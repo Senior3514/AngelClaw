@@ -1,0 +1,25 @@
+# ANGELGRID Cloud – SaaS backend container image
+
+FROM python:3.12-slim
+
+LABEL maintainer="ANGELGRID Team"
+LABEL description="ANGELGRID Cloud – Centralized Policy & Event Management"
+
+WORKDIR /app
+
+COPY shared/ ./shared/
+COPY cloud/ ./cloud/
+COPY angelnode/config/ ./angelnode/config/
+COPY pyproject.toml ./
+
+RUN pip install --no-cache-dir -e ".[cloud]"
+
+RUN mkdir -p /data
+
+# SECURITY: Database URL must be injected via environment.
+# Default uses SQLite for development only.
+ENV ANGELGRID_DATABASE_URL=sqlite:////data/angelgrid.db
+
+EXPOSE 8500
+
+CMD ["uvicorn", "cloud.api.server:app", "--host", "0.0.0.0", "--port", "8500"]

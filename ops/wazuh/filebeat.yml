@@ -1,0 +1,30 @@
+# ANGELGRID – Filebeat configuration for Wazuh integration.
+#
+# Tails the ANGELNODE structured decision log and forwards events to
+# the Wazuh Manager via the Wazuh Filebeat module.
+#
+# Adjust paths and Wazuh manager address for your environment.
+
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      # Default ANGELNODE decision log location
+      - /var/log/angelgrid/decisions.jsonl
+    # Each line is a complete JSON object
+    json.keys_under_root: true
+    json.add_error_key: true
+    fields:
+      source: angelgrid
+    fields_under_root: true
+
+output.logstash:
+  # Wazuh Manager address — adjust for your deployment
+  hosts: ["wazuh-manager:5044"]
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat-angelgrid
+  keepfiles: 7

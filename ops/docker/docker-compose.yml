@@ -1,0 +1,33 @@
+# ANGELGRID – Development docker-compose
+#
+# Starts both ANGELNODE and ANGELGRID Cloud for local development/testing.
+
+services:
+  angelnode:
+    build:
+      context: ../..
+      dockerfile: ops/docker/Dockerfile.angelnode
+    ports:
+      - "8400:8400"
+    volumes:
+      - angelnode-logs:/var/log/angelgrid
+    environment:
+      - ANGELNODE_POLICY_FILE=/app/angelnode/config/default_policy.json
+      - ANGELNODE_LOG_FILE=/var/log/angelgrid/decisions.jsonl
+
+  cloud:
+    build:
+      context: ../..
+      dockerfile: ops/docker/Dockerfile.cloud
+    ports:
+      - "8500:8500"
+    volumes:
+      - cloud-data:/data
+    environment:
+      - ANGELGRID_DATABASE_URL=sqlite:////data/angelgrid.db
+    depends_on:
+      - angelnode
+
+volumes:
+  angelnode-logs:
+  cloud-data:
