@@ -1,5 +1,5 @@
 {
-  "_doc": "Per-category default action when no PolicyRule matches an event. SECURITY: high-risk categories MUST default to 'block'. Only explicitly low-risk categories may default to 'allow'.",
+  "_doc": "Per-category default action when no PolicyRule matches an event. SECURITY: high-risk categories MUST default to 'block' (zero-trust default-deny). Only explicitly low-risk categories may default to 'allow'. These defaults are the last line of defense before the ultimate fail-closed BLOCK fallback.",
   "defaults": {
     "ai_tool":  { "action": "block", "risk_level": "high",   "reason": "No rule matched AI tool call; default-deny for AI actions" },
     "shell":    { "action": "block", "risk_level": "high",   "reason": "No rule matched shell execution; default-deny for shell" },
@@ -10,6 +10,7 @@
     "config":   { "action": "alert", "risk_level": "medium", "reason": "No rule matched config change; default-alert for configuration" },
     "system":   { "action": "audit", "risk_level": "low",    "reason": "No rule matched system event; default-audit for OS events" },
     "logging":  { "action": "allow", "risk_level": "none",   "reason": "No rule matched logging event; default-allow for logging" },
-    "metric":   { "action": "allow", "risk_level": "none",   "reason": "No rule matched metric event; default-allow for metrics" }
+    "metric":   { "action": "allow", "risk_level": "none",   "reason": "No rule matched metric event; default-allow for metrics" },
+    "llm":      { "action": "block", "risk_level": "high",   "reason": "No rule matched LLM proxy event; default-deny for LLM operations" }
   }
 }

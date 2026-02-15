@@ -1,25 +1,132 @@
 {
   "id": "default-bootstrap-policy",
   "name": "ANGELGRID Bootstrap Policy",
-  "description": "Starter policy for initial ANGELNODE deployment. Blocks known-dangerous patterns, alerts on suspicious activity, and allows everything else.",
+  "description": "Production-grade bootstrap policy for ANGELNODE. Implements zero-trust default-deny with explicit allowlists for known-safe operations. Rules are evaluated top-down; first match wins.",
   "rules": [
+
     {
-      "id": "block-shell-rm-rf",
+      "id": "block-shell-destructive-rm",
       "scope": "global",
       "match": {
         "categories": ["shell"],
         "types": ["exec"],
         "detail_conditions": {
-          "command_pattern": "rm -rf /"
+          "command_pattern": "rm\\s+(-[^\\s]*)?\\s*-[^\\s]*r[^\\s]*f|rm\\s+(-[^\\s]*)?\\s*-[^\\s]*f[^\\s]*r"
         }
       },
       "action": "block",
       "risk_level": "critical",
-      "description": "Block recursive root deletion",
+      "description": "Block recursive forced deletion (rm -rf, rm -fr, and flag variants)",
       "enabled": true
     },
     {
-      "id": "block-exfil-curl-post",
+      "id": "block-shell-no-preserve-root",
+      "scope": "global",
+      "match": {
+        "categories": ["shell"],
+        "types": ["exec"],
+        "detail_conditions": {
+          "command_pattern": "--no-preserve-root"
+        }
+      },
+      "action": "block",
+      "risk_level": "critical",
+      "description": "Block any command using --no-preserve-root flag",
+      "enabled": true
+    },
+    {
+      "id": "block-shell-format-disk",
+      "scope": "global",
+      "match": {
+        "categories": ["shell"],
+        "types": ["exec"],
+        "detail_conditions": {
+          "command_pattern": "mkfs\\.|dd\\s+.*of=/dev/"
+        }
+      },
+      "action": "block",
+      "risk_level": "critical",
+      "description": "Block disk formatting and raw device writes",
+      "enabled": true
+    },
+    {
+      "id": "block-shell-privilege-escalation",
+      "scope": "global",
+      "match": {
+        "categories": ["shell"],
+        "types": ["exec"],
+        "detail_conditions": {
+          "command_pattern": "sudo\\s|chmod\\s+[0-7]*[2367][0-7]*\\s|chown\\s+root|passwd\\s"
+        }
+      },
+      "action": "alert",
+      "risk_level": "high",
+      "description": "Alert on privilege escalation attempts (sudo, chmod world-write, chown root, passwd)",
+      "enabled": true
+    },
+    {
+      "id": "block-shell-reverse-shell",
+      "scope": "global",
+      "match": {
+        "categories": ["shell"],
+        "types": ["exec"],
+        "detail_conditions": {
+          "command_pattern": "/dev/tcp/|nc\\s+-[^\\s]*e|ncat\\s|mkfifo|bash\\s+-i"
+        }
+      },
+      "action": "block",
+      "risk_level": "critical",
+      "description": "Block common reverse-shell patterns",
+      "enabled": true
+    },
+
+    {
+      "id": "allow-network-cloud-api",
+      "scope": "global",
+      "match": {
+        "categories": ["network"],
+        "types": ["connect"],
+        "detail_conditions": {
+          "destination_pattern": "^https?://(cloud|localhost|127\\.0\\.0\\.1)(:[0-9]+)?/"
+        }
+      },
+      "action": "allow",
+      "risk_level": "none",
+      "description": "Allow outbound connections to ANGELGRID Cloud API (internal)",
+      "enabled": true
+    },
+    {
+      "id": "allow-network-package-registries",
+      "scope": "global",
+      "match": {
+        "categories": ["network"],
+        "types": ["connect"],
+        "detail_conditions": {
+          "destination_pattern": "^https://(pypi\\.org|files\\.pythonhosted\\.org|registry\\.npmjs\\.org|index\\.docker\\.io|ghcr\\.io|dl-cdn\\.alpinelinux\\.org)"
+        }
+      },
+      "action": "audit",
+      "risk_level": "low",
+      "description": "Audit (allow + log) connections to known package registries",
+      "enabled": true
+    },
+    {
+      "id": "allow-network-dns-ntp",
+      "scope": "global",
+      "match": {
+        "categories": ["network"],
+        "types": ["connect"],
+        "detail_conditions": {
+          "destination_port_in": [53, 123]
+        }
+      },
+      "action": "allow",
+      "risk_level": "none",
+      "description": "Allow DNS (53) and NTP (123) traffic",
+      "enabled": true
+    },
+    {
+      "id": "alert-network-exfil-post",
       "scope": "global",
       "match": {
         "categories": ["network"],
@@ -31,7 +138,184 @@
       },
       "action": "alert",
       "risk_level": "high",
-      "description": "Alert on outbound POST to suspicious destinations",
+      "description": "Alert on outbound POST to suspicious/unknown destinations",
+      "enabled": true
+    },
+    {
+      "id": "alert-network-large-upload",
+      "scope": "global",
+      "match": {
+        "categories": ["network"],
+        "types": ["connect"],
+        "detail_conditions": {
+          "payload_bytes_gt": 1048576
+        }
+      },
+      "action": "alert",
+      "risk_level": "high",
+      "description": "Alert on outbound payloads larger than 1 MB (potential exfiltration)",
+      "enabled": true
+    },
+
+    {
+      "id": "block-file-read-ssh-keys",
+      "scope": "global",
+      "match": {
+        "categories": ["file"],
+        "types": ["read"],
+        "detail_conditions": {
+          "path_pattern": "(/\\.ssh/|id_rsa|id_ed25519|id_ecdsa|authorized_keys)"
+        }
+      },
+      "action": "block",
+      "risk_level": "critical",
+      "description": "Block reads of SSH private keys and authorized_keys",
+      "enabled": true
+    },
+    {
+      "id": "block-file-read-credentials",
+      "scope": "global",
+      "match": {
+        "categories": ["file"],
+        "types": ["read"],
+        "detail_conditions": {
+          "path_pattern": "(\\.env|\\.aws/credentials|\\.kube/config|\\.docker/config\\.json|/etc/shadow|/etc/gshadow|secrets?\\.ya?ml|credentials?\\.json|token\\.json|service.account\\.json)"
+        }
+      },
+      "action": "block",
+      "risk_level": "critical",
+      "description": "Block reads of credential files (.env, AWS creds, kube config, shadow, secret YAMLs)",
+      "enabled": true
+    },
+    {
+      "id": "alert-file-read-sensitive-dirs",
+      "scope": "global",
+      "match": {
+        "categories": ["file"],
+        "types": ["read"],
+        "detail_conditions": {
+          "path_pattern": "^/(etc|var/secrets|var/lib/secrets|root/\\.|proc/[0-9]+/(environ|cmdline|maps))"
+        }
+      },
+      "action": "alert",
+      "risk_level": "medium",
+      "description": "Alert on reads under sensitive directories (/etc, /var/secrets, /root/.*, /proc/*/environ)",
+      "enabled": true
+    },
+    {
+      "id": "allow-file-read-safe",
+      "scope": "global",
+      "match": {
+        "categories": ["file"],
+        "types": ["read"]
+      },
+      "action": "audit",
+      "risk_level": "low",
+      "description": "Audit (allow + log) all other file reads — non-sensitive paths pass through",
+      "enabled": true
+    },
+    {
+      "id": "block-file-write-system",
+      "scope": "global",
+      "match": {
+        "categories": ["file"],
+        "types": ["write"],
+        "detail_conditions": {
+          "path_pattern": "^/(etc|boot|usr/(s?bin|lib)|var/lib/(dpkg|apt))"
+        }
+      },
+      "action": "block",
+      "risk_level": "critical",
+      "description": "Block writes to system-critical directories (/etc, /boot, /usr/bin, package state)",
+      "enabled": true
+    },
+    {
+      "id": "audit-file-write",
+      "scope": "global",
+      "match": {
+        "categories": ["file"],
+        "types": ["write"]
+      },
+      "action": "audit",
+      "risk_level": "low",
+      "description": "Audit all file write operations for forensic review",
+      "enabled": true
+    },
+
+    {
+      "id": "allow-db-read",
+      "scope": "global",
+      "match": {
+        "categories": ["db"],
+        "types": ["query"],
+        "detail_conditions": {
+          "statement_type": "SELECT"
+        }
+      },
+      "action": "audit",
+      "risk_level": "low",
+      "description": "Audit (allow + log) read-only SELECT queries",
+      "enabled": true
+    },
+    {
+      "id": "alert-db-write",
+      "scope": "global",
+      "match": {
+        "categories": ["db"],
+        "types": ["query"],
+        "detail_conditions": {
+          "statement_type_in": ["INSERT", "UPDATE", "DELETE"]
+        }
+      },
+      "action": "alert",
+      "risk_level": "medium",
+      "description": "Alert on data-modifying queries (INSERT/UPDATE/DELETE)",
+      "enabled": true
+    },
+    {
+      "id": "block-db-ddl",
+      "scope": "global",
+      "match": {
+        "categories": ["db"],
+        "types": ["query"],
+        "detail_conditions": {
+          "statement_type_in": ["DROP", "ALTER", "TRUNCATE", "CREATE"]
+        }
+      },
+      "action": "block",
+      "risk_level": "critical",
+      "description": "Block DDL operations (DROP, ALTER, TRUNCATE, CREATE) — schema changes require approval",
+      "enabled": true
+    },
+
+    {
+      "id": "allow-ai-tool-read-file",
+      "scope": "global",
+      "match": {
+        "categories": ["ai_tool"],
+        "types": ["tool_call"],
+        "detail_conditions": {
+          "tool_name_in": ["read_file", "search", "grep", "glob", "list_files"]
+        }
+      },
+      "action": "audit",
+      "risk_level": "low",
+      "description": "Audit (allow) known-safe read-only AI tools",
+      "enabled": true
+    },
+    {
+      "id": "allow-ai-tool-analysis",
+      "scope": "global",
+      "match": {
+        "categories": ["ai_tool"],
+        "types": ["tool_call"],
+        "detail_conditions": {
+          "tool_name_in": ["summarize", "explain", "analyze", "diff", "status"]
+        }
+      },
+      "action": "allow",
+      "risk_level": "none",
+      "description": "Allow known-safe analysis/summary AI tools",
       "enabled": true
     },
     {
@@ -41,7 +325,7 @@
         "categories": ["ai_tool"],
         "types": ["tool_call"],
         "detail_conditions": {
-          "tool_name": "bash"
+          "tool_name_in": ["bash", "shell", "exec", "terminal", "run_command"]
         }
       },
       "action": "alert",
@@ -65,15 +349,76 @@
       "enabled": true
     },
     {
-      "id": "audit-file-write",
+      "id": "alert-ai-tool-write",
       "scope": "global",
       "match": {
-        "categories": ["file"],
-        "types": ["write"]
+        "categories": ["ai_tool"],
+        "types": ["tool_call"],
+        "detail_conditions": {
+          "tool_name_in": ["write_file", "edit", "patch", "create_file"]
+        }
       },
-      "action": "audit",
-      "risk_level": "low",
-      "description": "Audit all file write operations for forensic review",
+      "action": "alert",
+      "risk_level": "medium",
+      "description": "Alert on AI tools that modify files — log for review",
+      "enabled": true
+    },
+
+    {
+      "id": "block-auth-password-change",
+      "scope": "global",
+      "match": {
+        "categories": ["auth"],
+        "types": ["password_change", "role_change", "privilege_grant"]
+      },
+      "action": "block",
+      "risk_level": "critical",
+      "description": "Block automated password changes, role changes, and privilege grants",
+      "enabled": true
+    },
+    {
+      "id": "alert-auth-login-failure",
+      "scope": "global",
+      "match": {
+        "categories": ["auth"],
+        "types": ["login_failure"]
+      },
+      "action": "alert",
+      "risk_level": "high",
+      "description": "Alert on authentication failures for brute-force detection",
+      "enabled": true
+    },
+
+    {
+      "id": "alert-shell-burst",
+      "scope": "global",
+      "match": {
+        "categories": ["shell"],
+        "types": ["exec"],
+        "detail_conditions": {
+          "burst_window_seconds": 10,
+          "burst_threshold": 20
+        }
+      },
+      "action": "alert",
+      "risk_level": "high",
+      "description": "Alert when >20 shell executions occur within 10 seconds (burst detection)",
+      "enabled": true
+    },
+    {
+      "id": "alert-ai-tool-burst",
+      "scope": "global",
+      "match": {
+        "categories": ["ai_tool"],
+        "types": ["tool_call"],
+        "detail_conditions": {
+          "burst_window_seconds": 10,
+          "burst_threshold": 30
+        }
+      },
+      "action": "alert",
+      "risk_level": "high",
+      "description": "Alert when >30 AI tool calls occur within 10 seconds (burst detection)",
       "enabled": true
     }
   ]

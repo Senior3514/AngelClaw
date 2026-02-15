@@ -1,6 +1,6 @@
 # ANGELGRID – Local Development Compose
 #
-# Single-VPS setup for running ANGELNODE + Cloud backend.
+# Single-VPS setup for running ANGELNODE + Cloud backend + optional LLM.
 # Run from the ops/ directory:
 #
 #   cd ops
@@ -9,6 +9,7 @@
 # ANGELNODE is exposed on 127.0.0.1:8400 (host loopback only).
 # Cloud API is internal-only (reachable at http://cloud:8500 from
 # other containers, but not exposed to the host by default).
+# Ollama is internal-only (no host port) — enable via LLM_ENABLED=true.
 
 services:
   angelnode:
@@ -43,16 +44,51 @@ services:
     # No host port mapping — cloud API is internal only.
     # Other containers reach it at http://cloud:8500.
     # Uncomment the next two lines to expose on the host for debugging:
-    # ports:
-    #   - "127.0.0.1:8500:8500"
+    ports:
+      - "127.0.0.1:8500:8500"
     expose:
       - "8500"
     volumes:
       - cloud-data:/data
     environment:
       - ANGELGRID_DATABASE_URL=sqlite:////data/angelgrid.db
+      # LLM Proxy — disabled by default.  Set to "true" to enable.
+      - LLM_ENABLED=false
+      - LLM_BACKEND_URL=http://ollama:11434
+      - LLM_MODEL=llama3
+      - LLM_MAX_TOKENS=1024
+      - LLM_TIMEOUT_SECONDS=30
     restart: unless-stopped
+
+  # --------------------------------------------------------------------------
+  # Ollama – Local LLM inference (optional, internal-only)
+  #
+  # To enable:
+  #   1. Set LLM_ENABLED=true on the 'cloud' service above
+  #   2. Uncomment the 'ollama' service below
+  #   3. Run: docker compose up --build
+  #   4. Pull a model: docker compose exec ollama ollama pull llama3
+  #
+  # SECURITY: Ollama has NO host port — only reachable from the Docker
+  # network at http://ollama:11434.  Never expose to the internet.
+  # --------------------------------------------------------------------------
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   expose:
+  #     - "11434"
+  #   volumes:
+  #     - ollama-data:/root/.ollama
+  #   restart: unless-stopped
+  #   # Uncomment for GPU passthrough (NVIDIA):
+  #   # deploy:
+  #   #   resources:
+  #   #     reservations:
+  #   #       devices:
+  #   #         - driver: nvidia
+  #   #           count: 1
+  #   #           capabilities: [gpu]
 
 volumes:
   angelnode-logs:
   cloud-data:
+  # ollama-data:

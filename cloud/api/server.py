@@ -37,9 +37,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="ANGELGRID Cloud API",
-    version="0.1.0",
+    version="0.2.0",
     lifespan=lifespan,
 )
+
+# Mount the AI Assistant routes
+from cloud.api.assistant_routes import router as assistant_router  # noqa: E402
+
+app.include_router(assistant_router)
+
+# Mount the LLM proxy routes
+from cloud.llm_proxy.routes import router as llm_router  # noqa: E402
+
+app.include_router(llm_router)
 
 
 # ---------------------------------------------------------------------------

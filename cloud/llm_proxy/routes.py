@@ -1,0 +1,180 @@
+"""ANGELGRID – LLM Proxy API routes.
+
+Provides a /api/v1/llm/chat endpoint that proxies requests to a
+configured LLM backend (Ollama, OpenAI-compatible) with a mandatory
+security-analyst system prompt.
+
+SECURITY NOTES:
+- The LLM proxy is disabled by default (LLM_ENABLED=false).
+- The system prompt is always injected first and cannot be overridden.
+- The proxy is read-only: it never modifies policies, events, or DB state.
+- All requests and responses are logged for audit.
+"""
+
+from __future__ import annotations
+
+import logging
+import time
+from typing import Any, Optional
+
+import httpx
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+
+from .config import (
+    LLM_BACKEND_URL,
+    LLM_ENABLED,
+    LLM_MAX_TOKENS,
+    LLM_MODEL,
+    LLM_SYSTEM_PROMPT,
+    LLM_TIMEOUT_SECONDS,
+)
+
+logger = logging.getLogger("angelgrid.cloud.llm_proxy")
+
+router = APIRouter(prefix="/api/v1/llm", tags=["LLM Proxy"])
+
+
+# ---------------------------------------------------------------------------
+# Request / Response models
+# ---------------------------------------------------------------------------
+
+class LLMChatRequest(BaseModel):
+    """Request body for the LLM chat endpoint."""
+
+    prompt: str = Field(
+        ...,
+        min_length=1,
+        max_length=4096,
+        description="The user's question or analysis request",
+    )
+    context: Optional[str] = Field(
+        default=None,
+        max_length=8192,
+        description="Optional read-only context (events, incidents, policies) to include",
+    )
+    options: Optional[dict[str, Any]] = Field(
+        default=None,
+        description="Optional model parameters (temperature, top_p, etc.)",
+    )
+
+
+class LLMChatResponse(BaseModel):
+    """Response from the LLM chat endpoint."""
+
+    answer: str = Field(description="The LLM's response")
+    used_model: str = Field(description="Model identifier that generated the response")
+    metadata: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Response metadata (latency_ms, token counts, etc.)",
+    )
+
+
+# ---------------------------------------------------------------------------
+# POST /api/v1/llm/chat
+# ---------------------------------------------------------------------------
+
+@router.post(
+    "/chat",
+    response_model=LLMChatResponse,
+    summary="Chat with ANGELGRID AI security analyst",
+    description=(
+        "Sends a prompt to the configured LLM backend with an enforced "
+        "read-only security-analyst system prompt. The LLM can analyze "
+        "events, explain decisions, and suggest policy tightening — but "
+        "cannot modify any state. Disabled by default (set LLM_ENABLED=true)."
+    ),
+)
+async def llm_chat(req: LLMChatRequest) -> LLMChatResponse:
+    if not LLM_ENABLED:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "LLM proxy is disabled. Set LLM_ENABLED=true and configure "
+                "LLM_BACKEND_URL to enable it."
+            ),
+        )
+
+    # Build the messages array with the mandatory system prompt first
+    messages: list[dict[str, str]] = [
+        {"role": "system", "content": LLM_SYSTEM_PROMPT},
+    ]
+
+    # Inject optional context as a system-level context block
+    if req.context:
+        messages.append({
+            "role": "system",
+            "content": f"--- READ-ONLY CONTEXT ---\n{req.context}\n--- END CONTEXT ---",
+        })
+
+    messages.append({"role": "user", "content": req.prompt})
+
+    # Build the request payload (OpenAI-compatible format, works with Ollama)
+    payload: dict[str, Any] = {
+        "model": LLM_MODEL,
+        "messages": messages,
+        "stream": False,
+        "options": {
+            "num_predict": LLM_MAX_TOKENS,
+        },
+    }
+
+    # Merge caller-provided options (but never override model or system prompt)
+    if req.options:
+        safe_options = {k: v for k, v in req.options.items() if k not in ("model", "messages", "system")}
+        payload["options"].update(safe_options)
+
+    logger.info(
+        "LLM request — model=%s, prompt_len=%d, context_len=%d",
+        LLM_MODEL,
+        len(req.prompt),
+        len(req.context) if req.context else 0,
+    )
+
+    start = time.monotonic()
+    try:
+        async with httpx.AsyncClient(timeout=LLM_TIMEOUT_SECONDS) as client:
+            resp = await client.post(
+                f"{LLM_BACKEND_URL}/api/chat",
+                json=payload,
+            )
+            resp.raise_for_status()
+    except httpx.TimeoutException:
+        raise HTTPException(
+            status_code=504,
+            detail=f"LLM backend timed out after {LLM_TIMEOUT_SECONDS}s",
+        )
+    except httpx.HTTPStatusError as exc:
+        logger.error("LLM backend error: %s %s", exc.response.status_code, exc.response.text[:200])
+        raise HTTPException(
+            status_code=502,
+            detail=f"LLM backend returned {exc.response.status_code}",
+        )
+    except httpx.ConnectError:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Cannot connect to LLM backend at {LLM_BACKEND_URL}",
+        )
+
+    latency_ms = int((time.monotonic() - start) * 1000)
+    body = resp.json()
+
+    # Ollama /api/chat response format
+    answer = body.get("message", {}).get("content", "")
+    if not answer:
+        # Fallback for OpenAI-compatible format
+        choices = body.get("choices", [])
+        if choices:
+            answer = choices[0].get("message", {}).get("content", "")
+
+    logger.info("LLM response — latency=%dms, answer_len=%d", latency_ms, len(answer))
+
+    return LLMChatResponse(
+        answer=answer or "(empty response from LLM)",
+        used_model=LLM_MODEL,
+        metadata={
+            "latency_ms": latency_ms,
+            "backend_url": LLM_BACKEND_URL,
+            "llm_enabled": True,
+        },
+    )

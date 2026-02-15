@@ -9,6 +9,13 @@ FILE, NETWORK, DB, AUTH) default to BLOCK.  Low-risk categories (LOGGING,
 METRIC) default to ALLOW.  This implements the zero-trust principle:
 deny-by-default for anything that can affect system state.
 
+Match conditions in detail_conditions support:
+  - Exact match:    "key": value
+  - Regex match:    "key_pattern": "regex"     (matched via re.search)
+  - List membership: "key_in": [v1, v2, ...]   (event value must be in list)
+  - Numeric GT:     "key_gt": number           (event value must be > number)
+  - Burst detection: "burst_window_seconds" + "burst_threshold"
+
 SECURITY NOTE: This is the critical decision path. Every action mediated by
 ANGELNODE passes through engine.evaluate().  Changes here must be reviewed
 with extra care.
@@ -19,6 +26,9 @@ from __future__ import annotations
 import json
 import logging
 import re
+import threading
+import time
+from collections import deque
 from pathlib import Path
 
 from shared.models.decision import Decision
@@ -61,6 +71,41 @@ def _load_category_defaults(path: str | Path) -> dict[str, Decision]:
     return defaults
 
 
+class BurstTracker:
+    """Thread-safe sliding-window counter for burst/rate detection.
+
+    Tracks event timestamps per (category, type) key and returns True
+    when the count in the last `window_seconds` exceeds `threshold`.
+    """
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        # key → deque of timestamps (monotonic seconds)
+        self._windows: dict[str, deque[float]] = {}
+
+    def record_and_check(
+        self,
+        category: str,
+        event_type: str,
+        window_seconds: int,
+        threshold: int,
+    ) -> bool:
+        """Record an event and return True if the burst threshold is exceeded."""
+        key = f"{category}:{event_type}"
+        now = time.monotonic()
+        cutoff = now - window_seconds
+
+        with self._lock:
+            if key not in self._windows:
+                self._windows[key] = deque()
+            q = self._windows[key]
+            # Evict expired entries
+            while q and q[0] < cutoff:
+                q.popleft()
+            q.append(now)
+            return len(q) > threshold
+
+
 class PolicyEngine:
     """Loads a PolicySet and evaluates Events against its rules."""
 
@@ -71,6 +116,7 @@ class PolicyEngine:
     ) -> None:
         self._policy_set = policy_set or PolicySet()
         self._category_defaults = category_defaults or {}
+        self._burst_tracker = BurstTracker()
         logger.info(
             "PolicyEngine initialized — %d rules, version=%s, %d category defaults",
             len(self._policy_set.rules),
@@ -175,9 +221,16 @@ class PolicyEngine:
     # Match logic
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _matches(match: PolicyMatch, event: Event) -> bool:
-        """Return True if all specified match conditions are satisfied."""
+    def _matches(self, match: PolicyMatch, event: Event) -> bool:
+        """Return True if all specified match conditions are satisfied.
+
+        Supports extended detail_conditions:
+          - "key": value           → exact match against event.details[key]
+          - "key_pattern": "re"    → regex match against event.details[key] (key without _pattern suffix)
+          - "key_in": [...]        → event.details[key] must be in the list
+          - "key_gt": number       → event.details[key] must be > number
+          - "burst_window_seconds" + "burst_threshold" → sliding-window burst detection
+        """
         # Category filter
         if match.categories is not None:
             if event.category.value not in match.categories:
@@ -195,10 +248,75 @@ class PolicyEngine:
             if not re.search(match.source_pattern, event.source):
                 return False
 
-        # Detail conditions (exact key-value match)
+        # Detail conditions (extended matching)
         if match.detail_conditions is not None:
-            for key, expected in match.detail_conditions.items():
-                if event.details.get(key) != expected:
+            if not self._match_details(match.detail_conditions, event):
+                return False
+
+        return True
+
+    def _match_details(self, conditions: dict, event: Event) -> bool:
+        """Evaluate extended detail_conditions against event.details.
+
+        Processes conditions in a single pass, recognizing suffixed keys
+        (_pattern, _in, _gt) as special operators.
+        """
+        details = event.details
+
+        # Extract burst params if present (handled separately)
+        burst_window = conditions.get("burst_window_seconds")
+        burst_threshold = conditions.get("burst_threshold")
+
+        for key, expected in conditions.items():
+            # Skip burst meta-keys (handled below)
+            if key in ("burst_window_seconds", "burst_threshold"):
+                continue
+
+            # Regex pattern match: "foo_pattern": "regex" matches details["foo"]
+            if key.endswith("_pattern"):
+                base_key = key[: -len("_pattern")]
+                actual = details.get(base_key)
+                if actual is None:
                     return False
+                if not re.search(str(expected), str(actual)):
+                    return False
+                continue
+
+            # List membership: "foo_in": [...] matches if details["foo"] in list
+            if key.endswith("_in"):
+                base_key = key[: -len("_in")]
+                actual = details.get(base_key)
+                if actual is None:
+                    return False
+                if actual not in expected:
+                    return False
+                continue
+
+            # Numeric greater-than: "foo_gt": N matches if details["foo"] > N
+            if key.endswith("_gt"):
+                base_key = key[: -len("_gt")]
+                actual = details.get(base_key)
+                if actual is None:
+                    return False
+                try:
+                    if float(actual) <= float(expected):
+                        return False
+                except (TypeError, ValueError):
+                    return False
+                continue
+
+            # Default: exact match
+            if details.get(key) != expected:
+                return False
+
+        # Burst detection (if both burst keys are present)
+        if burst_window is not None and burst_threshold is not None:
+            if not self._burst_tracker.record_and_check(
+                event.category.value,
+                event.type,
+                int(burst_window),
+                int(burst_threshold),
+            ):
+                return False
 
         return True
