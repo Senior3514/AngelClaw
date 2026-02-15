@@ -3,6 +3,10 @@
 All policy decisions are logged as single-line JSON records to a local log
 file.  This format is designed for easy parsing by Wazuh/Filebeat/Fluentd
 and for forensic review.
+
+The logger includes correlation_id when present in event.details,
+enabling end-to-end tracing from the AI shield adapter through the
+decision log and into Wazuh/SIEM.
 """
 
 from __future__ import annotations
@@ -41,6 +45,8 @@ class DecisionLogger:
             "matched_rule_id": decision.matched_rule_id,
             "risk_level": decision.risk_level.value,
             "source": event.source,
+            # Include correlation_id when present (set by AI shield adapter)
+            "correlation_id": event.details.get("correlation_id"),
         }
         line = json.dumps(record, separators=(",", ":"))
         with open(self._path, "a", encoding="utf-8") as f:

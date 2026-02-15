@@ -19,6 +19,7 @@ RUN pip install --no-cache-dir -e .
 RUN mkdir -p /var/log/angelgrid
 
 ENV ANGELNODE_POLICY_FILE=/app/angelnode/config/default_policy.json
+ENV ANGELNODE_CATEGORY_DEFAULTS_FILE=/app/angelnode/config/category_defaults.json
 ENV ANGELNODE_LOG_FILE=/var/log/angelgrid/decisions.jsonl
 
 EXPOSE 8400

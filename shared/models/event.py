@@ -26,6 +26,8 @@ class EventCategory(str, Enum):
     AUTH = "auth"              # Authentication / privilege change
     CONFIG = "config"          # Configuration modification
     SYSTEM = "system"          # OS-level / kernel event
+    LOGGING = "logging"        # Internal log emission (low risk)
+    METRIC = "metric"          # Telemetry / metric collection (low risk)
 
 
 class Severity(str, Enum):

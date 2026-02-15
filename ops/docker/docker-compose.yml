@@ -13,6 +13,7 @@ services:
       - angelnode-logs:/var/log/angelgrid
     environment:
       - ANGELNODE_POLICY_FILE=/app/angelnode/config/default_policy.json
+      - ANGELNODE_CATEGORY_DEFAULTS_FILE=/app/angelnode/config/category_defaults.json
       - ANGELNODE_LOG_FILE=/var/log/angelgrid/decisions.jsonl
 
   cloud:

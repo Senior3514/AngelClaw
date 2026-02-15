@@ -10,16 +10,65 @@ and infrastructure operations.
 - `core/` – Policy engine, evaluation API, structured logging, and agent lifecycle.
 - `ai_shield/` – Adapters for AI agent frameworks (OpenClaw, MoltBot, Claude Code).
 - `sensors/` – Future: process, file, network, and syscall monitors.
-- `config/` – Default configuration and sample policy files.
+- `config/` – Default configuration, policy files, and category defaults.
 
 ## Running
 
 ```bash
-cd angelnode
 pip install -e .
-uvicorn core.server:app --host 127.0.0.1 --port 8400
+uvicorn angelnode.core.server:app --host 127.0.0.1 --port 8400
 ```
 
-The agent exposes:
-- `POST /evaluate` – Evaluate an event against the loaded PolicySet.
-- `POST /ai/openclaw/evaluate_tool` – AI-agent-facing tool evaluation endpoint.
+## API Endpoints
+
+| Method | Path                           | Description                                      |
+|--------|--------------------------------|--------------------------------------------------|
+| GET    | `/health`                      | Liveness probe                                   |
+| GET    | `/status`                      | Agent status, counters, policy version (token-protected) |
+| POST   | `/evaluate`                    | Evaluate an event against the active PolicySet   |
+| POST   | `/ai/openclaw/evaluate_tool`   | AI-agent-facing tool evaluation endpoint         |
+
+## Default-Deny by Category
+
+The policy engine uses **per-category default actions** when no explicit rule matches.
+This is configured in `config/category_defaults.json`:
+
+| Category  | Default Action | Rationale                              |
+|-----------|---------------|----------------------------------------|
+| ai_tool   | **BLOCK**     | AI tool calls require explicit allow   |
+| shell     | **BLOCK**     | Shell execution is high risk           |
+| file      | **BLOCK**     | File operations need explicit policy   |
+| network   | **BLOCK**     | Network access must be allowlisted     |
+| db        | **BLOCK**     | Database access is sensitive           |
+| auth      | **BLOCK**     | Auth changes require policy coverage   |
+| config    | ALERT         | Config changes are logged with alert   |
+| system    | AUDIT         | OS events are logged for review        |
+| logging   | ALLOW         | Logging is inherently low risk         |
+| metric    | ALLOW         | Metrics collection is low risk         |
+
+If a category is **not listed** in the defaults file, the ultimate fallback
+is **BLOCK** (fail-closed).
+
+To override, edit `config/category_defaults.json` or set the
+`ANGELNODE_CATEGORY_DEFAULTS_FILE` environment variable to point to a custom file.
+
+## /status Endpoint Security
+
+The `/status` endpoint returns read-only operational data (agent ID, policy
+version, sync timestamp, evaluation counters). It does **not** expose secrets,
+tokens, or policy rule content.
+
+- **Default:** Open on loopback (127.0.0.1) only.
+- **Token protection:** Set `ANGELNODE_STATUS_TOKEN` environment variable.
+  When set, requests must include `X-ANGELNODE-TOKEN: <token>` header.
+
+## Environment Variables
+
+| Variable                        | Description                                    | Default                          |
+|---------------------------------|------------------------------------------------|----------------------------------|
+| `ANGELNODE_POLICY_FILE`         | Path to the PolicySet JSON file                | `config/default_policy.json`     |
+| `ANGELNODE_CATEGORY_DEFAULTS_FILE` | Path to category defaults JSON              | `config/category_defaults.json`  |
+| `ANGELNODE_LOG_FILE`            | Path for structured decision log (JSONL)       | `logs/decisions.jsonl`           |
+| `ANGELNODE_AGENT_ID`            | Unique identifier for this agent               | `local-dev-agent`                |
+| `ANGELNODE_STATUS_TOKEN`        | Bearer token for `/status` (optional)          | *(unset — open on loopback)*     |
+| `ANGELNODE_EVALUATE_URL`        | URL of the local `/evaluate` endpoint          | `http://127.0.0.1:8400/evaluate` |

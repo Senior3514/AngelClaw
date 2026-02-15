@@ -13,10 +13,11 @@ from __future__ import annotations
 
 import logging
 import os
+import uuid
 from typing import Any, Optional
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from shared.models.event import Event, EventCategory, Severity
@@ -65,7 +66,13 @@ class ToolCallResponse(BaseModel):
     allowed: bool
     action: str = Field(description="Policy action: allow, block, alert, audit")
     reason: str
-    risk_level: str = "none"
+    risk_level: str = Field(
+        default="none",
+        description="Risk level: none, low, medium, high, critical",
+    )
+    correlation_id: str = Field(
+        description="Unique ID for this evaluation — use for log correlation and debugging",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -79,7 +86,15 @@ async def evaluate_tool(request: ToolCallRequest):
     Converts the tool-call metadata into a standard ANGELGRID Event, forwards
     it to the local policy engine, and translates the result into a simple
     allow/block response the AI agent can act on.
+
+    Every request is assigned a unique correlation_id that appears in:
+    - the response JSON (for the calling agent),
+    - the Event.details (for Cloud-side correlation),
+    - the structured decision log (for forensic review / Wazuh).
     """
+    # Generate a per-request correlation ID for end-to-end tracing
+    correlation_id = str(uuid.uuid4())
+
     # Build a standard Event from the tool-call metadata
     # SECURITY: details are logged and matched against policy rules
     event = Event(
@@ -94,6 +109,8 @@ async def evaluate_tool(request: ToolCallRequest):
             "context": request.context,
             # Flag secret access if argument keys hint at credentials
             "accesses_secrets": _detects_secret_access(request.arguments),
+            # Embed correlation_id so it flows into logs and Cloud events
+            "correlation_id": correlation_id,
         },
     )
 
@@ -107,13 +124,17 @@ async def evaluate_tool(request: ToolCallRequest):
             resp.raise_for_status()
             result = resp.json()
     except httpx.HTTPError as exc:
-        logger.error("Failed to reach local evaluation engine: %s", exc)
+        logger.error(
+            "Failed to reach local evaluation engine (correlation_id=%s): %s",
+            correlation_id, exc,
+        )
         # SECURITY: fail-closed — if the engine is unreachable, block the action
         return ToolCallResponse(
             allowed=False,
             action="block",
             reason="Policy engine unreachable — fail-closed",
             risk_level="critical",
+            correlation_id=correlation_id,
         )
 
     decision = result["decision"]
@@ -124,6 +145,7 @@ async def evaluate_tool(request: ToolCallRequest):
         action=action,
         reason=decision["reason"],
         risk_level=decision.get("risk_level", "none"),
+        correlation_id=correlation_id,
     )
 
 
