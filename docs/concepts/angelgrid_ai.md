@@ -1,59 +1,98 @@
-# ANGELGRID AI – UX, Safety Boundaries & Approval Workflow
+# ANGELGRID AI – Philosophy, UX & Safety Boundaries
 
-## Overview
+## Our Philosophy: Guardian Angel, Not Gatekeeper
 
-ANGELGRID AI is a security assistant embedded in the ANGELGRID Cloud console.
-It provides a **chat-style UX** where analysts can ask questions about their
-security posture, investigate incidents, and receive policy recommendations.
+ANGELGRID exists to **enable** AI adoption — not restrict it.
 
-## UX Model
+Most "AI security" tools try to limit, block, or slow down AI usage.
+ANGELGRID takes the opposite approach: we want people to use AI agents,
+Claude Code, Ollama, web AI apps, and automations **as much as they like**.
+ANGELGRID's job is to be the invisible safety net — the "guardian angel"
+that protects systems, data, and infrastructure in the background, without
+killing creativity or making AI adoption painful.
 
-The console presents a chat panel where users can interact with ANGELGRID AI:
+### Core Design Principles
+
+1. **AI-first, safety-always.** We never try to "stop AI" in general.
+   Analysis, reading, summarizing, reasoning, and creative work flow freely.
+   ANGELGRID only intervenes when AI is about to do something genuinely
+   dangerous: destructive shell commands, modifying critical system files,
+   accessing secrets, or calling risky external endpoints.
+
+2. **Human-friendly UX.** The ANGELGRID assistant is a friendly guide, not
+   a wall of error messages. When something is blocked, it explains *why*
+   in plain language and suggests a safe alternative. Users should never
+   need deep security expertise to work with ANGELGRID.
+
+3. **Embrace variety of models.** Local models (Ollama), cloud models
+   (Claude, OpenAI-compatible), agent frameworks (OpenClaw, MoltBot,
+   Claude Code) — ANGELGRID doesn't care which model you use. We focus
+   on safe orchestration and control, not on picking winners.
+
+4. **Quiet protection.** The best security is the kind you don't notice.
+   ANGELGRID should feel like a seatbelt, not a speed bump. Most AI
+   operations pass through with zero friction — only truly risky actions
+   get flagged or blocked.
+
+---
+
+## The Guardian Angel UX
+
+The ANGELGRID AI assistant acts as a friendly security companion in the
+Cloud console:
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │  ANGELGRID AI                                  [?]  │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
-│  User: "What happened in the last 24 hours?"        │
+│  User: "Why was my AI agent's file write blocked?"  │
 │                                                     │
-│  AI: "I found 12 incidents across 4 agents:         │
-│   - 3 CRITICAL (prompt injection on ai-host-01)     │
-│   - 5 HIGH (unauthorized shell access)              │
-│   - 4 WARN (suspicious outbound network)            │
+│  AI: "Your agent tried to write to /etc/passwd,     │
+│   which is a system-critical file. ANGELGRID         │
+│   blocked it to protect your system.                │
 │                                                     │
-│   Recommendation: Review AI tool policies for       │
-│   ai-host-01. I can propose tighter rules if        │
-│   you'd like."                                      │
+│   To achieve your goal safely, you could:           │
+│   • Write to a user-space path like ~/config/       │
+│   • Add a policy rule to allow writes to a          │
+│     specific /etc/ file if you really need it       │
 │                                                     │
-│  User: "Yes, propose rules for the ai-hosts group." │
+│   Want me to help set up a targeted rule?"          │
 │                                                     │
-│  AI: "Here are 3 proposed rules:                    │
-│   1. Block all shell tool calls from AI agents      │
-│      unless explicitly allowlisted                  │
-│   2. Alert on outbound HTTP from AI hosts           │
-│   3. Block credential-file reads from AI agents     │
+│  User: "Yes, propose a rule for /etc/myapp.conf"    │
 │                                                     │
-│   ⚠ These are proposals only. Click 'Apply' to      │
-│   submit for approval."                             │
+│  AI: "Here's a proposed rule:                       │
+│   • allow-file-write-myapp-conf                     │
+│   • Allows writes only to /etc/myapp.conf           │
+│   • All other /etc/ writes remain blocked           │
 │                                                     │
-│  [Apply Proposals]  [Dismiss]  [Export]              │
+│   ⚠ This is a proposal. Click 'Apply' to submit    │
+│   for approval."                                    │
+│                                                     │
+│  [Apply Proposal]  [Dismiss]  [Export]              │
 │                                                     │
 └─────────────────────────────────────────────────────┘
 ```
 
+Key UX principles:
+- **Explain, don't just deny.** Every block comes with a human-readable reason.
+- **Suggest alternatives.** Help the user achieve their goal safely.
+- **Make policy changes easy.** Users shouldn't need to hand-edit JSON to
+  configure ANGELGRID — the assistant guides them through it.
+
+---
+
 ## Separation of Concerns: Analysis vs. Action
 
-This is the most important architectural boundary in ANGELGRID AI.
-
-### Analysis (ANGELGRID AI can do freely)
+### Analysis (ANGELGRID AI does freely — no restrictions)
 
 - Summarize incidents, events, and trends
-- Explain policy rules and their coverage
+- Explain policy rules and why decisions were made
 - Identify gaps in policy coverage
 - Correlate events across agents
 - Generate risk assessments
 - Propose policy changes as structured data
+- Help users understand their security posture
 
 ### Action (requires explicit human approval)
 
@@ -64,6 +103,8 @@ This is the most important architectural boundary in ANGELGRID AI.
 
 **There is no "auto-apply" mode.** Even if an admin requests it, the system
 architecture enforces the approval step at the API layer.
+
+---
 
 ## Approval Workflow
 
@@ -108,17 +149,31 @@ made manually — is logged as a **ChangeEvent** with:
 ChangeEvents are immutable and cannot be deleted or modified.  They serve
 as the audit trail for all policy mutations in the system.
 
+---
+
 ## Safety Guarantees
 
 1. **No direct database writes** from the assistant module — the code is
    architecturally read-only (queries only, no ORM mutations).
 
-2. **No external LLM calls** in the current implementation — all analysis
-   is deterministic and auditable.  When LLM integration is added, it will
-   be sandboxed behind the same analysis-only boundary.
+2. **Multi-backend LLM support** — the LLM proxy supports Ollama (local),
+   Claude, and OpenAI-compatible APIs. When an LLM is used, it operates
+   behind the same analysis-only boundary with an enforced system prompt.
 
 3. **Tenant isolation** — all queries are scoped by tenant_id.  The
    assistant cannot access data from other tenants.
 
 4. **No secret exposure** — the assistant never returns raw credentials,
    tokens, or connection strings.  It operates on metadata only.
+
+---
+
+## What ANGELGRID is NOT
+
+- **Not an AI blocker.** We don't restrict which models, tools, or frameworks
+  users can use. Use Claude Code, Ollama, GPT, open-source agents — we
+  protect them all equally.
+- **Not a compliance checkbox.** We're a living safety fabric that adapts
+  to real threats, not a static audit tool.
+- **Not a productivity tax.** If ANGELGRID is slowing down legitimate work,
+  the policies need tuning — not the user's workflow.

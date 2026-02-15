@@ -196,7 +196,12 @@ def _generate_recommendations(
     classifications: Counter[str],
     severities: Counter[str],
 ) -> list[str]:
-    """Generate human-readable recommendations from incident patterns."""
+    """Generate human-readable, solution-oriented recommendations.
+
+    ANGELGRID philosophy: guardian angel, not gatekeeper.  Recommendations
+    should help users stay safe while continuing to use AI freely.  Focus
+    on targeted fixes, not broad restrictions.
+    """
     recommendations: list[str] = []
 
     critical_count = severities.get("critical", 0)
@@ -204,32 +209,38 @@ def _generate_recommendations(
 
     if critical_count > 0:
         recommendations.append(
-            f"{critical_count} CRITICAL incident(s) detected — immediate investigation required."
+            f"{critical_count} CRITICAL incident(s) detected — worth a quick look to make sure "
+            "nothing slipped through. ANGELGRID blocked the dangerous actions automatically."
         )
 
     if classifications.get("prompt_injection", 0) > 0:
         recommendations.append(
-            "Prompt injection attempts detected — review AI agent input validation and tool restrictions."
+            "Prompt injection attempts were caught and blocked. Your AI agents are safe to keep "
+            "using — consider adding input-validation rules for the specific patterns detected."
         )
 
     if classifications.get("data_exfiltration", 0) > 0:
         recommendations.append(
-            "Potential data exfiltration — audit outbound network rules and restrict external API access."
+            "Potential data exfiltration was flagged. If your AI agents need to call external APIs, "
+            "add those domains to the network egress allowlist so legitimate traffic flows freely."
         )
 
     if classifications.get("malicious_tool_use", 0) > 0:
         recommendations.append(
-            "Malicious tool use incidents — consider tightening AI tool allowlists."
+            "Some tool calls were flagged as risky. Review the specific tools involved — if they're "
+            "safe for your workflow, add them to the AI tool allowlist so your agents aren't slowed down."
         )
 
     if high_count > 3:
         recommendations.append(
-            f"{high_count} HIGH severity incidents — consider running propose_policy_tightening() for affected agent groups."
+            f"{high_count} HIGH severity events were caught. You can use the /propose endpoint "
+            "to get targeted rule suggestions that close the gaps without blocking legitimate work."
         )
 
     if not recommendations:
         recommendations.append(
-            "Incident volume is within normal range. Continue monitoring."
+            "Everything looks good — your AI agents are running freely and ANGELGRID is quietly "
+            "watching in the background. No action needed."
         )
 
     return recommendations

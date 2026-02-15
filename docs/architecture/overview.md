@@ -43,8 +43,10 @@
 
 ## Key Design Principles
 
+- **Guardian Angel, Not Gatekeeper**: ANGELGRID enables AI adoption. Most AI operations (analysis, reading, summarizing, reasoning) flow freely. We only intervene for genuinely dangerous actions — destructive commands, secret access, risky external calls.
+- **AI-First, Safety-Always**: We embrace AI agents, local models (Ollama), cloud models (Claude, OpenAI), and agent frameworks. ANGELGRID focuses on safe orchestration, not restricting which tools people use.
 - **Autonomous**: ANGELNODEs enforce policy locally even when Cloud is unreachable.
-- **Zero Trust for AI**: Every AI tool call is mediated — no implicit trust.
-- **Fail-Closed**: If the policy engine is unreachable, actions are blocked.
+- **Zero Trust with Zero Friction**: Every action is verified against policy, but the vast majority pass through transparently. Users shouldn't notice ANGELGRID until it saves them.
+- **Fail-Closed**: If the policy engine is unreachable, actions are blocked. This is the safety net of last resort.
 - **Structured Logging**: All decisions are machine-parseable JSON for forensics.
 - **Minimal Footprint**: The agent is a single Python process with no heavy dependencies.

@@ -1,11 +1,15 @@
 # ANGELGRID – Autonomous AI Defense Fabric
 
-ANGELGRID is a security suite designed to protect AI agents and underlying
-IT/cloud infrastructure from cyber threats including prompt injection, data
-exfiltration, misconfiguration, and malicious behavior.
+**Guardian angel, not gatekeeper.**
 
-The suite is autonomous, proactive, and continuously learning. It operates 24/7
-and enforces zero-trust policy around all AI tools and infrastructure operations.
+ANGELGRID is a security fabric that lets people use AI agents, local models,
+cloud APIs, and automations **as freely as they want** — while quietly protecting
+their systems, data, and infrastructure in the background.
+
+We don't block AI. We embrace it. ANGELGRID only intervenes when AI is about to
+do something genuinely dangerous: destructive shell commands, accessing secrets,
+modifying critical files, or calling risky external endpoints. Everything else —
+analysis, reading, summarizing, reasoning, creating — flows freely.
 
 ## Repository Structure
 
@@ -63,12 +67,14 @@ uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
 
 ## Core Concepts
 
-- **ANGELNODE** – Lightweight agent that evaluates every action against policy locally.
-- **AI Shield** – Zero-trust mediator for AI agent tool calls.
-- **PolicySet** – Versioned collection of rules distributed to agents.
-- **Fail-Closed** – If the engine is unreachable, actions are blocked by default.
+- **Guardian Angel** – ANGELGRID protects quietly. Most operations pass through with zero friction — only genuinely dangerous actions get blocked.
+- **AI-First** – We support any model (Ollama, Claude, OpenAI), any agent framework (OpenClaw, Claude Code, MoltBot), and any workflow. Use AI however you like.
+- **ANGELNODE** – Lightweight agent that evaluates actions locally. Fast, autonomous, always-on.
+- **AI Shield** – Mediator for AI agent tool calls. Safe tools flow freely; risky ones get flagged.
+- **Fail-Closed** – If the engine is unreachable, actions are blocked. Safety net of last resort, not the normal mode.
 
-See [docs/concepts/glossary.md](docs/concepts/glossary.md) for the full glossary.
+See [docs/concepts/glossary.md](docs/concepts/glossary.md) for the full glossary and
+[docs/concepts/angelgrid_ai.md](docs/concepts/angelgrid_ai.md) for our product philosophy.
 
 ---
 
