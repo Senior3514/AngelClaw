@@ -28,7 +28,13 @@ services:
       - ANGELNODE_CATEGORY_DEFAULTS_FILE=/app/angelnode/config/category_defaults.json
       - ANGELNODE_LOG_FILE=/var/log/angelgrid/decisions.jsonl
       - ANGELNODE_AGENT_ID=dev-agent-01
+      # Cloud sync — register on startup and poll for policy updates
+      - ANGELGRID_CLOUD_URL=http://cloud:8500
+      - ANGELGRID_TENANT_ID=dev-tenant
+      - ANGELGRID_SYNC_INTERVAL=60
     restart: unless-stopped
+    depends_on:
+      - cloud
 
   cloud:
     build:
@@ -45,8 +51,6 @@ services:
       - cloud-data:/data
     environment:
       - ANGELGRID_DATABASE_URL=sqlite:////data/angelgrid.db
-    depends_on:
-      - angelnode
     restart: unless-stopped
 
 volumes:
