@@ -1,6 +1,9 @@
-# ANGELGRID – Development docker-compose
+# ANGELGRID – Development docker-compose (legacy location)
 #
-# Starts both ANGELNODE and ANGELGRID Cloud for local development/testing.
+# Prefer using ops/docker-compose.yml instead:
+#   cd ops && docker compose up --build
+#
+# This file is kept for backwards compatibility.
 
 services:
   angelnode:
@@ -8,26 +11,29 @@ services:
       context: ../..
       dockerfile: ops/docker/Dockerfile.angelnode
     ports:
-      - "8400:8400"
+      - "127.0.0.1:8400:8400"
     volumes:
       - angelnode-logs:/var/log/angelgrid
     environment:
       - ANGELNODE_POLICY_FILE=/app/angelnode/config/default_policy.json
       - ANGELNODE_CATEGORY_DEFAULTS_FILE=/app/angelnode/config/category_defaults.json
       - ANGELNODE_LOG_FILE=/var/log/angelgrid/decisions.jsonl
+      - ANGELGRID_CLOUD_URL=http://cloud:8500
+      - ANGELGRID_TENANT_ID=dev-tenant
+      - ANGELGRID_SYNC_INTERVAL=60
+    depends_on:
+      - cloud
 
   cloud:
     build:
       context: ../..
       dockerfile: ops/docker/Dockerfile.cloud
-    ports:
-      - "8500:8500"
+    expose:
+      - "8500"
     volumes:
       - cloud-data:/data
     environment:
       - ANGELGRID_DATABASE_URL=sqlite:////data/angelgrid.db
-    depends_on:
-      - angelnode
 
 volumes:
   angelnode-logs:

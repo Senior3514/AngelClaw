@@ -52,6 +52,25 @@ is **BLOCK** (fail-closed).
 To override, edit `config/category_defaults.json` or set the
 `ANGELNODE_CATEGORY_DEFAULTS_FILE` environment variable to point to a custom file.
 
+## Cloud Sync
+
+When `ANGELGRID_CLOUD_URL` is set, ANGELNODE automatically:
+
+1. **Registers** with the Cloud on startup (`POST /api/v1/agents/register`),
+   receiving its Cloud-assigned `agent_id` and initial PolicySet.
+2. **Polls** for policy updates every `ANGELGRID_SYNC_INTERVAL` seconds
+   (`GET /api/v1/policies/current?agentId=...`).
+3. **Hot-reloads** the engine if the policy version has changed.
+4. **Updates** `policy_version` and `last_policy_sync` in the `/status` endpoint.
+5. **Logs** every sync attempt (success or failure) to the JSONL decision log
+   with `record_type: "cloud_sync"`.
+
+If the Cloud is unreachable, the agent continues enforcing its last-known
+policy — sync failures are logged but never stop policy enforcement (fail-closed).
+
+Without `ANGELGRID_CLOUD_URL` set, the agent runs in **standalone mode** using
+only the local policy file.
+
 ## /status Endpoint Security
 
 The `/status` endpoint returns read-only operational data (agent ID, policy
@@ -64,11 +83,17 @@ tokens, or policy rule content.
 
 ## Environment Variables
 
-| Variable                        | Description                                    | Default                          |
-|---------------------------------|------------------------------------------------|----------------------------------|
-| `ANGELNODE_POLICY_FILE`         | Path to the PolicySet JSON file                | `config/default_policy.json`     |
-| `ANGELNODE_CATEGORY_DEFAULTS_FILE` | Path to category defaults JSON              | `config/category_defaults.json`  |
-| `ANGELNODE_LOG_FILE`            | Path for structured decision log (JSONL)       | `logs/decisions.jsonl`           |
-| `ANGELNODE_AGENT_ID`            | Unique identifier for this agent               | `local-dev-agent`                |
-| `ANGELNODE_STATUS_TOKEN`        | Bearer token for `/status` (optional)          | *(unset — open on loopback)*     |
-| `ANGELNODE_EVALUATE_URL`        | URL of the local `/evaluate` endpoint          | `http://127.0.0.1:8400/evaluate` |
+| Variable                           | Description                                    | Default                          |
+|------------------------------------|------------------------------------------------|----------------------------------|
+| `ANGELNODE_POLICY_FILE`            | Path to the PolicySet JSON file                | `config/default_policy.json`     |
+| `ANGELNODE_CATEGORY_DEFAULTS_FILE` | Path to category defaults JSON                 | `config/category_defaults.json`  |
+| `ANGELNODE_LOG_FILE`               | Path for structured decision log (JSONL)       | `logs/decisions.jsonl`           |
+| `ANGELNODE_AGENT_ID`               | Unique identifier for this agent               | `local-dev-agent`                |
+| `ANGELNODE_STATUS_TOKEN`           | Bearer token for `/status` (optional)          | *(unset — open on loopback)*     |
+| `ANGELNODE_EVALUATE_URL`           | URL of the local `/evaluate` endpoint          | `http://127.0.0.1:8400/evaluate` |
+| `ANGELGRID_CLOUD_URL`             | Cloud backend URL (enables sync when set)      | *(unset — standalone mode)*      |
+| `ANGELGRID_TENANT_ID`             | Tenant identifier for multi-tenant Cloud       | `default`                        |
+| `ANGELGRID_SYNC_INTERVAL`         | Policy poll interval in seconds                | `60`                             |
+| `ANGELNODE_AGENT_TYPE`             | Agent type for registration                    | `server`                         |
+| `ANGELNODE_VERSION`                | Agent version reported to Cloud                | `0.2.0`                          |
+| `ANGELNODE_TAGS`                   | Comma-separated tags for agent registration    | *(empty)*                        |
