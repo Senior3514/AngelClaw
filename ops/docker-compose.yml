@@ -1,0 +1,54 @@
+# ANGELGRID – Local Development Compose
+#
+# Single-VPS setup for running ANGELNODE + Cloud backend.
+# Run from the ops/ directory:
+#
+#   cd ops
+#   docker compose up --build
+#
+# ANGELNODE is exposed on 127.0.0.1:8400 (host loopback only).
+# Cloud API is internal-only (reachable at http://cloud:8500 from
+# other containers, but not exposed to the host by default).
+
+services:
+  angelnode:
+    build:
+      context: ..
+      dockerfile: ops/docker/Dockerfile.angelnode
+    ports:
+      # SECURITY: bind to loopback so only the local host can reach the agent
+      - "127.0.0.1:8400:8400"
+    volumes:
+      - angelnode-logs:/var/log/angelgrid
+      # Mount config files so edits take effect without rebuilding
+      - ../angelnode/config/default_policy.json:/app/angelnode/config/default_policy.json:ro
+      - ../angelnode/config/category_defaults.json:/app/angelnode/config/category_defaults.json:ro
+    environment:
+      - ANGELNODE_POLICY_FILE=/app/angelnode/config/default_policy.json
+      - ANGELNODE_CATEGORY_DEFAULTS_FILE=/app/angelnode/config/category_defaults.json
+      - ANGELNODE_LOG_FILE=/var/log/angelgrid/decisions.jsonl
+      - ANGELNODE_AGENT_ID=dev-agent-01
+    restart: unless-stopped
+
+  cloud:
+    build:
+      context: ..
+      dockerfile: ops/docker/Dockerfile.cloud
+    # No host port mapping — cloud API is internal only.
+    # Other containers reach it at http://cloud:8500.
+    # Uncomment the next two lines to expose on the host for debugging:
+    # ports:
+    #   - "127.0.0.1:8500:8500"
+    expose:
+      - "8500"
+    volumes:
+      - cloud-data:/data
+    environment:
+      - ANGELGRID_DATABASE_URL=sqlite:////data/angelgrid.db
+    depends_on:
+      - angelnode
+    restart: unless-stopped
+
+volumes:
+  angelnode-logs:
+  cloud-data:
