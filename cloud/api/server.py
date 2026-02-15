@@ -1,7 +1,7 @@
 """ANGELGRID Cloud – SaaS Backend API Server.
 
 Central management plane for ANGELNODE fleet.  Handles agent registration,
-event ingestion, and policy distribution.
+event ingestion, policy distribution, and AI-assisted analysis.
 """
 
 from __future__ import annotations
@@ -18,6 +18,8 @@ from shared.models.agent_node import AgentNode, AgentRegistrationRequest, AgentS
 from shared.models.event import Event, EventBatch
 from shared.models.policy import PolicySet
 
+from ..ai_assistant.assistant import propose_policy_tightening, summarize_recent_incidents
+from ..ai_assistant.models import IncidentSummary, ProposedPolicyChanges
 from ..db.models import AgentNodeRow, Base, EventRow, PolicySetRow
 from ..db.session import engine, get_db
 
@@ -213,3 +215,66 @@ def get_current_policy(
         "rules": ps_row.rules_json,
         "version": ps_row.version_hash,
     }
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/ai/summary/incidents
+# ---------------------------------------------------------------------------
+
+@app.get(
+    "/api/v1/ai/summary/incidents",
+    response_model=IncidentSummary,
+    tags=["AI Assistant"],
+)
+def ai_summary_incidents(
+    tenantId: str = Query(..., description="Tenant ID to scope the summary"),
+    lookbackHours: int = Query(
+        default=24,
+        ge=1,
+        le=720,
+        description="How many hours back to look (1–720)",
+    ),
+    db: Session = Depends(get_db),
+):
+    """Summarize recent incidents for a tenant.
+
+    Returns aggregated counts by classification and severity, the top
+    affected agents, and deterministic recommendations.
+
+    This endpoint is strictly read-only — it queries data but never
+    modifies the database.
+    """
+    return summarize_recent_incidents(db, tenantId, lookback_hours=lookbackHours)
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/ai/propose/policy
+# ---------------------------------------------------------------------------
+
+@app.get(
+    "/api/v1/ai/propose/policy",
+    response_model=ProposedPolicyChanges,
+    tags=["AI Assistant"],
+)
+def ai_propose_policy(
+    agentGroupId: str = Query(
+        ..., description="Agent group tag to analyze (matches AgentNodeRow.tags)",
+    ),
+    lookbackHours: int = Query(
+        default=24,
+        ge=1,
+        le=720,
+        description="How many hours back to look (1–720)",
+    ),
+    db: Session = Depends(get_db),
+):
+    """Propose policy tightening for an agent group.
+
+    Analyzes recent high-severity events, identifies recurring patterns,
+    and returns structured rule proposals.  Proposals are never applied
+    automatically — they require explicit human approval.
+
+    This endpoint is strictly read-only — it queries data but never
+    modifies the database.
+    """
+    return propose_policy_tightening(db, agentGroupId, lookback_hours=lookbackHours)
