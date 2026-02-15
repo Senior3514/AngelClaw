@@ -1,0 +1,21 @@
+<!--
+  ANGELGRID – Wazuh Decoder
+
+  Parses structured JSON decision logs produced by ANGELNODE.
+  Each log line is a single JSON object with fields:
+    ts, event_id, agent_id, category, type, severity, action, reason,
+    matched_rule_id, risk_level, source
+-->
+
+<decoder name="angelgrid">
+  <prematch>\"action\":</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>
+
+<decoder name="angelgrid-fields">
+  <parent>angelgrid</parent>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+  <order>
+    action, severity, category, type, event_id, agent_id, reason, risk_level, source
+  </order>
+</decoder>

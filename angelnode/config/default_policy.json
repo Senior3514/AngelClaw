@@ -1,0 +1,80 @@
+{
+  "id": "default-bootstrap-policy",
+  "name": "ANGELGRID Bootstrap Policy",
+  "description": "Starter policy for initial ANGELNODE deployment. Blocks known-dangerous patterns, alerts on suspicious activity, and allows everything else.",
+  "rules": [
+    {
+      "id": "block-shell-rm-rf",
+      "scope": "global",
+      "match": {
+        "categories": ["shell"],
+        "types": ["exec"],
+        "detail_conditions": {
+          "command_pattern": "rm -rf /"
+        }
+      },
+      "action": "block",
+      "risk_level": "critical",
+      "description": "Block recursive root deletion",
+      "enabled": true
+    },
+    {
+      "id": "block-exfil-curl-post",
+      "scope": "global",
+      "match": {
+        "categories": ["network"],
+        "types": ["connect"],
+        "detail_conditions": {
+          "method": "POST",
+          "destination_suspicious": true
+        }
+      },
+      "action": "alert",
+      "risk_level": "high",
+      "description": "Alert on outbound POST to suspicious destinations",
+      "enabled": true
+    },
+    {
+      "id": "alert-ai-tool-shell",
+      "scope": "global",
+      "match": {
+        "categories": ["ai_tool"],
+        "types": ["tool_call"],
+        "detail_conditions": {
+          "tool_name": "bash"
+        }
+      },
+      "action": "alert",
+      "risk_level": "high",
+      "description": "Alert when an AI agent invokes a shell tool — requires human review",
+      "enabled": true
+    },
+    {
+      "id": "block-ai-tool-secrets-access",
+      "scope": "global",
+      "match": {
+        "categories": ["ai_tool"],
+        "types": ["tool_call"],
+        "detail_conditions": {
+          "accesses_secrets": true
+        }
+      },
+      "action": "block",
+      "risk_level": "critical",
+      "description": "Block AI tool calls that attempt to access secrets or credentials",
+      "enabled": true
+    },
+    {
+      "id": "audit-file-write",
+      "scope": "global",
+      "match": {
+        "categories": ["file"],
+        "types": ["write"]
+      },
+      "action": "audit",
+      "risk_level": "low",
+      "description": "Audit all file write operations for forensic review",
+      "enabled": true
+    }
+  ]
+}

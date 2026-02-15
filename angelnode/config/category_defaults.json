@@ -1,0 +1,15 @@
+{
+  "_doc": "Per-category default action when no PolicyRule matches an event. SECURITY: high-risk categories MUST default to 'block'. Only explicitly low-risk categories may default to 'allow'.",
+  "defaults": {
+    "ai_tool":  { "action": "block", "risk_level": "high",   "reason": "No rule matched AI tool call; default-deny for AI actions" },
+    "shell":    { "action": "block", "risk_level": "high",   "reason": "No rule matched shell execution; default-deny for shell" },
+    "file":     { "action": "block", "risk_level": "medium", "reason": "No rule matched file operation; default-deny for file access" },
+    "network":  { "action": "block", "risk_level": "high",   "reason": "No rule matched network activity; default-deny for network" },
+    "db":       { "action": "block", "risk_level": "medium", "reason": "No rule matched database operation; default-deny for DB access" },
+    "auth":     { "action": "block", "risk_level": "high",   "reason": "No rule matched auth event; default-deny for authentication changes" },
+    "config":   { "action": "alert", "risk_level": "medium", "reason": "No rule matched config change; default-alert for configuration" },
+    "system":   { "action": "audit", "risk_level": "low",    "reason": "No rule matched system event; default-audit for OS events" },
+    "logging":  { "action": "allow", "risk_level": "none",   "reason": "No rule matched logging event; default-allow for logging" },
+    "metric":   { "action": "allow", "risk_level": "none",   "reason": "No rule matched metric event; default-allow for metrics" }
+  }
+}

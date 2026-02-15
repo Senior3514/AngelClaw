@@ -1,0 +1,63 @@
+<!--
+  ANGELGRID – Wazuh Rules
+
+  Custom rules that trigger alerts when ANGELGRID logs events with
+  severity >= WARN.  Rule IDs 100200–100210 are reserved for ANGELGRID.
+
+  Severity mapping:
+    info / low  → no alert (logged only)
+    warn        → level 7  (low alert)
+    high        → level 10 (medium alert)
+    critical    → level 13 (high alert — triggers active response)
+-->
+
+<group name="angelgrid,">
+
+  <!-- Base rule: matches any ANGELGRID log line -->
+  <rule id="100200" level="3">
+    <decoded_as>angelgrid</decoded_as>
+    <description>ANGELGRID event received.</description>
+  </rule>
+
+  <!-- Severity: WARN — policy alert or suspicious activity -->
+  <rule id="100201" level="7">
+    <if_sid>100200</if_sid>
+    <field name="severity">warn</field>
+    <description>ANGELGRID WARN: $(reason) [category=$(category), type=$(type)]</description>
+    <group>angelgrid_warn,</group>
+  </rule>
+
+  <!-- Severity: HIGH — blocked action or high-risk tool use -->
+  <rule id="100202" level="10">
+    <if_sid>100200</if_sid>
+    <field name="severity">high</field>
+    <description>ANGELGRID HIGH: $(reason) [category=$(category), type=$(type)]</description>
+    <group>angelgrid_high,</group>
+  </rule>
+
+  <!-- Severity: CRITICAL — immediate response required -->
+  <rule id="100203" level="13">
+    <if_sid>100200</if_sid>
+    <field name="severity">critical</field>
+    <description>ANGELGRID CRITICAL: $(reason) [category=$(category), action=$(action)]</description>
+    <group>angelgrid_critical,</group>
+  </rule>
+
+  <!-- Action: BLOCK — any blocked action regardless of severity -->
+  <rule id="100204" level="10">
+    <if_sid>100200</if_sid>
+    <field name="action">block</field>
+    <description>ANGELGRID BLOCKED: $(reason) [category=$(category), type=$(type)]</description>
+    <group>angelgrid_block,</group>
+  </rule>
+
+  <!-- AI tool call with high risk — AI agent attempted dangerous operation -->
+  <rule id="100205" level="12">
+    <if_sid>100200</if_sid>
+    <field name="category">ai_tool</field>
+    <field name="risk_level">high|critical</field>
+    <description>ANGELGRID AI THREAT: AI agent tool call flagged — $(reason)</description>
+    <group>angelgrid_ai_threat,</group>
+  </rule>
+
+</group>
