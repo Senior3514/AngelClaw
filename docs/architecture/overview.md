@@ -205,9 +205,36 @@ and transparent observability. All new features are **read-only/suggest-only**
 
 | Table | Purpose |
 |-------|---------|
-| `guardian_reports` | Periodic heartbeat summaries |
-| `guardian_alerts` | Event-driven critical notifications |
-| `guardian_changes` | Policy/config change records |
+| `guardian_reports` | Periodic heartbeat summaries (fleet health, anomalies, policy changes) |
+| `guardian_alerts` | Event-driven critical notifications (secret exfil, severity spikes, flapping) |
+| `guardian_changes` | Policy/config change records (immutable audit trail) |
+
+### Deep Context for Decisions
+
+The `event_context` endpoint provides a comprehensive decision bundle:
+- **Policy evaluation**: re-evaluates the event against the bootstrap policy
+  to show which rule fired, the action taken, and the risk level
+- **Agent decision history**: the agent's last 20 events for behavioral context
+- **History window**: events from the same agent within +/- 5 minutes
+- **Related AI traffic**: AI tool calls in the same time window
+
+### Agent Timeline
+
+Each agent has a chronological timeline (`/api/v1/analytics/agent/timeline`)
+that combines events, policy changes, session boundaries, and AI tool calls.
+The Web UI shows this as a modal when clicking on an agent in Fleet Status.
+
+### Predictive Threat Vectors
+
+The threat matrix now includes predicted "next attack vectors" based on
+deterministic pattern correlation:
+- shell + network traffic → data exfiltration risk
+- AI tool calls + secret access → lateral movement risk
+- auth event spikes → privilege escalation risk
+- file modifications + shell activity → persistence risk
+
+Predictions are shown in the dashboard's threat landscape card and are
+available via the Guardian Chat.
 
 ## Operator Experience
 

@@ -109,7 +109,7 @@ async def llm_chat(req: LLMChatRequest) -> LLMChatResponse:
     safe_prompt = redact_secrets(req.prompt)
     prompt_had_secrets = safe_prompt != req.prompt
     if prompt_had_secrets:
-        logger.warning("Secrets detected and redacted from user prompt")
+        logger.warning("[LLM PROXY SECRET BLOCK] Secrets detected and redacted from user prompt before sending to LLM")
 
     # Build the messages array with the mandatory system prompt first
     messages: list[dict[str, str]] = [
@@ -192,7 +192,7 @@ async def llm_chat(req: LLMChatRequest) -> LLMChatResponse:
     # SECURITY: Redact any secrets from the LLM response before returning
     safe_answer = redact_secrets(answer or "(empty response from LLM)")
     if safe_answer != answer:
-        logger.warning("Secrets detected and redacted from LLM response")
+        logger.warning("[LLM PROXY SECRET BLOCK] Secrets detected and redacted from LLM response before returning to user")
 
     logger.info("LLM response — latency=%dms, answer_len=%d", latency_ms, len(safe_answer))
 

@@ -26,6 +26,7 @@ class GuardianReport(BaseModel):
     agents_offline: int = 0
     incidents_total: int = 0
     incidents_by_severity: dict[str, int] = Field(default_factory=dict)
+    policy_changes_since_last: int = 0
     anomalies: list[str] = Field(default_factory=list)
     summary: str = ""
 
@@ -78,6 +79,15 @@ class ChatResponse(BaseModel):
 # Event Context
 # ---------------------------------------------------------------------------
 
+class EvaluationResult(BaseModel):
+    """Policy evaluation result for an event."""
+
+    action: str = Field(description="ALLOW, BLOCK, ALERT, or AUDIT")
+    reason: str = ""
+    matched_rule_id: Optional[str] = None
+    risk_level: str = "unknown"
+
+
 class EventContext(BaseModel):
     event_id: str
     category: str
@@ -87,6 +97,11 @@ class EventContext(BaseModel):
     source: Optional[str] = None
     details: dict[str, Any] = Field(default_factory=dict)
     explanation: str = ""
+    evaluation: Optional[EvaluationResult] = None
+    agent_decision_history: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Last N decisions for the same agent",
+    )
     history_window: list[dict[str, Any]] = Field(default_factory=list)
     related_ai_traffic: list[dict[str, Any]] = Field(default_factory=list)
 

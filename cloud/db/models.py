@@ -92,6 +92,7 @@ class GuardianReportRow(Base):
     agents_offline = Column(Integer, default=0)
     incidents_total = Column(Integer, default=0)
     incidents_by_severity = Column(JSON, default=dict)
+    policy_changes_since_last = Column(Integer, default=0)
     anomalies = Column(JSON, default=list)
     summary = Column(Text, default="")
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

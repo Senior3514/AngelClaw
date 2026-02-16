@@ -159,9 +159,29 @@ async def evaluate_tool(request: ToolCallRequest):
 
     decision = result["decision"]
     action = decision["action"]
+    allowed = action in (PolicyAction.ALLOW.value, PolicyAction.AUDIT.value)
+
+    # Human-friendly decision log
+    if not allowed:
+        logger.warning(
+            "[AI SHIELD BLOCK] tool=%s agent=%s reason='%s' risk=%s correlation=%s",
+            request.tool_name, request.agent_id[:8], decision["reason"],
+            decision.get("risk_level", "none"), correlation_id[:8],
+        )
+    elif secret_detected:
+        logger.warning(
+            "[AI SHIELD SECRET] Secrets detected in tool=%s from agent=%s — action=%s correlation=%s",
+            request.tool_name, request.agent_id[:8], action, correlation_id[:8],
+        )
+    else:
+        logger.info(
+            "[AI SHIELD] tool=%s agent=%s action=%s risk=%s",
+            request.tool_name, request.agent_id[:8], action,
+            decision.get("risk_level", "none"),
+        )
 
     return ToolCallResponse(
-        allowed=action in (PolicyAction.ALLOW.value, PolicyAction.AUDIT.value),
+        allowed=allowed,
         action=action,
         reason=decision["reason"],
         risk_level=decision.get("risk_level", "none"),

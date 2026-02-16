@@ -14,7 +14,7 @@ import uuid
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 
-from cloud.db.models import AgentNodeRow, EventRow, GuardianReportRow
+from cloud.db.models import AgentNodeRow, EventRow, GuardianChangeRow, GuardianReportRow
 from cloud.db.session import SessionLocal
 
 logger = logging.getLogger("angelgrid.cloud.heartbeat")
@@ -75,9 +75,29 @@ def _run_heartbeat(tenant_id: str) -> GuardianReportRow:
             if count >= 10:
                 anomalies.append(f"Repeated pattern: {ev_type} occurred {count}x in last {LOOKBACK_MINUTES}min")
 
+        # Policy changes since last report
+        last_report = (
+            db.query(GuardianReportRow)
+            .filter(GuardianReportRow.tenant_id == tenant_id)
+            .order_by(GuardianReportRow.timestamp.desc())
+            .first()
+        )
+        changes_cutoff = last_report.timestamp if last_report else cutoff
+        policy_changes = (
+            db.query(GuardianChangeRow)
+            .filter(
+                GuardianChangeRow.tenant_id == tenant_id,
+                GuardianChangeRow.created_at >= changes_cutoff,
+            )
+            .count()
+        )
+        if policy_changes > 0:
+            anomalies.append(f"Policy/config: {policy_changes} change(s) since last report")
+
         summary = (
             f"{total} agents ({active} healthy, {degraded} degraded, {offline} offline), "
             f"{len(events)} events in last {LOOKBACK_MINUTES}min, "
+            f"{policy_changes} policy change(s), "
             f"{len(anomalies)} anomalies"
         )
 
@@ -91,13 +111,20 @@ def _run_heartbeat(tenant_id: str) -> GuardianReportRow:
             agents_offline=offline,
             incidents_total=len(events),
             incidents_by_severity=dict(sev_counter),
+            policy_changes_since_last=policy_changes,
             anomalies=anomalies,
             summary=summary,
         )
         db.add(row)
         db.commit()
 
-        logger.info("Guardian Report: %s", summary)
+        # Human-friendly summary lines
+        logger.info("[GUARDIAN REPORT] %s", summary)
+        if anomalies:
+            for a in anomalies:
+                logger.warning("[GUARDIAN ANOMALY] %s", a)
+        if offline > 0:
+            logger.warning("[GUARDIAN FLEET] %d agent(s) offline — investigate connectivity", offline)
         return row
     finally:
         db.close()

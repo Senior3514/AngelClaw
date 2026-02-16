@@ -64,8 +64,8 @@ _SECRET_VALUE_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("hex_secret", re.compile(r"(?i)(secret|token|key|password)\s*[:=]\s*['\"]?[0-9a-f]{32,}['\"]?")),
     # Database connection strings with passwords
     ("db_connection_string", re.compile(r"(?i)(postgres|mysql|mongodb|redis)://[^:]+:[^@]+@")),
-    # OpenAI
-    ("openai_key", re.compile(r"sk-[0-9a-zA-Z]{20,}")),
+    # OpenAI (classic sk-... and project sk-proj-...)
+    ("openai_key", re.compile(r"sk-[0-9a-zA-Z\-_]{20,}")),
     # Anthropic
     ("anthropic_key", re.compile(r"sk-ant-[0-9a-zA-Z\-]{20,}")),
 ]

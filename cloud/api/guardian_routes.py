@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 from cloud.api.guardian_models import (
     ChatRequest,
     ChatResponse,
+    EvaluationResult,
     EventContext,
     GuardianAlert,
     GuardianChange,
@@ -78,6 +79,7 @@ def recent_reports(
             agents_offline=r.agents_offline,
             incidents_total=r.incidents_total,
             incidents_by_severity=r.incidents_by_severity or {},
+            policy_changes_since_last=r.policy_changes_since_last or 0,
             anomalies=r.anomalies or [],
             summary=r.summary or "",
         )
@@ -188,11 +190,61 @@ def event_context(
         .all()
     )
 
-    # Build explanation
+    # Policy evaluation — re-evaluate against bootstrap policy to show which rule fired
+    evaluation = None
     explanation = f"Event {event.category}/{event.type} with severity {event.severity}"
     if event.source:
         explanation += f" from {event.source}"
     explanation += f". Occurred at {event.timestamp.isoformat()}."
+
+    try:
+        from pathlib import Path as _Path
+        from shared.models.event import Event as _Event, EventCategory, Severity
+        from angelnode.core.engine import PolicyEngine
+
+        ev = _Event(
+            id=event.id,
+            agent_id=event.agent_id,
+            timestamp=event.timestamp,
+            category=EventCategory(event.category),
+            type=event.type,
+            severity=Severity(event.severity),
+            details=event.details or {},
+            source=event.source,
+        )
+        policy_path = (
+            _Path(__file__).resolve().parent.parent.parent
+            / "angelnode" / "config" / "default_policy.json"
+        )
+        if policy_path.exists():
+            eng = PolicyEngine.from_file(policy_path)
+            decision = eng.evaluate(ev)
+            evaluation = EvaluationResult(
+                action=decision.action.value.upper(),
+                reason=decision.reason,
+                matched_rule_id=decision.matched_rule_id,
+                risk_level=decision.risk_level.value,
+            )
+            explanation = (
+                f"Action: {decision.action.value.upper()}. "
+                f"Reason: {decision.reason}. "
+                f"Risk level: {decision.risk_level.value}."
+            )
+    except Exception:
+        logger.debug("Policy evaluation unavailable for event %s", eventId)
+
+    # Agent's recent decision history (last 20 events from same agent, before this event)
+    agent_history = (
+        db.query(EventRow)
+        .filter(
+            EventRow.agent_id == event.agent_id,
+            EventRow.timestamp <= event.timestamp,
+            EventRow.id != event.id,
+        )
+        .order_by(EventRow.timestamp.desc())
+        .limit(20)
+        .all()
+    )
 
     safe_details = redact_dict(event.details) if event.details else {}
     safe_explanation = redact_secrets(explanation)
@@ -206,6 +258,17 @@ def event_context(
         source=event.source,
         details=safe_details,
         explanation=safe_explanation,
+        evaluation=evaluation,
+        agent_decision_history=[
+            {
+                "id": h.id,
+                "timestamp": h.timestamp.isoformat(),
+                "category": h.category,
+                "type": h.type,
+                "severity": h.severity,
+            }
+            for h in agent_history
+        ],
         history_window=[
             {
                 "id": h.id,

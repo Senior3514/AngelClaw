@@ -248,9 +248,14 @@ def ingest_events(
     # V2: Check for critical patterns via the event bus
     from cloud.services.event_bus import check_for_alerts
     try:
-        check_for_alerts(db, rows)
+        alerts = check_for_alerts(db, rows)
+        if alerts:
+            logger.info(
+                "[EVENT INGEST] %d event(s) ingested from agent %s — %d alert(s) triggered",
+                len(rows), batch.agent_id[:8], len(alerts),
+            )
     except Exception:
-        logger.exception("Event bus alert check failed (non-fatal)")
+        logger.exception("[EVENT INGEST] Event bus alert check failed (non-fatal)")
 
     return {
         "accepted": len(rows),

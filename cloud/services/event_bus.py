@@ -120,5 +120,11 @@ def check_for_alerts(db: Session, events: list[EventRow], tenant_id: str = "dev-
     if alerts:
         db.add_all(alerts)
         db.commit()
+        for a in alerts:
+            logger.warning(
+                "[GUARDIAN ALERT] %s | severity=%s | %s | agents=%s",
+                a.alert_type, a.severity, a.title,
+                ",".join(a.related_agent_ids[:3]) if a.related_agent_ids else "none",
+            )
 
     return alerts

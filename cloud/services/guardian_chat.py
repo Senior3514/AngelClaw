@@ -47,8 +47,12 @@ _INTENT_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("changes", re.compile(r"(?i)(change|what.*change|recent.*update|modif|policy.*update)")),
     ("incidents", re.compile(r"(?i)(incident|breach|attack|event|blocked|critical|high.sev)")),
     ("about", re.compile(r"(?i)(who.*are.*you|what.*are.*you|about|introduce|guardian)")),
+    ("status_report", re.compile(r"(?i)(what.*been.*doing|what.*you.*doing|status.*report|guardian.*report|doing.*lately|been.*up.*to|activity)")),
     ("help", re.compile(r"(?i)(help|what.*can.*you|how.*do|command|feature)")),
 ]
+
+# UUID pattern for event ID extraction
+_EVENT_ID_RE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", re.IGNORECASE)
 
 
 def detect_intent(prompt: str) -> str:
@@ -212,6 +216,91 @@ def _handle_propose(db: Session, tenant_id: str) -> tuple[str, list[ActionSugges
     return "\n".join(lines), actions, ["/api/v1/assistant/propose"]
 
 
+def _handle_explain(db: Session, prompt: str) -> tuple[str, list[ActionSuggestion], list[str]]:
+    """Handle explain intent — extract event ID from prompt and explain with context."""
+    from cloud.ai_assistant.assistant import explain_event_with_context
+
+    match = _EVENT_ID_RE.search(prompt)
+    if not match:
+        return (
+            "To explain a specific event, I need an event ID. "
+            "You can find event IDs in the alerts feed or incidents list, "
+            "then ask me: \"Explain event <id>\".\n\n"
+            "Or try asking about recent incidents to see what's been happening.",
+            [ActionSuggestion(
+                action_type="review_incidents",
+                title="View recent events",
+                description="See the alerts feed for event IDs",
+                metadata={"endpoint": "/api/v1/incidents/recent"},
+            )],
+            ["/api/v1/assistant/explain"],
+        )
+
+    event_id = match.group(0)
+    result = explain_event_with_context(db, event_id)
+
+    if "error" in result:
+        return (
+            f"I couldn't find event `{event_id}`. Double-check the ID and try again.",
+            [], [],
+        )
+
+    lines = [
+        f"Here's what happened with event `{event_id}`:\n",
+        f"  **Category**: {result['category']}/{result['type']}",
+        f"  **Severity**: {result['severity']}",
+        f"  **Decision**: {result['explanation']}",
+    ]
+
+    ctx = result.get("context_window", [])
+    if ctx:
+        lines.append(f"\n  **Context window** ({len(ctx)} events nearby):")
+        for ev in ctx[:5]:
+            lines.append(f"    - {ev['category']}/{ev['type']} [{ev['severity']}] at {ev['timestamp']}")
+
+    actions = [ActionSuggestion(
+        action_type="check_event",
+        title="View full context",
+        description=f"Open event context for {event_id[:8]}...",
+        metadata={"endpoint": f"/api/v1/guardian/event_context?eventId={event_id}"},
+    )]
+    return "\n".join(lines), actions, [f"/api/v1/guardian/event_context?eventId={event_id}"]
+
+
+def _handle_status_report(db: Session, tenant_id: str) -> tuple[str, list[ActionSuggestion], list[str]]:
+    """Handle 'what have you been doing?' queries using guardian reports."""
+    reports = (
+        db.query(GuardianReportRow)
+        .filter(GuardianReportRow.tenant_id == tenant_id)
+        .order_by(GuardianReportRow.timestamp.desc())
+        .limit(3)
+        .all()
+    )
+    if not reports:
+        return (
+            "I just started watching — no reports yet. "
+            "I'll generate my first status report within 5 minutes.",
+            [], [],
+        )
+
+    latest = reports[0]
+    lines = [
+        "Here's what I've been doing:\n",
+        f"  **Latest report** ({latest.timestamp.strftime('%Y-%m-%d %H:%M UTC')}):",
+        f"    {latest.summary}",
+    ]
+    if latest.anomalies:
+        lines.append(f"    Anomalies detected: {', '.join(latest.anomalies[:3])}")
+    if len(reports) > 1:
+        lines.append(f"\n  I've generated {len(reports)} reports recently. All stored and available at /api/v1/guardian/reports/recent.")
+
+    lines.append(
+        "\nI'm continuously monitoring your fleet, detecting critical patterns, "
+        "and tracking policy changes — all in the background."
+    )
+    return "\n".join(lines), [], ["/api/v1/guardian/reports/recent"]
+
+
 def _handle_about() -> tuple[str, list[ActionSuggestion], list[str]]:
     return (
         "I'm your ANGELGRID Guardian Angel — an autonomous security companion "
@@ -234,7 +323,8 @@ def _handle_help() -> tuple[str, list[ActionSuggestion], list[str]]:
         "  **Alerts** — \"Any guardian alerts?\" / \"Critical notifications?\"\n"
         "  **Changes** — \"What changed recently?\" / \"Policy updates?\"\n"
         "  **Proposals** — \"Suggest policy improvements\" / \"Tighten security\"\n"
-        "  **Explain** — \"Why was this event blocked?\"\n"
+        "  **Explain** — \"Explain event <event-id>\" / \"Why was <event-id> blocked?\"\n"
+        "  **Status report** — \"What have you been doing?\" / \"Show me your reports\"\n"
         "  **About** — \"Who are you?\" / \"What do you do?\"\n\n"
         "I'm always watching in the background. Ask me anything about your security posture!",
         [], [],
@@ -275,10 +365,10 @@ def _handle_general(db: Session, tenant_id: str) -> tuple[str, list[ActionSugges
 async def handle_chat(db: Session, req: ChatRequest) -> ChatResponse:
     """Process a chat request. Deterministic by default, LLM-backed if enabled."""
     intent = detect_intent(req.prompt)
-    logger.info("Guardian Chat — intent=%s, prompt_len=%d", intent, len(req.prompt))
+    logger.info("[GUARDIAN CHAT] intent=%s prompt_len=%d tenant=%s", intent, len(req.prompt), req.tenant_id)
 
     # Gather deterministic response
-    answer, actions, refs = _dispatch_intent(db, intent, req.tenant_id)
+    answer, actions, refs = _dispatch_intent(db, intent, req.tenant_id, req.prompt)
 
     # Try LLM enrichment if enabled
     llm_answer = await _try_llm_enrichment(req.prompt, answer, intent)
@@ -297,7 +387,7 @@ async def handle_chat(db: Session, req: ChatRequest) -> ChatResponse:
 
 
 def _dispatch_intent(
-    db: Session, intent: str, tenant_id: str,
+    db: Session, intent: str, tenant_id: str, prompt: str = "",
 ) -> tuple[str, list[ActionSuggestion], list[str]]:
     """Route to the appropriate deterministic handler."""
     if intent == "incidents":
@@ -314,22 +404,12 @@ def _dispatch_intent(
         return _handle_propose(db, tenant_id)
     elif intent == "about":
         return _handle_about()
+    elif intent == "status_report":
+        return _handle_status_report(db, tenant_id)
     elif intent == "help":
         return _handle_help()
     elif intent == "explain":
-        return (
-            "To explain a specific event, I need an event ID. "
-            "You can find event IDs in the alerts feed or incidents list, "
-            "then ask me: \"Explain event <id>\".\n\n"
-            "Or try asking about recent incidents to see what's been happening.",
-            [ActionSuggestion(
-                action_type="review_incidents",
-                title="View recent events",
-                description="See the alerts feed for event IDs",
-                metadata={"endpoint": "/api/v1/incidents/recent"},
-            )],
-            ["/api/v1/assistant/explain"],
-        )
+        return _handle_explain(db, prompt)
     else:
         return _handle_general(db, tenant_id)
 

@@ -277,6 +277,55 @@ Predictions appear in the threat matrix and are available via the chat.
 
 ---
 
+### Deep Context for Decisions
+
+V2 enhances every decision with deep contextual understanding:
+
+**Event Context Bundle** (`GET /api/v1/guardian/event_context`):
+For any event, the system returns:
+- The event itself with full details
+- **Policy evaluation**: which rule fired, the action taken, risk level
+- **History window**: events from the same agent within +/- 5 minutes
+- **Agent decision history**: the agent's last 20 events (behavioral context)
+- **Related AI traffic**: AI tool calls in the same time window
+
+This bundle powers both the chat explanations and the dashboard's event
+detail views.
+
+**Chat Explain with Context**: When a user asks "Explain event <id>", the
+chat extracts the event ID, re-evaluates it against the bootstrap policy,
+and returns a rich explanation that includes the matched rule, surrounding
+context, and the agent's recent behavioral pattern.
+
+### Agent Timeline
+
+Each agent has a chronological timeline accessible via:
+- `GET /api/v1/analytics/agent/timeline?agentId=...&hours=24`
+- Web UI: click any agent in Fleet Status to open the timeline modal
+
+The timeline combines:
+- Security events (with severity color-coding)
+- Policy changes (version updates)
+- Session boundaries (5-minute gaps)
+- AI tool calls (highlighted separately)
+
+The AI Assistant uses timelines to provide contextual explanations like:
+"Over the last 24h this agent had X blocks, Y warnings, and a policy
+update at T."
+
+### Operator Experience: "What Have You Been Doing?"
+
+When an operator asks the guardian "What have you been doing?", the chat
+pulls from the stored guardian reports to show:
+- Latest heartbeat summary (fleet health, event counts, anomalies)
+- Number of reports generated
+- Policy changes tracked since last report
+
+This makes ANGELGRID's autonomous operation transparent — operators always
+know what the system has been watching and detecting.
+
+---
+
 ## What ANGELGRID is NOT
 
 - **Not an AI blocker.** We don't restrict which models, tools, or frameworks

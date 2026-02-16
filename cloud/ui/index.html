@@ -102,7 +102,7 @@
   }
 
   /* Stats row */
-  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
   .stat-card {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius); padding: 14px; text-align: center;
@@ -130,7 +130,8 @@
     letter-spacing: 0.5px; color: var(--text-dim); border-bottom: 1px solid var(--border);
   }
   .agent-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
-  .agent-table tr:hover { background: var(--surface2); }
+  .agent-table tr:hover { background: var(--surface2); cursor: pointer; }
+  .agent-table tr.clickable:active { background: var(--accent-glow); }
   .status-badge {
     display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 10px; font-weight: 600;
   }
@@ -162,6 +163,18 @@
   .threat-label { width: 80px; font-size: 11px; color: var(--text-dim); text-align: right; }
   .threat-bar-bg { flex: 1; height: 20px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
   .threat-bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 6px; font-size: 10px; font-weight: 600; min-width: 24px; }
+  .prediction-list { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+  .prediction-item {
+    display: flex; align-items: center; gap: 8px; padding: 4px 8px;
+    font-size: 11px; border-radius: 6px; margin-bottom: 3px; background: var(--surface2);
+  }
+  .prediction-conf {
+    font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 6px;
+    min-width: 36px; text-align: center;
+  }
+  .conf-high { background: var(--red-dim); color: var(--red); }
+  .conf-med { background: var(--yellow-dim); color: var(--yellow); }
+  .conf-low { background: var(--accent-glow); color: var(--accent); }
 
   /* Chat panel */
   .chat-header {
@@ -214,6 +227,66 @@
 
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
+  /* Timeline Modal */
+  .modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center;
+  }
+  .modal-overlay.visible { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    width: 680px; max-width: 90vw; max-height: 80vh; display: flex; flex-direction: column;
+  }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+  }
+  .modal-header h2 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .modal-close {
+    background: none; border: none; color: var(--text-dim); font-size: 20px;
+    cursor: pointer; padding: 4px 8px; border-radius: 6px;
+  }
+  .modal-close:hover { background: var(--surface2); color: var(--text); }
+  .modal-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+
+  /* Timeline entries */
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .tl-entry {
+    display: flex; gap: 12px; padding: 8px 0; border-left: 2px solid var(--border);
+    margin-left: 12px; padding-left: 16px; position: relative;
+  }
+  .tl-entry::before {
+    content: ''; position: absolute; left: -5px; top: 12px;
+    width: 8px; height: 8px; border-radius: 50%; background: var(--border);
+  }
+  .tl-entry.tl-event::before { background: var(--accent); }
+  .tl-entry.tl-policy::before { background: var(--yellow); }
+  .tl-entry.tl-session::before { background: var(--green); }
+  .tl-entry.tl-ai::before { background: #a78bfa; }
+  .tl-entry.tl-critical::before { background: var(--red); }
+  .tl-entry.tl-high::before { background: var(--orange); }
+  .tl-time { font-size: 10px; color: var(--text-dim); min-width: 70px; font-family: var(--mono); }
+  .tl-content { flex: 1; }
+  .tl-summary { font-size: 12px; }
+  .tl-type-badge {
+    font-size: 9px; padding: 0 5px; border-radius: 4px; font-weight: 600;
+    display: inline-block; margin-right: 4px;
+  }
+  .tl-type-event { background: var(--accent-glow); color: var(--accent); }
+  .tl-type-policy { background: var(--yellow-dim); color: var(--yellow); }
+  .tl-type-session { background: var(--green-dim); color: var(--green); }
+  .tl-type-ai { background: rgba(167,139,250,0.15); color: #a78bfa; }
+
+  /* Guardian report strip */
+  .report-strip {
+    display: flex; gap: 8px; align-items: center; font-size: 11px; color: var(--text-dim);
+    padding: 8px 12px; background: var(--surface2); border-radius: 8px; overflow-x: auto;
+  }
+  .report-strip .rpt-item { white-space: nowrap; }
+  .report-strip .rpt-label { color: var(--text-dim); }
+  .report-strip .rpt-val { color: var(--text); font-weight: 600; }
+  .report-strip .rpt-sep { color: var(--border); }
+
   @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; height: auto; }
     .right-panel { border-left: none; border-top: 1px solid var(--border); min-height: 400px; }
@@ -238,6 +311,17 @@
   <!-- LEFT PANEL — Dashboard -->
   <div class="left-panel">
 
+    <!-- Latest Guardian Report Strip -->
+    <div class="report-strip" id="report-strip">
+      <span class="rpt-item"><span class="rpt-label">Last report:</span> <span class="rpt-val" id="rpt-time">--</span></span>
+      <span class="rpt-sep">|</span>
+      <span class="rpt-item"><span class="rpt-label">Events:</span> <span class="rpt-val" id="rpt-events">--</span></span>
+      <span class="rpt-sep">|</span>
+      <span class="rpt-item"><span class="rpt-label">Anomalies:</span> <span class="rpt-val" id="rpt-anomalies">--</span></span>
+      <span class="rpt-sep">|</span>
+      <span class="rpt-item"><span class="rpt-label">Policy changes:</span> <span class="rpt-val" id="rpt-policy">--</span></span>
+    </div>
+
     <!-- Stats Row -->
     <div class="stats" id="stats">
       <div class="stat-card"><div class="stat-value" id="stat-agents">-</div><div class="stat-label">Agents</div></div>
@@ -245,6 +329,7 @@
       <div class="stat-card"><div class="stat-value" style="color:var(--green)" id="stat-blocked">-</div><div class="stat-label">Blocked</div></div>
       <div class="stat-card"><div class="stat-value" style="color:var(--accent)" id="stat-policies">-</div><div class="stat-label">Rules</div></div>
       <div class="stat-card"><div class="stat-value" style="color:var(--red)" id="stat-alerts">-</div><div class="stat-label">Alerts</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--yellow)" id="stat-predictions">-</div><div class="stat-label">Predictions</div></div>
     </div>
 
     <!-- Guardian Alerts -->
@@ -276,6 +361,7 @@
           <span class="card-badge">By category</span>
         </div>
         <div class="threat-chart" id="threat-chart"><div class="loading">Loading...</div></div>
+        <div class="prediction-list" id="prediction-list"></div>
       </div>
     </div>
 
@@ -298,7 +384,7 @@
     <div class="chat-messages" id="chat-messages">
       <div class="chat-msg system">
         Hi! I'm your ANGELGRID Guardian Angel. I watch over your fleet autonomously and can answer questions about incidents, threats, agents, policy, and more.<br><br>
-        Try: "What happened recently?" or "Any threats?"
+        Try: "What happened recently?", "Any threats?", or "What have you been doing?"
       </div>
     </div>
     <div id="chat-typing" class="chat-typing" style="display:none">Guardian is thinking...</div>
@@ -309,19 +395,45 @@
   </div>
 </div>
 
+<!-- Agent Timeline Modal -->
+<div class="modal-overlay" id="timeline-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2><span>&#128337;</span> <span id="tl-agent-name">Agent Timeline</span></h2>
+      <button class="modal-close" onclick="closeTimeline()">&times;</button>
+    </div>
+    <div class="modal-body" id="tl-body">
+      <div class="loading">Loading timeline...</div>
+    </div>
+  </div>
+</div>
+
 <script>
 const BASE = window.location.origin;
 const chatHistory = [];
+let threatPredictionCount = 0;
 
 const sevIcon = s => ({critical:'&#9888;&#65039;',high:'&#128308;',warn:'&#128992;',medium:'&#128992;',low:'&#128309;',info:'&#128310;'}[s]||'&#9679;');
 const sevClass = s => 'sev-'+(s==='warn'?'medium':s);
 const statusClass = s => 'status-'+(s==='active'?'active':s==='degraded'?'degraded':'offline');
 const ago = ts => { if(!ts) return 'never'; const d=new Date(ts); const m=Math.floor((Date.now()-d)/60000); return m<1?'just now':m<60?m+'m ago':m<1440?Math.floor(m/60)+'h ago':Math.floor(m/1440)+'d ago'; };
-const catColor = c => ({shell:'var(--red)',network:'var(--orange)',file:'var(--yellow)',ai_tool:'var(--accent)',db:'#a78bfa',auth:'var(--red)',system:'var(--text-dim)'}[c]||'var(--accent)');
+const catColor = c => ({shell:'var(--red)',network:'var(--orange)',file:'var(--yellow)',ai_tool:'var(--accent)',db:'#a78bfa',auth:'var(--red)',config:'var(--yellow)',system:'var(--text-dim)'}[c]||'var(--accent)');
 const esc = t => t ? t.replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
+const fmtTime = ts => { if(!ts) return '--'; const d = new Date(ts); return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); };
 
 async function fetchJSON(path) {
   try { const r = await fetch(BASE + path); if(!r.ok) return null; return await r.json(); } catch { return null; }
+}
+
+// Guardian Reports Strip
+async function loadReportStrip() {
+  const data = await fetchJSON('/api/v1/guardian/reports/recent?tenantId=dev-tenant&limit=1');
+  if(!data || !data.length) return;
+  const r = data[0];
+  document.getElementById('rpt-time').textContent = ago(r.timestamp);
+  document.getElementById('rpt-events').textContent = r.incidents_total;
+  document.getElementById('rpt-anomalies').textContent = (r.anomalies||[]).length;
+  document.getElementById('rpt-policy').textContent = r.policy_changes_since_last || 0;
 }
 
 // Guardian Alerts
@@ -342,7 +454,7 @@ async function loadGuardianAlerts() {
   return data.length;
 }
 
-// Fleet
+// Fleet — clickable rows open timeline
 async function loadFleet() {
   const agents = await fetchJSON('/api/v1/agents');
   const el = document.getElementById('fleet-table');
@@ -350,7 +462,7 @@ async function loadFleet() {
   if(!agents || !agents.length) { el.innerHTML='<div class="empty">No agents registered.</div>'; countEl.textContent='0'; return agents||[]; }
   countEl.textContent = agents.length+' agent'+(agents.length!==1?'s':'');
   el.innerHTML = '<table class="agent-table"><thead><tr><th>Host</th><th>Status</th><th>OS</th><th>Version</th><th>Seen</th></tr></thead><tbody>' +
-    agents.map(a => '<tr><td>'+esc(a.hostname)+'</td><td><span class="status-badge '+statusClass(a.status)+'">'+esc(a.status)+'</span></td><td>'+esc(a.os)+'</td><td>'+esc(a.version)+'</td><td>'+ago(a.last_seen_at)+'</td></tr>').join('') +
+    agents.map(a => '<tr class="clickable" onclick="openTimeline(\''+esc(a.agent_id)+'\',\''+esc(a.hostname)+'\')" title="Click to view timeline"><td>'+esc(a.hostname)+'</td><td><span class="status-badge '+statusClass(a.status)+'">'+esc(a.status)+'</span></td><td>'+esc(a.os)+'</td><td>'+esc(a.version)+'</td><td>'+ago(a.last_seen_at)+'</td></tr>').join('') +
     '</tbody></table>';
   return agents;
 }
@@ -366,16 +478,43 @@ async function loadAlerts() {
   return events;
 }
 
-// Threat matrix
+// Threat matrix with predictions
 async function loadThreats() {
   const data = await fetchJSON('/api/v1/analytics/threat-matrix?lookback_hours=24');
   const el = document.getElementById('threat-chart');
-  if(!data || !data.length) { el.innerHTML='<div class="empty">No threat data.</div>'; return; }
+  const predEl = document.getElementById('prediction-list');
+  if(!data || !data.length) { el.innerHTML='<div class="empty">No threat data.</div>'; predEl.innerHTML=''; threatPredictionCount=0; return; }
   const max = Math.max(...data.map(d=>d.total_events),1);
   el.innerHTML = data.slice(0,6).map(d => {
     const pct = Math.max(8, (d.total_events/max)*100);
     return '<div class="threat-row"><span class="threat-label">'+esc(d.category)+'</span><div class="threat-bar-bg"><div class="threat-bar-fill" style="width:'+pct+'%;background:'+catColor(d.category)+'">'+d.total_events+'</div></div></div>';
   }).join('');
+
+  // Collect unique predictions across all categories
+  const seen = new Set();
+  const predictions = [];
+  data.forEach(d => {
+    (d.predicted_vectors||[]).forEach(p => {
+      if(!seen.has(p.vector_name)) {
+        seen.add(p.vector_name);
+        predictions.push(p);
+      }
+    });
+  });
+  predictions.sort((a,b) => b.confidence - a.confidence);
+  threatPredictionCount = predictions.length;
+
+  if(predictions.length) {
+    predEl.innerHTML = '<div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;font-weight:600">Predicted Next Vectors</div>' +
+      predictions.map(p => {
+        const pct = Math.round(p.confidence*100);
+        const cls = pct>=70?'conf-high':pct>=40?'conf-med':'conf-low';
+        const name = p.vector_name.replace(/_/g,' ');
+        return '<div class="prediction-item"><span class="prediction-conf '+cls+'">'+pct+'%</span><span>'+esc(name)+'</span></div>';
+      }).join('');
+  } else {
+    predEl.innerHTML = '';
+  }
 }
 
 // Stats
@@ -388,7 +527,55 @@ async function loadStats(agents, events, alertCount) {
   const ruleCount = policies && policies.length ? policies[0].rule_count : 0;
   document.getElementById('stat-policies').textContent = ruleCount;
   document.getElementById('stat-alerts').textContent = alertCount || 0;
+  document.getElementById('stat-predictions').textContent = threatPredictionCount;
 }
+
+// Agent Timeline Modal
+async function openTimeline(agentId, hostname) {
+  const modal = document.getElementById('timeline-modal');
+  const body = document.getElementById('tl-body');
+  const name = document.getElementById('tl-agent-name');
+  name.textContent = hostname + ' Timeline (24h)';
+  body.innerHTML = '<div class="loading">Loading timeline...</div>';
+  modal.classList.add('visible');
+
+  const data = await fetchJSON('/api/v1/analytics/agent/timeline?agentId='+agentId+'&hours=24');
+  if(!data || !data.entries || !data.entries.length) {
+    body.innerHTML = '<div class="empty">No activity in the last 24 hours for this agent.</div>';
+    return;
+  }
+
+  let html = '<div style="font-size:11px;color:var(--text-dim);margin-bottom:12px">'+data.total_events+' events in the last '+data.hours+' hours</div>';
+  html += '<div class="timeline">';
+  data.entries.forEach(e => {
+    const t = e.entry_type;
+    let cls = 'tl-event';
+    let badge = '<span class="tl-type-badge tl-type-event">event</span>';
+    if(t==='policy_change') { cls='tl-policy'; badge='<span class="tl-type-badge tl-type-policy">policy</span>'; }
+    else if(t==='session_start') { cls='tl-session'; badge='<span class="tl-type-badge tl-type-session">session</span>'; }
+    else if(t==='ai_tool_call') { cls='tl-ai'; badge='<span class="tl-type-badge tl-type-ai">ai tool</span>'; }
+    if(e.severity==='critical') cls += ' tl-critical';
+    else if(e.severity==='high') cls += ' tl-high';
+
+    const ts = new Date(e.timestamp);
+    const timeStr = ts.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    html += '<div class="tl-entry '+cls+'"><span class="tl-time">'+timeStr+'</span><div class="tl-content"><div class="tl-summary">'+badge+' '+esc(e.summary);
+    if(e.severity) html += ' <span class="alert-sev '+sevClass(e.severity)+'">'+esc(e.severity)+'</span>';
+    html += '</div></div></div>';
+  });
+  html += '</div>';
+  body.innerHTML = html;
+}
+
+function closeTimeline() {
+  document.getElementById('timeline-modal').classList.remove('visible');
+}
+// Close modal on overlay click
+document.getElementById('timeline-modal').addEventListener('click', function(e) {
+  if(e.target === this) closeTimeline();
+});
+// Close modal on Escape
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeTimeline(); });
 
 // Chat
 async function sendChat() {
@@ -399,7 +586,6 @@ async function sendChat() {
   const text = input.value.trim();
   if(!text) return;
 
-  // Add user message
   chatHistory.push({role:'user', content:text});
   msgs.innerHTML += '<div class="chat-msg user">'+esc(text)+'</div>';
   input.value = '';
@@ -418,7 +604,6 @@ async function sendChat() {
       chatHistory.push({role:'system', content:data.answer});
       responseHtml = '<div class="chat-msg system">' + formatAnswer(data.answer);
 
-      // Action suggestion cards
       if(data.actions && data.actions.length) {
         responseHtml += '<div class="actions">';
         data.actions.forEach(a => {
@@ -427,7 +612,6 @@ async function sendChat() {
         responseHtml += '</div>';
       }
 
-      // References
       if(data.references && data.references.length) {
         responseHtml += '<div class="chat-refs">Refs: '+data.references.map(r=>'<a href="'+r+'" target="_blank">'+esc(r)+'</a>').join(', ')+'</div>';
       }
@@ -448,8 +632,7 @@ async function sendChat() {
 }
 
 function formatAnswer(text) {
-  // Simple markdown: **bold**, newlines
-  return esc(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  return esc(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`([^`]+)`/g, '<code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-family:var(--mono);font-size:11px">$1</code>').replace(/\n/g, '<br>');
 }
 
 document.getElementById('chat-input').addEventListener('keydown', e => { if(e.key==='Enter') sendChat(); });
@@ -460,6 +643,7 @@ document.getElementById('chat-input').addEventListener('keydown', e => { if(e.ke
   const events = await loadAlerts();
   await loadThreats();
   const alertCount = await loadGuardianAlerts();
+  await loadReportStrip();
   await loadStats(agents, events, alertCount);
   // Refresh every 30s
   setInterval(async () => {
@@ -467,6 +651,7 @@ document.getElementById('chat-input').addEventListener('keydown', e => { if(e.ke
     const e = await loadAlerts();
     await loadThreats();
     const ac = await loadGuardianAlerts();
+    await loadReportStrip();
     await loadStats(a, e, ac);
   }, 30000);
 })();
