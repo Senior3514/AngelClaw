@@ -12,6 +12,9 @@ from sqlalchemy.orm import Session
 from cloud.db.session import get_db
 from cloud.guardian.orchestrator import angel_orchestrator
 
+from cloud.guardian.self_audit import run_self_audit
+from cloud.guardian.learning import learning_engine
+
 router = APIRouter(prefix="/api/v1/orchestrator", tags=["orchestrator"])
 
 
@@ -119,4 +122,34 @@ async def dry_run_playbook(
         "dry_run": True,
         "success": result.success,
         "results": result.result_data,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Self-Audit
+# ---------------------------------------------------------------------------
+
+@router.get("/self-audit")
+async def self_audit(db: Session = Depends(get_db)):
+    """Run a self-audit and return findings."""
+    report = await run_self_audit(db)
+    return report.model_dump(mode="json")
+
+
+# ---------------------------------------------------------------------------
+# Learning Engine
+# ---------------------------------------------------------------------------
+
+@router.get("/learning/summary")
+async def learning_summary():
+    """Return the learning engine state: reflections, playbook rankings, threshold suggestions."""
+    return learning_engine.summary()
+
+
+@router.get("/learning/reflections")
+async def learning_reflections(limit: int = 50, category: str | None = None):
+    """Return recent learning reflections."""
+    return {
+        "reflections": learning_engine.get_reflections(limit=limit, category=category),
+        "total": len(learning_engine._reflections),
     }

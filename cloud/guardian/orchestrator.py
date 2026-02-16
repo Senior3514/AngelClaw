@@ -151,7 +151,7 @@ class AngelOrchestrator:
                 "events": [
                     {
                         "id": e.id,
-                        "tenant_id": e.tenant_id,
+                        "tenant_id": getattr(e, "tenant_id", "dev-tenant"),
                         "agent_id": e.agent_id,
                         "type": e.type,
                         "severity": e.severity,

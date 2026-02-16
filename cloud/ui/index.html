@@ -407,6 +407,32 @@
       </div>
     </div>
 
+    <!-- Orchestrator + Incidents in two columns -->
+    <div class="two-col">
+      <!-- Orchestrator Status -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">ANGEL AGI Orchestrator</span>
+          <span class="card-badge" id="orch-status-pill">--</span>
+        </div>
+        <div id="orch-stats" style="font-size:12px">
+          <div class="loading">Loading orchestrator...</div>
+        </div>
+        <div id="orch-agents" style="margin-top:8px;font-size:11px"></div>
+      </div>
+
+      <!-- Incidents -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Incidents</span>
+          <span class="card-badge" id="incident-count">0</span>
+        </div>
+        <div id="incident-feed" style="max-height:200px;overflow-y:auto">
+          <div class="loading">Loading incidents...</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Fleet + Threat in two columns -->
     <div class="two-col">
       <!-- Agent Fleet -->
@@ -685,6 +711,67 @@ async function loadThreats() {
   }
 }
 
+// Orchestrator Status
+async function loadOrchestrator() {
+  const data = await fetchJSON('/api/v1/orchestrator/status');
+  if(!data) return;
+  const pill = document.getElementById('orch-status-pill');
+  pill.textContent = data.running ? 'RUNNING' : 'STOPPED';
+  pill.style.background = data.running ? 'var(--green-dim)' : 'var(--red-dim)';
+  pill.style.color = data.running ? 'var(--green)' : 'var(--red)';
+
+  const s = data.stats || {};
+  document.getElementById('orch-stats').innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px">' +
+    '<span><span style="color:var(--text-dim)">Events:</span> '+s.events_processed+'</span>' +
+    '<span><span style="color:var(--text-dim)">Indicators:</span> '+s.indicators_found+'</span>' +
+    '<span><span style="color:var(--text-dim)">Incidents:</span> '+s.incidents_created+'</span>' +
+    '<span><span style="color:var(--text-dim)">Responses:</span> '+s.responses_executed+'</span>' +
+    '</div>';
+
+  const agents2 = data.agents || {};
+  let agentHtml = '';
+  for(const [name, info] of Object.entries(agents2)) {
+    const st = info.status;
+    const color = (st==='idle'||st==='ok') ? 'var(--green)' : 'var(--yellow)';
+    agentHtml += '<span style="margin-right:12px"><span style="color:'+color+'">&#9679;</span> '+name+' <span style="color:var(--text-dim)">('+st+')</span></span>';
+  }
+  document.getElementById('orch-agents').innerHTML = agentHtml;
+}
+
+// Incidents
+async function loadIncidents() {
+  const data = await fetchJSON('/api/v1/orchestrator/incidents?limit=10');
+  const el = document.getElementById('incident-feed');
+  const countEl = document.getElementById('incident-count');
+  const incidents = data ? (data.incidents || []) : [];
+  if(!incidents.length) {
+    el.innerHTML = '<div class="empty">No incidents tracked.</div>';
+    countEl.textContent = '0';
+    return;
+  }
+  countEl.textContent = incidents.length;
+  el.innerHTML = incidents.map(inc => {
+    const sev = inc.severity || 'info';
+    const state = inc.state || '?';
+    const needsApproval = inc.requires_approval && (state==='triaging' || state==='new');
+    const approveBtn = needsApproval ? ' <button onclick="approveIncident(\''+esc(inc.incident_id)+'\')" style="font-size:10px;padding:1px 8px;border-radius:4px;border:1px solid var(--accent);background:none;color:var(--accent);cursor:pointer">Approve</button>' : '';
+    return '<div class="guardian-alert-item '+(sev==='critical'?'':'sev-'+sev)+'"><div class="guardian-alert-body"><div class="guardian-alert-title">['+esc(state).toUpperCase()+'] '+esc(inc.title||'').substring(0,80)+approveBtn+'</div><div class="guardian-alert-meta">'+esc(sev)+' &middot; '+ago(inc.created_at)+' &middot; playbook: '+(inc.playbook_name||'none')+'</div></div></div>';
+  }).join('');
+}
+
+async function approveIncident(id) {
+  const data = await fetch(BASE+'/api/v1/orchestrator/incidents/'+id+'/approve', {
+    method:'POST', headers: authHeaders()
+  }).then(r=>r.json()).catch(()=>null);
+  if(data && !data.error) {
+    alert('Incident approved! Response: '+(data.response_executed?'executed':'pending'));
+    loadIncidents();
+  } else {
+    alert('Approval failed: '+(data?data.error:'unknown'));
+  }
+}
+
 // Stats
 async function loadStats(agents, events, alertCount) {
   document.getElementById('stat-agents').textContent = agents ? agents.length : 0;
@@ -812,6 +899,8 @@ async function bootstrapDashboard() {
   await loadThreats();
   const alertCount = await loadGuardianAlerts();
   await loadReportStrip();
+  await loadOrchestrator();
+  await loadIncidents();
   await loadStats(agents, events, alertCount);
   // Refresh every 30s
   setInterval(async () => {
@@ -820,6 +909,8 @@ async function bootstrapDashboard() {
     await loadThreats();
     const ac = await loadGuardianAlerts();
     await loadReportStrip();
+    await loadOrchestrator();
+    await loadIncidents();
     await loadStats(a, e, ac);
   }, 30000);
 }

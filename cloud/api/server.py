@@ -68,6 +68,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Security middleware (rate limiting, CORS, security headers)
+from cloud.middleware.security import setup_security_middleware  # noqa: E402
+
+setup_security_middleware(app)
+
 # Add correlation ID middleware (outermost — runs before auth)
 from cloud.services.structured_logger import CorrelationMiddleware  # noqa: E402
 
@@ -157,8 +162,9 @@ async def auth_middleware(request: Request, call_next):
 
     # Viewer role check: block POST/PUT/DELETE on non-chat endpoints
     if user.role.value == "viewer" and request.method in ("POST", "PUT", "DELETE"):
-        # Allow chat for viewers (read-only operation that returns analysis)
-        if path not in ("/api/v1/guardian/chat", "/api/v1/auth/logout"):
+        # Allow chat, logout, and password change for viewers
+        _VIEWER_WRITE_PATHS = {"/api/v1/guardian/chat", "/api/v1/auth/logout", "/api/v1/auth/change-password"}
+        if path not in _VIEWER_WRITE_PATHS:
             return JSONResponse(
                 status_code=403,
                 content={"detail": f"Viewers cannot {request.method} to {path}"},

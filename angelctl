@@ -1,0 +1,389 @@
+#!/usr/bin/env python3
+"""angelctl — AngelClaw CLI v2.
+
+Usage:
+    angelctl status              Show orchestrator and fleet status
+    angelctl agents              List registered agents
+    angelctl incidents [--state] List tracked incidents
+    angelctl incident <id>       Get incident details
+    angelctl approve <id>        Approve a pending incident response
+    angelctl scan                Run guardian security scan
+    angelctl metrics             Show Prometheus metrics summary
+    angelctl playbooks           List loaded response playbooks
+    angelctl dry-run <playbook>  Dry-run a playbook
+    angelctl alerts [--limit]    Show recent guardian alerts
+    angelctl health              Health + readiness check
+    angelctl chat <message>      Chat with the guardian
+    angelctl login               Authenticate and store token
+    angelctl version             Show version
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+
+try:
+    import httpx
+except ImportError:
+    print("Error: httpx not installed. Run: pip install httpx")
+    sys.exit(1)
+
+VERSION = "0.4.0"
+DEFAULT_URL = "http://127.0.0.1:8500"
+TOKEN_FILE = Path.home() / ".angelclaw_token"
+
+
+def get_base_url() -> str:
+    return os.environ.get("ANGELCLAW_URL", DEFAULT_URL).rstrip("/")
+
+
+def get_token() -> str:
+    token = os.environ.get("ANGELCLAW_TOKEN", "")
+    if not token and TOKEN_FILE.exists():
+        token = TOKEN_FILE.read_text().strip()
+    return token
+
+
+def headers() -> dict:
+    h = {"Content-Type": "application/json"}
+    token = get_token()
+    if token:
+        h["Authorization"] = f"Bearer {token}"
+    return h
+
+
+def api_get(path: str, params: dict | None = None) -> dict | list | None:
+    url = f"{get_base_url()}{path}"
+    try:
+        r = httpx.get(url, headers=headers(), params=params, timeout=10)
+        if r.status_code == 401:
+            print("Error: Authentication required. Run: angelctl login")
+            sys.exit(1)
+        r.raise_for_status()
+        return r.json()
+    except httpx.ConnectError:
+        print(f"Error: Cannot connect to {get_base_url()}. Is the Cloud API running?")
+        sys.exit(1)
+    except httpx.HTTPStatusError as e:
+        print(f"Error: {e.response.status_code} — {e.response.text[:200]}")
+        sys.exit(1)
+
+
+def api_post(path: str, body: dict | None = None) -> dict | None:
+    url = f"{get_base_url()}{path}"
+    try:
+        r = httpx.post(url, headers=headers(), json=body or {}, timeout=15)
+        if r.status_code == 401:
+            print("Error: Authentication required. Run: angelctl login")
+            sys.exit(1)
+        r.raise_for_status()
+        return r.json()
+    except httpx.ConnectError:
+        print(f"Error: Cannot connect to {get_base_url()}")
+        sys.exit(1)
+    except httpx.HTTPStatusError as e:
+        print(f"Error: {e.response.status_code} — {e.response.text[:200]}")
+        sys.exit(1)
+
+
+# ---------------------------------------------------------------------------
+# Commands
+# ---------------------------------------------------------------------------
+
+def cmd_status(_args):
+    """Show orchestrator and fleet status."""
+    data = api_get("/api/v1/orchestrator/status")
+    stats = data.get("stats", {})
+    incidents = data.get("incidents", {})
+    agents = data.get("agents", {})
+
+    print(f"  Orchestrator: {'RUNNING' if data.get('running') else 'STOPPED'}")
+    print(f"  Events processed: {stats.get('events_processed', 0)}")
+    print(f"  Indicators found: {stats.get('indicators_found', 0)}")
+    print(f"  Incidents created: {stats.get('incidents_created', 0)}")
+    print(f"  Responses executed: {stats.get('responses_executed', 0)}")
+    print(f"  Pending approvals: {incidents.get('pending_approval', 0)}")
+    print()
+    print("  Sub-Agents:")
+    for name, info in agents.items():
+        status = info.get("status", "unknown")
+        tasks_ok = info.get("tasks_completed", 0)
+        tasks_fail = info.get("tasks_failed", 0)
+        symbol = "+" if status in ("idle", "ok") else "!"
+        print(f"    [{symbol}] {name:<12} {status:<8}  tasks: {tasks_ok} ok / {tasks_fail} fail")
+    print()
+    print(f"  Playbooks loaded: {', '.join(data.get('playbooks', []))}")
+
+
+def cmd_agents(_args):
+    """List registered agents."""
+    agents = api_get("/api/v1/agents")
+    if not agents:
+        print("  No agents registered.")
+        return
+    print(f"  {'HOSTNAME':<25} {'STATUS':<12} {'OS':<10} {'VERSION':<10} {'LAST SEEN'}")
+    print(f"  {'─' * 25} {'─' * 12} {'─' * 10} {'─' * 10} {'─' * 20}")
+    for a in agents:
+        host = a.get("hostname", "?")[:24]
+        status = a.get("status", "?")
+        os_name = a.get("os", "?")[:9]
+        ver = a.get("version", "?")[:9]
+        seen = a.get("last_seen_at", "never")
+        if isinstance(seen, str) and len(seen) > 19:
+            seen = seen[:19]
+        print(f"  {host:<25} {status:<12} {os_name:<10} {ver:<10} {seen}")
+
+
+def cmd_incidents(args):
+    """List tracked incidents."""
+    params = {"limit": 20}
+    if args.state:
+        params["state"] = args.state
+    data = api_get("/api/v1/orchestrator/incidents", params=params)
+    incidents = data.get("incidents", [])
+    if not incidents:
+        print("  No incidents found.")
+        return
+    print(f"  {'ID':<10} {'STATE':<14} {'SEVERITY':<10} {'TITLE'}")
+    print(f"  {'─' * 10} {'─' * 14} {'─' * 10} {'─' * 50}")
+    for inc in incidents:
+        iid = inc.get("incident_id", "?")[:9]
+        state = inc.get("state", "?")
+        sev = inc.get("severity", "?")
+        title = inc.get("title", "")[:50]
+        print(f"  {iid:<10} {state:<14} {sev:<10} {title}")
+
+
+def cmd_incident(args):
+    """Get incident details."""
+    data = api_get(f"/api/v1/orchestrator/incidents/{args.id}")
+    if "error" in data:
+        print(f"  Error: {data['error']}")
+        return
+    print(json.dumps(data, indent=2, default=str))
+
+
+def cmd_approve(args):
+    """Approve a pending incident response."""
+    data = api_post(f"/api/v1/orchestrator/incidents/{args.id}/approve")
+    if data.get("error"):
+        print(f"  Error: {data['error']}")
+    else:
+        print(f"  Incident {args.id} approved by {data.get('approved_by', '?')}")
+        print(f"  Response executed: {data.get('response_executed', False)}")
+        print(f"  State: {data.get('state', '?')}")
+
+
+def cmd_scan(_args):
+    """Run guardian security scan via chat."""
+    data = api_post("/api/v1/guardian/chat", {
+        "tenantId": "dev-tenant",
+        "prompt": "scan the whole system for exposures",
+    })
+    if data:
+        print(data.get("answer", "No response"))
+        actions = data.get("actions", [])
+        if actions:
+            print("\n  Suggested actions:")
+            for a in actions:
+                print(f"    - {a.get('title', '?')}: {a.get('description', '')}")
+
+
+def cmd_metrics(_args):
+    """Show metrics summary."""
+    url = f"{get_base_url()}/metrics"
+    try:
+        r = httpx.get(url, headers=headers(), timeout=10)
+        # Parse key metrics from Prometheus text
+        for line in r.text.splitlines():
+            if line.startswith("#") or not line.strip():
+                continue
+            parts = line.split(" ", 1)
+            if len(parts) == 2:
+                name = parts[0].split("{")[0]
+                val = parts[1]
+                short = name.replace("angelclaw_", "")
+                print(f"  {short:<45} {val}")
+    except Exception as e:
+        print(f"  Error fetching metrics: {e}")
+
+
+def cmd_playbooks(_args):
+    """List loaded response playbooks."""
+    data = api_get("/api/v1/orchestrator/playbooks")
+    playbooks = data.get("playbooks", [])
+    if not playbooks:
+        print("  No playbooks loaded.")
+        return
+    for pb in playbooks:
+        auto = "AUTO" if pb.get("auto_respond") else "MANUAL"
+        print(f"  [{auto}] {pb.get('name', '?')}")
+        print(f"         {pb.get('description', '')}")
+        print(f"         triggers: {', '.join(pb.get('trigger_patterns', []))}")
+        print(f"         steps: {' -> '.join(pb.get('steps', []))}")
+        print()
+
+
+def cmd_dryrun(args):
+    """Dry-run a playbook."""
+    data = api_post(f"/api/v1/orchestrator/playbooks/{args.playbook}/dry-run")
+    if data:
+        ok = "SUCCESS" if data.get("success") else "FAILED"
+        print(f"  Playbook: {data.get('playbook', '?')}")
+        print(f"  Result: {ok}")
+        results = data.get("results", {})
+        if isinstance(results, dict):
+            for k, v in results.items():
+                print(f"    {k}: {v}")
+
+
+def cmd_alerts(args):
+    """Show recent guardian alerts."""
+    limit = getattr(args, "limit", 10)
+    data = api_get("/api/v1/guardian/alerts/recent", {"tenantId": "dev-tenant", "limit": limit})
+    if not data:
+        print("  No alerts. All clear.")
+        return
+    for a in data:
+        sev = a.get("severity", "?").upper()
+        print(f"  [{sev}] {a.get('title', '?')}")
+        print(f"         type: {a.get('alert_type', '?')}  created: {a.get('created_at', '?')}")
+
+
+def cmd_health(_args):
+    """Health and readiness check."""
+    health = api_get("/health")
+    ready = api_get("/ready")
+    print(f"  Health: {health.get('status', '?')} (v{health.get('version', '?')})")
+    print(f"  Orchestrator: {health.get('orchestrator', '?')}")
+    agents = health.get("agents", {})
+    for name, status in agents.items():
+        print(f"    {name}: {status}")
+    print()
+    checks = ready.get("checks", {})
+    all_ok = ready.get("ready", False)
+    print(f"  Ready: {'YES' if all_ok else 'NO'}")
+    for name, check in checks.items():
+        status = check.get("status", "?")
+        symbol = "+" if status in ("ok", "idle") else "!"
+        print(f"    [{symbol}] {name}: {status}")
+
+
+def cmd_chat(args):
+    """Chat with the guardian."""
+    message = " ".join(args.message)
+    data = api_post("/api/v1/guardian/chat", {
+        "tenantId": "dev-tenant",
+        "prompt": message,
+    })
+    if data:
+        print(data.get("answer", "No response"))
+
+
+def cmd_login(_args):
+    """Authenticate and store token."""
+    import getpass
+    base = get_base_url()
+    username = input("Username: ").strip()
+    password = getpass.getpass("Password: ")
+
+    try:
+        r = httpx.post(f"{base}/api/v1/auth/login", json={
+            "username": username, "password": password,
+        }, timeout=10)
+        if r.status_code == 200:
+            data = r.json()
+            token = data.get("access_token", "")
+            TOKEN_FILE.write_text(token)
+            TOKEN_FILE.chmod(0o600)
+            print(f"  Logged in as {data.get('username')} (role: {data.get('role')})")
+            print(f"  Token saved to {TOKEN_FILE}")
+        elif r.status_code == 400:
+            print("  Auth is disabled on this server.")
+        else:
+            err = r.json() if r.headers.get("content-type", "").startswith("application/json") else {"detail": r.text}
+            print(f"  Login failed: {err.get('detail', 'unknown error')}")
+    except httpx.ConnectError:
+        print(f"  Cannot connect to {base}")
+
+
+def cmd_version(_args):
+    print(f"  angelctl v{VERSION} — AngelClaw CLI")
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog="angelctl",
+        description="AngelClaw CLI v2 — Autonomous Guardian Control",
+    )
+    sub = parser.add_subparsers(dest="command")
+
+    sub.add_parser("status", help="Orchestrator and fleet status")
+    sub.add_parser("agents", help="List registered agents")
+
+    p_inc = sub.add_parser("incidents", help="List incidents")
+    p_inc.add_argument("--state", help="Filter by state (new, triaging, responding, resolved, escalated)")
+
+    p_iid = sub.add_parser("incident", help="Incident details")
+    p_iid.add_argument("id", help="Incident ID")
+
+    p_app = sub.add_parser("approve", help="Approve pending incident")
+    p_app.add_argument("id", help="Incident ID")
+
+    sub.add_parser("scan", help="Run guardian security scan")
+    sub.add_parser("metrics", help="Show metrics")
+    sub.add_parser("playbooks", help="List playbooks")
+
+    p_dr = sub.add_parser("dry-run", help="Dry-run a playbook")
+    p_dr.add_argument("playbook", help="Playbook name")
+
+    p_al = sub.add_parser("alerts", help="Recent guardian alerts")
+    p_al.add_argument("--limit", type=int, default=10, help="Max alerts")
+
+    sub.add_parser("health", help="Health and readiness")
+
+    p_ch = sub.add_parser("chat", help="Chat with guardian")
+    p_ch.add_argument("message", nargs="+", help="Message text")
+
+    sub.add_parser("login", help="Authenticate")
+    sub.add_parser("version", help="Show version")
+
+    args = parser.parse_args()
+    if not args.command:
+        parser.print_help()
+        sys.exit(0)
+
+    commands = {
+        "status": cmd_status,
+        "agents": cmd_agents,
+        "incidents": cmd_incidents,
+        "incident": cmd_incident,
+        "approve": cmd_approve,
+        "scan": cmd_scan,
+        "metrics": cmd_metrics,
+        "playbooks": cmd_playbooks,
+        "dry-run": cmd_dryrun,
+        "alerts": cmd_alerts,
+        "health": cmd_health,
+        "chat": cmd_chat,
+        "login": cmd_login,
+        "version": cmd_version,
+    }
+
+    fn = commands.get(args.command)
+    if fn:
+        fn(args)
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()

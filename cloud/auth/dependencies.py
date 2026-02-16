@@ -8,7 +8,7 @@ from typing import Optional
 from fastapi import Cookie, Header, HTTPException, Request
 
 from .config import AUTH_ENABLED, AUTH_MODE
-from .models import AuthUser, UserRole
+from .models import AuthUser, UserRole, role_at_least
 from .service import verify_bearer, verify_jwt
 
 logger = logging.getLogger("angelgrid.cloud.auth")
@@ -64,8 +64,8 @@ def require_role(required_role: UserRole):
     ) -> AuthUser:
         user = await get_current_user(request, authorization, angelclaw_token)
 
-        # Operator can do everything; Viewer is restricted
-        if required_role == UserRole.OPERATOR and user.role != UserRole.OPERATOR:
+        # Check role hierarchy
+        if not role_at_least(user.role, required_role):
             raise HTTPException(
                 status_code=403,
                 detail=f"Requires {required_role.value} role (you are {user.role.value})",
