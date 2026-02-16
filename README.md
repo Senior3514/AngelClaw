@@ -251,6 +251,44 @@ Environment variables:
 **Security**: The Ollama service has **no host port** — it's reachable only
 from the Docker network at `http://ollama:11434`. Never expose it to the internet.
 
+### Request schema
+
+```jsonc
+POST /api/v1/llm/chat
+{
+  "prompt": "Why was agent dev-01 blocked from writing to /etc?",  // required string
+  "context": {                      // optional dict — structured data for the LLM
+    "agent_id": "dev-01",
+    "recent_events": ["file_write blocked /etc/passwd"]
+  },
+  "options": {                      // optional dict — model params forwarded to Ollama
+    "temperature": 0.3
+  }
+}
+```
+
+### Example curls
+
+```bash
+# Simple question (prompt only)
+curl -X POST http://127.0.0.1:8500/api/v1/llm/chat \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "What are the top 3 things I should check after a failed deploy?"}'
+
+# Question with structured context + model options
+curl -X POST http://127.0.0.1:8500/api/v1/llm/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Summarize the security posture for agent dev-01",
+    "context": {
+      "agent_id": "dev-01",
+      "blocked_events": 12,
+      "top_categories": ["shell", "file", "network"]
+    },
+    "options": {"temperature": 0.2}
+  }'
+```
+
 ---
 
 ## API Endpoints Summary

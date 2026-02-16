@@ -29,7 +29,7 @@ import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from shared.security.secret_scanner import contains_secret, redact_secrets
+from shared.security.secret_scanner import contains_secret, redact_dict, redact_secrets
 
 from .config import (
     LLM_BACKEND_URL,
@@ -58,10 +58,9 @@ class LLMChatRequest(BaseModel):
         max_length=4096,
         description="The user's question or analysis request",
     )
-    context: Optional[str] = Field(
+    context: Optional[dict[str, Any]] = Field(
         default=None,
-        max_length=8192,
-        description="Optional read-only context (events, incidents, policies) to include",
+        description="Optional read-only context (events, incidents, policies) as structured data",
     )
     options: Optional[dict[str, Any]] = Field(
         default=None,
@@ -117,15 +116,17 @@ async def llm_chat(req: LLMChatRequest) -> LLMChatResponse:
         {"role": "system", "content": LLM_SYSTEM_PROMPT},
     ]
 
-    # Inject optional context — REDACTED for secrets first
+    # Inject optional context dict — REDACTED for secrets first
     if req.context:
-        safe_context = redact_secrets(req.context)
-        context_had_secrets = safe_context != req.context
-        if context_had_secrets:
+        import json as _json
+
+        safe_context = redact_dict(req.context)
+        if safe_context != req.context:
             logger.warning("Secrets detected and redacted from LLM context")
+        context_str = _json.dumps(safe_context, indent=2, default=str)
         messages.append({
             "role": "system",
-            "content": f"--- READ-ONLY CONTEXT ---\n{safe_context}\n--- END CONTEXT ---",
+            "content": f"--- READ-ONLY CONTEXT ---\n{context_str}\n--- END CONTEXT ---",
         })
 
     messages.append({"role": "user", "content": safe_prompt})
@@ -149,7 +150,7 @@ async def llm_chat(req: LLMChatRequest) -> LLMChatResponse:
         "LLM request — model=%s, prompt_len=%d, context_len=%d",
         LLM_MODEL,
         len(safe_prompt),
-        len(req.context) if req.context else 0,
+        len(req.context) if req.context else 0,  # number of keys
     )
 
     start = time.monotonic()
