@@ -1,0 +1,56 @@
+"""AngelClaw V5 – API Models.
+
+Pydantic schemas for the unified AngelClaw API endpoints.
+Lightweight: no extra dependencies beyond Pydantic.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any, Optional
+
+from pydantic import BaseModel, Field
+
+
+# ---------------------------------------------------------------------------
+# Chat
+# ---------------------------------------------------------------------------
+
+class AngelClawChatRequest(BaseModel):
+    tenant_id: str = Field(alias="tenantId", default="dev-tenant")
+    prompt: str = Field(min_length=1, max_length=8192)
+    mode: Optional[str] = Field(default=None, description="Optional hint: status, scan, help, etc.")
+    preferences: Optional[dict[str, Any]] = None
+
+    model_config = {"populate_by_name": True}
+
+
+class AngelClawChatResponse(BaseModel):
+    answer: str
+    actions: list[dict[str, Any]] = Field(default_factory=list)
+    effects: list[dict[str, Any]] = Field(default_factory=list)
+    references: list[str] = Field(default_factory=list)
+    meta: dict[str, Any] = Field(default_factory=dict)
+
+
+# ---------------------------------------------------------------------------
+# Activity
+# ---------------------------------------------------------------------------
+
+class ActivityEntry(BaseModel):
+    id: str
+    timestamp: str
+    category: str
+    summary: str
+    details: dict[str, Any] = Field(default_factory=dict)
+
+
+# ---------------------------------------------------------------------------
+# Daemon Status
+# ---------------------------------------------------------------------------
+
+class DaemonStatus(BaseModel):
+    running: bool = False
+    cycles_completed: int = 0
+    last_scan_summary: str = ""
+    activity_count: int = 0

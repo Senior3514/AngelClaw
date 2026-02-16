@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AngelClaw V3 — Autonomous Guardian Dashboard</title>
+<title>AngelClaw V5 — Autonomous Guardian Brain</title>
 <style>
   :root {
     --bg: #0f1117;
@@ -359,7 +359,7 @@
     <span class="angel-icon">&#128737;</span>
     AngelClaw
     <span class="subtitle">Autonomous Guardian</span>
-    <span class="version-pill">V3</span>
+    <span class="version-pill">V5</span>
   </h1>
   <div class="header-right">
     <div class="user-badge" id="user-badge" style="display:none">
@@ -455,6 +455,58 @@
       </div>
     </div>
 
+    <!-- Live Activity + Settings in two columns -->
+    <div class="two-col">
+      <!-- AngelClaw Live Activity -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Live Activity</span>
+          <span class="card-badge" id="activity-status">--</span>
+        </div>
+        <div id="activity-feed" style="max-height:180px;overflow-y:auto;font-size:12px">
+          <div class="loading">Loading activity...</div>
+        </div>
+      </div>
+
+      <!-- AngelClaw Settings -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">AngelClaw Settings</span>
+          <span class="card-badge">V5</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:12px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="min-width:90px;color:var(--text-dim)">Autonomy:</label>
+            <select id="pref-autonomy" onchange="updatePref('autonomy_level',this.value)" style="flex:1;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px">
+              <option value="observe_only">Observe Only</option>
+              <option value="suggest_only">Suggest Only</option>
+              <option value="assist">Assist</option>
+              <option value="autonomous_apply">Autonomous</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="min-width:90px;color:var(--text-dim)">Scan (min):</label>
+            <select id="pref-scan" onchange="updatePref('scan_frequency_minutes',parseInt(this.value))" style="flex:1;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px">
+              <option value="1">1</option>
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="30">30</option>
+              <option value="60">60</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="min-width:90px;color:var(--text-dim)">Reporting:</label>
+            <select id="pref-reporting" onchange="updatePref('reporting_level',this.value)" style="flex:1;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px">
+              <option value="quiet">Quiet</option>
+              <option value="normal">Normal</option>
+              <option value="verbose">Verbose</option>
+            </select>
+          </div>
+          <div id="pref-status" style="font-size:10px;color:var(--text-dim);min-height:14px"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Active Events Feed -->
     <div class="card">
       <div class="card-header">
@@ -469,17 +521,18 @@
   <!-- RIGHT PANEL — Guardian Chat -->
   <div class="right-panel">
     <div class="chat-header">
-      <span>&#128737;</span> Guardian Chat
+      <span>&#128737;</span> AngelClaw Brain
+      <span style="font-size:10px;color:var(--text-dim);margin-left:auto" id="chat-daemon-pill">--</span>
     </div>
     <div class="chat-messages" id="chat-messages">
       <div class="chat-msg system">
-        Hi! I'm your AngelClaw Guardian Angel. I watch over your fleet autonomously and can answer questions about incidents, threats, agents, policy, and more.<br><br>
-        Try: "What happened recently?", "Any threats?", or "What have you been doing?"
+        I'm your AngelClaw Guardian — always on, always watching. I understand natural language.<br><br>
+        Try: "Scan the system", "Any concerns?", "Scan every 5 minutes", or just ask anything.
       </div>
     </div>
-    <div id="chat-typing" class="chat-typing" style="display:none">Guardian is thinking...</div>
+    <div id="chat-typing" class="chat-typing" style="display:none">AngelClaw is thinking...</div>
     <div class="chat-input-row">
-      <input class="chat-input" id="chat-input" placeholder="Ask about incidents, threats, agents..." />
+      <input class="chat-input" id="chat-input" placeholder="Talk to AngelClaw..." />
       <button class="chat-send" id="chat-send" onclick="sendChat()">Send</button>
     </div>
   </div>
@@ -832,7 +885,7 @@ document.getElementById('timeline-modal').addEventListener('click', function(e) 
 // Close modal on Escape
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeTimeline(); });
 
-// Chat
+// Chat — using AngelClaw V5 Brain endpoint
 async function sendChat() {
   const input = document.getElementById('chat-input');
   const msgs = document.getElementById('chat-messages');
@@ -851,7 +904,7 @@ async function sendChat() {
   let responseHtml = '';
   try {
     const chatHeaders = {'Content-Type':'application/json', ...authHeaders()};
-    const resp = await fetch(BASE+'/api/v1/guardian/chat', {
+    const resp = await fetch(BASE+'/api/v1/angelclaw/chat', {
       method:'POST', headers: chatHeaders,
       body: JSON.stringify({tenantId: 'dev-tenant', prompt: text})
     });
@@ -860,10 +913,23 @@ async function sendChat() {
       chatHistory.push({role:'system', content:data.answer});
       responseHtml = '<div class="chat-msg system">' + formatAnswer(data.answer);
 
+      // Proposed actions with apply buttons
       if(data.actions && data.actions.length) {
         responseHtml += '<div class="actions">';
         data.actions.forEach(a => {
-          responseHtml += '<div class="action-card"><div class="action-title">'+esc(a.title)+'</div><div class="action-desc">'+esc(a.description)+'</div></div>';
+          const idx = a.index || '';
+          const applyBtn = a.dry_run ? ' <span onclick="sendChatText(\'apply #'+idx+'\')" style="color:var(--green);cursor:pointer;font-weight:600;font-size:10px">[Apply]</span>' : '';
+          responseHtml += '<div class="action-card"><div class="action-title">#'+idx+' '+esc(a.type||a.action_type||'')+applyBtn+'</div><div class="action-desc">'+esc(a.description||'')+'</div></div>';
+        });
+        responseHtml += '</div>';
+      }
+
+      // Effects (applied actions)
+      if(data.effects && data.effects.length) {
+        responseHtml += '<div style="margin-top:6px;padding:6px 8px;background:var(--green-dim);border-radius:6px;font-size:11px">';
+        data.effects.forEach(e => {
+          const icon = e.success ? '&#9989;' : '&#10060;';
+          responseHtml += '<div>'+icon+' '+esc(e.message||e.type||'')+'</div>';
         });
         responseHtml += '</div>';
       }
@@ -873,6 +939,11 @@ async function sendChat() {
       }
 
       responseHtml += '</div>';
+
+      // If preferences changed, refresh settings panel
+      if(data.effects && data.effects.some(e => e.type === 'preference_update')) {
+        loadPreferences();
+      }
     } else {
       responseHtml = '<div class="chat-msg system">Sorry, I had trouble processing that. Try again?</div>';
     }
@@ -887,11 +958,74 @@ async function sendChat() {
   input.focus();
 }
 
+function sendChatText(text) {
+  document.getElementById('chat-input').value = text;
+  sendChat();
+}
+
 function formatAnswer(text) {
   return esc(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`([^`]+)`/g, '<code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-family:var(--mono);font-size:11px">$1</code>').replace(/\n/g, '<br>');
 }
 
 document.getElementById('chat-input').addEventListener('keydown', e => { if(e.key==='Enter') sendChat(); });
+
+// AngelClaw Live Activity
+async function loadActivity() {
+  const data = await fetchJSON('/api/v1/angelclaw/activity/recent?limit=10');
+  const el = document.getElementById('activity-feed');
+  if(!data || !data.length) {
+    el.innerHTML='<div class="empty">Daemon starting up...</div>';
+    return;
+  }
+  el.innerHTML = data.map(a => {
+    const catColors = {scan:'var(--accent)',cycle:'var(--green)',alert:'var(--red)',drift:'var(--yellow)',lifecycle:'var(--text-dim)',error:'var(--red)'};
+    const color = catColors[a.category] || 'var(--text-dim)';
+    return '<div style="padding:4px 0;border-bottom:1px solid var(--border)"><span style="color:'+color+';font-weight:600;font-size:10px;text-transform:uppercase">'+esc(a.category)+'</span> <span style="color:var(--text-dim);font-size:10px">'+ago(a.timestamp)+'</span><br><span style="font-size:11px">'+esc(a.summary)+'</span></div>';
+  }).join('');
+}
+
+// Daemon status
+async function loadDaemonStatus() {
+  const data = await fetchJSON('/api/v1/angelclaw/daemon/status');
+  if(!data) return;
+  const pill = document.getElementById('activity-status');
+  pill.textContent = data.running ? 'ACTIVE ('+data.cycles_completed+' cycles)' : 'STOPPED';
+  pill.style.color = data.running ? 'var(--green)' : 'var(--red)';
+  const chatPill = document.getElementById('chat-daemon-pill');
+  if(chatPill) chatPill.textContent = data.running ? 'Daemon active' : 'Daemon stopped';
+}
+
+// Preferences
+async function loadPreferences() {
+  const data = await fetchJSON('/api/v1/angelclaw/preferences?tenantId=dev-tenant');
+  if(!data) return;
+  const aEl = document.getElementById('pref-autonomy');
+  const sEl = document.getElementById('pref-scan');
+  const rEl = document.getElementById('pref-reporting');
+  if(aEl) aEl.value = data.autonomy_level || 'suggest_only';
+  if(sEl) sEl.value = String(data.scan_frequency_minutes || 10);
+  if(rEl) rEl.value = data.reporting_level || 'normal';
+}
+
+async function updatePref(key, value) {
+  const body = {};
+  body[key] = value;
+  const statusEl = document.getElementById('pref-status');
+  try {
+    const r = await fetch(BASE+'/api/v1/angelclaw/preferences?tenantId=dev-tenant', {
+      method:'POST', headers:{'Content-Type':'application/json', ...authHeaders()},
+      body: JSON.stringify(body)
+    });
+    if(r.ok) {
+      statusEl.textContent = key.replace(/_/g,' ')+' updated';
+      statusEl.style.color = 'var(--green)';
+      setTimeout(()=>{ statusEl.textContent=''; }, 3000);
+    }
+  } catch(e) {
+    statusEl.textContent = 'Update failed';
+    statusEl.style.color = 'var(--red)';
+  }
+}
 
 async function bootstrapDashboard() {
   const agents = await loadFleet();
@@ -901,6 +1035,9 @@ async function bootstrapDashboard() {
   await loadReportStrip();
   await loadOrchestrator();
   await loadIncidents();
+  await loadActivity();
+  await loadDaemonStatus();
+  await loadPreferences();
   await loadStats(agents, events, alertCount);
   // Refresh every 30s
   setInterval(async () => {
@@ -911,6 +1048,8 @@ async function bootstrapDashboard() {
     await loadReportStrip();
     await loadOrchestrator();
     await loadIncidents();
+    await loadActivity();
+    await loadDaemonStatus();
     await loadStats(a, e, ac);
   }, 30000);
 }

@@ -55,8 +55,12 @@ async def lifespan(app: FastAPI):
     # Start Wazuh XDR ingest loop (no-op if not configured)
     from cloud.integrations.wazuh_ingest import wazuh_ingest_loop
     wazuh_task = asyncio.create_task(wazuh_ingest_loop())
-    logger.info("AngelClaw Cloud API V3 started — tables, heartbeat, orchestrator, Wazuh ingest")
+    # Start AngelClaw V5 Autonomous Daemon
+    from cloud.angelclaw.daemon import start_daemon, stop_daemon
+    await start_daemon()
+    logger.info("AngelClaw Cloud API V5 started — tables, heartbeat, orchestrator, Wazuh, daemon")
     yield
+    await stop_daemon()
     wazuh_task.cancel()
     heartbeat_task.cancel()
     await angel_orchestrator.stop()
@@ -64,7 +68,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="AngelClaw Cloud API",
-    version="0.4.0",
+    version="0.5.0",
     lifespan=lifespan,
 )
 
@@ -112,6 +116,11 @@ app.include_router(orchestrator_router)
 from cloud.api.metrics_routes import router as metrics_router  # noqa: E402
 
 app.include_router(metrics_router)
+
+# Mount AngelClaw V5 routes (unified brain, preferences, daemon, actions)
+from cloud.angelclaw.routes import router as angelclaw_router  # noqa: E402
+
+app.include_router(angelclaw_router)
 
 
 # ---------------------------------------------------------------------------
@@ -163,7 +172,7 @@ async def auth_middleware(request: Request, call_next):
     # Viewer role check: block POST/PUT/DELETE on non-chat endpoints
     if user.role.value == "viewer" and request.method in ("POST", "PUT", "DELETE"):
         # Allow chat, logout, and password change for viewers
-        _VIEWER_WRITE_PATHS = {"/api/v1/guardian/chat", "/api/v1/auth/logout", "/api/v1/auth/change-password"}
+        _VIEWER_WRITE_PATHS = {"/api/v1/guardian/chat", "/api/v1/angelclaw/chat", "/api/v1/auth/logout", "/api/v1/auth/change-password"}
         if path not in _VIEWER_WRITE_PATHS:
             return JSONResponse(
                 status_code=403,
@@ -185,7 +194,7 @@ def health_check():
     orch = angel_orchestrator.status()
     return {
         "status": "ok",
-        "version": "0.4.0",
+        "version": "0.5.0",
         "orchestrator": orch["running"],
         "agents": {
             name: info["status"]
