@@ -1,19 +1,21 @@
-# ANGELGRID – Autonomous AI Defense Fabric
+# AngelClaw – Autonomous AI Defense Guardian
 
 **Guardian angel, not gatekeeper.**
 
-ANGELGRID is a security fabric that lets people use AI agents, local models,
+> The Python package is named `angelgrid` for internal compatibility. The product name is **AngelClaw**.
+
+AngelClaw is a security fabric that lets people use AI agents, local models,
 cloud APIs, and automations **as freely as they want** — while quietly protecting
 their systems, data, and infrastructure in the background.
 
-We don't block AI. We embrace it. ANGELGRID only intervenes when AI is about to
+We don't block AI. We embrace it. AngelClaw only intervenes when AI is about to
 do something genuinely dangerous: destructive shell commands, accessing secrets,
 modifying critical files, or calling risky external endpoints. Everything else —
 analysis, reading, summarizing, reasoning, creating — flows freely.
 
-## V2: Autonomous Guardian
+## V3: Autonomous Guardian
 
-V2 makes ANGELGRID a **truly autonomous guardian** with:
+V3 makes AngelClaw a **truly autonomous guardian** with:
 
 - **Guardian Heartbeat** — Continuous fleet health monitoring every 5 minutes
 - **Event Bus Alerts** — Automatic detection of critical patterns (secret exfil, severity spikes, agent flapping)
@@ -22,7 +24,7 @@ V2 makes ANGELGRID a **truly autonomous guardian** with:
 - **Agent Timeline** — Chronological activity view per agent
 - **Two-Panel Dashboard** — Stats + alerts + fleet on the left, persistent Guardian Chat on the right
 
-All V2 features are **read-only/suggest-only** — no auto-applying actions.
+All V3 features are **read-only/suggest-only** — no auto-applying actions.
 
 ## Repository Structure
 
@@ -33,7 +35,7 @@ angelgrid/
 │   ├── ai_shield/       #   AI agent adapters (OpenClaw, MoltBot, Claude Code)
 │   ├── sensors/         #   Future: process/file/network monitors
 │   └── config/          #   Default policies and configuration
-├── cloud/               # SaaS backend (ANGELGRID Cloud)
+├── cloud/               # SaaS backend (AngelClaw Cloud)
 │   ├── api/             #   FastAPI REST endpoints, AI Assistant, analytics
 │   ├── ai_assistant/    #   Security analysis (read-only, deterministic)
 │   ├── llm_proxy/       #   Optional LLM proxy for Ollama / external models
@@ -80,7 +82,7 @@ On a fresh Ubuntu/Debian server (as root):
 curl -sSL https://raw.githubusercontent.com/Senior3514/AngelGrid/main/ops/install/install_angelgrid_linux.sh | bash
 ```
 
-This installs the full stack (ANGELNODE + Cloud + Ollama) with Docker Compose
+This installs the full stack (ANGELNODE + AngelClaw Cloud + Ollama) with Docker Compose
 and registers a systemd service for automatic start on boot.
 
 Optional environment variables:
@@ -111,13 +113,31 @@ C:\AngelGrid\ops\install\install_angelnode_windows.ps1 -CloudUrl "http://YOUR-VP
 ```
 
 This installs **ANGELNODE only** — the lightweight agent that connects to your
-remote ANGELGRID Cloud running on the Linux VPS.
+remote AngelClaw Cloud running on the Linux VPS.
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `-CloudUrl` | `http://your-cloud-server:8500` | Your VPS Cloud API URL |
 | `-TenantId` | `default` | Tenant identifier |
 | `-InstallDir` | `C:\AngelGrid` | Install directory |
+
+### Windows Agent Quickstart (VPS Example)
+
+If your AngelClaw Cloud is running on a VPS at `168.231.110.18`:
+
+```powershell
+# Clone and install the agent pointing at your VPS
+Set-ExecutionPolicy Bypass -Scope Process -Force
+git clone https://github.com/Senior3514/AngelGrid.git C:\AngelGrid
+C:\AngelGrid\ops\install\install_angelnode_windows.ps1 -CloudUrl http://168.231.110.18:8500
+```
+
+The agent will register with the remote AngelClaw Cloud automatically and begin
+syncing policies. Verify with:
+
+```powershell
+curl http://127.0.0.1:8400/status
+```
 
 ### Quick Start (Development)
 
@@ -134,7 +154,7 @@ uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
 
 ## Core Concepts
 
-- **Guardian Angel** – ANGELGRID protects quietly. Most operations pass through with zero friction — only genuinely dangerous actions get blocked.
+- **Guardian Angel** – AngelClaw protects quietly. Most operations pass through with zero friction — only genuinely dangerous actions get blocked.
 - **AI-First** – We support any model (Ollama, Claude, OpenAI), any agent framework (OpenClaw, Claude Code, MoltBot), and any workflow. Use AI however you like.
 - **ANGELNODE** – Lightweight agent that evaluates actions locally. Fast, autonomous, always-on.
 - **AI Shield** – Mediator for AI agent tool calls. Safe tools flow freely; risky ones get flagged.
@@ -234,7 +254,7 @@ Policy rules support enhanced `detail_conditions`:
 ### Overriding / Extending Policies
 
 1. Edit `angelnode/config/default_policy.json` directly (bind-mounted read-only in Docker)
-2. Or push updated rules via ANGELGRID Cloud → the ANGELNODE polls every 60s
+2. Or push updated rules via AngelClaw Cloud → the ANGELNODE polls every 60s
 3. Rules are first-match-wins — put more specific rules **before** generic catch-alls
 
 ---
@@ -270,7 +290,7 @@ curl "http://127.0.0.1:8500/api/v1/assistant/explain?event_id=<uuid>"
 
 ## Secret Protection
 
-ANGELGRID embraces AI usage — but **absolutely refuses to leak secrets**.
+AngelClaw embraces AI usage — but **absolutely refuses to leak secrets**.
 
 Every layer in the stack scans for and redacts API keys, tokens, passwords,
 SSH keys, JWTs, connection strings, and sensitive file paths. The secret
@@ -395,7 +415,7 @@ It shows:
 - **Network trust bar** — % of agents in verified/conditional/untrusted state
 - **Active alerts feed** — real-time security events with severity icons
 - **Threat landscape chart** — events by category over the last 24h
-- **ANGELGRID AI chat** — ask questions about incidents, policies, and security posture
+- **AngelClaw AI chat** — ask questions about incidents, policies, and security posture
 
 No build step needed — it's a single HTML file served by FastAPI.
 

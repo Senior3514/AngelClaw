@@ -1,4 +1,4 @@
-"""ANGELGRID Cloud – Guardian Heartbeat Service.
+"""AngelClaw Cloud – Guardian Heartbeat Service.
 
 Background async loop that runs every 5 minutes, computes fleet health,
 incident counts, anomaly detection, and stores a GuardianReportRow.

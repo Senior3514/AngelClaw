@@ -1,4 +1,4 @@
-"""ANGELGRID Cloud – Pydantic schemas for Guardian V2 APIs.
+"""AngelClaw Cloud – Pydantic schemas for Guardian V3 APIs.
 
 Request/response models for guardian reports, alerts, chat, event context,
 timeline, and change tracking.

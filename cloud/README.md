@@ -1,6 +1,6 @@
-# ANGELGRID Cloud – Centralized SaaS Backend
+# AngelClaw Cloud – Centralized SaaS Backend
 
-ANGELGRID Cloud provides centralized policy management, event ingestion, global learning,
+AngelClaw Cloud provides centralized policy management, event ingestion, global learning,
 and multi-tenant operations for all connected ANGELNODEs.
 
 ## Structure
@@ -8,7 +8,7 @@ and multi-tenant operations for all connected ANGELNODEs.
 - `api/` – FastAPI application with REST endpoints for agent registration, event ingestion, and policy distribution.
 - `db/` – Database models (SQLAlchemy) and migration support.
 - `services/` – Business logic for policy compilation, incident correlation, and threat intel.
-- `ai_assistant/` – ANGELGRID AI security assistant (analysis-only, never applies changes directly).
+- `ai_assistant/` – AngelClaw AI security assistant (analysis-only, never applies changes directly).
 
 ## API Endpoints
 
@@ -16,7 +16,7 @@ and multi-tenant operations for all connected ANGELNODEs.
 - `POST /api/v1/events/batch` – Ingest a batch of events from agents.
 - `GET  /api/v1/policies/current?agentId=...` – Retrieve current PolicySet for an agent.
 
-## ANGELGRID AI Assistant
+## AngelClaw AI Assistant
 
 The `ai_assistant/` module provides structured security analysis functions:
 

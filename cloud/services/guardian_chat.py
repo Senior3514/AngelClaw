@@ -1,4 +1,4 @@
-"""ANGELGRID Cloud – Guardian Chat Orchestrator.
+"""AngelClaw Cloud – Guardian Chat Orchestrator.
 
 Dual-mode chat:
   - Deterministic mode (LLM_ENABLED=false, default): regex-based intent
@@ -46,6 +46,7 @@ _INTENT_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("agent_status", re.compile(r"(?i)(agent|fleet|node|status|health|online|offline)")),
     ("changes", re.compile(r"(?i)(change|what.*change|recent.*update|modif|policy.*update)")),
     ("incidents", re.compile(r"(?i)(incident|breach|attack|event|blocked|critical|high.sev)")),
+    ("scan", re.compile(r"(?i)(scan|exposure|audit|check.*system|harden|security.*check|vulnerability)")),
     ("about", re.compile(r"(?i)(who.*are.*you|what.*are.*you|about|introduce|guardian)")),
     ("status_report", re.compile(r"(?i)(what.*been.*doing|what.*you.*doing|status.*report|guardian.*report|doing.*lately|been.*up.*to|activity)")),
     ("help", re.compile(r"(?i)(help|what.*can.*you|how.*do|command|feature)")),
@@ -134,7 +135,7 @@ def _handle_threats(db: Session) -> tuple[str, list[ActionSuggestion], list[str]
     if not predictions:
         return (
             "No threat vectors detected in the last 24 hours. "
-            "Your systems look healthy — ANGELGRID is watching quietly in the background.",
+            "Your systems look healthy — AngelClaw is watching quietly in the background.",
             [], ["/api/v1/analytics/threat-matrix"],
         )
 
@@ -301,9 +302,48 @@ def _handle_status_report(db: Session, tenant_id: str) -> tuple[str, list[Action
     return "\n".join(lines), [], ["/api/v1/guardian/reports/recent"]
 
 
+async def _handle_scan(db: Session, tenant_id: str) -> tuple[str, list[ActionSuggestion], list[str]]:
+    """Handle scan/audit intent — run a guardian scan and format results."""
+    from cloud.services.guardian_scan import run_guardian_scan
+
+    result = await run_guardian_scan(db, tenant_id)
+
+    lines = [result.summary, ""]
+    if result.top_risks:
+        lines.append("**Top risks found:**\n")
+        for i, risk in enumerate(result.top_risks[:5], 1):
+            sev = risk.severity.upper()
+            lines.append(f"  {i}. [{sev}] **{risk.title}**")
+            lines.append(f"     {risk.description}")
+            if risk.suggested_fix:
+                lines.append(f"     Fix: {risk.suggested_fix}")
+            lines.append("")
+    else:
+        lines.append("No significant risks detected. Your system looks well-configured!")
+
+    actions = []
+    for s in result.hardening_suggestions:
+        actions.append(ActionSuggestion(
+            action_type=s.action,
+            title=s.description[:60],
+            description=s.description,
+            metadata={"scope": s.scope, "rule_id": s.rule_id} if s.rule_id else {"scope": s.scope},
+        ))
+
+    if result.top_risks:
+        actions.append(ActionSuggestion(
+            action_type="propose_rule",
+            title="Get policy proposals",
+            description="Run 'suggest policy improvements' for targeted hardening rules",
+            metadata={"endpoint": "/api/v1/assistant/propose"},
+        ))
+
+    return "\n".join(lines), actions, []
+
+
 def _handle_about() -> tuple[str, list[ActionSuggestion], list[str]]:
     return (
-        "I'm your ANGELGRID Guardian Angel — an autonomous security companion "
+        "I'm your AngelClaw Guardian Angel — an autonomous security companion "
         "that watches over your AI agents, servers, and infrastructure.\n\n"
         "I protect quietly in the background, like a seatbelt — not a speed bump. "
         "I only speak up when something genuinely dangerous happens: secret access, "
@@ -324,6 +364,7 @@ def _handle_help() -> tuple[str, list[ActionSuggestion], list[str]]:
         "  **Changes** — \"What changed recently?\" / \"Policy updates?\"\n"
         "  **Proposals** — \"Suggest policy improvements\" / \"Tighten security\"\n"
         "  **Explain** — \"Explain event <event-id>\" / \"Why was <event-id> blocked?\"\n"
+        "  **Scan** — \"Scan the system\" / \"Check for exposures\" / \"Audit security\"\n"
         "  **Status report** — \"What have you been doing?\" / \"Show me your reports\"\n"
         "  **About** — \"Who are you?\" / \"What do you do?\"\n\n"
         "I'm always watching in the background. Ask me anything about your security posture!",
@@ -367,8 +408,12 @@ async def handle_chat(db: Session, req: ChatRequest) -> ChatResponse:
     intent = detect_intent(req.prompt)
     logger.info("[GUARDIAN CHAT] intent=%s prompt_len=%d tenant=%s", intent, len(req.prompt), req.tenant_id)
 
-    # Gather deterministic response
-    answer, actions, refs = _dispatch_intent(db, intent, req.tenant_id, req.prompt)
+    # Handle async intents (scan)
+    if intent == "scan":
+        answer, actions, refs = await _handle_scan(db, req.tenant_id)
+    else:
+        # Gather deterministic response
+        answer, actions, refs = _dispatch_intent(db, intent, req.tenant_id, req.prompt)
 
     # Try LLM enrichment if enabled
     llm_answer = await _try_llm_enrichment(req.prompt, answer, intent)
@@ -425,7 +470,7 @@ async def _try_llm_enrichment(prompt: str, context_answer: str, intent: str) -> 
 
     try:
         enriched_prompt = (
-            f"You are the ANGELGRID Guardian Angel. The user asked: \"{prompt}\"\n\n"
+            f"You are the AngelClaw Guardian Angel. The user asked: \"{prompt}\"\n\n"
             f"Here is the factual data from the system (intent: {intent}):\n"
             f"{context_answer}\n\n"
             "Please provide a friendly, concise response incorporating this data. "

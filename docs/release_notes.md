@@ -1,4 +1,87 @@
-# ANGELGRID Release Notes
+# AngelClaw Release Notes
+
+## V0.4.0 — AngelClaw V3 (2026-02-16)
+
+**Status**: Production-ready with auth, RBAC, and secure-by-default binding.
+
+This release rebrands the project from ANGELGRID to **AngelClaw**, adds real
+authentication and authorization, introduces Guardian Scan for automated
+exposure analysis, and wires webhook/SIEM integration for external alerting.
+
+### Rebranding
+
+- All user-facing text renamed from ANGELGRID to **AngelClaw**
+- Python package name (`angelgrid`) preserved for internal compatibility
+- Environment variable names (`ANGELGRID_*`) preserved for backward compatibility;
+  new `ANGELCLAW_*` aliases added for auth, binding, and webhook configuration
+
+### Authentication & RBAC
+
+- JWT-based auth with HMAC-SHA256 signing (no external dependency)
+- Two roles: **Viewer** (read-only) and **Operator** (full control)
+- Login page in the dashboard with localStorage JWT persistence
+- Bearer token support for service-to-service communication
+- Auth enabled by default (`ANGELCLAW_AUTH_ENABLED=true`)
+- New endpoints: `POST /api/v1/auth/login`, `GET /api/v1/auth/me`, `POST /api/v1/auth/logout`
+
+### Secure-by-Default Binding
+
+- Cloud API and Docker Compose now bind to `127.0.0.1` by default (was `0.0.0.0`)
+- Public exposure requires explicit `ANGELCLAW_BIND_HOST=0.0.0.0` + auth enabled
+
+### Guardian Scan
+
+- New chat command: "scan", "audit", "check system", "harden"
+- Runs 7 automated security checks: stale agents, secret access attempts,
+  auth configuration, binding exposure, severity spikes, no agents, no webhook
+- Returns structured risk assessments sorted by severity with hardening suggestions
+
+### Webhook / SIEM Integration
+
+- New `WebhookSink` service pushes critical/high alerts to any HTTP(S) endpoint
+- HMAC-SHA256 payload signing via `X-AngelClaw-Signature` header
+- Wired into the event bus — fires automatically on Guardian Alert creation
+- Integration docs for Wazuh, Splunk HEC, and Elasticsearch/Kibana
+
+### Event Bus — Critical Pattern Detection
+
+- Detects repeated secret exfiltration (>=2 secret-access events in a batch)
+- Detects high-severity burst (>=5 high/critical from one agent in a batch)
+- Detects agent flapping (>=8 distinct event types from one agent)
+- Creates `GuardianAlertRow` entries with full event correlation
+
+### Dashboard Enhancements
+
+- Login page with username/password form
+- User badge in header showing username + role
+- Logout button
+- Auth-aware API calls (auto-redirect to login on 401)
+- AngelClaw V3 branding throughout
+
+### Documentation
+
+- `docs/product_overview.md` — full product overview and architecture
+- `docs/security_model.md` — threat model, secret protection pipeline, auth model
+- `docs/integrations.md` — webhook config, HMAC verification, Wazuh/Splunk/Elastic guides
+- All README files updated with AngelClaw branding
+
+### New Environment Variables
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `ANGELCLAW_AUTH_ENABLED` | `true` | Enable/disable authentication |
+| `ANGELCLAW_AUTH_MODE` | `local` | Auth mode: `local` or `bearer` |
+| `ANGELCLAW_ADMIN_USER` | `admin` | Admin username |
+| `ANGELCLAW_ADMIN_PASSWORD` | *(required)* | Admin password |
+| `ANGELCLAW_VIEWER_USER` | `viewer` | Viewer username |
+| `ANGELCLAW_VIEWER_PASSWORD` | *(optional)* | Viewer password |
+| `ANGELCLAW_JWT_SECRET` | *(auto-generated)* | JWT signing key |
+| `ANGELCLAW_BIND_HOST` | `127.0.0.1` | Server bind address |
+| `ANGELCLAW_BIND_PORT` | `8500` | Server bind port |
+| `ANGELCLAW_WEBHOOK_URL` | *(empty)* | Webhook endpoint for alerts |
+| `ANGELCLAW_WEBHOOK_SECRET` | *(empty)* | HMAC signing secret |
+
+---
 
 ## V0.3.0 — V1 Pilot Release (2026-02-16)
 
@@ -77,5 +160,5 @@ testing and iteration — not production deployment.
 
 ---
 
-*ANGELGRID: Guardian angel, not gatekeeper.*
+*AngelClaw: Guardian angel, not gatekeeper.*
 *We will iterate tomorrow.*

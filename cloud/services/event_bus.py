@@ -1,4 +1,4 @@
-"""ANGELGRID Cloud – Event Bus (Critical Pattern Detection).
+"""AngelClaw Cloud – Event Bus (Critical Pattern Detection).
 
 Called synchronously from ingest_events() after batch insert.
 Detects dangerous patterns and creates GuardianAlertRow entries.
@@ -127,4 +127,44 @@ def check_for_alerts(db: Session, events: list[EventRow], tenant_id: str = "dev-
                 ",".join(a.related_agent_ids[:3]) if a.related_agent_ids else "none",
             )
 
+        # Fire webhooks for critical/high alerts (non-blocking)
+        _fire_webhooks(alerts, tenant_id)
+
     return alerts
+
+
+def _fire_webhooks(alerts: list[GuardianAlertRow], tenant_id: str) -> None:
+    """Send webhook notifications for critical alerts (best-effort)."""
+    try:
+        import asyncio
+        from cloud.services.webhook import webhook_sink
+
+        if not webhook_sink.enabled:
+            return
+
+        for a in alerts:
+            if a.severity in ("critical", "high"):
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        loop.create_task(webhook_sink.send_alert(
+                            alert_type=a.alert_type,
+                            title=a.title,
+                            severity=a.severity,
+                            details=a.details,
+                            tenant_id=tenant_id,
+                            related_event_ids=a.related_event_ids,
+                        ))
+                    else:
+                        asyncio.run(webhook_sink.send_alert(
+                            alert_type=a.alert_type,
+                            title=a.title,
+                            severity=a.severity,
+                            details=a.details,
+                            tenant_id=tenant_id,
+                            related_event_ids=a.related_event_ids,
+                        ))
+                except Exception:
+                    logger.debug("Webhook fire failed for alert %s", a.id, exc_info=True)
+    except Exception:
+        logger.debug("Webhook module unavailable", exc_info=True)

@@ -86,7 +86,7 @@ class LLMChatResponse(BaseModel):
 @router.post(
     "/chat",
     response_model=LLMChatResponse,
-    summary="Chat with ANGELGRID AI security analyst",
+    summary="Chat with AngelClaw AI security analyst",
     description=(
         "Sends a prompt to the configured LLM backend with an enforced "
         "read-only security-analyst system prompt. All inputs and outputs "

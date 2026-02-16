@@ -1,10 +1,10 @@
-# ANGELGRID Architecture Overview
+# AngelClaw Architecture Overview
 
 ## System Components
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                        ANGELGRID Cloud                           │
+│                        AngelClaw Cloud                            │
 │  ┌──────────┐  ┌──────────────┐  ┌────────────┐  ┌───────────┐ │
 │  │ Agent    │  │ Policy       │  │ Event      │  │ Incident  │ │
 │  │ Registry │  │ Distribution │  │ Ingestion  │  │ Mgmt      │ │
@@ -41,16 +41,16 @@
 2. **Local Evaluation**: The ANGELNODE Policy Engine evaluates each Event against the active PolicySet.
 3. **Decision**: The engine returns allow/block/alert/audit and the caller enforces it.
 4. **Logging**: Every decision is written to a structured JSON log file.
-5. **Telemetry Upload**: Events are batched and sent to ANGELGRID Cloud for correlation.
+5. **Telemetry Upload**: Events are batched and sent to AngelClaw Cloud for correlation.
 6. **Policy Sync**: ANGELNODEs periodically pull updated PolicySets from Cloud.
 7. **SIEM Integration**: Log files are forwarded to Wazuh/SIEM via Filebeat.
 
 ## Key Design Principles
 
-- **Guardian Angel, Not Gatekeeper**: ANGELGRID enables AI adoption. Most AI operations (analysis, reading, summarizing, reasoning) flow freely. We only intervene for genuinely dangerous actions — destructive commands, secret access, risky external calls.
-- **AI-First, Safety-Always**: We embrace AI agents, local models (Ollama), cloud models (Claude, OpenAI), and agent frameworks. ANGELGRID focuses on safe orchestration, not restricting which tools people use.
+- **Guardian Angel, Not Gatekeeper**: AngelClaw enables AI adoption. Most AI operations (analysis, reading, summarizing, reasoning) flow freely. We only intervene for genuinely dangerous actions — destructive commands, secret access, risky external calls.
+- **AI-First, Safety-Always**: We embrace AI agents, local models (Ollama), cloud models (Claude, OpenAI), and agent frameworks. AngelClaw focuses on safe orchestration, not restricting which tools people use.
 - **Autonomous**: ANGELNODEs enforce policy locally even when Cloud is unreachable.
-- **Zero Trust with Zero Friction**: Every action is verified against policy, but the vast majority pass through transparently. Users shouldn't notice ANGELGRID until it saves them.
+- **Zero Trust with Zero Friction**: Every action is verified against policy, but the vast majority pass through transparently. Users shouldn't notice AngelClaw until it saves them.
 - **Fail-Closed**: If the policy engine is unreachable, actions are blocked. This is the safety net of last resort.
 - **Structured Logging**: All decisions are machine-parseable JSON for forensics.
 - **Minimal Footprint**: The agent is a single Python process with no heavy dependencies.
@@ -58,7 +58,7 @@
 
 ## Secret Protection Pipeline
 
-ANGELGRID **absolutely refuses** to leak secrets, passwords, API keys,
+AngelClaw **absolutely refuses** to leak secrets, passwords, API keys,
 tokens, or credentials — no matter what prompt injection or bypass
 technique is attempted. Secret protection is enforced at every layer:
 
@@ -135,9 +135,9 @@ that computes insights from stored events and agent data:
 All analytics are computed on-the-fly from existing tables (no additional
 storage needed). All endpoints are tenant-scoped and read-only.
 
-## V2 Autonomous Guardian
+## V3 Autonomous Guardian
 
-V2 adds autonomous monitoring, a unified chat interface, deeper analytics,
+V3 adds autonomous monitoring, a unified chat interface, deeper analytics,
 and transparent observability. All new features are **read-only/suggest-only**
 — no auto-applying actions.
 
@@ -145,7 +145,7 @@ and transparent observability. All new features are **read-only/suggest-only**
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│                    ANGELGRID Cloud V2                                  │
+│                    AngelClaw Cloud V3                                   │
 │                                                                      │
 │  ┌─────────────┐  ┌──────────────┐  ┌────────────┐  ┌────────────┐ │
 │  │  Guardian    │  │  Event Bus   │  │  Timeline  │  │ Predictive │ │
@@ -190,7 +190,7 @@ and transparent observability. All new features are **read-only/suggest-only**
 5. Action suggestions are always deterministic (never LLM-generated)
 6. Returns structured response with answer, actions, and references
 
-### New Endpoints (V2)
+### New Endpoints (V3)
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
@@ -201,7 +201,7 @@ and transparent observability. All new features are **read-only/suggest-only**
 | `/api/v1/guardian/changes` | GET | Policy/config change log |
 | `/api/v1/analytics/agent/timeline` | GET | Agent activity timeline |
 
-### New DB Tables (V2)
+### New DB Tables (V3)
 
 | Table | Purpose |
 |-------|---------|

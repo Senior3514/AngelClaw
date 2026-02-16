@@ -24,7 +24,7 @@ from shared.security.secret_scanner import (
     scan_text,
 )
 
-REDACTED = "[REDACTED by ANGELGRID]"
+REDACTED = "[REDACTED by AngelClaw]"
 
 passed = 0
 failed = 0

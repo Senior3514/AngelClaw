@@ -1,4 +1,4 @@
-"""ANGELGRID Cloud – Threat Vector Prediction (Rule-Based).
+"""AngelClaw Cloud – Threat Vector Prediction (Rule-Based).
 
 Deterministic pattern rules for predicting attack vectors. No LLM or ML —
 purely based on event category correlations observed in the lookback window.

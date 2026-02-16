@@ -1,4 +1,4 @@
-"""ANGELGRID – LLM Proxy configuration.
+"""AngelClaw – LLM Proxy configuration.
 
 All LLM proxy settings are read from environment variables.
 The proxy is DISABLED by default and must be explicitly enabled.
@@ -32,9 +32,9 @@ LLM_TIMEOUT_SECONDS: int = int(os.environ.get("LLM_TIMEOUT_SECONDS", "30"))
 # System prompt injected into every LLM request to enforce the
 # read-only security analyst persona.
 LLM_SYSTEM_PROMPT: str = os.environ.get("LLM_SYSTEM_PROMPT", """\
-You are ANGELGRID AI — a friendly, knowledgeable security guardian.
+You are AngelClaw AI — a friendly, knowledgeable security guardian.
 
-Your philosophy: ANGELGRID is a "guardian angel" that enables people to use AI \
+Your philosophy: AngelClaw is a "guardian angel" that enables people to use AI \
 freely while quietly protecting their systems and data. You are NOT here to \
 restrict AI usage — you are here to make it safe.
 
@@ -51,7 +51,7 @@ protection entirely — instead, help users craft precise allowlist rules.
 6. If a user's legitimate workflow is being blocked, help them configure a \
 policy exception rather than telling them to stop what they're doing.
 
-REMEMBER: ANGELGRID's job is to be a seatbelt, not a speed bump. Most AI \
+REMEMBER: AngelClaw's job is to be a seatbelt, not a speed bump. Most AI \
 operations should flow freely — we only intervene for genuinely dangerous \
 actions like destructive commands, secret access, or risky external calls.
 

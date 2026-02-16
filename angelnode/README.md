@@ -73,7 +73,7 @@ only the local policy file.
 
 ## Secret & Password Protection
 
-ANGELGRID aggressively protects secrets across every layer. The guardian angel
+AngelClaw aggressively protects secrets across every layer. The guardian angel
 philosophy applies: AI agents can do anything they want — we just make sure
 secrets never leak.
 
@@ -105,7 +105,7 @@ secrets never leak.
 3. **Cloud AI Assistant** + **LLM Proxy**:
    - All event data is redacted before being returned to users or sent to LLMs
    - The LLM system prompt strictly forbids outputting secrets
-   - Even if logs contain raw secrets, ANGELGRID will redact them in responses
+   - Even if logs contain raw secrets, AngelClaw will redact them in responses
 
 ### Example: secret detection in action
 
@@ -147,5 +147,5 @@ tokens, or policy rule content.
 | `ANGELGRID_TENANT_ID`             | Tenant identifier for multi-tenant Cloud       | `default`                        |
 | `ANGELGRID_SYNC_INTERVAL`         | Policy poll interval in seconds                | `60`                             |
 | `ANGELNODE_AGENT_TYPE`             | Agent type for registration                    | `server`                         |
-| `ANGELNODE_VERSION`                | Agent version reported to Cloud                | `0.2.0`                          |
+| `ANGELNODE_VERSION`                | Agent version reported to Cloud                | `0.4.0`                          |
 | `ANGELNODE_TAGS`                   | Comma-separated tags for agent registration    | *(empty)*                        |

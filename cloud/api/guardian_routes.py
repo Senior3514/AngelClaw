@@ -1,4 +1,4 @@
-"""ANGELGRID Cloud – Guardian API routes (V2).
+"""AngelClaw Cloud – Guardian API routes (V3).
 
 Provides endpoints for guardian reports, alerts, chat, event context,
 and change tracking. All endpoints are read-only except chat (which

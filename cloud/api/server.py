@@ -1,4 +1,4 @@
-"""ANGELGRID Cloud – SaaS Backend API Server (V2 Autonomous Guardian).
+"""AngelClaw Cloud – SaaS Backend API Server (V3 Autonomous Guardian).
 
 Central management plane for ANGELNODE fleet.  Handles agent registration,
 event ingestion, policy distribution, AI-assisted analysis, analytics,
@@ -15,8 +15,10 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse, HTMLResponse
+import os
+
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
@@ -42,16 +44,21 @@ async def lifespan(app: FastAPI):
     # Start guardian heartbeat background task
     from cloud.services.guardian_heartbeat import heartbeat_loop
     heartbeat_task = asyncio.create_task(heartbeat_loop())
-    logger.info("ANGELGRID Cloud API V2 started — tables created, heartbeat running")
+    logger.info("AngelClaw Cloud API V3 started — tables created, heartbeat running")
     yield
     heartbeat_task.cancel()
 
 
 app = FastAPI(
-    title="ANGELGRID Cloud API",
-    version="2.0.0",
+    title="AngelClaw Cloud API",
+    version="0.4.0",
     lifespan=lifespan,
 )
+
+# Mount auth routes (always available, even when auth is disabled)
+from cloud.auth.routes import router as auth_router  # noqa: E402
+
+app.include_router(auth_router)
 
 # Mount the AI Assistant routes
 from cloud.api.assistant_routes import router as assistant_router  # noqa: E402
@@ -68,10 +75,70 @@ from cloud.api.analytics_routes import router as analytics_router  # noqa: E402
 
 app.include_router(analytics_router)
 
-# Mount Guardian V2 routes
+# Mount Guardian V3 routes
 from cloud.api.guardian_routes import router as guardian_router  # noqa: E402
 
 app.include_router(guardian_router)
+
+
+# ---------------------------------------------------------------------------
+# Auth middleware — protect /api/v1/* routes when auth is enabled
+# ---------------------------------------------------------------------------
+
+from cloud.auth.config import AUTH_ENABLED  # noqa: E402
+from cloud.auth.service import verify_bearer, verify_jwt  # noqa: E402
+
+# Paths that never require auth
+_PUBLIC_PATHS = {"/health", "/ui", "/api/v1/auth/login", "/api/v1/auth/logout", "/docs", "/openapi.json", "/redoc"}
+
+
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    """If auth is enabled, require a valid token for /api/v1/* routes."""
+    if not AUTH_ENABLED:
+        return await call_next(request)
+
+    path = request.url.path
+
+    # Public paths bypass auth
+    if path in _PUBLIC_PATHS or not path.startswith("/api/"):
+        return await call_next(request)
+
+    # Extract token from header or cookie
+    token = None
+    auth_header = request.headers.get("authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+    elif auth_header:
+        token = auth_header
+
+    if not token:
+        token = request.cookies.get("angelclaw_token")
+
+    if not token:
+        return JSONResponse(status_code=401, content={"detail": "Authentication required"})
+
+    user = verify_jwt(token)
+    if not user:
+        from cloud.auth.config import AUTH_MODE
+        if AUTH_MODE == "bearer":
+            user = verify_bearer(token)
+
+    if not user:
+        return JSONResponse(status_code=401, content={"detail": "Invalid or expired token"})
+
+    # Viewer role check: block POST/PUT/DELETE on non-chat endpoints
+    if user.role.value == "viewer" and request.method in ("POST", "PUT", "DELETE"):
+        # Allow chat for viewers (read-only operation that returns analysis)
+        if path not in ("/api/v1/guardian/chat", "/api/v1/auth/logout"):
+            return JSONResponse(
+                status_code=403,
+                content={"detail": f"Viewers cannot {request.method} to {path}"},
+            )
+
+    # Attach user to request state for downstream use
+    request.state.auth_user = user
+    return await call_next(request)
 
 
 # ---------------------------------------------------------------------------
@@ -80,7 +147,7 @@ app.include_router(guardian_router)
 
 @app.get("/health", tags=["System"])
 def health_check():
-    return {"status": "ok", "version": "2.0.0"}
+    return {"status": "ok", "version": "0.4.0"}
 
 
 # ---------------------------------------------------------------------------
@@ -154,11 +221,7 @@ def register_agent(
     req: AgentRegistrationRequest,
     db: Session = Depends(get_db),
 ):
-    """Register a new ANGELNODE and return its initial PolicySet.
-
-    If the agent hostname already exists, update its record instead
-    of creating a duplicate.
-    """
+    """Register a new ANGELNODE and return its initial PolicySet."""
     # Check for existing registration by hostname
     existing = db.query(AgentNodeRow).filter_by(hostname=req.hostname).first()
 
@@ -220,10 +283,7 @@ def ingest_events(
     batch: EventBatch,
     db: Session = Depends(get_db),
 ):
-    """Ingest a batch of Events from an ANGELNODE.
-
-    Events are stored for analysis, correlation, and incident creation.
-    """
+    """Ingest a batch of Events from an ANGELNODE."""
     # Update agent last-seen timestamp
     agent_row = db.query(AgentNodeRow).filter_by(id=batch.agent_id).first()
     if agent_row:
@@ -355,3 +415,15 @@ def ai_propose_policy(
     modifies the database.
     """
     return propose_policy_tightening(db, agentGroupId, lookback_hours=lookbackHours)
+
+
+# ---------------------------------------------------------------------------
+# Standalone runner with secure-by-default binding
+# ---------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    import uvicorn
+
+    bind_host = os.environ.get("ANGELCLAW_BIND_HOST", "127.0.0.1")
+    bind_port = int(os.environ.get("ANGELCLAW_BIND_PORT", "8500"))
+    uvicorn.run(app, host=bind_host, port=bind_port)

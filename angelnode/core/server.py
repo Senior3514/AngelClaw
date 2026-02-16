@@ -1,12 +1,13 @@
-"""ANGELGRID – ANGELNODE Local HTTP Server.
+"""AngelClaw – ANGELNODE Local HTTP Server.
 
 Exposes the policy evaluation API on the local loopback interface.
 This is the primary entry point for all local consumers — sensors,
 AI shield adapters, and CLI tools.
 
-On startup, if ANGELGRID_CLOUD_URL is configured, the server registers
-with the Cloud backend, receives an initial PolicySet, and starts a
-background polling loop that checks for policy updates every 60 seconds.
+On startup, if ANGELGRID_CLOUD_URL (or ANGELCLAW_CLOUD_URL) is configured,
+the server registers with the Cloud backend, receives an initial PolicySet,
+and starts a background polling loop that checks for policy updates every
+60 seconds.
 
 SECURITY NOTE: The server binds to 127.0.0.1 by default.  It must NOT
 be exposed to external networks without authentication.
@@ -149,7 +150,7 @@ async def lifespan(app: FastAPI):
         await sync_client.start_polling()
     else:
         logger.info(
-            "Cloud sync disabled — set ANGELGRID_CLOUD_URL to enable"
+            "Cloud sync disabled — set ANGELCLAW_CLOUD_URL to enable"
         )
 
     yield

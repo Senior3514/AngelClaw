@@ -1,4 +1,4 @@
-"""ANGELGRID AI – Security Assistant core logic.
+"""AngelClaw AI – Security Assistant core logic.
 
 Provides structured analysis functions that query the Cloud database and
 return deterministic, auditable results.  No external LLM is used; all
@@ -284,7 +284,7 @@ def _generate_recommendations(
 ) -> list[str]:
     """Generate human-readable, solution-oriented recommendations.
 
-    ANGELGRID philosophy: guardian angel, not gatekeeper.  Recommendations
+    AngelClaw philosophy: guardian angel, not gatekeeper.  Recommendations
     should help users stay safe while continuing to use AI freely.  Focus
     on targeted fixes, not broad restrictions.
     """
@@ -296,7 +296,7 @@ def _generate_recommendations(
     if critical_count > 0:
         recommendations.append(
             f"{critical_count} CRITICAL incident(s) detected — worth a quick look to make sure "
-            "nothing slipped through. ANGELGRID blocked the dangerous actions automatically."
+            "nothing slipped through. AngelClaw blocked the dangerous actions automatically."
         )
 
     if classifications.get("prompt_injection", 0) > 0:
@@ -325,7 +325,7 @@ def _generate_recommendations(
 
     if not recommendations:
         recommendations.append(
-            "Everything looks good — your AI agents are running freely and ANGELGRID is quietly "
+            "Everything looks good — your AI agents are running freely and AngelClaw is quietly "
             "watching in the background. No action needed."
         )
 

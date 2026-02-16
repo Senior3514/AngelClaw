@@ -1,5 +1,5 @@
 [Unit]
-Description=AngelGrid Stack (ANGELNODE + Cloud + Ollama)
+Description=AngelClaw Stack (ANGELNODE + Cloud + Ollama)
 Documentation=https://github.com/Senior3514/AngelGrid
 After=docker.service network-online.target
 Requires=docker.service

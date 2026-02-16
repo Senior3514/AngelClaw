@@ -1,13 +1,13 @@
-# ANGELGRID AI – Philosophy, UX & Safety Boundaries
+# AngelClaw AI – Philosophy, UX & Safety Boundaries
 
 ## Our Philosophy: Guardian Angel, Not Gatekeeper
 
-ANGELGRID exists to **enable** AI adoption — not restrict it.
+AngelClaw exists to **enable** AI adoption — not restrict it.
 
 Most "AI security" tools try to limit, block, or slow down AI usage.
-ANGELGRID takes the opposite approach: we want people to use AI agents,
+AngelClaw takes the opposite approach: we want people to use AI agents,
 Claude Code, Ollama, web AI apps, and automations **as much as they like**.
-ANGELGRID's job is to be the invisible safety net — the "guardian angel"
+AngelClaw's job is to be the invisible safety net — the "guardian angel"
 that protects systems, data, and infrastructure in the background, without
 killing creativity or making AI adoption painful.
 
@@ -15,22 +15,22 @@ killing creativity or making AI adoption painful.
 
 1. **AI-first, safety-always.** We never try to "stop AI" in general.
    Analysis, reading, summarizing, reasoning, and creative work flow freely.
-   ANGELGRID only intervenes when AI is about to do something genuinely
+   AngelClaw only intervenes when AI is about to do something genuinely
    dangerous: destructive shell commands, modifying critical system files,
    accessing secrets, or calling risky external endpoints.
 
-2. **Human-friendly UX.** The ANGELGRID assistant is a friendly guide, not
+2. **Human-friendly UX.** The AngelClaw assistant is a friendly guide, not
    a wall of error messages. When something is blocked, it explains *why*
    in plain language and suggests a safe alternative. Users should never
-   need deep security expertise to work with ANGELGRID.
+   need deep security expertise to work with AngelClaw.
 
 3. **Embrace variety of models.** Local models (Ollama), cloud models
    (Claude, OpenAI-compatible), agent frameworks (OpenClaw, MoltBot,
-   Claude Code) — ANGELGRID doesn't care which model you use. We focus
+   Claude Code) — AngelClaw doesn't care which model you use. We focus
    on safe orchestration and control, not on picking winners.
 
 4. **Quiet protection.** The best security is the kind you don't notice.
-   ANGELGRID should feel like a seatbelt, not a speed bump. Most AI
+   AngelClaw should feel like a seatbelt, not a speed bump. Most AI
    operations pass through with zero friction — only truly risky actions
    get flagged or blocked.
 
@@ -38,18 +38,18 @@ killing creativity or making AI adoption painful.
 
 ## The Guardian Angel UX
 
-The ANGELGRID AI assistant acts as a friendly security companion in the
+The AngelClaw AI assistant acts as a friendly security companion in the
 Cloud console:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  ANGELGRID AI                                  [?]  │
+│  AngelClaw AI                                  [?]  │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
 │  User: "Why was my AI agent's file write blocked?"  │
 │                                                     │
 │  AI: "Your agent tried to write to /etc/passwd,     │
-│   which is a system-critical file. ANGELGRID         │
+│   which is a system-critical file. AngelClaw          │
 │   blocked it to protect your system.                │
 │                                                     │
 │   To achieve your goal safely, you could:           │
@@ -78,13 +78,13 @@ Key UX principles:
 - **Explain, don't just deny.** Every block comes with a human-readable reason.
 - **Suggest alternatives.** Help the user achieve their goal safely.
 - **Make policy changes easy.** Users shouldn't need to hand-edit JSON to
-  configure ANGELGRID — the assistant guides them through it.
+  configure AngelClaw — the assistant guides them through it.
 
 ---
 
 ## Separation of Concerns: Analysis vs. Action
 
-### Analysis (ANGELGRID AI does freely — no restrictions)
+### Analysis (AngelClaw AI does freely — no restrictions)
 
 - Summarize incidents, events, and trends
 - Explain policy rules and why decisions were made
@@ -109,7 +109,7 @@ architecture enforces the approval step at the API layer.
 ## Approval Workflow
 
 ```
-  ANGELGRID AI          Cloud API            Approver           Audit Log
+  AngelClaw AI          Cloud API            Approver           Audit Log
        │                    │                    │                   │
        │  propose_changes() │                    │                   │
        │───────────────────>│                    │                   │
@@ -133,13 +133,13 @@ architecture enforces the approval step at the API layer.
 
 ## ChangeEvent Logging
 
-Every policy or configuration change — whether proposed by ANGELGRID AI or
+Every policy or configuration change — whether proposed by AngelClaw AI or
 made manually — is logged as a **ChangeEvent** with:
 
 | Field             | Description                                    |
 |-------------------|------------------------------------------------|
 | `change_type`     | `policy_edit`, `policy_deploy`, `config_change` |
-| `proposed_by`     | `angelgrid_ai` or `user:<email>`                |
+| `proposed_by`     | `angelclaw_ai` or `user:<email>`                |
 | `approved_by`     | `user:<email>` (required)                       |
 | `timestamp`       | When the change was applied                     |
 | `before_snapshot` | PolicySet version hash before the change        |
@@ -165,7 +165,7 @@ as the audit trail for all policy mutations in the system.
 
 4. **No secret exposure** — secrets are actively scanned and redacted at
    every layer (ANGELNODE, AI Assistant, LLM Proxy). Even if raw secrets
-   exist in logs or database, ANGELGRID redacts them before any response
+   exist in logs or database, AngelClaw redacts them before any response
    leaves the system. See the Secret Protection section below.
 
 5. **LLM containment** — the LLM proxy scrubs both input (user prompt,
@@ -177,11 +177,11 @@ as the audit trail for all policy mutations in the system.
 
 ## Secret Protection: The One Hard Line
 
-ANGELGRID embraces AI usage. We let AI agents read, write, analyze, and
+AngelClaw embraces AI usage. We let AI agents read, write, analyze, and
 create freely. But there is **one absolute rule**: secrets never leak.
 
 No matter what prompt injection, social engineering, or bypass technique
-is attempted, ANGELGRID will **never** return raw secret values through
+is attempted, AngelClaw will **never** return raw secret values through
 any API endpoint, LLM response, or event explanation.
 
 ### How it works
@@ -211,17 +211,17 @@ key named `password`, `secret`, `token`, `api_key`, or `credential`.
 ### The philosophy
 
 This isn't about distrust — it's about making AI **safer to use freely**.
-When developers know that ANGELGRID has their back on secrets, they can
+When developers know that AngelClaw has their back on secrets, they can
 give AI agents more freedom, not less.
 
 ---
 
-## V2: Guardian Chat & Autonomous Reports
+## V3: Guardian Chat & Autonomous Reports
 
 ### Guardian Chat
 
-The V2 dashboard features a persistent Guardian Chat panel that provides a
-unified interface to all ANGELGRID analytics and insights.
+The V3 dashboard features a persistent Guardian Chat panel that provides a
+unified interface to all AngelClaw analytics and insights.
 
 **Intent Detection**: The chat uses regex-based intent detection to classify
 user queries into categories:
@@ -279,7 +279,7 @@ Predictions appear in the threat matrix and are available via the chat.
 
 ### Deep Context for Decisions
 
-V2 enhances every decision with deep contextual understanding:
+V3 enhances every decision with deep contextual understanding:
 
 **Event Context Bundle** (`GET /api/v1/guardian/event_context`):
 For any event, the system returns:
@@ -321,20 +321,20 @@ pulls from the stored guardian reports to show:
 - Number of reports generated
 - Policy changes tracked since last report
 
-This makes ANGELGRID's autonomous operation transparent — operators always
+This makes AngelClaw's autonomous operation transparent — operators always
 know what the system has been watching and detecting.
 
 ---
 
-## What ANGELGRID is NOT
+## What AngelClaw is NOT
 
 - **Not an AI blocker.** We don't restrict which models, tools, or frameworks
   users can use. Use Claude Code, Ollama, GPT, open-source agents — we
   protect them all equally.
 - **Not a compliance checkbox.** We're a living safety fabric that adapts
   to real threats, not a static audit tool.
-- **Not a productivity tax.** If ANGELGRID is slowing down legitimate work,
+- **Not a productivity tax.** If AngelClaw is slowing down legitimate work,
   the policies need tuning — not the user's workflow.
-- **Not a secret exposer.** Under no circumstances will ANGELGRID return
+- **Not a secret exposer.** Under no circumstances will AngelClaw return
   raw secrets in any API response, LLM output, or log entry. This is the
   one rule that is never relaxed.

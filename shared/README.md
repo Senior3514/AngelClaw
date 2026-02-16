@@ -1,7 +1,7 @@
 # Shared – Common Models, Security Helpers & Config Schemas
 
 This package contains all data models, security utility functions, and configuration
-schemas shared between ANGELNODE, ANGELGRID Cloud, and agentless connectors.
+schemas shared between ANGELNODE, AngelClaw Cloud, and agentless connectors.
 
 ## Structure
 

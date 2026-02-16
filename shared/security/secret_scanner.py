@@ -1,15 +1,15 @@
-"""ANGELGRID – Secret & Credential Scanner.
+"""AngelClaw – Secret & Credential Scanner.
 
 Provides pattern-based detection and redaction of secrets, passwords,
 API keys, tokens, SSH keys, JWTs, and other sensitive data.
 
-Used across the entire ANGELGRID stack:
+Used across the entire AngelClaw stack:
   - ANGELNODE engine: flag events that reference secrets
   - AI Shield adapter: detect secret access in tool-call arguments
   - Cloud AI Assistant: redact secrets from responses
   - LLM Proxy: scrub context before sending to any LLM backend
 
-SECURITY RULE: ANGELGRID will NEVER output raw secret values, no
+SECURITY RULE: AngelClaw will NEVER output raw secret values, no
 matter what prompt injection or bypass technique is attempted.
 
 Philosophy: Guardian Angel — we don't block AI from working with
@@ -109,7 +109,7 @@ _SENSITIVE_PATH_PATTERNS: list[re.Pattern] = [
 ]
 
 # Redaction placeholder
-_REDACTED = "[REDACTED by ANGELGRID]"
+_REDACTED = "[REDACTED by AngelClaw]"
 
 
 # ---------------------------------------------------------------------------
@@ -139,7 +139,7 @@ def contains_secret(text: str) -> bool:
 
 
 def redact_secrets(text: str) -> str:
-    """Replace all detected secret values with [REDACTED by ANGELGRID]."""
+    """Replace all detected secret values with [REDACTED by AngelClaw]."""
     for _, pattern in _SECRET_VALUE_PATTERNS:
         text = pattern.sub(_REDACTED, text)
     return text

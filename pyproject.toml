@@ -3,9 +3,9 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "angelgrid"
-version = "0.1.0"
-description = "ANGELGRID – Autonomous AI Defense Fabric"
+name = "angelgrid"  # Package name kept as 'angelgrid' for internal compatibility. Product name is AngelClaw.
+version = "0.4.0"
+description = "AngelClaw – Autonomous AI Defense Guardian"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "Proprietary"}
