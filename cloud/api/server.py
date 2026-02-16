@@ -38,15 +38,19 @@ _UI_DIR = Path(__file__).resolve().parent.parent / "ui"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create database tables on startup, start guardian heartbeat."""
+    """Create database tables on startup, start guardian heartbeat and orchestrator."""
     Base.metadata.create_all(bind=engine)
     _ensure_default_policy_exists()
     # Start guardian heartbeat background task
     from cloud.services.guardian_heartbeat import heartbeat_loop
     heartbeat_task = asyncio.create_task(heartbeat_loop())
-    logger.info("AngelClaw Cloud API V3 started — tables created, heartbeat running")
+    # Start ANGEL AGI Orchestrator
+    from cloud.guardian.orchestrator import angel_orchestrator
+    await angel_orchestrator.start()
+    logger.info("AngelClaw Cloud API V3 started — tables created, heartbeat + orchestrator running")
     yield
     heartbeat_task.cancel()
+    await angel_orchestrator.stop()
 
 
 app = FastAPI(
@@ -79,6 +83,11 @@ app.include_router(analytics_router)
 from cloud.api.guardian_routes import router as guardian_router  # noqa: E402
 
 app.include_router(guardian_router)
+
+# Mount Orchestrator API routes (ANGEL AGI)
+from cloud.api.orchestrator_routes import router as orchestrator_router  # noqa: E402
+
+app.include_router(orchestrator_router)
 
 
 # ---------------------------------------------------------------------------
@@ -307,20 +316,48 @@ def ingest_events(
 
     # V2: Check for critical patterns via the event bus
     from cloud.services.event_bus import check_for_alerts
+    alerts_created = []
     try:
-        alerts = check_for_alerts(db, rows)
-        if alerts:
+        alerts_created = check_for_alerts(db, rows)
+        if alerts_created:
             logger.info(
                 "[EVENT INGEST] %d event(s) ingested from agent %s — %d alert(s) triggered",
-                len(rows), batch.agent_id[:8], len(alerts),
+                len(rows), batch.agent_id[:8], len(alerts_created),
             )
     except Exception:
         logger.exception("[EVENT INGEST] Event bus alert check failed (non-fatal)")
 
+    # V3: Run events through ANGEL AGI Orchestrator (non-blocking)
+    from cloud.guardian.orchestrator import angel_orchestrator
+    indicators = []
+    try:
+        indicators = asyncio.get_event_loop().run_until_complete(
+            angel_orchestrator.process_events(rows, db)
+        ) if not asyncio.get_event_loop().is_running() else []
+        # If we're inside an async context, schedule as task
+        if asyncio.get_event_loop().is_running():
+            asyncio.create_task(_run_orchestrator(rows, db))
+    except RuntimeError:
+        # No event loop — skip orchestrator (sync context)
+        pass
+    except Exception:
+        logger.debug("[EVENT INGEST] Orchestrator analysis skipped", exc_info=True)
+
     return {
         "accepted": len(rows),
         "agent_id": batch.agent_id,
+        "alerts": len(alerts_created),
+        "indicators": len(indicators),
     }
+
+
+async def _run_orchestrator(rows: list, db: Session) -> None:
+    """Run orchestrator analysis as a background task."""
+    from cloud.guardian.orchestrator import angel_orchestrator
+    try:
+        await angel_orchestrator.process_events(rows, db)
+    except Exception:
+        logger.debug("[ORCHESTRATOR] Background analysis failed", exc_info=True)
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,19 @@
+playbook: revoke_token
+description: "Revoke authentication tokens for a compromised identity."
+trigger_patterns:
+  - credential_stuffing
+  - repeated_secret_exfil
+severity_threshold: critical
+auto_respond: true
+steps:
+  - action: revoke_token
+    target: "{{ agent_id }}"
+    description: "Invalidate all active tokens for the suspect"
+    reversible: false
+    timeout_seconds: 10
+  - action: notify_operator
+    params:
+      channel: webhook
+      message: "Tokens revoked for {{ agent_id }}: {{ title }}"
+  - action: log_incident
+rollback: []
