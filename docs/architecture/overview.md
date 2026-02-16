@@ -10,6 +10,10 @@
 │  │ Registry │  │ Distribution │  │ Ingestion  │  │ Mgmt      │ │
 │  └──────────┘  └──────────────┘  └────────────┘  └───────────┘ │
 │                        │                                         │
+│  ┌──────────┐  ┌──────────────┐  ┌────────────┐  ┌───────────┐ │
+│  │Analytics │  │ LLM Proxy    │  │ Web UI     │  │ AI Asst   │ │
+│  │ Engine   │  │ (Ollama)     │  │ Dashboard  │  │ (r/o)     │ │
+│  └──────────┘  └──────────────┘  └────────────┘  └───────────┘ │
 │                   REST API (FastAPI)                              │
 └───────────────────────┬──────────────────────────────────────────┘
                         │  HTTPS
@@ -112,3 +116,43 @@ technique is attempted. Secret protection is enforced at every layer:
 
 The scanner lives in `shared/security/secret_scanner.py` and is used by
 every component in the stack.
+
+## Analytics Engine
+
+The Cloud API includes a read-only analytics layer (`cloud/api/analytics_routes.py`)
+that computes insights from stored events and agent data:
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /api/v1/agents` | Fleet listing — all registered ANGELNODEs |
+| `GET /api/v1/agents/identity` | Agent behavioral fingerprint and risk profile |
+| `GET /api/v1/incidents/recent` | Recent security events feed (filterable) |
+| `GET /api/v1/analytics/policy/evolution` | Policy version history and rule counts |
+| `GET /api/v1/analytics/threat-matrix` | Threat landscape by category and severity |
+| `GET /api/v1/analytics/ai-traffic` | AI tool call traffic inspection |
+| `GET /api/v1/analytics/sessions` | Session grouping and risk scoring |
+
+All analytics are computed on-the-fly from existing tables (no additional
+storage needed). All endpoints are tenant-scoped and read-only.
+
+## Operator Experience
+
+### Web Dashboard (`/ui`)
+
+A single-page web dashboard at `http://CLOUD:8500/ui` provides:
+- Fleet status table (agents, health, tags, last sync)
+- Network trust bar (verified / conditional / untrusted)
+- Active alerts feed with severity icons
+- Threat landscape chart by category
+- ANGELGRID AI chat interface
+
+The dashboard is a lightweight HTML file with vanilla JS that calls
+the Cloud REST API. No build step or Node.js required.
+
+### CLI Tool (`ops/cli/angelgridctl`)
+
+A Python CLI for operators that wraps the REST APIs:
+- `angelgridctl status` — ANGELNODE + Cloud health
+- `angelgridctl incidents` — recent events + threat matrix
+- `angelgridctl test-ai-tool` — run AI tool evaluation checks
+- `angelgridctl explain <event-id>` — explain a decision

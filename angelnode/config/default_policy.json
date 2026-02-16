@@ -289,6 +289,21 @@
     },
 
     {
+      "id": "block-ai-tool-secrets-access",
+      "scope": "global",
+      "match": {
+        "categories": ["ai_tool"],
+        "types": ["tool_call"],
+        "detail_conditions": {
+          "accesses_secrets": true
+        }
+      },
+      "action": "block",
+      "risk_level": "critical",
+      "description": "Block AI tool calls that attempt to access secrets or credentials — evaluated FIRST before any tool-name allows",
+      "enabled": true
+    },
+    {
       "id": "allow-ai-tool-read-file",
       "scope": "global",
       "match": {
@@ -331,21 +346,6 @@
       "action": "alert",
       "risk_level": "high",
       "description": "Alert when an AI agent invokes a shell tool — requires human review",
-      "enabled": true
-    },
-    {
-      "id": "block-ai-tool-secrets-access",
-      "scope": "global",
-      "match": {
-        "categories": ["ai_tool"],
-        "types": ["tool_call"],
-        "detail_conditions": {
-          "accesses_secrets": true
-        }
-      },
-      "action": "block",
-      "risk_level": "critical",
-      "description": "Block AI tool calls that attempt to access secrets or credentials",
       "enabled": true
     },
     {

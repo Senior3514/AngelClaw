@@ -1,7 +1,8 @@
 """ANGELGRID Cloud – SaaS Backend API Server.
 
 Central management plane for ANGELNODE fleet.  Handles agent registration,
-event ingestion, policy distribution, and AI-assisted analysis.
+event ingestion, policy distribution, AI-assisted analysis, analytics,
+and the Guardian Angel web dashboard.
 """
 
 from __future__ import annotations
@@ -10,8 +11,11 @@ import json
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from shared.models.agent_node import AgentNode, AgentRegistrationRequest, AgentStatus
@@ -25,6 +29,8 @@ from ..db.session import engine, get_db
 
 logger = logging.getLogger("angelgrid.cloud")
 
+_UI_DIR = Path(__file__).resolve().parent.parent / "ui"
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,7 +43,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="ANGELGRID Cloud API",
-    version="0.2.0",
+    version="0.3.0",
     lifespan=lifespan,
 )
 
@@ -50,6 +56,33 @@ app.include_router(assistant_router)
 from cloud.llm_proxy.routes import router as llm_router  # noqa: E402
 
 app.include_router(llm_router)
+
+# Mount analytics and fleet routes
+from cloud.api.analytics_routes import router as analytics_router  # noqa: E402
+
+app.include_router(analytics_router)
+
+
+# ---------------------------------------------------------------------------
+# GET /health — liveness probe
+# ---------------------------------------------------------------------------
+
+@app.get("/health", tags=["System"])
+def health_check():
+    return {"status": "ok", "version": "0.3.0"}
+
+
+# ---------------------------------------------------------------------------
+# GET /ui — Guardian Angel Dashboard
+# ---------------------------------------------------------------------------
+
+@app.get("/ui", response_class=HTMLResponse, tags=["Dashboard"], include_in_schema=False)
+def serve_dashboard():
+    """Serve the Guardian Angel web dashboard."""
+    index = _UI_DIR / "index.html"
+    if index.exists():
+        return HTMLResponse(content=index.read_text(encoding="utf-8"))
+    return HTMLResponse(content="<h1>Dashboard not found</h1><p>Place index.html in cloud/ui/</p>", status_code=404)
 
 
 # ---------------------------------------------------------------------------

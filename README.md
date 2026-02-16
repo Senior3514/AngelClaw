@@ -21,9 +21,10 @@ angelgrid/
 │   ├── sensors/         #   Future: process/file/network monitors
 │   └── config/          #   Default policies and configuration
 ├── cloud/               # SaaS backend (ANGELGRID Cloud)
-│   ├── api/             #   FastAPI REST endpoints + AI Assistant routes
+│   ├── api/             #   FastAPI REST endpoints, AI Assistant, analytics
 │   ├── ai_assistant/    #   Security analysis (read-only, deterministic)
 │   ├── llm_proxy/       #   Optional LLM proxy for Ollama / external models
+│   ├── ui/              #   Guardian Angel web dashboard (single-page app)
 │   ├── db/              #   SQLAlchemy ORM models and session management
 │   └── services/        #   Business logic (policy compilation, incidents)
 ├── agentless/           # Cloud connectors and legacy scanners
@@ -34,6 +35,7 @@ angelgrid/
 │   ├── security/        #   Cryptographic helpers and input sanitization
 │   └── config/          #   Configuration schemas
 ├── ops/                 # Deployment and integrations
+│   ├── cli/             #   angelgridctl operator CLI
 │   ├── docker/          #   Dockerfiles and compose configurations
 │   ├── wazuh/           #   Wazuh SIEM integration configs and rules
 │   └── infra/           #   Future: Terraform/Pulumi modules
@@ -131,13 +133,16 @@ organized by category. Rules are evaluated top-down; **first match wins**.
 
 | Rule ID | Action | What it does |
 |---------|--------|--------------|
+| `block-ai-tool-secrets-access` | **BLOCK** | Any tool call flagged with `accesses_secrets: true` — **evaluated first** |
 | `allow-ai-tool-read-file` | AUDIT | `read_file`, `search`, `grep`, `glob`, `list_files` |
 | `allow-ai-tool-analysis` | ALLOW | `summarize`, `explain`, `analyze`, `diff`, `status` |
 | `alert-ai-tool-shell` | ALERT | `bash`, `shell`, `exec`, `terminal`, `run_command` |
-| `block-ai-tool-secrets-access` | BLOCK | Any tool call flagged with `accesses_secrets: true` |
 | `alert-ai-tool-write` | ALERT | `write_file`, `edit`, `patch`, `create_file` |
 | `alert-ai-tool-burst` | ALERT | >30 AI tool calls within 10 seconds |
 | *(no match)* | **BLOCK** | Category default: unknown AI tools are blocked |
+
+> **Key**: `block-ai-tool-secrets-access` is first in the AI tool section so that
+> secret-touching operations are **always** blocked, even if the tool name is in a safe list.
 
 ### Extended Match Syntax
 
@@ -291,6 +296,46 @@ curl -X POST http://127.0.0.1:8500/api/v1/llm/chat \
 
 ---
 
+## CLI Usage
+
+`ops/cli/angelgridctl` is a lightweight Python CLI for operators:
+
+```bash
+# Check ANGELNODE and Cloud health
+./ops/cli/angelgridctl status
+
+# Show recent security events with threat matrix
+./ops/cli/angelgridctl incidents
+
+# Run AI tool evaluation tests (safe read, secret path, API key)
+./ops/cli/angelgridctl test-ai-tool
+
+# Explain a specific event decision
+./ops/cli/angelgridctl explain <event-id>
+```
+
+Override endpoints via environment:
+```bash
+ANGELNODE_URL=http://10.0.0.5:8400 CLOUD_URL=http://10.0.0.5:8500 ./ops/cli/angelgridctl status
+```
+
+---
+
+## Web Dashboard
+
+The Guardian Angel dashboard is served at **`http://127.0.0.1:8500/ui`**.
+
+It shows:
+- **Fleet status** — registered agents, health, tags, last sync
+- **Network trust bar** — % of agents in verified/conditional/untrusted state
+- **Active alerts feed** — real-time security events with severity icons
+- **Threat landscape chart** — events by category over the last 24h
+- **ANGELGRID AI chat** — ask questions about incidents, policies, and security posture
+
+No build step needed — it's a single HTML file served by FastAPI.
+
+---
+
 ## API Endpoints Summary
 
 ### ANGELNODE (127.0.0.1:8400)
@@ -306,9 +351,18 @@ curl -X POST http://127.0.0.1:8500/api/v1/llm/chat \
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
+| `/health` | GET | Liveness probe |
+| `/ui` | GET | Guardian Angel web dashboard |
 | `/api/v1/agents/register` | POST | Register an ANGELNODE |
+| `/api/v1/agents` | GET | List all registered agents |
+| `/api/v1/agents/identity` | GET | Agent identity and behavioral fingerprint |
 | `/api/v1/events/batch` | POST | Ingest event batch |
+| `/api/v1/incidents/recent` | GET | Recent security events feed |
 | `/api/v1/policies/current` | GET | Get current policy for an agent |
+| `/api/v1/analytics/policy/evolution` | GET | Policy version history |
+| `/api/v1/analytics/threat-matrix` | GET | Threat landscape by category |
+| `/api/v1/analytics/ai-traffic` | GET | AI tool traffic inspection |
+| `/api/v1/analytics/sessions` | GET | Session analytics by agent |
 | `/api/v1/assistant/incidents` | GET | Incident summary |
 | `/api/v1/assistant/propose` | POST | Policy tightening proposals |
 | `/api/v1/assistant/explain` | GET | Event decision explanation |

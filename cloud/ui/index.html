@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ANGELGRID — Guardian Angel Dashboard</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232733;
+    --border: #2d3140;
+    --text: #e4e7ef;
+    --text-dim: #8b90a0;
+    --accent: #6c8fff;
+    --accent-glow: rgba(108,143,255,0.15);
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.12);
+    --yellow: #fbbf24;
+    --yellow-dim: rgba(251,191,36,0.12);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.12);
+    --orange: #fb923c;
+    --radius: 10px;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  a { color: var(--accent); text-decoration: none; }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .header h1 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .header .angel-icon { font-size: 26px; }
+  .header .subtitle { color: var(--text-dim); font-size: 13px; font-weight: 400; }
+  .header .status-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;
+    background: var(--green-dim); color: var(--green);
+  }
+  .header .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* Layout */
+  .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 20px 28px; max-width: 1400px; margin: 0 auto; }
+  .full-width { grid-column: 1 / -1; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  }
+  .card-title { font-size: 15px; font-weight: 600; }
+  .card-badge {
+    font-size: 11px; padding: 3px 10px; border-radius: 12px;
+    background: var(--accent-glow); color: var(--accent);
+  }
+
+  /* Stats row */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .stat-card {
+    background: var(--surface2); border-radius: var(--radius); padding: 16px;
+    text-align: center;
+  }
+  .stat-value { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .stat-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Trust bar */
+  .trust-bar-container { margin-top: 8px; }
+  .trust-bar { display: flex; height: 32px; border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
+  .trust-bar .segment { display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; min-width: 40px; transition: width 0.5s ease; }
+  .trust-bar .verified { background: var(--green); }
+  .trust-bar .conditional { background: var(--yellow); color: #000; }
+  .trust-bar .untrusted { background: var(--red); }
+  .trust-legend { display: flex; gap: 20px; font-size: 12px; color: var(--text-dim); }
+  .trust-legend span { display: flex; align-items: center; gap: 6px; }
+  .trust-legend .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* Agent table */
+  .agent-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .agent-table th {
+    text-align: left; padding: 8px 12px; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--text-dim); border-bottom: 1px solid var(--border);
+  }
+  .agent-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .agent-table tr:hover { background: var(--surface2); }
+  .status-badge {
+    display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+  }
+  .status-active { background: var(--green-dim); color: var(--green); }
+  .status-degraded { background: var(--yellow-dim); color: var(--yellow); }
+  .status-offline { background: var(--red-dim); color: var(--red); }
+  .tag { display: inline-block; padding: 1px 8px; margin: 1px 2px; border-radius: 8px; font-size: 10px; background: var(--accent-glow); color: var(--accent); }
+
+  /* Alerts feed */
+  .alert-feed { max-height: 380px; overflow-y: auto; }
+  .alert-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 10px; border-radius: 8px; margin-bottom: 6px;
+    transition: background 0.15s;
+  }
+  .alert-item:hover { background: var(--surface2); }
+  .alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+  .alert-body { flex: 1; min-width: 0; }
+  .alert-title { font-size: 13px; font-weight: 500; }
+  .alert-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .alert-sev { font-size: 10px; padding: 1px 8px; border-radius: 8px; font-weight: 600; }
+  .sev-critical { background: var(--red-dim); color: var(--red); }
+  .sev-high { background: var(--orange); color: #000; background: rgba(251,146,60,0.15); color: var(--orange); }
+  .sev-warn, .sev-medium { background: var(--yellow-dim); color: var(--yellow); }
+  .sev-info, .sev-low { background: var(--accent-glow); color: var(--accent); }
+
+  /* Threat chart */
+  .threat-chart { display: flex; flex-direction: column; gap: 8px; }
+  .threat-row { display: flex; align-items: center; gap: 12px; }
+  .threat-label { width: 90px; font-size: 12px; color: var(--text-dim); text-align: right; }
+  .threat-bar-bg { flex: 1; height: 24px; background: var(--surface2); border-radius: 4px; overflow: hidden; position: relative; }
+  .threat-bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 600; transition: width 0.5s ease; min-width: 30px; }
+  .threat-count { width: 50px; font-size: 12px; font-weight: 600; text-align: right; }
+
+  /* Chat */
+  .chat-area { display: flex; flex-direction: column; gap: 12px; }
+  .chat-messages { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  .chat-msg { padding: 10px 14px; border-radius: 10px; font-size: 13px; line-height: 1.5; max-width: 90%; }
+  .chat-msg.system { background: var(--accent-glow); color: var(--accent); align-self: flex-start; }
+  .chat-msg.user { background: var(--surface2); align-self: flex-end; }
+  .chat-input-row { display: flex; gap: 8px; }
+  .chat-input {
+    flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text); font-size: 13px; font-family: var(--font);
+    outline: none;
+  }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-send {
+    padding: 10px 20px; border-radius: 8px; border: none;
+    background: var(--accent); color: #fff; font-weight: 600; cursor: pointer;
+    font-size: 13px; transition: opacity 0.15s;
+  }
+  .chat-send:hover { opacity: 0.85; }
+  .chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .loading { color: var(--text-dim); font-size: 13px; text-align: center; padding: 20px; }
+  .empty { color: var(--text-dim); font-size: 13px; text-align: center; padding: 30px; }
+
+  @media (max-width: 900px) {
+    .dashboard { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>
+    <span class="angel-icon">&#128737;</span>
+    ANGELGRID
+    <span class="subtitle">Guardian Angel Dashboard</span>
+  </h1>
+  <div class="status-pill"><span class="status-dot"></span> Protected</div>
+</div>
+
+<div class="dashboard">
+
+  <!-- Stats Row -->
+  <div class="full-width stats" id="stats">
+    <div class="stat-card"><div class="stat-value" id="stat-agents">-</div><div class="stat-label">Agents</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-events">-</div><div class="stat-label">Events (24h)</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--green)" id="stat-blocked">-</div><div class="stat-label">Threats Blocked</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--accent)" id="stat-policies">-</div><div class="stat-label">Policy Rules</div></div>
+  </div>
+
+  <!-- Network Trust Bar -->
+  <div class="card full-width">
+    <div class="card-header">
+      <span class="card-title">Network Trust Overview</span>
+      <span class="card-badge">Real-time</span>
+    </div>
+    <div class="trust-bar-container">
+      <div class="trust-bar" id="trust-bar">
+        <div class="segment verified" style="width:100%">Loading...</div>
+      </div>
+      <div class="trust-legend">
+        <span><span class="dot" style="background:var(--green)"></span> Verified (healthy agents)</span>
+        <span><span class="dot" style="background:var(--yellow)"></span> Conditional (degraded)</span>
+        <span><span class="dot" style="background:var(--red)"></span> Untrusted (offline/unknown)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent Fleet -->
+  <div class="card full-width">
+    <div class="card-header">
+      <span class="card-title">ANGELNODE Fleet Status</span>
+      <span class="card-badge" id="fleet-count">0 agents</span>
+    </div>
+    <div id="fleet-table"><div class="loading">Loading fleet data...</div></div>
+  </div>
+
+  <!-- Active Alerts Feed -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Active Alerts Feed</span>
+      <span class="card-badge" id="alert-count">0 events</span>
+    </div>
+    <div class="alert-feed" id="alert-feed"><div class="loading">Loading events...</div></div>
+  </div>
+
+  <!-- Threat Landscape -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Threat Landscape (24h)</span>
+      <span class="card-badge">By category</span>
+    </div>
+    <div class="threat-chart" id="threat-chart"><div class="loading">Loading threat data...</div></div>
+  </div>
+
+  <!-- Guardian Angel Chat -->
+  <div class="card full-width">
+    <div class="card-header">
+      <span class="card-title">&#128737; Ask ANGELGRID AI</span>
+      <span class="card-badge">Guardian Angel</span>
+    </div>
+    <div class="chat-area">
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-msg system">Hi! I'm your ANGELGRID guardian angel. Ask me about recent incidents, policy decisions, or how to stay safe while using AI freely.</div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chat-input" placeholder="Ask about incidents, policies, or security posture..." />
+        <button class="chat-send" id="chat-send" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const BASE = window.location.origin;
+
+// Severity helpers
+const sevIcon = s => ({critical:'&#9888;&#65039;',high:'&#128308;',warn:'&#128992;',medium:'&#128992;',low:'&#128309;',info:'&#128310;'}[s]||'&#9679;');
+const sevClass = s => 'sev-'+(s==='warn'?'medium':s);
+const statusClass = s => 'status-'+(s==='active'?'active':s==='degraded'?'degraded':'offline');
+const ago = ts => { if(!ts) return 'never'; const d=new Date(ts); const m=Math.floor((Date.now()-d)/60000); return m<1?'just now':m<60?m+'m ago':m<1440?Math.floor(m/60)+'h ago':Math.floor(m/1440)+'d ago'; };
+const catColor = c => ({shell:'var(--red)',network:'var(--orange)',file:'var(--yellow)',ai_tool:'var(--accent)',db:'#a78bfa',auth:'var(--red)',system:'var(--text-dim)'}[c]||'var(--accent)');
+
+async function fetchJSON(path) {
+  try { const r = await fetch(BASE + path); if(!r.ok) return null; return await r.json(); } catch { return null; }
+}
+
+// Load fleet
+async function loadFleet() {
+  const agents = await fetchJSON('/api/v1/agents');
+  const el = document.getElementById('fleet-table');
+  const countEl = document.getElementById('fleet-count');
+  if(!agents || !agents.length) { el.innerHTML='<div class="empty">No agents registered yet. Start an ANGELNODE to see it here.</div>'; countEl.textContent='0 agents'; return agents||[]; }
+  countEl.textContent = agents.length+' agent'+(agents.length!==1?'s':'');
+  el.innerHTML = '<table class="agent-table"><thead><tr><th>Agent ID</th><th>Hostname</th><th>OS</th><th>Status</th><th>Version</th><th>Tags</th><th>Last Seen</th></tr></thead><tbody>' +
+    agents.map(a => '<tr><td style="font-family:var(--mono);font-size:11px">'+a.agent_id.slice(0,12)+'...</td><td>'+a.hostname+'</td><td>'+a.os+'</td><td><span class="status-badge '+statusClass(a.status)+'">'+a.status+'</span></td><td>'+a.version+'</td><td>'+(a.tags||[]).map(t=>'<span class="tag">'+t+'</span>').join('')+'</td><td>'+ago(a.last_seen_at)+'</td></tr>').join('') +
+    '</tbody></table>';
+  return agents;
+}
+
+// Load alerts
+async function loadAlerts() {
+  const events = await fetchJSON('/api/v1/incidents/recent?limit=30');
+  const el = document.getElementById('alert-feed');
+  const countEl = document.getElementById('alert-count');
+  if(!events || !events.length) { el.innerHTML='<div class="empty">All clear — no recent security events. Your systems are protected.</div>'; countEl.textContent='0 events'; return []; }
+  countEl.textContent = events.length+' events';
+  el.innerHTML = events.map(e => '<div class="alert-item"><span class="alert-icon">'+sevIcon(e.severity)+'</span><div class="alert-body"><div class="alert-title">'+e.category+'/'+e.type+' <span class="alert-sev '+sevClass(e.severity)+'">'+e.severity+'</span></div><div class="alert-meta">'+ago(e.timestamp)+' &middot; '+e.agent_id.slice(0,12)+'... &middot; '+(e.source||'system')+'</div></div></div>').join('');
+  return events;
+}
+
+// Load threat matrix
+async function loadThreats() {
+  const data = await fetchJSON('/api/v1/analytics/threat-matrix?lookback_hours=24');
+  const el = document.getElementById('threat-chart');
+  if(!data || !data.length) { el.innerHTML='<div class="empty">No threat data for the last 24 hours. Everything looks safe.</div>'; return; }
+  const max = Math.max(...data.map(d=>d.total_events),1);
+  el.innerHTML = data.slice(0,8).map(d => {
+    const pct = Math.max(5, (d.total_events/max)*100);
+    return '<div class="threat-row"><span class="threat-label">'+d.category+'</span><div class="threat-bar-bg"><div class="threat-bar-fill" style="width:'+pct+'%;background:'+catColor(d.category)+'">'+d.total_events+'</div></div></div>';
+  }).join('');
+}
+
+// Trust bar
+function updateTrust(agents) {
+  const el = document.getElementById('trust-bar');
+  if(!agents||!agents.length) { el.innerHTML='<div class="segment verified" style="width:100%">No agents</div>'; return; }
+  const active = agents.filter(a=>a.status==='active').length;
+  const degraded = agents.filter(a=>a.status==='degraded').length;
+  const other = agents.length - active - degraded;
+  const pct = n => Math.max(0,Math.round(n/agents.length*100));
+  let html = '';
+  if(active) html += '<div class="segment verified" style="width:'+pct(active)+'%">'+pct(active)+'%</div>';
+  if(degraded) html += '<div class="segment conditional" style="width:'+pct(degraded)+'%">'+pct(degraded)+'%</div>';
+  if(other) html += '<div class="segment untrusted" style="width:'+pct(other)+'%">'+pct(other)+'%</div>';
+  el.innerHTML = html || '<div class="segment verified" style="width:100%">100%</div>';
+}
+
+// Stats
+async function loadStats(agents, events) {
+  document.getElementById('stat-agents').textContent = agents ? agents.length : 0;
+  document.getElementById('stat-events').textContent = events ? events.length : 0;
+  const blocked = events ? events.filter(e=>['critical','high'].includes(e.severity)).length : 0;
+  document.getElementById('stat-blocked').textContent = blocked;
+  const policies = await fetchJSON('/api/v1/analytics/policy/evolution');
+  const ruleCount = policies && policies.length ? policies[0].rule_count : 0;
+  document.getElementById('stat-policies').textContent = ruleCount;
+}
+
+// Chat
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msgs = document.getElementById('chat-messages');
+  const btn = document.getElementById('chat-send');
+  const text = input.value.trim();
+  if(!text) return;
+
+  msgs.innerHTML += '<div class="chat-msg user">'+text.replace(/</g,'&lt;')+'</div>';
+  input.value = '';
+  btn.disabled = true;
+
+  // Try LLM proxy first, fall back to incidents summary
+  let answer = null;
+  const llmResp = await fetch(BASE+'/api/v1/llm/chat', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({prompt: text})
+  }).catch(()=>null);
+
+  if(llmResp && llmResp.ok) {
+    const data = await llmResp.json();
+    answer = data.answer;
+  } else {
+    // Fallback: fetch incident summary
+    const summary = await fetchJSON('/api/v1/assistant/incidents?lookback_hours=24');
+    if(summary) {
+      answer = 'Here\'s what I can tell you from the last 24 hours:\n\n' +
+        'Total incidents: ' + summary.total_incidents + '\n' +
+        (summary.recommended_focus||[]).map(r=>'- '+r).join('\n') +
+        '\n\n(LLM proxy is disabled. Enable it for richer responses.)';
+    } else {
+      answer = 'I\'m having trouble reaching the backend. Make sure the Cloud API is running.';
+    }
+  }
+
+  msgs.innerHTML += '<div class="chat-msg system">'+answer.replace(/</g,'&lt;').replace(/\n/g,'<br>')+'</div>';
+  msgs.scrollTop = msgs.scrollHeight;
+  btn.disabled = false;
+}
+
+document.getElementById('chat-input').addEventListener('keydown', e => { if(e.key==='Enter') sendChat(); });
+
+// Bootstrap
+(async () => {
+  const agents = await loadFleet();
+  const events = await loadAlerts();
+  await loadThreats();
+  updateTrust(agents);
+  await loadStats(agents, events);
+  // Refresh every 30s
+  setInterval(async () => {
+    const a = await loadFleet();
+    const e = await loadAlerts();
+    await loadThreats();
+    updateTrust(a);
+    await loadStats(a, e);
+  }, 30000);
+})();
+</script>
+</body>
+</html>
