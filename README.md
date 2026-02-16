@@ -11,6 +11,19 @@ do something genuinely dangerous: destructive shell commands, accessing secrets,
 modifying critical files, or calling risky external endpoints. Everything else —
 analysis, reading, summarizing, reasoning, creating — flows freely.
 
+## V2: Autonomous Guardian
+
+V2 makes ANGELGRID a **truly autonomous guardian** with:
+
+- **Guardian Heartbeat** — Continuous fleet health monitoring every 5 minutes
+- **Event Bus Alerts** — Automatic detection of critical patterns (secret exfil, severity spikes, agent flapping)
+- **Guardian Chat** — Unified chat interface for asking about incidents, threats, agents, and policies
+- **Predictive Threat Vectors** — Rule-based attack pattern correlation (no ML needed)
+- **Agent Timeline** — Chronological activity view per agent
+- **Two-Panel Dashboard** — Stats + alerts + fleet on the left, persistent Guardian Chat on the right
+
+All V2 features are **read-only/suggest-only** — no auto-applying actions.
+
 ## Repository Structure
 
 ```
@@ -419,6 +432,12 @@ No build step needed — it's a single HTML file served by FastAPI.
 | `/api/v1/assistant/propose` | POST | Policy tightening proposals |
 | `/api/v1/assistant/explain` | GET | Event decision explanation |
 | `/api/v1/llm/chat` | POST | LLM proxy (disabled by default) |
+| `/api/v1/guardian/reports/recent` | GET | Guardian heartbeat reports |
+| `/api/v1/guardian/alerts/recent` | GET | Critical pattern alerts |
+| `/api/v1/guardian/chat` | POST | Unified guardian chat |
+| `/api/v1/guardian/event_context` | GET | Event with history window and AI traffic |
+| `/api/v1/guardian/changes` | GET | Policy/config change log |
+| `/api/v1/analytics/agent/timeline` | GET | Agent activity timeline |
 
 ## License
 

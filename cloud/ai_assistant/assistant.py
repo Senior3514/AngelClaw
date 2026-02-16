@@ -192,6 +192,92 @@ def propose_policy_tightening(
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+def explain_event_with_context(
+    db: Session,
+    event_id: str,
+) -> dict:
+    """Return event explanation with surrounding context window.
+
+    Helper used by the Guardian Chat and event_context endpoint.
+    This function is strictly read-only.
+    """
+    from datetime import timedelta
+
+    from shared.security.secret_scanner import redact_dict, redact_secrets
+
+    event_row = db.query(EventRow).filter_by(id=event_id).first()
+    if not event_row:
+        return {"error": f"Event '{event_id}' not found"}
+
+    # Build explanation via policy engine
+    explanation = f"Event {event_row.category}/{event_row.type} with severity {event_row.severity}"
+    try:
+        import json
+        from pathlib import Path
+        from shared.models.event import Event, EventCategory, Severity
+        from angelnode.core.engine import PolicyEngine
+
+        event = Event(
+            id=event_row.id,
+            agent_id=event_row.agent_id,
+            timestamp=event_row.timestamp,
+            category=EventCategory(event_row.category),
+            type=event_row.type,
+            severity=Severity(event_row.severity),
+            details=event_row.details or {},
+            source=event_row.source,
+        )
+        policy_path = (
+            Path(__file__).resolve().parent.parent.parent
+            / "angelnode" / "config" / "default_policy.json"
+        )
+        if policy_path.exists():
+            engine = PolicyEngine.from_file(policy_path)
+            decision = engine.evaluate(event)
+            explanation = (
+                f"Action: {decision.action.value.upper()}. "
+                f"Reason: {decision.reason}. "
+                f"Risk level: {decision.risk_level.value}."
+            )
+    except Exception:
+        pass
+
+    # Context window
+    window_start = event_row.timestamp - timedelta(minutes=5)
+    window_end = event_row.timestamp + timedelta(minutes=5)
+    history = (
+        db.query(EventRow)
+        .filter(
+            EventRow.agent_id == event_row.agent_id,
+            EventRow.timestamp >= window_start,
+            EventRow.timestamp <= window_end,
+            EventRow.id != event_row.id,
+        )
+        .order_by(EventRow.timestamp.asc())
+        .limit(20)
+        .all()
+    )
+
+    return {
+        "event_id": event_row.id,
+        "category": event_row.category,
+        "type": event_row.type,
+        "severity": event_row.severity,
+        "explanation": redact_secrets(explanation),
+        "details": redact_dict(event_row.details) if event_row.details else {},
+        "context_window": [
+            {
+                "id": h.id,
+                "category": h.category,
+                "type": h.type,
+                "severity": h.severity,
+                "timestamp": h.timestamp.isoformat(),
+            }
+            for h in history
+        ],
+    }
+
+
 def _generate_recommendations(
     classifications: Counter[str],
     severities: Counter[str],

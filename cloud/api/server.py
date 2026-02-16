@@ -1,14 +1,16 @@
-"""ANGELGRID Cloud – SaaS Backend API Server.
+"""ANGELGRID Cloud – SaaS Backend API Server (V2 Autonomous Guardian).
 
 Central management plane for ANGELNODE fleet.  Handles agent registration,
 event ingestion, policy distribution, AI-assisted analysis, analytics,
-and the Guardian Angel web dashboard.
+guardian heartbeat, event bus alerts, and the Guardian Angel web dashboard.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
+import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,7 +26,7 @@ from shared.models.policy import PolicySet
 
 from ..ai_assistant.assistant import propose_policy_tightening, summarize_recent_incidents
 from ..ai_assistant.models import IncidentSummary, ProposedPolicyChanges
-from ..db.models import AgentNodeRow, Base, EventRow, PolicySetRow
+from ..db.models import AgentNodeRow, Base, EventRow, GuardianChangeRow, PolicySetRow
 from ..db.session import engine, get_db
 
 logger = logging.getLogger("angelgrid.cloud")
@@ -34,16 +36,20 @@ _UI_DIR = Path(__file__).resolve().parent.parent / "ui"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create database tables on startup."""
+    """Create database tables on startup, start guardian heartbeat."""
     Base.metadata.create_all(bind=engine)
     _ensure_default_policy_exists()
-    logger.info("ANGELGRID Cloud API started — tables created")
+    # Start guardian heartbeat background task
+    from cloud.services.guardian_heartbeat import heartbeat_loop
+    heartbeat_task = asyncio.create_task(heartbeat_loop())
+    logger.info("ANGELGRID Cloud API V2 started — tables created, heartbeat running")
     yield
+    heartbeat_task.cancel()
 
 
 app = FastAPI(
     title="ANGELGRID Cloud API",
-    version="0.3.0",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
@@ -62,6 +68,11 @@ from cloud.api.analytics_routes import router as analytics_router  # noqa: E402
 
 app.include_router(analytics_router)
 
+# Mount Guardian V2 routes
+from cloud.api.guardian_routes import router as guardian_router  # noqa: E402
+
+app.include_router(guardian_router)
+
 
 # ---------------------------------------------------------------------------
 # GET /health — liveness probe
@@ -69,7 +80,7 @@ app.include_router(analytics_router)
 
 @app.get("/health", tags=["System"])
 def health_check():
-    return {"status": "ok", "version": "0.3.0"}
+    return {"status": "ok", "version": "2.0.0"}
 
 
 # ---------------------------------------------------------------------------
@@ -117,6 +128,17 @@ def _ensure_default_policy_exists():
             version_hash=ps.version,
         )
         db.add(row)
+        # Record this as a guardian change
+        change = GuardianChangeRow(
+            id=str(uuid.uuid4()),
+            tenant_id="dev-tenant",
+            change_type="policy_seed",
+            description=f"Initial policy seeded: {ps.name} (v{ps.version[:8]})",
+            after_snapshot=ps.version,
+            changed_by="system",
+            details={"policy_name": ps.name, "rule_count": len(ps.rules)},
+        )
+        db.add(change)
         db.commit()
         logger.info("Seeded default PolicySet (version=%s)", ps.version)
     finally:
@@ -222,6 +244,13 @@ def ingest_events(
 
     db.add_all(rows)
     db.commit()
+
+    # V2: Check for critical patterns via the event bus
+    from cloud.services.event_bus import check_for_alerts
+    try:
+        check_for_alerts(db, rows)
+    except Exception:
+        logger.exception("Event bus alert check failed (non-fatal)")
 
     return {
         "accepted": len(rows),

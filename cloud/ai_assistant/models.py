@@ -84,3 +84,13 @@ class ProposedPolicyChanges(BaseModel):
         default=True,
         description="Always True — assistant proposals must be approved",
     )
+
+
+class ThreatPrediction(BaseModel):
+    """A predicted threat vector based on deterministic pattern rules."""
+
+    vector_name: str = Field(description="e.g. 'data_exfiltration', 'lateral_movement'")
+    confidence: float = Field(ge=0.0, le=1.0, description="0.0–1.0 confidence score")
+    rationale: str
+    contributing_categories: list[str] = Field(default_factory=list)
+    event_count: int = 0

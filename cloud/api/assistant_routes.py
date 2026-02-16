@@ -68,6 +68,14 @@ class EventExplanation(BaseModel):
     explanation: str = Field(
         description="Human-readable explanation of the decision",
     )
+    context_window: list[dict] = Field(
+        default_factory=list,
+        description="Surrounding events within +/- 5 minutes (when include_context=true)",
+    )
+    related_ai_traffic: list[dict] = Field(
+        default_factory=list,
+        description="AI tool call events from same agent in the window (when include_context=true)",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -149,6 +157,7 @@ def propose_tightening(
 )
 def explain_event(
     event_id: str = Query(..., description="The event ID to explain"),
+    include_context: bool = Query(default=False, description="Include surrounding events and AI traffic"),
     tenant_id: str = Depends(_require_tenant),
     db: Session = Depends(get_db),
 ) -> EventExplanation:
@@ -201,6 +210,58 @@ def explain_event(
     safe_details = redact_dict(event_row.details) if event_row.details else {}
     safe_explanation = redact_secrets(explanation)
 
+    # Optional: include surrounding context
+    context_window_data: list[dict] = []
+    ai_traffic_data: list[dict] = []
+    if include_context:
+        from datetime import timedelta
+        window_start = event_row.timestamp - timedelta(minutes=5)
+        window_end = event_row.timestamp + timedelta(minutes=5)
+        history = (
+            db.query(EventRow)
+            .filter(
+                EventRow.agent_id == event_row.agent_id,
+                EventRow.timestamp >= window_start,
+                EventRow.timestamp <= window_end,
+                EventRow.id != event_row.id,
+            )
+            .order_by(EventRow.timestamp.asc())
+            .limit(20)
+            .all()
+        )
+        context_window_data = [
+            {
+                "id": h.id,
+                "timestamp": h.timestamp.isoformat(),
+                "category": h.category,
+                "type": h.type,
+                "severity": h.severity,
+            }
+            for h in history
+        ]
+        ai_events = (
+            db.query(EventRow)
+            .filter(
+                EventRow.agent_id == event_row.agent_id,
+                EventRow.category == "ai_tool",
+                EventRow.timestamp >= window_start,
+                EventRow.timestamp <= window_end,
+            )
+            .order_by(EventRow.timestamp.asc())
+            .limit(10)
+            .all()
+        )
+        ai_traffic_data = [
+            {
+                "id": t.id,
+                "timestamp": t.timestamp.isoformat(),
+                "type": t.type,
+                "severity": t.severity,
+                "tool_name": (t.details or {}).get("tool_name", "unknown"),
+            }
+            for t in ai_events
+        ]
+
     return EventExplanation(
         event_id=event_row.id,
         category=event_row.category,
@@ -211,4 +272,6 @@ def explain_event(
         details=safe_details,
         matched_rule_id=decision.matched_rule_id if decision else None,
         explanation=safe_explanation,
+        context_window=context_window_data,
+        related_ai_traffic=ai_traffic_data,
     )

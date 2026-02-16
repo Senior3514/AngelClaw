@@ -83,6 +83,7 @@ class ThreatMatrixEntry(BaseModel):
     total_events: int
     by_severity: dict[str, int] = Field(default_factory=dict)
     top_types: list[dict[str, Any]] = Field(default_factory=list)
+    predicted_vectors: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class AITrafficEntry(BaseModel):
@@ -232,6 +233,18 @@ def threat_matrix(
     for ev in events:
         by_cat.setdefault(ev.category, []).append(ev)
 
+    # Get predicted threat vectors
+    from cloud.services.predictive import predict_threat_vectors
+    predictions = predict_threat_vectors(db, lookback_hours=lookback_hours)
+    pred_by_cat: dict[str, list[dict[str, Any]]] = {}
+    for p in predictions:
+        for cat in p.contributing_categories:
+            pred_by_cat.setdefault(cat, []).append({
+                "vector_name": p.vector_name,
+                "confidence": p.confidence,
+                "rationale": p.rationale,
+            })
+
     result = []
     for cat, cat_events in sorted(by_cat.items(), key=lambda x: -len(x[1])):
         sev_counter: Counter[str] = Counter(e.severity for e in cat_events)
@@ -244,6 +257,7 @@ def threat_matrix(
                 {"type": t, "count": c}
                 for t, c in type_counter.most_common(5)
             ],
+            predicted_vectors=pred_by_cat.get(cat, []),
         ))
     return result
 
@@ -394,6 +408,24 @@ def session_analytics(
         sessions.append(_build_session(current, SEVERITY_ORDER))
 
     return sorted(sessions, key=lambda s: s.session_start, reverse=True)[:100]
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/analytics/agent/timeline
+# ---------------------------------------------------------------------------
+
+@router.get(
+    "/api/v1/analytics/agent/timeline",
+    summary="Agent activity timeline",
+)
+def agent_timeline(
+    agentId: str = Query(..., description="Agent ID"),
+    hours: int = Query(default=24, ge=1, le=720),
+    tenant_id: str = Depends(_require_tenant),
+    db: Session = Depends(get_db),
+):
+    from cloud.services.timeline import build_agent_timeline
+    return build_agent_timeline(db, agentId, hours=hours)
 
 
 def _build_session(

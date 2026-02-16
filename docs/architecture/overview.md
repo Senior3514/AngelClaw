@@ -135,16 +135,98 @@ that computes insights from stored events and agent data:
 All analytics are computed on-the-fly from existing tables (no additional
 storage needed). All endpoints are tenant-scoped and read-only.
 
+## V2 Autonomous Guardian
+
+V2 adds autonomous monitoring, a unified chat interface, deeper analytics,
+and transparent observability. All new features are **read-only/suggest-only**
+— no auto-applying actions.
+
+### Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    ANGELGRID Cloud V2                                  │
+│                                                                      │
+│  ┌─────────────┐  ┌──────────────┐  ┌────────────┐  ┌────────────┐ │
+│  │  Guardian    │  │  Event Bus   │  │  Timeline  │  │ Predictive │ │
+│  │  Heartbeat   │  │  (Alerts)    │  │  Builder   │  │  Engine    │ │
+│  │  (5min loop) │  │  (on ingest) │  │            │  │            │ │
+│  └──────┬──────┘  └──────┬──────┘  └─────┬──────┘  └─────┬──────┘ │
+│         │                │               │                │         │
+│         ▼                ▼               ▼                ▼         │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │              Guardian Chat Orchestrator                       │   │
+│  │  (Deterministic + Optional LLM enrichment)                   │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│         │                                                           │
+│  ┌──────▼──────────────────────────────────────────────────────┐   │
+│  │  Guardian API (/api/v1/guardian/*)                            │   │
+│  │  reports/recent | alerts/recent | chat | event_context |     │   │
+│  │  changes                                                     │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Guardian Heartbeat Flow
+
+1. Every 5 minutes, the heartbeat service computes fleet health
+2. Counts agents by status, events by severity, detects anomalies
+3. Stores a `GuardianReportRow` and emits a log line
+4. Anomaly types: agents going offline, severity spikes, repeated patterns
+
+### Event Bus (Alert Detection) Flow
+
+1. `ingest_events()` inserts event batch into the database
+2. Calls `check_for_alerts()` synchronously after insert
+3. Detects patterns: repeated secret exfil, high-severity bursts, agent flapping
+4. Creates `GuardianAlertRow` entries for critical patterns
+
+### Guardian Chat Flow
+
+1. User sends prompt via `/api/v1/guardian/chat`
+2. Regex-based intent detection classifies the query
+3. Deterministic handler gathers data (incidents, agents, threats, etc.)
+4. If LLM is enabled, enriches with natural language via `/api/v1/llm/chat`
+5. Action suggestions are always deterministic (never LLM-generated)
+6. Returns structured response with answer, actions, and references
+
+### New Endpoints (V2)
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/v1/guardian/reports/recent` | GET | Guardian heartbeat reports |
+| `/api/v1/guardian/alerts/recent` | GET | Critical pattern alerts |
+| `/api/v1/guardian/chat` | POST | Unified guardian chat |
+| `/api/v1/guardian/event_context` | GET | Event with history window |
+| `/api/v1/guardian/changes` | GET | Policy/config change log |
+| `/api/v1/analytics/agent/timeline` | GET | Agent activity timeline |
+
+### New DB Tables (V2)
+
+| Table | Purpose |
+|-------|---------|
+| `guardian_reports` | Periodic heartbeat summaries |
+| `guardian_alerts` | Event-driven critical notifications |
+| `guardian_changes` | Policy/config change records |
+
 ## Operator Experience
 
 ### Web Dashboard (`/ui`)
 
-A single-page web dashboard at `http://CLOUD:8500/ui` provides:
-- Fleet status table (agents, health, tags, last sync)
-- Network trust bar (verified / conditional / untrusted)
-- Active alerts feed with severity icons
+A two-panel web dashboard at `http://CLOUD:8500/ui` provides:
+
+**Left panel (65%)**:
+- Stats row (agents, events, blocked, rules, alerts)
+- Guardian Alerts feed (critical pattern notifications)
+- Fleet status table (agents, health, version, last seen)
 - Threat landscape chart by category
-- ANGELGRID AI chat interface
+- Recent events feed with severity icons
+
+**Right panel (35%)**:
+- Persistent Guardian Chat connected to `/api/v1/guardian/chat`
+- Renders action suggestion cards and reference links
+- Session history in JS array (in-memory, cleared on refresh)
+- Responsive: stacks vertically on mobile
 
 The dashboard is a lightweight HTML file with vanilla JS that calls
 the Cloud REST API. No build step or Node.js required.
