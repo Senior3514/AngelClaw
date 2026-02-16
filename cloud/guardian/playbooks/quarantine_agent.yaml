@@ -1,0 +1,28 @@
+playbook: quarantine_agent
+description: "Quarantine a suspect agent: pause, snapshot, notify, investigate."
+trigger_patterns:
+  - repeated_secret_exfil
+  - data_staging
+severity_threshold: critical
+auto_respond: false
+steps:
+  - action: pause_agent
+    target: "{{ agent_id }}"
+    description: "Pause the suspect agent to stop further activity"
+    reversible: true
+    timeout_seconds: 30
+  - action: snapshot_state
+    target: "{{ agent_id }}"
+    description: "Capture agent state for forensic analysis"
+    timeout_seconds: 60
+  - action: notify_operator
+    description: "Alert the operator about the quarantine"
+    params:
+      channel: webhook
+      message: "Agent {{ agent_id }} quarantined due to {{ title }}"
+  - action: create_investigation
+    description: "Dispatch forensic agent to investigate"
+rollback:
+  - action: resume_agent
+    target: "{{ agent_id }}"
+    description: "Resume the agent if quarantine was a false positive"

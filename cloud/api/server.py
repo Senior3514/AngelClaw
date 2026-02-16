@@ -2,7 +2,8 @@
 
 Central management plane for ANGELNODE fleet.  Handles agent registration,
 event ingestion, policy distribution, AI-assisted analysis, analytics,
-guardian heartbeat, event bus alerts, and the Guardian Angel web dashboard.
+guardian heartbeat, event bus alerts, Wazuh XDR integration, structured
+observability, and the Guardian Angel web dashboard.
 """
 
 from __future__ import annotations
@@ -38,15 +39,27 @@ _UI_DIR = Path(__file__).resolve().parent.parent / "ui"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create database tables on startup, start guardian heartbeat."""
+    """Create database tables on startup, start guardian heartbeat, orchestrator, and Wazuh ingest."""
+    # Structured logging (before anything else logs)
+    from cloud.services.structured_logger import setup_structured_logging
+    setup_structured_logging()
+
     Base.metadata.create_all(bind=engine)
     _ensure_default_policy_exists()
     # Start guardian heartbeat background task
     from cloud.services.guardian_heartbeat import heartbeat_loop
     heartbeat_task = asyncio.create_task(heartbeat_loop())
-    logger.info("AngelClaw Cloud API V3 started — tables created, heartbeat running")
+    # Start ANGEL AGI Orchestrator
+    from cloud.guardian.orchestrator import angel_orchestrator
+    await angel_orchestrator.start()
+    # Start Wazuh XDR ingest loop (no-op if not configured)
+    from cloud.integrations.wazuh_ingest import wazuh_ingest_loop
+    wazuh_task = asyncio.create_task(wazuh_ingest_loop())
+    logger.info("AngelClaw Cloud API V3 started — tables, heartbeat, orchestrator, Wazuh ingest")
     yield
+    wazuh_task.cancel()
     heartbeat_task.cancel()
+    await angel_orchestrator.stop()
 
 
 app = FastAPI(
@@ -54,6 +67,16 @@ app = FastAPI(
     version="0.4.0",
     lifespan=lifespan,
 )
+
+# Security middleware (rate limiting, CORS, security headers)
+from cloud.middleware.security import setup_security_middleware  # noqa: E402
+
+setup_security_middleware(app)
+
+# Add correlation ID middleware (outermost — runs before auth)
+from cloud.services.structured_logger import CorrelationMiddleware  # noqa: E402
+
+app.add_middleware(CorrelationMiddleware)
 
 # Mount auth routes (always available, even when auth is disabled)
 from cloud.auth.routes import router as auth_router  # noqa: E402
@@ -80,6 +103,16 @@ from cloud.api.guardian_routes import router as guardian_router  # noqa: E402
 
 app.include_router(guardian_router)
 
+# Mount Orchestrator API routes (ANGEL AGI)
+from cloud.api.orchestrator_routes import router as orchestrator_router  # noqa: E402
+
+app.include_router(orchestrator_router)
+
+# Mount Metrics & Observability routes
+from cloud.api.metrics_routes import router as metrics_router  # noqa: E402
+
+app.include_router(metrics_router)
+
 
 # ---------------------------------------------------------------------------
 # Auth middleware — protect /api/v1/* routes when auth is enabled
@@ -89,7 +122,7 @@ from cloud.auth.config import AUTH_ENABLED  # noqa: E402
 from cloud.auth.service import verify_bearer, verify_jwt  # noqa: E402
 
 # Paths that never require auth
-_PUBLIC_PATHS = {"/health", "/ui", "/api/v1/auth/login", "/api/v1/auth/logout", "/docs", "/openapi.json", "/redoc"}
+_PUBLIC_PATHS = {"/health", "/ready", "/metrics", "/ui", "/api/v1/auth/login", "/api/v1/auth/logout", "/docs", "/openapi.json", "/redoc"}
 
 
 @app.middleware("http")
@@ -129,8 +162,9 @@ async def auth_middleware(request: Request, call_next):
 
     # Viewer role check: block POST/PUT/DELETE on non-chat endpoints
     if user.role.value == "viewer" and request.method in ("POST", "PUT", "DELETE"):
-        # Allow chat for viewers (read-only operation that returns analysis)
-        if path not in ("/api/v1/guardian/chat", "/api/v1/auth/logout"):
+        # Allow chat, logout, and password change for viewers
+        _VIEWER_WRITE_PATHS = {"/api/v1/guardian/chat", "/api/v1/auth/logout", "/api/v1/auth/change-password"}
+        if path not in _VIEWER_WRITE_PATHS:
             return JSONResponse(
                 status_code=403,
                 content={"detail": f"Viewers cannot {request.method} to {path}"},
@@ -147,7 +181,17 @@ async def auth_middleware(request: Request, call_next):
 
 @app.get("/health", tags=["System"])
 def health_check():
-    return {"status": "ok", "version": "0.4.0"}
+    from cloud.guardian.orchestrator import angel_orchestrator
+    orch = angel_orchestrator.status()
+    return {
+        "status": "ok",
+        "version": "0.4.0",
+        "orchestrator": orch["running"],
+        "agents": {
+            name: info["status"]
+            for name, info in orch.get("agents", {}).items()
+        },
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -307,20 +351,48 @@ def ingest_events(
 
     # V2: Check for critical patterns via the event bus
     from cloud.services.event_bus import check_for_alerts
+    alerts_created = []
     try:
-        alerts = check_for_alerts(db, rows)
-        if alerts:
+        alerts_created = check_for_alerts(db, rows)
+        if alerts_created:
             logger.info(
                 "[EVENT INGEST] %d event(s) ingested from agent %s — %d alert(s) triggered",
-                len(rows), batch.agent_id[:8], len(alerts),
+                len(rows), batch.agent_id[:8], len(alerts_created),
             )
     except Exception:
         logger.exception("[EVENT INGEST] Event bus alert check failed (non-fatal)")
 
+    # V3: Run events through ANGEL AGI Orchestrator (non-blocking)
+    from cloud.guardian.orchestrator import angel_orchestrator
+    indicators = []
+    try:
+        indicators = asyncio.get_event_loop().run_until_complete(
+            angel_orchestrator.process_events(rows, db)
+        ) if not asyncio.get_event_loop().is_running() else []
+        # If we're inside an async context, schedule as task
+        if asyncio.get_event_loop().is_running():
+            asyncio.create_task(_run_orchestrator(rows, db))
+    except RuntimeError:
+        # No event loop — skip orchestrator (sync context)
+        pass
+    except Exception:
+        logger.debug("[EVENT INGEST] Orchestrator analysis skipped", exc_info=True)
+
     return {
         "accepted": len(rows),
         "agent_id": batch.agent_id,
+        "alerts": len(alerts_created),
+        "indicators": len(indicators),
     }
+
+
+async def _run_orchestrator(rows: list, db: Session) -> None:
+    """Run orchestrator analysis as a background task."""
+    from cloud.guardian.orchestrator import angel_orchestrator
+    try:
+        await angel_orchestrator.process_events(rows, db)
+    except Exception:
+        logger.debug("[ORCHESTRATOR] Background analysis failed", exc_info=True)
 
 
 # ---------------------------------------------------------------------------

@@ -55,6 +55,8 @@ services:
       - "8500"
     volumes:
       - cloud-data:/data
+    env_file:
+      - config/angelgrid.env
     environment:
       - ANGELGRID_DATABASE_URL=sqlite:////data/angelgrid.db
       # LLM Proxy configuration

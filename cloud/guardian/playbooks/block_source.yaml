@@ -1,0 +1,24 @@
+playbook: block_source
+description: "Temporarily block a source exhibiting brute-force behavior."
+trigger_patterns:
+  - credential_stuffing
+severity_threshold: high
+auto_respond: true
+steps:
+  - action: block_source
+    target: "{{ agent_id }}"
+    description: "Add source to deny list for 1 hour"
+    reversible: true
+    timeout_seconds: 10
+    params:
+      duration_seconds: 3600
+  - action: notify_operator
+    params:
+      channel: webhook
+      message: "Source {{ agent_id }} blocked for 1h: {{ title }}"
+  - action: log_incident
+rollback:
+  - action: block_source
+    target: "{{ agent_id }}"
+    params:
+      duration_seconds: 0

@@ -6,6 +6,7 @@ import hashlib
 import hmac
 import json
 import logging
+import os
 import time
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 
@@ -17,6 +18,8 @@ from .config import (
     JWT_ALGORITHM,
     JWT_EXPIRE_HOURS,
     JWT_SECRET,
+    SECOPS_PASSWORD,
+    SECOPS_USER,
     VIEWER_PASSWORD,
     VIEWER_USER,
 )
@@ -47,12 +50,47 @@ def _verify_password(password: str, hashed: str) -> bool:
 def authenticate_local(username: str, password: str) -> AuthUser | None:
     """Authenticate against configured local credentials."""
     if username == ADMIN_USER and ADMIN_PASSWORD and password == ADMIN_PASSWORD:
-        return AuthUser(username=username, role=UserRole.OPERATOR, tenant_id="dev-tenant")
+        return AuthUser(username=username, role=UserRole.ADMIN, tenant_id="dev-tenant")
+
+    if username == SECOPS_USER and SECOPS_PASSWORD and password == SECOPS_PASSWORD:
+        return AuthUser(username=username, role=UserRole.SECOPS, tenant_id="dev-tenant")
 
     if username == VIEWER_USER and VIEWER_PASSWORD and password == VIEWER_PASSWORD:
         return AuthUser(username=username, role=UserRole.VIEWER, tenant_id="dev-tenant")
 
+    # Backward compat: operator role for admin user
     return None
+
+
+def change_password(username: str, current_password: str, new_password: str) -> bool:
+    """Change password for a local user. Returns True on success."""
+    import cloud.auth.config as cfg
+
+    if username == cfg.ADMIN_USER:
+        if current_password != cfg.ADMIN_PASSWORD:
+            return False
+        cfg.ADMIN_PASSWORD = new_password
+        os.environ["ANGELCLAW_ADMIN_PASSWORD"] = new_password
+        logger.info("Password changed for admin user")
+        return True
+
+    if username == cfg.SECOPS_USER:
+        if current_password != cfg.SECOPS_PASSWORD:
+            return False
+        cfg.SECOPS_PASSWORD = new_password
+        os.environ["ANGELCLAW_SECOPS_PASSWORD"] = new_password
+        logger.info("Password changed for secops user")
+        return True
+
+    if username == cfg.VIEWER_USER:
+        if current_password != cfg.VIEWER_PASSWORD:
+            return False
+        cfg.VIEWER_PASSWORD = new_password
+        os.environ["ANGELCLAW_VIEWER_PASSWORD"] = new_password
+        logger.info("Password changed for viewer user")
+        return True
+
+    return False
 
 
 # ---------------------------------------------------------------------------

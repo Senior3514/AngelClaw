@@ -1,0 +1,23 @@
+playbook: tighten_policy
+description: "Propose and apply a tighter policy rule based on repeated alerts."
+trigger_patterns:
+  - high_severity_burst
+severity_threshold: high
+auto_respond: false
+steps:
+  - action: notify_operator
+    description: "Notify about proposed policy change"
+    params:
+      channel: webhook
+      message: "Policy tightening proposed for {{ agent_id }}: {{ title }}"
+  - action: apply_policy_rule
+    target: "{{ agent_id }}"
+    description: "Apply the proposed policy rule"
+    reversible: true
+    timeout_seconds: 30
+  - action: log_incident
+rollback:
+  - action: apply_policy_rule
+    target: "{{ agent_id }}"
+    params:
+      rule_id: "rollback"

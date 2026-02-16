@@ -1,0 +1,27 @@
+playbook: throttle_agent
+description: "Rate-limit a suspicious agent to slow potential damage."
+trigger_patterns:
+  - high_severity_burst
+  - behavioral_anomaly
+severity_threshold: high
+auto_respond: true
+steps:
+  - action: throttle_agent
+    target: "{{ agent_id }}"
+    description: "Rate-limit agent to 1 request per 10 seconds"
+    reversible: true
+    timeout_seconds: 10
+    params:
+      rate: "1req/10s"
+  - action: notify_operator
+    description: "Inform operator of throttle action"
+    params:
+      channel: webhook
+      message: "Agent {{ agent_id }} throttled: {{ title }}"
+  - action: log_incident
+    description: "Record the throttle incident"
+rollback:
+  - action: throttle_agent
+    target: "{{ agent_id }}"
+    params:
+      rate: "unlimited"

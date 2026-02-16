@@ -17,6 +17,9 @@ AUTH_MODE: str = os.environ.get("ANGELCLAW_AUTH_MODE", "local")
 ADMIN_USER: str = os.environ.get("ANGELCLAW_ADMIN_USER", "admin")
 ADMIN_PASSWORD: str = os.environ.get("ANGELCLAW_ADMIN_PASSWORD", "")
 
+SECOPS_USER: str = os.environ.get("ANGELCLAW_SECOPS_USER", "")
+SECOPS_PASSWORD: str = os.environ.get("ANGELCLAW_SECOPS_PASSWORD", "")
+
 VIEWER_USER: str = os.environ.get("ANGELCLAW_VIEWER_USER", "viewer")
 VIEWER_PASSWORD: str = os.environ.get("ANGELCLAW_VIEWER_PASSWORD", "")
 

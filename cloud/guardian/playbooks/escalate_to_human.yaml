@@ -1,0 +1,21 @@
+playbook: escalate_to_human
+description: "Escalate to human operator when confidence is low or threat is complex."
+trigger_patterns:
+  - privilege_chain
+  - kill_chain
+  - policy_tampering
+  - lateral_movement
+severity_threshold: high
+auto_respond: false
+steps:
+  - action: notify_operator
+    description: "Send urgent alert to all channels"
+    params:
+      channel: webhook
+      message: "URGENT: {{ title }} — requires human investigation"
+  - action: snapshot_state
+    target: "{{ agent_id }}"
+    description: "Preserve current state before any intervention"
+  - action: log_incident
+    description: "Record escalation"
+rollback: []
