@@ -44,6 +44,9 @@ async def lifespan(app: FastAPI):
     from cloud.services.structured_logger import setup_structured_logging
     setup_structured_logging()
 
+    # Import AngelClaw models so their tables get created
+    from cloud.angelclaw.preferences import AngelClawPreferencesRow  # noqa: F401
+    from cloud.angelclaw.actions import ActionLogRow  # noqa: F401
     Base.metadata.create_all(bind=engine)
     _ensure_default_policy_exists()
     # Start guardian heartbeat background task
