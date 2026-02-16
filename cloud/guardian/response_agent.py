@@ -57,6 +57,7 @@ class ResponseAgent(SubAgent):
             "create_investigation": self._action_create_investigation,
             "apply_policy_rule": self._action_apply_policy_rule,
             "log_incident": self._action_log_incident,
+            "wazuh_active_response": self._action_wazuh_active_response,
         }
         self._consecutive_failures: int = 0
         self._max_failures: int = 3  # circuit breaker threshold
@@ -405,6 +406,46 @@ class ResponseAgent(SubAgent):
             action="log_incident", target=target, success=True,
             message="Incident logged",
         )
+
+    async def _action_wazuh_active_response(
+        self, target: str, context: dict, params: dict,
+    ) -> ResponseResult:
+        """Dispatch a Wazuh active response command."""
+        self.require_permission(Permission.CALL_EXTERNAL)
+        command = params.get("command", "")
+        arguments = params.get("arguments", [])
+
+        if not command:
+            return ResponseResult(
+                action="wazuh_active_response", target=target, success=False,
+                message="No command specified for Wazuh active response",
+            )
+
+        try:
+            from cloud.integrations.wazuh_client import wazuh_client
+            if not wazuh_client.enabled:
+                return ResponseResult(
+                    action="wazuh_active_response", target=target, success=False,
+                    message="Wazuh integration not configured",
+                )
+
+            success = await wazuh_client.send_active_response(
+                agent_id=target, command=command, arguments=arguments,
+            )
+            return ResponseResult(
+                action="wazuh_active_response", target=target,
+                success=success,
+                message=(
+                    f"Wazuh active response '{command}' dispatched to {target}"
+                    if success
+                    else f"Wazuh active response '{command}' failed for {target}"
+                ),
+            )
+        except Exception as exc:
+            return ResponseResult(
+                action="wazuh_active_response", target=target, success=False,
+                message=f"Wazuh active response error: {exc}",
+            )
 
     # ------------------------------------------------------------------
     # Utilities

@@ -2,7 +2,8 @@
 
 Central management plane for ANGELNODE fleet.  Handles agent registration,
 event ingestion, policy distribution, AI-assisted analysis, analytics,
-guardian heartbeat, event bus alerts, and the Guardian Angel web dashboard.
+guardian heartbeat, event bus alerts, Wazuh XDR integration, structured
+observability, and the Guardian Angel web dashboard.
 """
 
 from __future__ import annotations
@@ -38,7 +39,11 @@ _UI_DIR = Path(__file__).resolve().parent.parent / "ui"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create database tables on startup, start guardian heartbeat and orchestrator."""
+    """Create database tables on startup, start guardian heartbeat, orchestrator, and Wazuh ingest."""
+    # Structured logging (before anything else logs)
+    from cloud.services.structured_logger import setup_structured_logging
+    setup_structured_logging()
+
     Base.metadata.create_all(bind=engine)
     _ensure_default_policy_exists()
     # Start guardian heartbeat background task
@@ -47,8 +52,12 @@ async def lifespan(app: FastAPI):
     # Start ANGEL AGI Orchestrator
     from cloud.guardian.orchestrator import angel_orchestrator
     await angel_orchestrator.start()
-    logger.info("AngelClaw Cloud API V3 started — tables created, heartbeat + orchestrator running")
+    # Start Wazuh XDR ingest loop (no-op if not configured)
+    from cloud.integrations.wazuh_ingest import wazuh_ingest_loop
+    wazuh_task = asyncio.create_task(wazuh_ingest_loop())
+    logger.info("AngelClaw Cloud API V3 started — tables, heartbeat, orchestrator, Wazuh ingest")
     yield
+    wazuh_task.cancel()
     heartbeat_task.cancel()
     await angel_orchestrator.stop()
 
@@ -58,6 +67,11 @@ app = FastAPI(
     version="0.4.0",
     lifespan=lifespan,
 )
+
+# Add correlation ID middleware (outermost — runs before auth)
+from cloud.services.structured_logger import CorrelationMiddleware  # noqa: E402
+
+app.add_middleware(CorrelationMiddleware)
 
 # Mount auth routes (always available, even when auth is disabled)
 from cloud.auth.routes import router as auth_router  # noqa: E402
@@ -89,6 +103,11 @@ from cloud.api.orchestrator_routes import router as orchestrator_router  # noqa:
 
 app.include_router(orchestrator_router)
 
+# Mount Metrics & Observability routes
+from cloud.api.metrics_routes import router as metrics_router  # noqa: E402
+
+app.include_router(metrics_router)
+
 
 # ---------------------------------------------------------------------------
 # Auth middleware — protect /api/v1/* routes when auth is enabled
@@ -98,7 +117,7 @@ from cloud.auth.config import AUTH_ENABLED  # noqa: E402
 from cloud.auth.service import verify_bearer, verify_jwt  # noqa: E402
 
 # Paths that never require auth
-_PUBLIC_PATHS = {"/health", "/ui", "/api/v1/auth/login", "/api/v1/auth/logout", "/docs", "/openapi.json", "/redoc"}
+_PUBLIC_PATHS = {"/health", "/ready", "/metrics", "/ui", "/api/v1/auth/login", "/api/v1/auth/logout", "/docs", "/openapi.json", "/redoc"}
 
 
 @app.middleware("http")
@@ -156,7 +175,17 @@ async def auth_middleware(request: Request, call_next):
 
 @app.get("/health", tags=["System"])
 def health_check():
-    return {"status": "ok", "version": "0.4.0"}
+    from cloud.guardian.orchestrator import angel_orchestrator
+    orch = angel_orchestrator.status()
+    return {
+        "status": "ok",
+        "version": "0.4.0",
+        "orchestrator": orch["running"],
+        "agents": {
+            name: info["status"]
+            for name, info in orch.get("agents", {}).items()
+        },
+    }
 
 
 # ---------------------------------------------------------------------------
