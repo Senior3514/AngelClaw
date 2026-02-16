@@ -198,30 +198,58 @@ curl "http://127.0.0.1:8500/api/v1/assistant/explain?event_id=<uuid>"
 
 ---
 
-## LLM Proxy (Optional)
+## Secret Protection
+
+ANGELGRID embraces AI usage — but **absolutely refuses to leak secrets**.
+
+Every layer in the stack scans for and redacts API keys, tokens, passwords,
+SSH keys, JWTs, connection strings, and sensitive file paths. The secret
+scanner (`shared/security/secret_scanner.py`) is used by:
+
+| Layer | What it does |
+|-------|-------------|
+| **ANGELNODE AI Shield** | Scans tool-call arguments; blocks if secrets detected; redacts before logging |
+| **Cloud AI Assistant** | Redacts event details and explanations in all API responses |
+| **LLM Proxy** | Scrubs user prompt *before* LLM, scrubs LLM response *before* user |
+
+**No raw secret ever leaves the system** — not through the API, not through
+the LLM, not through event explanations. This is the one rule that is never relaxed.
+
+See [docs/architecture/overview.md](docs/architecture/overview.md) for the full
+secret protection pipeline diagram.
+
+---
+
+## LLM Proxy — Guardian Angel for LLMs
 
 An optional LLM proxy endpoint at `/api/v1/llm/chat` forwards requests to an
-Ollama (or OpenAI-compatible) backend with an enforced security-analyst system prompt.
+Ollama (or OpenAI-compatible) backend with an enforced guardian-angel system prompt.
+
+The LLM proxy is designed to make local AI **safe to use freely**:
+- Mandatory security-analyst system prompt (cannot be overridden)
+- All user prompts and context are scrubbed for secrets before reaching the LLM
+- All LLM responses are scrubbed for secrets before reaching the user
+- Prompt injection attempts that try to extract secrets are caught and redacted
 
 **Disabled by default.** To enable:
 
-1. Uncomment the `ollama` service in `ops/docker-compose.yml`
-2. Set `LLM_ENABLED=true` on the `cloud` service
-3. `docker compose up --build`
-4. Pull a model: `docker compose exec ollama ollama pull llama3`
+1. Set `LLM_ENABLED=true` on the `cloud` service in `ops/docker-compose.yml`
+2. Bring up the stack: `docker-compose up --build -d`
+3. Pull a model: `docker-compose exec ollama ollama pull llama3`
+4. Test: `curl -X POST http://127.0.0.1:8500/api/v1/llm/chat -H "Content-Type: application/json" -d '{"prompt":"hello"}'`
 
 Environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `LLM_ENABLED` | `false` | Enable/disable the proxy |
-| `LLM_BACKEND_URL` | `http://ollama:11434` | LLM service URL (internal network) |
+| `LLM_BACKEND_URL` | `http://ollama:11434` | LLM service URL (internal Docker network) |
 | `LLM_MODEL` | `llama3` | Model name for inference |
 | `LLM_MAX_TOKENS` | `1024` | Max tokens per response |
-| `LLM_TIMEOUT_SECONDS` | `30` | Request timeout |
+| `LLM_TIMEOUT_SECONDS` | `60` | Request timeout |
 
-**Security**: The LLM system prompt enforces a read-only security analyst persona.
-The Ollama service has no host port and is reachable only from the Docker network.
+**Security**: The Ollama service has **no host port** — it's reachable only
+from the Docker network at `http://ollama:11434`. Never expose it to the internet.
 
 ---
 

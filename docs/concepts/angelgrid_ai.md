@@ -163,8 +163,56 @@ as the audit trail for all policy mutations in the system.
 3. **Tenant isolation** — all queries are scoped by tenant_id.  The
    assistant cannot access data from other tenants.
 
-4. **No secret exposure** — the assistant never returns raw credentials,
-   tokens, or connection strings.  It operates on metadata only.
+4. **No secret exposure** — secrets are actively scanned and redacted at
+   every layer (ANGELNODE, AI Assistant, LLM Proxy). Even if raw secrets
+   exist in logs or database, ANGELGRID redacts them before any response
+   leaves the system. See the Secret Protection section below.
+
+5. **LLM containment** — the LLM proxy scrubs both input (user prompt,
+   context) and output (LLM response) for secrets. The system prompt is
+   mandatory and cannot be overridden. The LLM backend (Ollama) has no
+   host port and is reachable only from the Docker network.
+
+---
+
+## Secret Protection: The One Hard Line
+
+ANGELGRID embraces AI usage. We let AI agents read, write, analyze, and
+create freely. But there is **one absolute rule**: secrets never leak.
+
+No matter what prompt injection, social engineering, or bypass technique
+is attempted, ANGELGRID will **never** return raw secret values through
+any API endpoint, LLM response, or event explanation.
+
+### How it works
+
+Every layer in the stack runs secrets through `shared/security/secret_scanner.py`:
+
+1. **ANGELNODE AI Shield** — scans tool-call arguments for API keys, tokens,
+   passwords, and sensitive file paths. If found, the tool call is blocked
+   and severity is escalated to CRITICAL.
+
+2. **Cloud AI Assistant** — redacts event details and explanations before
+   returning them to API consumers. Even if the database contains raw
+   secrets, they are scrubbed in the response.
+
+3. **LLM Proxy** — scrubs the user's prompt and context *before* sending
+   to the LLM, then scrubs the LLM's response *before* returning to the
+   user. Secrets never reach the model, and even if the model hallucinates
+   a secret-like string, it gets caught on the way back.
+
+### What gets caught
+
+API keys (`AKIA*`, `ghp_*`, `sk-*`), JWTs, passwords, SSH private keys,
+database connection strings, bearer tokens, Slack tokens, Stripe keys,
+sensitive file paths (`.env`, `.ssh/*`, `.aws/credentials`), and any dict
+key named `password`, `secret`, `token`, `api_key`, or `credential`.
+
+### The philosophy
+
+This isn't about distrust — it's about making AI **safer to use freely**.
+When developers know that ANGELGRID has their back on secrets, they can
+give AI agents more freedom, not less.
 
 ---
 
@@ -177,3 +225,6 @@ as the audit trail for all policy mutations in the system.
   to real threats, not a static audit tool.
 - **Not a productivity tax.** If ANGELGRID is slowing down legitimate work,
   the policies need tuning — not the user's workflow.
+- **Not a secret exposer.** Under no circumstances will ANGELGRID return
+  raw secrets in any API response, LLM output, or log entry. This is the
+  one rule that is never relaxed.

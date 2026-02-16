@@ -4,12 +4,18 @@
 # Run from the ops/ directory:
 #
 #   cd ops
-#   docker compose up --build
+#   docker-compose up --build
 #
 # ANGELNODE is exposed on 127.0.0.1:8400 (host loopback only).
-# Cloud API is internal-only (reachable at http://cloud:8500 from
-# other containers, but not exposed to the host by default).
+# Cloud API is on 127.0.0.1:8500 (loopback only).
 # Ollama is internal-only (no host port) — enable via LLM_ENABLED=true.
+#
+# To enable LLM:
+#   1. Set LLM_ENABLED=true below
+#   2. docker-compose up --build -d
+#   3. docker-compose exec ollama ollama pull llama3
+#   4. Test: curl -X POST http://127.0.0.1:8500/api/v1/llm/chat \
+#        -H "Content-Type: application/json" -d '{"prompt":"hello"}'
 
 services:
   angelnode:
@@ -41,9 +47,6 @@ services:
     build:
       context: ..
       dockerfile: ops/docker/Dockerfile.cloud
-    # No host port mapping — cloud API is internal only.
-    # Other containers reach it at http://cloud:8500.
-    # Uncomment the next two lines to expose on the host for debugging:
     ports:
       - "127.0.0.1:8500:8500"
     expose:
@@ -52,43 +55,43 @@ services:
       - cloud-data:/data
     environment:
       - ANGELGRID_DATABASE_URL=sqlite:////data/angelgrid.db
-      # LLM Proxy — disabled by default.  Set to "true" to enable.
+      # LLM Proxy configuration
+      # Set LLM_ENABLED=true to activate the /api/v1/llm/chat endpoint
       - LLM_ENABLED=false
       - LLM_BACKEND_URL=http://ollama:11434
       - LLM_MODEL=llama3
       - LLM_MAX_TOKENS=1024
-      - LLM_TIMEOUT_SECONDS=30
+      - LLM_TIMEOUT_SECONDS=60
     restart: unless-stopped
+    depends_on:
+      - ollama
 
   # --------------------------------------------------------------------------
-  # Ollama – Local LLM inference (optional, internal-only)
-  #
-  # To enable:
-  #   1. Set LLM_ENABLED=true on the 'cloud' service above
-  #   2. Uncomment the 'ollama' service below
-  #   3. Run: docker compose up --build
-  #   4. Pull a model: docker compose exec ollama ollama pull llama3
+  # Ollama – Local LLM inference (internal-only)
   #
   # SECURITY: Ollama has NO host port — only reachable from the Docker
   # network at http://ollama:11434.  Never expose to the internet.
+  #
+  # After first start, pull a model:
+  #   docker-compose exec ollama ollama pull llama3
   # --------------------------------------------------------------------------
-  # ollama:
-  #   image: ollama/ollama:latest
-  #   expose:
-  #     - "11434"
-  #   volumes:
-  #     - ollama-data:/root/.ollama
-  #   restart: unless-stopped
-  #   # Uncomment for GPU passthrough (NVIDIA):
-  #   # deploy:
-  #   #   resources:
-  #   #     reservations:
-  #   #       devices:
-  #   #         - driver: nvidia
-  #   #           count: 1
-  #   #           capabilities: [gpu]
+  ollama:
+    image: ollama/ollama:latest
+    expose:
+      - "11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+    # Uncomment for GPU passthrough (NVIDIA):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
 
 volumes:
   angelnode-logs:
   cloud-data:
-  # ollama-data:
+  ollama-data:

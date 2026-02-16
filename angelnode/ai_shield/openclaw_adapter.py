@@ -7,6 +7,14 @@ local /evaluate API, and returns an allow/block decision the agent can consume.
 
 SECURITY NOTE: This is the zero-trust boundary for AI tool use.  Every tool
 invocation from an AI agent must pass through this adapter before execution.
+
+SECRET PROTECTION: The adapter scans all tool arguments for secret patterns
+and sensitive file paths.  If secrets are detected, the event is flagged with
+higher risk and the `accesses_secrets` detail is set to True, which triggers
+the block-ai-tool-secrets-access policy rule.
+
+Philosophy: Guardian Angel — AI agents can use any tool they want; we just
+make sure secrets never get exposed or exfiltrated in the process.
 """
 
 from __future__ import annotations
@@ -22,6 +30,12 @@ from pydantic import BaseModel, Field
 
 from shared.models.event import Event, EventCategory, Severity
 from shared.models.policy import PolicyAction
+from shared.security.secret_scanner import (
+    contains_secret,
+    is_sensitive_key,
+    is_sensitive_path,
+    redact_dict,
+)
 
 logger = logging.getLogger("angelnode.ai_shield")
 
@@ -87,6 +101,10 @@ async def evaluate_tool(request: ToolCallRequest):
     it to the local policy engine, and translates the result into a simple
     allow/block response the AI agent can act on.
 
+    SECRET PROTECTION: Arguments are scanned for secret patterns, sensitive
+    key names, and sensitive file paths.  If any are found, the event is
+    flagged with accesses_secrets=True and elevated severity.
+
     Every request is assigned a unique correlation_id that appears in:
     - the response JSON (for the calling agent),
     - the Event.details (for Cloud-side correlation),
@@ -95,21 +113,23 @@ async def evaluate_tool(request: ToolCallRequest):
     # Generate a per-request correlation ID for end-to-end tracing
     correlation_id = str(uuid.uuid4())
 
+    # Detect secret access across all arguments
+    secret_detected = _detects_secret_access(request.tool_name, request.arguments)
+
     # Build a standard Event from the tool-call metadata
     # SECURITY: details are logged and matched against policy rules
     event = Event(
         agent_id=request.agent_id,
         category=EventCategory.AI_TOOL,
         type="tool_call",
-        severity=_infer_severity(request.tool_name),
+        severity=_infer_severity(request.tool_name, secret_detected),
         source=request.agent_name or "ai_agent",
         details={
             "tool_name": request.tool_name,
-            "arguments": request.arguments,
-            "context": request.context,
-            # Flag secret access if argument keys hint at credentials
-            "accesses_secrets": _detects_secret_access(request.arguments),
-            # Embed correlation_id so it flows into logs and Cloud events
+            # SECURITY: redact secrets from arguments before logging
+            "arguments": redact_dict(request.arguments),
+            "context": redact_dict(request.context),
+            "accesses_secrets": secret_detected,
             "correlation_id": correlation_id,
         },
     )
@@ -153,11 +173,14 @@ async def evaluate_tool(request: ToolCallRequest):
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _infer_severity(tool_name: str) -> Severity:
-    """Assign a base severity based on the tool name.
+def _infer_severity(tool_name: str, secret_detected: bool) -> Severity:
+    """Assign a base severity based on the tool name and secret access.
 
-    Tools with system-level access get a higher default severity.
+    If secrets are detected, severity is always escalated to CRITICAL.
     """
+    if secret_detected:
+        return Severity.CRITICAL
+
     high_risk_tools = {"bash", "shell", "exec", "terminal", "sudo", "ssh"}
     medium_risk_tools = {"write_file", "delete_file", "http_request", "database_query"}
 
@@ -169,13 +192,31 @@ def _infer_severity(tool_name: str) -> Severity:
     return Severity.INFO
 
 
-def _detects_secret_access(arguments: dict[str, Any]) -> bool:
-    """Heuristic: flag if argument keys or values suggest secret/credential access."""
-    sensitive_patterns = {"password", "secret", "token", "api_key", "credential", "private_key"}
+def _detects_secret_access(tool_name: str, arguments: dict[str, Any]) -> bool:
+    """Comprehensive check for secret/credential access in tool arguments.
+
+    Checks:
+    1. Argument key names matching sensitive patterns (password, token, etc.)
+    2. Argument string values containing secret patterns (API keys, JWTs, etc.)
+    3. File path arguments pointing to sensitive files (.env, .ssh/*, etc.)
+    """
+    # Check argument keys for sensitive names
     for key in arguments:
-        if any(pat in key.lower() for pat in sensitive_patterns):
+        if is_sensitive_key(key):
             return True
-    for val in arguments.values():
-        if isinstance(val, str) and any(pat in val.lower() for pat in sensitive_patterns):
-            return True
+
+    # Check argument values
+    for key, val in arguments.items():
+        if isinstance(val, str):
+            # Check for secret values (API keys, tokens, etc.)
+            if contains_secret(val):
+                return True
+            # Check for sensitive file paths
+            if is_sensitive_path(val):
+                return True
+        elif isinstance(val, dict):
+            # Recurse into nested dicts
+            if _detects_secret_access(tool_name, val):
+                return True
+
     return False

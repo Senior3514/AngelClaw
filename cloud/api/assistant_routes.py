@@ -25,6 +25,7 @@ from cloud.ai_assistant.assistant import (
 from cloud.ai_assistant.models import IncidentSummary, ProposedPolicyChanges
 from cloud.db.models import EventRow
 from cloud.db.session import get_db
+from shared.security.secret_scanner import redact_dict, redact_secrets
 
 logger = logging.getLogger("angelgrid.cloud.assistant_api")
 
@@ -196,6 +197,10 @@ def explain_event(
         )
         decision = None
 
+    # SECURITY: redact any secrets from event details before returning
+    safe_details = redact_dict(event_row.details) if event_row.details else {}
+    safe_explanation = redact_secrets(explanation)
+
     return EventExplanation(
         event_id=event_row.id,
         category=event_row.category,
@@ -203,7 +208,7 @@ def explain_event(
         timestamp=event_row.timestamp,
         severity=event_row.severity,
         source=event_row.source,
-        details=event_row.details or {},
+        details=safe_details,
         matched_rule_id=decision.matched_rule_id if decision else None,
-        explanation=explanation,
+        explanation=safe_explanation,
     )

@@ -71,6 +71,58 @@ policy — sync failures are logged but never stop policy enforcement (fail-clos
 Without `ANGELGRID_CLOUD_URL` set, the agent runs in **standalone mode** using
 only the local policy file.
 
+## Secret & Password Protection
+
+ANGELGRID aggressively protects secrets across every layer. The guardian angel
+philosophy applies: AI agents can do anything they want — we just make sure
+secrets never leak.
+
+### What counts as a secret?
+
+| Category | Examples |
+|----------|----------|
+| API keys | `AKIA*`, `ghp_*`, `sk-*`, `sk-ant-*`, `sk_test_*` |
+| Tokens | JWTs (`eyJ...`), bearer tokens, Slack tokens (`xox*-*`) |
+| Passwords | Any `password=`, `passwd=`, `pwd=` assignment |
+| SSH keys | `-----BEGIN * PRIVATE KEY-----` |
+| Cloud creds | AWS credentials, kube config, Docker config |
+| Connection strings | `postgres://user:pass@host`, `redis://...` |
+| Secret files | `.env`, `.aws/credentials`, `secrets.yml`, `*.pem`, `*.key` |
+
+### How protection works
+
+1. **AI Shield adapter** (`ai_shield/openclaw_adapter.py`):
+   - Scans all tool-call arguments for secret patterns and sensitive paths
+   - If found: `accesses_secrets=True` → triggers `block-ai-tool-secrets-access` rule
+   - Severity escalated to CRITICAL for any secret-touching operation
+   - Arguments are **redacted** before logging (secrets never written to logs)
+
+2. **Policy rules** (`config/default_policy.json`):
+   - `block-file-read-ssh-keys` — blocks reads of SSH private keys
+   - `block-file-read-credentials` — blocks reads of `.env`, AWS creds, kube config, etc.
+   - `block-ai-tool-secrets-access` — blocks any AI tool flagged with `accesses_secrets`
+
+3. **Cloud AI Assistant** + **LLM Proxy**:
+   - All event data is redacted before being returned to users or sent to LLMs
+   - The LLM system prompt strictly forbids outputting secrets
+   - Even if logs contain raw secrets, ANGELGRID will redact them in responses
+
+### Example: secret detection in action
+
+```bash
+# AI agent tries to read .env file → BLOCKED
+curl -X POST http://127.0.0.1:8400/ai/openclaw/evaluate_tool \
+  -H "Content-Type: application/json" \
+  -d '{"tool_name": "read_file", "arguments": {"path": "/app/.env"}}'
+# → {"allowed": false, "action": "block", "reason": "Block AI tool calls that attempt to access secrets"}
+
+# AI agent tries to pass an API key as argument → BLOCKED
+curl -X POST http://127.0.0.1:8400/ai/openclaw/evaluate_tool \
+  -H "Content-Type: application/json" \
+  -d '{"tool_name": "http_request", "arguments": {"api_key": "sk-1234567890abcdef"}}'
+# → {"allowed": false, "action": "block", "reason": "Block AI tool calls that attempt to access secrets"}
+```
+
 ## /status Endpoint Security
 
 The `/status` endpoint returns read-only operational data (agent ID, policy

@@ -8,7 +8,15 @@ SECURITY NOTES:
 - The LLM proxy is disabled by default (LLM_ENABLED=false).
 - The system prompt is always injected first and cannot be overridden.
 - The proxy is read-only: it never modifies policies, events, or DB state.
+- All user prompts and context are scanned and redacted for secrets BEFORE
+  being sent to the LLM backend.
+- LLM responses are scanned and redacted before being returned to the user.
 - All requests and responses are logged for audit.
+
+SECRET PROTECTION PIPELINE:
+  User prompt → redact secrets → inject system prompt → send to LLM
+  LLM response → redact secrets → return to user
+  At no point does a raw secret value reach the LLM or the user.
 """
 
 from __future__ import annotations
@@ -18,8 +26,10 @@ import time
 from typing import Any, Optional
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
+
+from shared.security.secret_scanner import contains_secret, redact_secrets
 
 from .config import (
     LLM_BACKEND_URL,
@@ -80,9 +90,10 @@ class LLMChatResponse(BaseModel):
     summary="Chat with ANGELGRID AI security analyst",
     description=(
         "Sends a prompt to the configured LLM backend with an enforced "
-        "read-only security-analyst system prompt. The LLM can analyze "
-        "events, explain decisions, and suggest policy tightening — but "
-        "cannot modify any state. Disabled by default (set LLM_ENABLED=true)."
+        "read-only security-analyst system prompt. All inputs and outputs "
+        "are scanned and redacted for secrets. The LLM can analyze events, "
+        "explain decisions, and suggest policy tightening — but cannot "
+        "modify any state or expose secrets. Disabled by default."
     ),
 )
 async def llm_chat(req: LLMChatRequest) -> LLMChatResponse:
@@ -95,19 +106,29 @@ async def llm_chat(req: LLMChatRequest) -> LLMChatResponse:
             ),
         )
 
+    # SECURITY: Redact secrets from user prompt before sending to LLM
+    safe_prompt = redact_secrets(req.prompt)
+    prompt_had_secrets = safe_prompt != req.prompt
+    if prompt_had_secrets:
+        logger.warning("Secrets detected and redacted from user prompt")
+
     # Build the messages array with the mandatory system prompt first
     messages: list[dict[str, str]] = [
         {"role": "system", "content": LLM_SYSTEM_PROMPT},
     ]
 
-    # Inject optional context as a system-level context block
+    # Inject optional context — REDACTED for secrets first
     if req.context:
+        safe_context = redact_secrets(req.context)
+        context_had_secrets = safe_context != req.context
+        if context_had_secrets:
+            logger.warning("Secrets detected and redacted from LLM context")
         messages.append({
             "role": "system",
-            "content": f"--- READ-ONLY CONTEXT ---\n{req.context}\n--- END CONTEXT ---",
+            "content": f"--- READ-ONLY CONTEXT ---\n{safe_context}\n--- END CONTEXT ---",
         })
 
-    messages.append({"role": "user", "content": req.prompt})
+    messages.append({"role": "user", "content": safe_prompt})
 
     # Build the request payload (OpenAI-compatible format, works with Ollama)
     payload: dict[str, Any] = {
@@ -127,7 +148,7 @@ async def llm_chat(req: LLMChatRequest) -> LLMChatResponse:
     logger.info(
         "LLM request — model=%s, prompt_len=%d, context_len=%d",
         LLM_MODEL,
-        len(req.prompt),
+        len(safe_prompt),
         len(req.context) if req.context else 0,
     )
 
@@ -167,14 +188,20 @@ async def llm_chat(req: LLMChatRequest) -> LLMChatResponse:
         if choices:
             answer = choices[0].get("message", {}).get("content", "")
 
-    logger.info("LLM response — latency=%dms, answer_len=%d", latency_ms, len(answer))
+    # SECURITY: Redact any secrets from the LLM response before returning
+    safe_answer = redact_secrets(answer or "(empty response from LLM)")
+    if safe_answer != answer:
+        logger.warning("Secrets detected and redacted from LLM response")
+
+    logger.info("LLM response — latency=%dms, answer_len=%d", latency_ms, len(safe_answer))
 
     return LLMChatResponse(
-        answer=answer or "(empty response from LLM)",
+        answer=safe_answer,
         used_model=LLM_MODEL,
         metadata={
             "latency_ms": latency_ms,
             "backend_url": LLM_BACKEND_URL,
             "llm_enabled": True,
+            "secrets_redacted_from_prompt": prompt_had_secrets,
         },
     )
