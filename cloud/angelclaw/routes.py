@@ -1,4 +1,4 @@
-"""AngelClaw V5 – API Routes.
+"""AngelClaw AGI Guardian – API Routes.
 
 All AngelClaw endpoints under /api/v1/angelclaw/*.
 Tenant-scoped, auth-aware, secret-safe.
@@ -11,6 +11,9 @@ Endpoints:
   GET  /activity/recent   — Recent daemon activity
   GET  /actions/history   — Action audit trail
   GET  /daemon/status     — Daemon health
+  GET  /shield/status     — ClawSec shield status
+  POST /shield/assess     — Run shield threat assessment
+  GET  /skills/status     — Skills integrity verification
 """
 
 from __future__ import annotations
@@ -33,7 +36,7 @@ from shared.security.secret_scanner import redact_secrets
 
 logger = logging.getLogger("angelclaw.routes")
 
-router = APIRouter(prefix="/api/v1/angelclaw", tags=["AngelClaw V5"])
+router = APIRouter(prefix="/api/v1/angelclaw", tags=["AngelClaw AGI Guardian"])
 
 
 # ---------------------------------------------------------------------------
@@ -171,3 +174,66 @@ def actions_history(
 def daemon_status():
     from cloud.angelclaw.daemon import get_daemon_status
     return DaemonStatus(**get_daemon_status())
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/angelclaw/shield/status
+# ---------------------------------------------------------------------------
+
+@router.get("/shield/status", summary="ClawSec shield status")
+def shield_status():
+    from cloud.angelclaw.shield import shield as _shield
+    return _shield.get_status()
+
+
+# ---------------------------------------------------------------------------
+# POST /api/v1/angelclaw/shield/assess
+# ---------------------------------------------------------------------------
+
+@router.post("/shield/assess", summary="Run shield threat assessment")
+def shield_assess(
+    tenantId: str = Query(default="dev-tenant"),
+    tenant_id: str = Depends(_tenant),
+    db: Session = Depends(get_db),
+):
+    from cloud.angelclaw.shield import shield as _shield
+    from cloud.angelclaw.context import gather_context
+
+    effective = tenantId or tenant_id
+    ctx = gather_context(db, effective, lookback_hours=24, include_events=True)
+
+    event_dicts = [
+        {"category": e.get("category", ""), "type": e.get("type", ""),
+         "details": e.get("details", {}), "severity": e.get("severity", "")}
+        for e in ctx.recent_events[:200]
+    ]
+    report = _shield.assess_events(event_dicts)
+
+    return {
+        "overall_risk": report.overall_risk.value,
+        "lethal_trifecta_score": report.lethal_trifecta_score,
+        "checks_run": report.checks_run,
+        "indicators": [
+            {
+                "category": ind.category.value,
+                "severity": ind.severity.value,
+                "title": ind.title,
+                "description": ind.description,
+                "evidence": ind.evidence[:3],
+                "mitigations": ind.mitigations[:3],
+            }
+            for ind in report.indicators
+        ],
+        "skills_status": report.skills_status,
+        "scanned_at": report.scanned_at,
+    }
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/angelclaw/skills/status
+# ---------------------------------------------------------------------------
+
+@router.get("/skills/status", summary="Skills integrity verification")
+def skills_status():
+    from cloud.angelclaw.shield import verify_all_skills
+    return verify_all_skills()

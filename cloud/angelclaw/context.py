@@ -1,4 +1,4 @@
-"""AngelClaw – Deep Context Engine.
+"""AngelClaw AGI Guardian – Deep Context Engine.
 
 Gathers comprehensive system context for the brain to use when answering
 questions, making decisions, or proposing actions. This is what gives
@@ -306,7 +306,7 @@ def _gather_host_info() -> dict[str, Any]:
         "os": f"{platform.system()} {platform.release()}",
         "python": platform.python_version(),
         "architecture": platform.machine(),
-        "angelclaw_version": "0.5.0",
+        "angelclaw_version": "0.7.0",
         "process_uptime": f"{hours}h {minutes}m",
         "pid": os.getpid(),
     }

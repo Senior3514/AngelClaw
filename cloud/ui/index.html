@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AngelClaw V5 — Autonomous Guardian Brain</title>
+<title>AngelClaw AGI Guardian — ClawSec Shield</title>
 <style>
   :root {
     --bg: #0f1117;
@@ -343,8 +343,8 @@
 <!-- Login Page (shown when auth required) -->
 <div class="login-page" id="login-page" style="display:none">
   <div class="login-box">
-    <h2><span>&#128737;</span> AngelClaw</h2>
-    <div class="login-sub">Autonomous Guardian — Sign in to continue</div>
+    <h2><span>&#128737;</span> AngelClaw AGI</h2>
+    <div class="login-sub">AGI Guardian — Sign in to continue</div>
     <div class="login-error" id="login-error"></div>
     <input type="text" id="login-user" placeholder="Username" autocomplete="username" />
     <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password" />
@@ -358,8 +358,8 @@
   <h1>
     <span class="angel-icon">&#128737;</span>
     AngelClaw
-    <span class="subtitle">Autonomous Guardian</span>
-    <span class="version-pill">V5</span>
+    <span class="subtitle">AGI Guardian</span>
+    <span class="version-pill">V0.7</span>
   </h1>
   <div class="header-right">
     <div class="user-badge" id="user-badge" style="display:none">
@@ -472,7 +472,7 @@
       <div class="card">
         <div class="card-header">
           <span class="card-title">AngelClaw Settings</span>
-          <span class="card-badge">V5</span>
+          <span class="card-badge">V0.7</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:10px;font-size:12px">
           <div style="display:flex;align-items:center;gap:8px">
@@ -507,6 +507,21 @@
       </div>
     </div>
 
+    <!-- ClawSec Shield Status -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">ClawSec Shield</span>
+        <span class="card-badge" id="shield-risk">--</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;font-size:12px" id="shield-stats">
+        <div style="text-align:center"><div style="font-size:18px;font-weight:700" id="shield-trifecta">--%</div><div style="font-size:10px;color:var(--text-dim)">Trifecta</div></div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:700" id="shield-patterns">--</div><div style="font-size:10px;color:var(--text-dim)">Patterns</div></div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:700" id="shield-skills">--</div><div style="font-size:10px;color:var(--text-dim)">Skills OK</div></div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:700" id="shield-assessments">--</div><div style="font-size:10px;color:var(--text-dim)">Assessments</div></div>
+      </div>
+      <div id="shield-indicators" style="margin-top:8px;max-height:120px;overflow-y:auto;font-size:11px"></div>
+    </div>
+
     <!-- Active Events Feed -->
     <div class="card">
       <div class="card-header">
@@ -521,13 +536,13 @@
   <!-- RIGHT PANEL — Guardian Chat -->
   <div class="right-panel">
     <div class="chat-header">
-      <span>&#128737;</span> AngelClaw Brain
+      <span>&#128737;</span> AGI Guardian
       <span style="font-size:10px;color:var(--text-dim);margin-left:auto" id="chat-daemon-pill">--</span>
     </div>
     <div class="chat-messages" id="chat-messages">
       <div class="chat-msg system">
-        I'm your AngelClaw Guardian — always on, always watching. I understand natural language.<br><br>
-        Try: "Scan the system", "Any concerns?", "Scan every 5 minutes", or just ask anything.
+        I'm your AngelClaw AGI Guardian with ClawSec-grade threat detection — always on, always watching.<br><br>
+        Try: "Run shield assessment", "Verify module integrity", "Scan the system", "Any concerns?", or just ask anything.
       </div>
     </div>
     <div id="chat-typing" class="chat-typing" style="display:none">AngelClaw is thinking...</div>
@@ -885,7 +900,41 @@ document.getElementById('timeline-modal').addEventListener('click', function(e) 
 // Close modal on Escape
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeTimeline(); });
 
-// Chat — using AngelClaw V5 Brain endpoint
+// ClawSec Shield Status
+async function loadShieldStatus() {
+  const data = await fetchJSON('/api/v1/angelclaw/shield/status');
+  if(!data) return;
+  const riskEl = document.getElementById('shield-risk');
+  const riskColors = {critical:'var(--red)',high:'var(--orange)',medium:'var(--yellow)',low:'var(--green)',info:'var(--accent)',unknown:'var(--text-dim)'};
+  const risk = data.last_risk_level || 'unknown';
+  riskEl.textContent = risk.toUpperCase();
+  riskEl.style.background = (riskColors[risk]||'var(--text-dim)')+'20';
+  riskEl.style.color = riskColors[risk]||'var(--text-dim)';
+
+  document.getElementById('shield-trifecta').textContent = '--';
+  const totalPatterns = (data.injection_patterns||0) + (data.leakage_patterns||0) + (data.evil_agi_patterns||0);
+  document.getElementById('shield-patterns').textContent = totalPatterns;
+  document.getElementById('shield-skills').textContent = data.skills_registered || 0;
+  document.getElementById('shield-assessments').textContent = data.assessments_run || 0;
+}
+
+async function loadShieldAssessment() {
+  const data = await fetchJSON('/api/v1/angelclaw/skills/status');
+  if(!data) return;
+  const skillsEl = document.getElementById('shield-skills');
+  skillsEl.textContent = (data.verified||0)+'/'+(data.total||0);
+  if(data.drifted > 0) skillsEl.style.color = 'var(--red)';
+  else skillsEl.style.color = 'var(--green)';
+
+  const indEl = document.getElementById('shield-indicators');
+  if(data.drifted > 0) {
+    indEl.innerHTML = '<div style="color:var(--red);padding:4px 8px;background:var(--red-dim);border-radius:6px">'+data.drifted+' module(s) modified since registration</div>';
+  } else if(data.total > 0) {
+    indEl.innerHTML = '<div style="color:var(--green);padding:4px 8px">All '+data.total+' modules verified. No tampering detected.</div>';
+  }
+}
+
+// Chat — using AngelClaw AGI Guardian Brain endpoint
 async function sendChat() {
   const input = document.getElementById('chat-input');
   const msgs = document.getElementById('chat-messages');
@@ -1038,6 +1087,8 @@ async function bootstrapDashboard() {
   await loadActivity();
   await loadDaemonStatus();
   await loadPreferences();
+  await loadShieldStatus();
+  await loadShieldAssessment();
   await loadStats(agents, events, alertCount);
   // Refresh every 30s
   setInterval(async () => {
@@ -1050,6 +1101,8 @@ async function bootstrapDashboard() {
     await loadIncidents();
     await loadActivity();
     await loadDaemonStatus();
+    await loadShieldStatus();
+    await loadShieldAssessment();
     await loadStats(a, e, ac);
   }, 30000);
 }

@@ -1,9 +1,10 @@
-"""AngelClaw V5 – Autonomous Daemon.
+"""AngelClaw AGI Guardian – Autonomous Daemon.
 
 Always-on background loop that makes AngelClaw a living guardian:
   - Periodic scans (configurable frequency)
+  - ClawSec shield assessment (threat detection, trifecta, attack chains)
   - Guardian report generation
-  - Drift detection (policy, agent health, anomalies)
+  - Drift detection (policy, agent health, skills integrity, anomalies)
   - Activity logging with human-friendly summaries
   - Respects operator preferences (frequency, reporting level, autonomy)
 
@@ -102,18 +103,23 @@ async def daemon_loop(tenant_id: str = "dev-tenant") -> None:
             # 2. Generate guardian report
             _generate_report(db, tenant_id)
 
-            # 3. Check for drift and anomalies
+            # 3. ClawSec shield assessment
+            shield_summary = _run_shield_assessment(db, tenant_id)
+
+            # 4. Check for drift and anomalies
             drift_findings = _check_drift(db, tenant_id)
 
-            # 4. Check agent health
+            # 5. Check agent health
             health_issues = _check_agent_health(db)
 
-            # 5. Log cycle summary
+            # 6. Log cycle summary
             elapsed = (datetime.now(timezone.utc) - cycle_start).total_seconds()
             cycle_summary = (
                 f"Cycle #{_cycles_completed} complete ({elapsed:.1f}s) — "
                 f"{scan_summary}"
             )
+            if shield_summary:
+                cycle_summary += f", shield: {shield_summary}"
             if drift_findings:
                 cycle_summary += f", {len(drift_findings)} drift finding(s)"
             if health_issues:
@@ -246,6 +252,47 @@ def _generate_report(db, tenant_id: str) -> None:
             db.rollback()
         except Exception:
             pass
+
+
+# ---------------------------------------------------------------------------
+# Shield assessment (ClawSec-inspired)
+# ---------------------------------------------------------------------------
+
+def _run_shield_assessment(db, tenant_id: str) -> str:
+    """Run ClawSec shield assessment on recent events."""
+    try:
+        from cloud.angelclaw.shield import shield as _shield
+        from cloud.db.models import EventRow
+
+        now = datetime.now(timezone.utc)
+        cutoff = now - timedelta(minutes=30)
+        events = db.query(EventRow).filter(EventRow.timestamp >= cutoff).limit(100).all()
+
+        event_dicts = [
+            {"category": e.category, "type": e.type,
+             "details": e.details or {}, "severity": e.severity}
+            for e in events
+        ]
+
+        report = _shield.assess_events(event_dicts)
+
+        if report.critical_count > 0:
+            _log_activity(
+                f"SHIELD CRITICAL: {report.critical_count} critical threat(s) detected",
+                "shield_alert",
+                {"indicators": [i.title for i in report.indicators if i.severity.value == "critical"]},
+            )
+        elif report.high_count > 0:
+            _log_activity(
+                f"Shield: {report.high_count} high-severity indicator(s)",
+                "shield",
+            )
+
+        trifecta = f"trifecta={int(report.lethal_trifecta_score * 100)}%"
+        return f"{report.overall_risk.value} ({trifecta})"
+    except Exception as e:
+        logger.debug("[DAEMON] Shield assessment failed: %s", e)
+        return ""
 
 
 # ---------------------------------------------------------------------------

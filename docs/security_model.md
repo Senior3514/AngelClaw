@@ -17,11 +17,23 @@ This document describes the threat model, security guarantees, and protective me
 | **Large Data Exfiltration** | Network | Alerts on outbound payloads exceeding 1 MB and POST requests to suspicious/unknown destinations |
 | **Brute-Force Attacks** | Auth | Alerts on authentication failures for brute-force detection |
 
+## ClawSec-Inspired Threat Detection (V0.7.0)
+
+| Threat | Category | Protection |
+|---|---|---|
+| **Lethal Trifecta** | Agentic AI | Monitors for the OpenClaw "Lethal Trifecta": simultaneous private data access + untrusted content processing + external communication. CRITICAL alert when all three pillars are active. |
+| **Multi-Step Attack Chains** | Agentic AI | Detects sequences of benign-looking operations that form attack patterns: recon -> credential access -> privilege escalation -> lateral movement -> exfiltration -> impact. Severity scales with stage count. |
+| **Evil AGI / CLAW BOT** | Agentic AI | Detects self-replication, persistence installation (crontab, systemd), anti-detection (log clearing), C2 callbacks (reverse shells), resource abuse (cryptomining), and security kill attempts. |
+| **Skills Tampering** | Supply Chain | SHA256 integrity verification of all registered modules. Detects unauthorized modifications to AngelClaw's own codebase. Inspired by ClawSec's audit-watchdog. |
+| **Prompt Injection (Advanced)** | AI | 12+ multi-layer detection patterns: DAN mode, god mode, system prompt extraction, delimiter injection, markdown injection, tool output injection, social engineering, encoding bypass. |
+| **Data Leakage** | Exfiltration | Detects curl/wget with secret data, netcat reverse shells, base64-piped secret files, environment dumps, large file uploads. |
+| **OpenClaw/MCP Risks** | Agentic AI | Runtime awareness of OpenClaw/MCP tool-server patterns. Detects exposed instances, persistent memory exploitation, context window flooding. |
+| **Session/Memory Exploitation** | Agentic AI | Detects context window overflow/flooding attacks, persistent memory poisoning, and large payload injection. |
+
 ## Threats Planned
 
 | Threat | Status | Description |
 |---|---|---|
-| **Supply Chain Attacks** | Planned | Detect malicious dependencies during package install, verify checksums against known-good registries |
 | **Cloud Misconfigurations** | Planned | Monitor cloud API calls for overly permissive IAM policies, public S3 buckets, open security groups |
 | **Cross-Tenant Leaks** | Planned | Enforce strict tenant isolation in multi-tenant deployments, detect data crossing tenant boundaries |
 

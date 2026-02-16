@@ -1,9 +1,9 @@
-"""AngelClaw Cloud – SaaS Backend API Server (V3 Autonomous Guardian).
+"""AngelClaw AGI Guardian – Cloud API Server.
 
 Central management plane for ANGELNODE fleet.  Handles agent registration,
 event ingestion, policy distribution, AI-assisted analysis, analytics,
 guardian heartbeat, event bus alerts, Wazuh XDR integration, structured
-observability, and the Guardian Angel web dashboard.
+observability, ClawSec-grade threat detection, and the AGI Guardian dashboard.
 """
 
 from __future__ import annotations
@@ -61,7 +61,7 @@ async def lifespan(app: FastAPI):
     # Start AngelClaw V5 Autonomous Daemon
     from cloud.angelclaw.daemon import start_daemon, stop_daemon
     await start_daemon()
-    logger.info("AngelClaw Cloud API V5 started — tables, heartbeat, orchestrator, Wazuh, daemon")
+    logger.info("AngelClaw AGI Guardian 0.7.0 started — tables, heartbeat, orchestrator, Wazuh, shield, daemon")
     yield
     await stop_daemon()
     wazuh_task.cancel()
@@ -70,8 +70,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="AngelClaw Cloud API",
-    version="0.5.0",
+    title="AngelClaw AGI Guardian API",
+    version="0.7.0",
     lifespan=lifespan,
 )
 
@@ -120,7 +120,7 @@ from cloud.api.metrics_routes import router as metrics_router  # noqa: E402
 
 app.include_router(metrics_router)
 
-# Mount AngelClaw V5 routes (unified brain, preferences, daemon, actions)
+# Mount AngelClaw AGI Guardian routes (brain, shield, preferences, daemon, skills)
 from cloud.angelclaw.routes import router as angelclaw_router  # noqa: E402
 
 app.include_router(angelclaw_router)
@@ -197,7 +197,7 @@ def health_check():
     orch = angel_orchestrator.status()
     return {
         "status": "ok",
-        "version": "0.5.0",
+        "version": "0.7.0",
         "orchestrator": orch["running"],
         "agents": {
             name: info["status"]

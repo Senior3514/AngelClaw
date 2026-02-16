@@ -1,4 +1,4 @@
-"""AngelClaw V5 – API Models.
+"""AngelClaw AGI Guardian – API Models.
 
 Pydantic schemas for the unified AngelClaw API endpoints.
 Lightweight: no extra dependencies beyond Pydantic.
@@ -54,3 +54,25 @@ class DaemonStatus(BaseModel):
     cycles_completed: int = 0
     last_scan_summary: str = ""
     activity_count: int = 0
+
+
+# ---------------------------------------------------------------------------
+# Shield
+# ---------------------------------------------------------------------------
+
+class ShieldIndicator(BaseModel):
+    category: str
+    severity: str
+    title: str
+    description: str
+    evidence: list[str] = Field(default_factory=list)
+    mitigations: list[str] = Field(default_factory=list)
+
+
+class ShieldAssessment(BaseModel):
+    overall_risk: str = "info"
+    lethal_trifecta_score: float = 0.0
+    checks_run: int = 0
+    indicators: list[ShieldIndicator] = Field(default_factory=list)
+    skills_status: dict[str, Any] = Field(default_factory=dict)
+    scanned_at: str = ""
