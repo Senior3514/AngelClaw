@@ -1,4 +1,4 @@
-"""ANGELGRID AI – Response models for the security assistant.
+"""AngelClaw AI – Response models for the security assistant.
 
 These are the structured data objects returned by assistant functions.
 They are designed for programmatic consumption by the Cloud console

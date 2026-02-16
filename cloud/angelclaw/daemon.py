@@ -103,7 +103,7 @@ async def daemon_loop(tenant_id: str = "dev-tenant") -> None:
             # 2. Generate guardian report
             _generate_report(db, tenant_id)
 
-            # 3. ClawSec shield assessment
+            # 3. AngelClaw shield assessment
             shield_summary = _run_shield_assessment(db, tenant_id)
 
             # 4. Check for drift and anomalies
@@ -112,7 +112,11 @@ async def daemon_loop(tenant_id: str = "dev-tenant") -> None:
             # 5. Check agent health
             health_issues = _check_agent_health(db)
 
-            # 6. Log cycle summary
+            # 6. ClawSec-aligned checks (prompt injection attempts, suspicious
+            #    tool usage, memory leak signs, exposed services)
+            security_findings = _run_security_checks(db, tenant_id)
+
+            # 7. Log cycle summary
             elapsed = (datetime.now(timezone.utc) - cycle_start).total_seconds()
             cycle_summary = (
                 f"Cycle #{_cycles_completed} complete ({elapsed:.1f}s) — "
@@ -124,6 +128,8 @@ async def daemon_loop(tenant_id: str = "dev-tenant") -> None:
                 cycle_summary += f", {len(drift_findings)} drift finding(s)"
             if health_issues:
                 cycle_summary += f", {len(health_issues)} health issue(s)"
+            if security_findings:
+                cycle_summary += f", {len(security_findings)} security finding(s)"
 
             if reporting != ReportingLevel.QUIET or drift_findings or health_issues:
                 _log_activity(cycle_summary, "cycle")
@@ -316,6 +322,95 @@ def _check_drift(db, tenant_id: str) -> list[str]:
             _log_activity(msg, "drift", {"agents": [a.hostname for a in drifted[:5]]})
     except Exception:
         pass
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# ClawSec-aligned security checks
+# ---------------------------------------------------------------------------
+
+def _run_security_checks(db, tenant_id: str) -> list[str]:
+    """Run ClawSec-aligned security checks on recent events.
+
+    Looks specifically for:
+      - Prompt injection attempts in recent events
+      - Suspicious tool usage patterns (high-frequency, unusual tools)
+      - Memory leak or data exfil signs
+      - Misconfigured tools exposed to public internet
+    """
+    findings = []
+    try:
+        from cloud.db.models import EventRow
+        from cloud.angelclaw.shield import detect_prompt_injection, detect_data_leakage
+
+        now = datetime.now(timezone.utc)
+        cutoff = now - timedelta(minutes=30)
+        events = db.query(EventRow).filter(EventRow.timestamp >= cutoff).limit(200).all()
+
+        # 1. Check for prompt injection attempts in AI tool events
+        injection_count = 0
+        for e in events:
+            if e.category in ("ai_tool", "custom"):
+                details = e.details or {}
+                command = details.get("command", "") or details.get("prompt", "") or ""
+                args = str(details.get("arguments", ""))
+                text = f"{command} {args}"
+                if text.strip():
+                    indicators = detect_prompt_injection(text)
+                    if indicators:
+                        injection_count += 1
+
+        if injection_count > 0:
+            msg = f"Prompt injection: {injection_count} attempt(s) detected in last 30min"
+            findings.append(msg)
+            _log_activity(msg, "security_alert", {"count": injection_count})
+
+        # 2. Suspicious tool usage patterns (rapid-fire different tools)
+        tool_events = [e for e in events if e.category == "ai_tool"]
+        if len(tool_events) > 50:
+            # Check for burst patterns
+            tool_names = set()
+            for e in tool_events:
+                details = e.details or {}
+                tool_name = details.get("tool_name", "") or details.get("command", "")
+                if tool_name:
+                    tool_names.add(tool_name)
+            if len(tool_names) > 15:
+                msg = f"Suspicious tool pattern: {len(tool_events)} calls across {len(tool_names)} unique tools in 30min"
+                findings.append(msg)
+                _log_activity(msg, "security_alert")
+
+        # 3. Data exfiltration signs
+        exfil_count = 0
+        for e in events:
+            if e.category in ("network", "shell"):
+                details = e.details or {}
+                command = details.get("command", "") or ""
+                if command:
+                    leakage = detect_data_leakage(command)
+                    if leakage:
+                        exfil_count += 1
+
+        if exfil_count > 0:
+            msg = f"Data exfil: {exfil_count} suspicious transfer pattern(s) in last 30min"
+            findings.append(msg)
+            _log_activity(msg, "security_alert", {"count": exfil_count})
+
+        # 4. Check for exposed services (public-facing ports in events)
+        exposed_patterns = ["0.0.0.0:", "exposed", "public_ip", "internet_facing"]
+        exposed_count = 0
+        for e in events:
+            details_str = str(e.details or {}).lower()
+            if any(p in details_str for p in exposed_patterns):
+                exposed_count += 1
+
+        if exposed_count > 0:
+            msg = f"Exposure risk: {exposed_count} event(s) suggest publicly exposed services"
+            findings.append(msg)
+            _log_activity(msg, "security_alert", {"count": exposed_count})
+
+    except Exception:
+        logger.debug("[DAEMON] Security checks failed", exc_info=True)
     return findings
 
 

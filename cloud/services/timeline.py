@@ -1,4 +1,4 @@
-"""ANGELGRID Cloud – Agent Timeline Builder.
+"""AngelClaw Cloud – Agent Timeline Builder.
 
 Queries events, policy versions, sessions, and AI tool calls for one agent
 and returns a sorted chronological timeline with redacted details.

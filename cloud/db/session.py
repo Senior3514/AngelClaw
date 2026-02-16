@@ -1,4 +1,4 @@
-"""ANGELGRID Cloud – Database session management.
+"""AngelClaw Cloud – Database session management.
 
 Provides an async-compatible session factory.  Uses SQLite by default;
 override DATABASE_URL environment variable for PostgreSQL.

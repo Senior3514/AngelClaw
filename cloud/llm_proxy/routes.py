@@ -1,4 +1,4 @@
-"""ANGELGRID – LLM Proxy API routes.
+"""AngelClaw – LLM Proxy API routes.
 
 Provides a /api/v1/llm/chat endpoint that proxies requests to a
 configured LLM backend (Ollama, OpenAI-compatible) with a mandatory

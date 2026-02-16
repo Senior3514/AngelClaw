@@ -1,4 +1,4 @@
-"""ANGELGRID Cloud – SQLAlchemy ORM models.
+"""AngelClaw Cloud – SQLAlchemy ORM models.
 
 These models mirror the shared Pydantic schemas but are mapped to relational
 tables for persistent storage.  SQLite is used by default; switch the

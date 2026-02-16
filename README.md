@@ -13,18 +13,22 @@ do something genuinely dangerous: destructive shell commands, accessing secrets,
 modifying critical files, or calling risky external endpoints. Everything else —
 analysis, reading, summarizing, reasoning, creating — flows freely.
 
-## V3: Autonomous Guardian
+## AngelClaw AGI Guardian (V0.8.0)
 
-V3 makes AngelClaw a **truly autonomous guardian** with:
+AngelClaw is a **full-stack, enterprise-grade, autonomous AGI security suite**:
 
-- **Guardian Heartbeat** — Continuous fleet health monitoring every 5 minutes
-- **Event Bus Alerts** — Automatic detection of critical patterns (secret exfil, severity spikes, agent flapping)
-- **Guardian Chat** — Unified chat interface for asking about incidents, threats, agents, and policies
-- **Predictive Threat Vectors** — Rule-based attack pattern correlation (no ML needed)
-- **Agent Timeline** — Chronological activity view per agent
-- **Two-Panel Dashboard** — Stats + alerts + fleet on the left, persistent Guardian Chat on the right
+- **Autonomous Brain** — 23 NLP intents, natural language security chat, context-aware responses
+- **Threat Shield** — 13 prompt injection patterns, 6 data leakage detectors, 7 evil AGI patterns, Lethal Trifecta monitoring, 6-stage ATT&CK attack chain detection
+- **Always-On Daemon** — Continuous scans, shield assessments, drift detection, agent health monitoring, security checks for prompt injection attempts and data exfil signs
+- **Action Framework** — 11 action types with dry-run proposals, confirmation workflow, full audit trail
+- **Auth & RBAC** — JWT authentication, 3 roles (viewer/secops/admin), no unauthenticated access by default
+- **Secret Protection** — 40+ pattern secret scanner, 3-layer redaction pipeline, NEVER leaks secrets
+- **Skills Integrity** — SHA256 verification of all core modules, drift detection with HIGH severity alerts
+- **Fleet Management** — Agent registration, policy distribution, heartbeat monitoring
+- **Guardian Chat** — Unified AI chat for incidents, threats, policies, scans, and general security guidance
+- **Enterprise Dashboard** — Real-time fleet status, threat landscape, alerts, AngelClaw AI chat
 
-All V3 features are **read-only/suggest-only** — no auto-applying actions.
+AngelClaw incorporates and extends security concepts from ClawSec, OpenClaw, and Moltbot agentic AI security research. See [docs/angelclaw_vs_clawsec.md](docs/angelclaw_vs_clawsec.md) for the capability mapping.
 
 ## Repository Structure
 
@@ -458,6 +462,38 @@ No build step needed — it's a single HTML file served by FastAPI.
 | `/api/v1/guardian/event_context` | GET | Event with history window and AI traffic |
 | `/api/v1/guardian/changes` | GET | Policy/config change log |
 | `/api/v1/analytics/agent/timeline` | GET | Agent activity timeline |
+| `/api/v1/angelclaw/chat` | POST | AngelClaw AI brain (23 intents, context-aware) |
+| `/api/v1/angelclaw/preferences` | GET/POST | Operator preferences (autonomy, scan frequency, reporting) |
+| `/api/v1/angelclaw/reports/recent` | GET | Guardian reports (last 10) |
+| `/api/v1/angelclaw/activity/recent` | GET | Daemon activity log (last 20) |
+| `/api/v1/angelclaw/actions/history` | GET | Action audit trail |
+| `/api/v1/angelclaw/daemon/status` | GET | Daemon health status |
+| `/api/v1/angelclaw/shield/status` | GET | Shield configuration and statistics |
+| `/api/v1/angelclaw/shield/assess` | POST | Run full threat assessment |
+| `/api/v1/angelclaw/skills/status` | GET | Module integrity report |
+| `/api/v1/auth/login` | POST | JWT authentication |
+| `/api/v1/auth/logout` | POST | Session termination |
+| `/api/v1/auth/change-password` | POST | Password change |
+
+## Access from Any Device
+
+AngelClaw Cloud is accessible from any device with a browser:
+
+- **Linux server** — Direct access at `http://127.0.0.1:8500/ui` or via SSH tunnel
+- **Windows host** — Install AngelClaw Node for local protection, access Cloud UI via browser
+- **Tablets/mobile** (e.g., Xiaomi Pad) — Access via browser at `http://YOUR-VPS-IP:8500/ui` (requires auth when exposed)
+- **SSH + CLI** — Use `angelgridctl` via SSH for command-line access from any device
+
+To expose the dashboard securely for remote access:
+
+```bash
+# Option 1: SSH tunnel (recommended — no auth bypass needed)
+ssh -L 8500:127.0.0.1:8500 user@your-vps
+
+# Option 2: Reverse proxy with HTTPS (nginx/caddy)
+# Configure your reverse proxy to forward to 127.0.0.1:8500
+# Ensure ANGELCLAW_AUTH_ENABLED=true (default)
+```
 
 ## License
 

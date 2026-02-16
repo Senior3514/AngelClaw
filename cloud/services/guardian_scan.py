@@ -73,7 +73,7 @@ async def run_guardian_scan(
     stale_cutoff = now - timedelta(minutes=10)
     stale_agents = [
         a for a in agents
-        if a.status == "active" and a.last_seen_at and a.last_seen_at < stale_cutoff
+        if a.status == "active" and a.last_seen_at and a.last_seen_at.replace(tzinfo=None) < stale_cutoff.replace(tzinfo=None)
     ]
     if stale_agents:
         risks.append(ScanRisk(

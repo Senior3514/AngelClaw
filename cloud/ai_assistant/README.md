@@ -1,12 +1,12 @@
-# ANGELGRID AI – Security Assistant
+# AngelClaw AI – Security Assistant
 
-ANGELGRID AI is a built-in security assistant that helps analysts understand
-events, incidents, and policies through a chat-style UX in the ANGELGRID Cloud
+AngelClaw AI is a built-in security assistant that helps analysts understand
+events, incidents, and policies through a chat-style UX in the AngelClaw Cloud
 console.
 
 ## Design Principles
 
-1. **Analysis only, never action.**  ANGELGRID AI can summarize incidents,
+1. **Analysis only, never action.**  AngelClaw AI can summarize incidents,
    explain policy gaps, and *propose* changes — but it **cannot** apply
    changes directly.  Every proposed change must go through explicit human
    approval and is logged as an auditable ChangeEvent.

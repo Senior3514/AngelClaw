@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "angelgrid"  # Package name kept as 'angelgrid' for internal compatibility. Product name is AngelClaw.
-version = "0.4.0"
-description = "AngelClaw – Autonomous AI Defense Guardian"
+version = "0.8.0"
+description = "AngelClaw AGI Guardian – Enterprise-Grade Autonomous AI Security Suite"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "Proprietary"}

@@ -1,4 +1,4 @@
-"""ANGELGRID Cloud – AI Assistant API routes.
+"""AngelClaw Cloud – AI Assistant API routes.
 
 Exposes the security assistant analysis functions as REST endpoints.
 All endpoints are read-only and do not modify database state.

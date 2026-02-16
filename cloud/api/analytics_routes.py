@@ -1,4 +1,4 @@
-"""ANGELGRID Cloud – Analytics & Fleet API routes.
+"""AngelClaw Cloud – Analytics & Fleet API routes.
 
 Provides endpoints for:
   - Agent fleet listing and identity

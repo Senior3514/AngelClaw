@@ -1,5 +1,57 @@
 # AngelClaw Release Notes
 
+## V0.8.0 — AngelClaw AGI Guardian (2026-02-16)
+
+**Status**: Enterprise-grade autonomous AI security suite with ClawSec-inspired threat detection.
+
+This release transforms AngelClaw into a full AGI Guardian with unified security modules,
+comprehensive threat detection inspired by ClawSec/OpenClaw/Moltbot research, and 304
+automated tests covering advanced attack scenarios.
+
+### ClawSec-Inspired Unified Security Module (`cloud/angelclaw/security.py`)
+
+- **PromptDefense**: Wraps shield.py with scan-and-block workflow, risk classification, stats tracking
+- **ToolGuard**: Tool call validation with blocklist (20 tools), allowlist (16 tools), burst detection (20/10s)
+- **SkillIntegrity**: SHA256 runtime integrity verification with auto-restore, tamper-evident audit chain
+- **WorkspaceIsolation**: Path traversal detection, sensitive read/write blocklists, cross-tenant detection
+- **RiskScoring**: Unified 0-100 scoring combining injection (30), leakage (25), evil AGI (25), trifecta (15), attack chain (5)
+- **AdvisoryMonitor**: In-memory advisory registry with built-in advisories and custom rule support
+
+### Enhanced Daemon Security Checks
+
+- ClawSec-aligned continuous security monitoring in the autonomous daemon loop
+- Real-time prompt injection detection in AI tool events
+- Suspicious tool usage pattern detection (>50 events, >15 unique tools in 30 min)
+- Data exfiltration monitoring via shield's leakage detection
+- Exposed service indicators check
+
+### Advanced Security Test Suite (101 new tests)
+
+- **TestPromptInjectionAdvanced**: 22 tests covering multi-layer injection, encoded payloads, indirect injection
+- **TestSecretExfilAttempts**: 11 tests for social engineering, encoded secrets, multi-step exfiltration
+- **TestSelfProtectionDisable**: 10 tests verifying AngelClaw cannot be tricked into disabling itself
+- **TestSecretScannerComprehensive**: 38 tests covering 20+ secret formats and edge cases
+- **TestShieldEvasionAttempts**: 20 tests for obfuscation, encoding, attack chains, evasion combos
+
+### Documentation
+
+- `docs/angelclaw_vs_clawsec.md` — Comprehensive capability mapping: ClawSec vs AngelClaw
+- `docs/security_model.md` — Enhanced with hard-coded invariants, 11 agentic AI attack vectors,
+  defense-in-depth architecture, prompt injection deep dive, expanded RBAC model (3 roles)
+
+### Branding
+
+- All user-facing docstrings updated from "ANGELGRID" to "AngelClaw"
+- Internal package name (`angelgrid`) and env vars (`ANGELGRID_*`) preserved for compatibility
+- Version 0.8.0 across server, pyproject.toml, health endpoint, and installers
+
+### Test Results
+
+- **304 tests passing** (39 shield + 101 advanced security + 164 existing)
+- Zero failures
+
+---
+
 ## V0.4.0 — AngelClaw V3 (2026-02-16)
 
 **Status**: Production-ready with auth, RBAC, and secure-by-default binding.
