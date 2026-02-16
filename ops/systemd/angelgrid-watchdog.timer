@@ -1,0 +1,11 @@
+[Unit]
+Description=AngelGrid Health Check (every 2 minutes)
+After=angelgrid.service
+
+[Timer]
+OnBootSec=90
+OnUnitActiveSec=120
+AccuracySec=10
+
+[Install]
+WantedBy=timers.target

@@ -36,6 +36,9 @@ angelgrid/
 │   └── config/          #   Configuration schemas
 ├── ops/                 # Deployment and integrations
 │   ├── cli/             #   angelgridctl operator CLI
+│   ├── install/         #   Linux and Windows installers
+│   ├── systemd/         #   systemd unit files
+│   ├── config/          #   Environment config templates
 │   ├── docker/          #   Dockerfiles and compose configurations
 │   ├── wazuh/           #   Wazuh SIEM integration configs and rules
 │   └── infra/           #   Future: Terraform/Pulumi modules
@@ -54,7 +57,56 @@ angelgrid/
 | Containers      | Docker + docker-compose             |
 | LLM (optional)  | Ollama (internal, disabled by default) |
 
-## Quick Start
+## Installation
+
+### Linux Quick Install (V1 / pilot)
+
+On a fresh Ubuntu/Debian server (as root):
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Senior3514/AngelGrid/main/ops/install/install_angelgrid_linux.sh | bash
+```
+
+This installs the full stack (ANGELNODE + Cloud + Ollama) with Docker Compose
+and registers a systemd service for automatic start on boot.
+
+Optional environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ANGELGRID_DIR` | `/root/AngelGrid` | Install directory |
+| `ANGELGRID_TENANT_ID` | `default` | Tenant identifier |
+| `ANGELGRID_CLOUD_URL` | `http://cloud:8500` | Cloud URL for agents |
+| `LLM_ENABLED` | `false` | Enable LLM proxy |
+
+After install:
+
+```bash
+systemctl status angelgrid          # check stack status
+journalctl -u angelgrid -f          # follow logs
+curl http://127.0.0.1:8500/ui       # open dashboard
+```
+
+### Windows Agent Quick Install (V1 / pilot)
+
+On a Windows machine with Docker Desktop installed (PowerShell as Administrator):
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+git clone https://github.com/Senior3514/AngelGrid.git C:\AngelGrid
+C:\AngelGrid\ops\install\install_angelnode_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500" -TenantId "my-tenant"
+```
+
+This installs **ANGELNODE only** — the lightweight agent that connects to your
+remote ANGELGRID Cloud running on the Linux VPS.
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `-CloudUrl` | `http://your-cloud-server:8500` | Your VPS Cloud API URL |
+| `-TenantId` | `default` | Tenant identifier |
+| `-InstallDir` | `C:\AngelGrid` | Install directory |
+
+### Quick Start (Development)
 
 ```bash
 # Docker Compose (recommended)

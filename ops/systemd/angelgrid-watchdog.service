@@ -1,0 +1,11 @@
+[Unit]
+Description=AngelGrid Health Watchdog
+After=angelgrid.service
+Requires=angelgrid.service
+
+[Service]
+Type=oneshot
+ExecStart=/root/AngelGrid/ops/scripts/healthcheck.sh
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=angelgrid-watchdog
