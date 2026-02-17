@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AngelClaw AGI Guardian — Linux Installer (V0.8.0)
+# AngelClaw AGI Guardian — Linux Installer (V2.0.0) [Legacy]
+#
+# NOTE: This is the legacy installer. Prefer install_angelclaw_linux.sh instead.
 #
 # Installs the full AngelClaw stack (ANGELNODE + Cloud + Ollama) on a Linux
 # server using Docker Compose + systemd.

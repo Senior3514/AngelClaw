@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AngelClaw AGI Guardian — Linux Installer (V1.2.0)
+# AngelClaw AGI Guardian — Linux Installer (V2.0.0)
 #
 # Installs the full AngelClaw stack (ANGELNODE + Cloud + Ollama) on a Linux
 # server using Docker Compose + systemd.
+# Includes the Angel Legion: 10-agent swarm with 7 specialized sentinels.
 #
 # Usage:
 #   curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
@@ -47,7 +48,7 @@ err()  { echo -e "${R}[X]${N} $1"; }
 echo ""
 echo -e "${B}${C}+================================================+${N}"
 echo -e "${B}${C}|   AngelClaw AGI Guardian — Linux Installer      |${N}"
-echo -e "${B}${C}|   V1.1.0 — Guardian Angel, Not Gatekeeper       |${N}"
+echo -e "${B}${C}|   V2.0.0 — Angel Legion                        |${N}"
 echo -e "${B}${C}+================================================+${N}"
 echo ""
 
@@ -262,5 +263,5 @@ if [ "$LLM" = "true" ]; then
   echo ""
 fi
 
-echo -e "  ${C}AngelClaw AGI Guardian — guardian angel, not gatekeeper.${N}"
+echo -e "  ${C}AngelClaw V2.0.0 — Angel Legion — guardian angel, not gatekeeper.${N}"
 echo ""

@@ -1,14 +1,30 @@
-# AngelClaw AGI Guardian — Installation Guide
+# AngelClaw AGI Guardian — Installation Guide (V2.0.0)
 
 ## Overview
 
-AngelClaw deploys as three components:
+AngelClaw V2.0.0 deploys as three containers running the **Angel Legion** — a 10-agent
+autonomous security swarm:
 
 | Component | Port | Description |
 |-----------|------|-------------|
 | **ANGELNODE** | 8400 | Local policy engine (lightweight agent) |
-| **Cloud API** | 8500 | Central management, dashboard, AI chat |
+| **Cloud API** | 8500 | Central management, Angel Legion orchestrator, dashboard, AI chat |
 | **Ollama** | internal | Optional local LLM (no host port) |
+
+The Cloud API runs the **Seraph orchestrator** managing 10 sub-agents:
+
+| Agent | Code Name | Role |
+|-------|-----------|------|
+| SentinelAgent | Vigil | Core pattern matching and anomaly detection |
+| ResponseAgent | — | Automated incident response |
+| ForensicAgent | — | Deep-dive forensic analysis |
+| AuditAgent | — | Compliance and audit trail |
+| NetworkSentinel | Net Warden | Suspicious ports, DNS tunneling, port scans |
+| BrowserSentinel | Glass Eye | URL threats, page injection, extension abuse |
+| ToolchainSentinel | Tool Smith | Tool bursts, version drift, output injection |
+| TimelineSentinel | Chronicle | Kill chains, coordinated activity, time clustering |
+| SecretsSentinel | Vault Keeper | Secret access bursts, brute force, exfiltration |
+| BehaviorSentinel | Drift Watcher | Peer deviation, severity escalation, novelty |
 
 All components bind to `127.0.0.1` by default — secure out of the box.
 
@@ -205,8 +221,8 @@ curl -X POST http://127.0.0.1:8500/api/v1/auth/change-password \
                     +--------v----------+
                     |  AngelClaw Cloud  |  :8500
                     |  (FastAPI + DB)   |
-                    |  - AGI Brain      |
-                    |  - Daemon         |
+                    |  - Seraph Brain   |
+                    |  - Angel Legion   |
                     |  - Shield         |
                     |  - Auth/RBAC      |
                     +---+----------+----+
@@ -217,4 +233,15 @@ curl -X POST http://127.0.0.1:8500/api/v1/auth/change-password \
      | ANGELNODE   |   | Ollama    |  | Wazuh     |
      | :8400       |   | (internal)|  | (optional)|
      +-------------+   +-----------+  +-----------+
+
+     Angel Legion (10 agents inside Cloud):
+     ┌──────────┬──────────┬──────────┬──────────┐
+     │  Vigil   │Net Warden│Glass Eye │Tool Smith│
+     │(Sentinel)│(Network) │(Browser) │(Toolchain│
+     ├──────────┼──────────┼──────────┼──────────┤
+     │Chronicle │Vault Keep│Drift Watch│ Response │
+     │(Timeline)│(Secrets) │(Behavior)│          │
+     ├──────────┼──────────┼──────────┼──────────┤
+     │ Forensic │  Audit   │          │          │
+     └──────────┴──────────┴──────────┴──────────┘
 ```
