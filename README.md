@@ -13,11 +13,11 @@ do something genuinely dangerous: destructive shell commands, accessing secrets,
 modifying critical files, or calling risky external endpoints. Everything else —
 analysis, reading, summarizing, reasoning, creating — flows freely.
 
-## AngelClaw AGI Guardian (V0.8.0)
+## AngelClaw AGI Guardian (V1.1.0)
 
 AngelClaw is a **full-stack, enterprise-grade, autonomous AGI security suite**:
 
-- **Autonomous Brain** — 23 NLP intents, natural language security chat, context-aware responses
+- **Autonomous Brain** — 29 NLP intents, natural language security chat, context-aware responses
 - **Threat Shield** — 13 prompt injection patterns, 6 data leakage detectors, 7 evil AGI patterns, Lethal Trifecta monitoring, 6-stage ATT&CK attack chain detection
 - **Always-On Daemon** — Continuous scans, shield assessments, drift detection, agent health monitoring, security checks for prompt injection attempts and data exfil signs
 - **Action Framework** — 11 action types with dry-run proposals, confirmation workflow, full audit trail
@@ -78,62 +78,61 @@ angelgrid/
 
 ## Installation
 
-### Linux Quick Install (V1 / pilot)
+### Linux Quick Install
 
 On a fresh Ubuntu/Debian server (as root):
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Senior3514/AngelGrid/main/ops/install/install_angelgrid_linux.sh | bash
+curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
 ```
 
-This installs the full stack (ANGELNODE + AngelClaw Cloud + Ollama) with Docker Compose
+This installs the full stack (AngelClaw Node + AngelClaw Cloud + Ollama) with Docker Compose
 and registers a systemd service for automatic start on boot.
 
 Optional environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `ANGELGRID_DIR` | `/root/AngelGrid` | Install directory |
-| `ANGELGRID_TENANT_ID` | `default` | Tenant identifier |
-| `ANGELGRID_CLOUD_URL` | `http://cloud:8500` | Cloud URL for agents |
+| `ANGELCLAW_DIR` | `/root/AngelClaw` | Install directory |
+| `ANGELCLAW_TENANT_ID` | `default` | Tenant identifier |
+| `ANGELCLAW_CLOUD_URL` | `http://cloud:8500` | Cloud URL for agents |
 | `LLM_ENABLED` | `false` | Enable LLM proxy |
 
 After install:
 
 ```bash
-systemctl status angelgrid          # check stack status
-journalctl -u angelgrid -f          # follow logs
+systemctl status angelclaw          # check stack status
+journalctl -u angelclaw -f          # follow logs
 curl http://127.0.0.1:8500/ui       # open dashboard
 ```
 
-### Windows Agent Quick Install (V1 / pilot)
+### Windows Agent Quick Install
 
 On a Windows machine with Docker Desktop installed (PowerShell as Administrator):
 
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force
-git clone https://github.com/Senior3514/AngelGrid.git C:\AngelGrid
-C:\AngelGrid\ops\install\install_angelnode_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500" -TenantId "my-tenant"
+git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw
+C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500" -TenantId "my-tenant"
 ```
 
-This installs **ANGELNODE only** — the lightweight agent that connects to your
+This installs **AngelClaw Node only** — the lightweight agent that connects to your
 remote AngelClaw Cloud running on the Linux VPS.
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `-CloudUrl` | `http://your-cloud-server:8500` | Your VPS Cloud API URL |
 | `-TenantId` | `default` | Tenant identifier |
-| `-InstallDir` | `C:\AngelGrid` | Install directory |
+| `-InstallDir` | `C:\AngelClaw` | Install directory |
 
 ### Windows Agent Quickstart (VPS Example)
 
 If your AngelClaw Cloud is running on a VPS at `168.231.110.18`:
 
 ```powershell
-# Clone and install the agent pointing at your VPS
 Set-ExecutionPolicy Bypass -Scope Process -Force
-git clone https://github.com/Senior3514/AngelGrid.git C:\AngelGrid
-C:\AngelGrid\ops\install\install_angelnode_windows.ps1 -CloudUrl http://168.231.110.18:8500
+git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw
+C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl http://168.231.110.18:8500
 ```
 
 The agent will register with the remote AngelClaw Cloud automatically and begin
@@ -387,25 +386,25 @@ curl -X POST http://127.0.0.1:8500/api/v1/llm/chat \
 
 ## CLI Usage
 
-`ops/cli/angelgridctl` is a lightweight Python CLI for operators:
+`ops/cli/angelclawctl` is a lightweight Python CLI for operators:
 
 ```bash
-# Check ANGELNODE and Cloud health
-./ops/cli/angelgridctl status
+# Check AngelClaw Node and Cloud health
+./ops/cli/angelclawctl status
 
 # Show recent security events with threat matrix
-./ops/cli/angelgridctl incidents
+./ops/cli/angelclawctl incidents
 
 # Run AI tool evaluation tests (safe read, secret path, API key)
-./ops/cli/angelgridctl test-ai-tool
+./ops/cli/angelclawctl test-ai-tool
 
 # Explain a specific event decision
-./ops/cli/angelgridctl explain <event-id>
+./ops/cli/angelclawctl explain <event-id>
 ```
 
 Override endpoints via environment:
 ```bash
-ANGELNODE_URL=http://10.0.0.5:8400 CLOUD_URL=http://10.0.0.5:8500 ./ops/cli/angelgridctl status
+ANGELNODE_URL=http://10.0.0.5:8400 CLOUD_URL=http://10.0.0.5:8500 ./ops/cli/angelclawctl status
 ```
 
 ---
@@ -462,7 +461,7 @@ No build step needed — it's a single HTML file served by FastAPI.
 | `/api/v1/guardian/event_context` | GET | Event with history window and AI traffic |
 | `/api/v1/guardian/changes` | GET | Policy/config change log |
 | `/api/v1/analytics/agent/timeline` | GET | Agent activity timeline |
-| `/api/v1/angelclaw/chat` | POST | AngelClaw AI brain (23 intents, context-aware) |
+| `/api/v1/angelclaw/chat` | POST | AngelClaw AI brain (29 intents, context-aware) |
 | `/api/v1/angelclaw/preferences` | GET/POST | Operator preferences (autonomy, scan frequency, reporting) |
 | `/api/v1/angelclaw/reports/recent` | GET | Guardian reports (last 10) |
 | `/api/v1/angelclaw/activity/recent` | GET | Daemon activity log (last 20) |
@@ -482,7 +481,7 @@ AngelClaw Cloud is accessible from any device with a browser:
 - **Linux server** — Direct access at `http://127.0.0.1:8500/ui` or via SSH tunnel
 - **Windows host** — Install AngelClaw Node for local protection, access Cloud UI via browser
 - **Tablets/mobile** (e.g., Xiaomi Pad) — Access via browser at `http://YOUR-VPS-IP:8500/ui` (requires auth when exposed)
-- **SSH + CLI** — Use `angelgridctl` via SSH for command-line access from any device
+- **SSH + CLI** — Use `angelclawctl` via SSH for command-line access from any device
 
 To expose the dashboard securely for remote access:
 

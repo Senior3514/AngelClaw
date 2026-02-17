@@ -61,7 +61,7 @@ async def lifespan(app: FastAPI):
     # Start AngelClaw V5 Autonomous Daemon
     from cloud.angelclaw.daemon import start_daemon, stop_daemon
     await start_daemon()
-    logger.info("AngelClaw AGI Guardian 0.8.0 started — tables, heartbeat, orchestrator, Wazuh, shield, daemon")
+    logger.info("AngelClaw AGI Guardian 1.1.0 started — tables, heartbeat, orchestrator, Wazuh, shield, daemon")
     yield
     await stop_daemon()
     wazuh_task.cancel()
@@ -71,7 +71,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="AngelClaw AGI Guardian API",
-    version="0.8.0",
+    version="1.1.0",
     lifespan=lifespan,
 )
 
@@ -197,7 +197,7 @@ def health_check():
     orch = angel_orchestrator.status()
     return {
         "status": "ok",
-        "version": "0.8.0",
+        "version": "1.0.0",
         "orchestrator": orch["running"],
         "agents": {
             name: info["status"]

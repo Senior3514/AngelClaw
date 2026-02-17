@@ -306,7 +306,7 @@ def _gather_host_info() -> dict[str, Any]:
         "os": f"{platform.system()} {platform.release()}",
         "python": platform.python_version(),
         "architecture": platform.machine(),
-        "angelclaw_version": "0.7.0",
+        "angelclaw_version": "1.1.0",
         "process_uptime": f"{hours}h {minutes}m",
         "pid": os.getpid(),
     }

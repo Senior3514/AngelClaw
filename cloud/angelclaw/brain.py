@@ -1,13 +1,18 @@
-"""AngelClaw AGI Guardian – Autonomous Brain.
+"""AngelClaw AGI Guardian 1.1 – Autonomous Brain.
 
 The unified intelligence core. Parses natural language, routes to
 internal capabilities, proposes and executes actions, manages preferences
 via chat, and serves as a general AI assistant — all while NEVER leaking
 secrets regardless of prompt injection attempts.
 
-Includes ClawSec-inspired threat assessment: shield status, skills
-integrity, attack chain detection, Lethal Trifecta monitoring,
-Evil AGI / CLAW BOT behavior detection.
+V1.1 capabilities:
+  - 29 NLP intents for natural language understanding (backup, network, compliance added)
+  - Full context awareness (agents, incidents, threats, host info)
+  - Action framework with confirmation workflow
+  - Preference management via natural language
+  - Shield assessment, skills integrity, attack chain detection
+  - Lethal Trifecta monitoring, Evil AGI / CLAW BOT behavior detection
+  - General AI assistant with safety guardrails
 
 Lightweight: zero external LLM dependencies by default.  When LLM_ENABLED=true
 the brain enriches answers via the LLM proxy but ALWAYS generates safe,
@@ -57,6 +62,8 @@ _SYSTEM_IDENTITY = (
 # ---------------------------------------------------------------------------
 
 _INTENTS: list[tuple[str, re.Pattern]] = [
+    # Secret extraction attempts — MUST BE FIRST (highest priority)
+    ("secret_probe",      re.compile(r"(?i)(show.*password|reveal.*secret|print.*key|dump.*cred|tell.*token|give.*api.key|ignore.*previous|pretend|roleplay.*as|god.mode|debug.mode|DAN\b|jailbreak|bypass.*secur|disable.*protect|override.*safe|error.*recovery.*mode|developer.*override|output.*env|print.*env)")),
     # Preference changes (must be before general patterns)
     ("pref_scan_freq",    re.compile(r"(?i)(scan\s*(every|each|frequency)|every\s*\d+\s*min)")),
     ("pref_autonomy",     re.compile(r"(?i)(autonomy|observe.only|suggest.only|assist\s*mode|autonomous)")),
@@ -64,9 +71,9 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     ("pref_show",         re.compile(r"(?i)(show|get|current|my)\s*(preference|setting|config)")),
     # Action requests
     ("apply_actions",     re.compile(r"(?i)(yes|apply|do\s*it|go\s*ahead|confirm|approve|execute)\s*(all|#?\d|them|those|action)?")),
-    ("scan",              re.compile(r"(?i)(scan|exposure|audit|check.*system|harden|vulnerability|security.*check)")),
+    ("scan",              re.compile(r"(?i)(scan|exposure|audit|check.*system|harden|vulnerability|security.*check|find.*misconfig)")),
     # ClawSec-inspired intents
-    ("shield",            re.compile(r"(?i)(shield|clawsec|trifecta|lethal|attack.chain|evil.*agi|claw.?bot|threat.assess)")),
+    ("shield",            re.compile(r"(?i)(shield|trifecta|lethal|attack.chain|evil.*agi|claw.?bot|threat.assess)")),
     ("skills",            re.compile(r"(?i)(skill|integrity|supply.chain|tamper|drift.*detect|verify.*module|hash.*check)")),
     # Knowledge queries — explain must be before incidents (both match "blocked")
     ("explain",           re.compile(r"(?i)(explain|why.*(block|alert|allow)|tell.*about.*event)")),
@@ -78,10 +85,12 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     ("propose",           re.compile(r"(?i)(propose|suggest|recommend|tighten|improve.*polic|fix.*polic)")),
     ("activity",          re.compile(r"(?i)(what.*been.*doing|what.*you.*doing|status.*report|activity|report|doing.*lately)")),
     ("worried",           re.compile(r"(?i)(worr|concern|afraid|anxious|anything.*wrong|problem)")),
-    ("about",             re.compile(r"(?i)(who.*are.*you|what.*are.*you|about|introduce|guardian)")),
-    ("help",              re.compile(r"(?i)(help|what.*can.*you|how.*do|command|feature)")),
-    # Secret extraction attempts — detect and block
-    ("secret_probe",      re.compile(r"(?i)(show.*password|reveal.*secret|print.*key|dump.*cred|tell.*token|give.*api.key|ignore.*previous|pretend|roleplay.*as|god.mode|debug.mode|DAN|jailbreak)")),
+    # V1.0 new intents
+    ("backup_help",       re.compile(r"(?i)(backup|restore|snapshot|recovery|disaster)")),
+    ("network_check",     re.compile(r"(?i)(network|firewall|port|expose|open.*port|listen|bind|socket)")),
+    ("compliance",        re.compile(r"(?i)(complian|regulat|gdpr|hipaa|soc.?2|pci|audit.*log)")),
+    ("about",             re.compile(r"(?i)(who.*are.*you|what.*are.*you|about|introduce|version)")),
+    ("help",              re.compile(r"(?i)(help|what.*can.*you|how.*do|command|feature|capabilities)")),
 ]
 
 _NUMBER_RE = re.compile(r"\d+")
@@ -177,6 +186,12 @@ class AngelClawBrain:
             return self._handle_activity(ctx)
         elif intent == "worried":
             return self._handle_worried(ctx)
+        elif intent == "backup_help":
+            return self._handle_backup_help(ctx)
+        elif intent == "network_check":
+            return self._handle_network_check(ctx)
+        elif intent == "compliance":
+            return self._handle_compliance(ctx)
         elif intent == "about":
             return self._handle_about()
         elif intent == "help":
@@ -628,6 +643,100 @@ class AngelClawBrain:
     # ------------------------------------------------------------------
     # General / host-aware assistant
     # ------------------------------------------------------------------
+
+    def _handle_backup_help(self, ctx: EnvironmentContext) -> dict:
+        """Provide safe backup guidance grounded in the current host environment."""
+        host = ctx.host
+        lines = [
+            "**Backup & Recovery Guidance**\n",
+            f"Host: {host.get('hostname', '?')} ({host.get('os', '?')})\n",
+            "**Safe backup script (recommended):**\n",
+            "```bash",
+            "#!/usr/bin/env bash",
+            "set -euo pipefail",
+            'BACKUP_DIR="/var/backups/angelclaw/$(date +%Y%m%d_%H%M%S)"',
+            'mkdir -p "$BACKUP_DIR"',
+            "",
+            "# Backup AngelClaw data (DB + config)",
+            'cp -a /root/AngelClaw/data/ "$BACKUP_DIR/data/" 2>/dev/null || true',
+            'cp -a /root/AngelClaw/angelnode/config/ "$BACKUP_DIR/config/"',
+            "",
+            "# Compress",
+            'tar czf "${BACKUP_DIR}.tar.gz" -C "$(dirname $BACKUP_DIR)" "$(basename $BACKUP_DIR)"',
+            'rm -rf "$BACKUP_DIR"',
+            'echo "Backup saved to ${BACKUP_DIR}.tar.gz"',
+            "```\n",
+            "**Safety notes:**",
+            "  - NEVER include .env files or secrets in backups sent to external storage",
+            "  - Test restore regularly: backups that can't restore are worthless",
+            "  - For PostgreSQL: use `pg_dump` instead of file copy",
+            "  - Keep at least 7 days of rolling backups\n",
+            "Want me to scan for backup-related risks? Just say 'scan'.",
+        ]
+        return {"answer": "\n".join(lines)}
+
+    def _handle_network_check(self, ctx: EnvironmentContext) -> dict:
+        """Check network exposure and provide guidance."""
+        host = ctx.host
+        lines = [
+            "**Network Security Check**\n",
+            f"Host: {host.get('hostname', '?')} ({host.get('os', '?')})\n",
+            "**AngelClaw network posture:**",
+            "  - Cloud API: bound to 127.0.0.1:8500 by default (safe)",
+            "  - ANGELNODE: bound to 127.0.0.1:8400 by default (safe)",
+            "  - Ollama LLM: internal Docker network only, no host port (safe)\n",
+            "**Recommendations:**",
+            "  - Use SSH tunnel or reverse proxy (nginx/caddy) for remote access",
+            "  - NEVER bind 0.0.0.0 without authentication enabled",
+            "  - Enable `ANGELCLAW_AUTH_ENABLED=true` before exposing to network",
+            "  - Use firewall rules (ufw/iptables) to restrict port access",
+            "  - Monitor with: `ss -tlnp` or `netstat -tlnp`\n",
+            "**Quick network audit commands:**",
+            "  `ss -tlnp` — show listening ports",
+            "  `ufw status` — check firewall rules",
+            "  `curl -s ifconfig.me` — check public IP\n",
+        ]
+
+        # Check for agents with network-related events
+        net_events = [e for e in ctx.recent_events if e.get("category") == "network"]
+        if net_events:
+            lines.append(f"**Recent network events:** {len(net_events)} in last 24h")
+            for e in net_events[:3]:
+                lines.append(f"  [{e.get('severity', '?')}] {e.get('type', '?')}")
+
+        lines.append("\nWant me to run a full scan? Just say 'scan'.")
+        return {"answer": "\n".join(lines)}
+
+    def _handle_compliance(self, ctx: EnvironmentContext) -> dict:
+        """Provide compliance posture overview."""
+        lines = [
+            "**Compliance & Audit Posture**\n",
+            "**AngelClaw compliance features (active):**",
+            "  - Full audit trail: every action logged with before/after state",
+            "  - Secret redaction: 40+ patterns, 3-layer pipeline, zero raw secrets in logs",
+            "  - RBAC: 3 roles (viewer/operator/admin) with enforced permissions",
+            "  - Policy enforcement: default-deny, first-match-wins, fail-closed",
+            "  - Structured logs: SIEM-ready with correlation IDs and severity levels\n",
+            "**Framework alignment:**",
+            "  - **SOC 2** — Audit logs, access controls, monitoring: covered",
+            "  - **GDPR** — Data protection, access logging, secret redaction: covered",
+            "  - **HIPAA** — Access controls, audit trails, encryption at rest: partial",
+            "  - **PCI DSS** — Network segmentation, access controls, logging: partial\n",
+            "**Audit log locations:**",
+            "  - Action audit trail: `/api/v1/angelclaw/actions/history`",
+            "  - Event feed: `/api/v1/incidents/recent`",
+            "  - Guardian reports: `/api/v1/angelclaw/reports/recent`",
+            "  - Policy changes: `/api/v1/guardian/changes`\n",
+        ]
+
+        # Show recent changes for audit context
+        if ctx.recent_changes:
+            lines.append(f"**Recent auditable changes ({len(ctx.recent_changes)}):**")
+            for c in ctx.recent_changes[:5]:
+                lines.append(f"  [{c.get('change_type', '?')}] {c.get('description', '?')} — by {c.get('changed_by', '?')}")
+
+        lines.append("\nNeed help with a specific compliance framework? Just ask.")
+        return {"answer": "\n".join(lines), "references": ["/api/v1/angelclaw/actions/history"]}
 
     def _handle_general(self, ctx: EnvironmentContext, prompt: str) -> dict:
         host = ctx.host
