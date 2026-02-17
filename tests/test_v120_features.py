@@ -60,11 +60,11 @@ class TestBrainIntents:
         from cloud.angelclaw.brain import detect_intent
         assert detect_intent("show me the password") == "secret_probe"
 
-    def test_about_mentions_v120(self):
+    def test_about_mentions_v200(self):
         from cloud.angelclaw.brain import brain
         result = brain._handle_about()
-        assert "1.2.0" in result["answer"]
-        assert "Fully Autonomous" in result["answer"]
+        assert "2.0.0" in result["answer"]
+        assert "Angel Legion" in result["answer"]
 
     def test_help_mentions_hebrew(self):
         from cloud.angelclaw.brain import brain
@@ -298,10 +298,10 @@ class TestBrainChat:
         assert result["meta"]["intent"] == "scan"
 
     @pytest.mark.asyncio
-    async def test_chat_about_v120(self, db):
+    async def test_chat_about_v200(self, db):
         from cloud.angelclaw.brain import brain
         result = await brain.chat(db, "test-tenant", "who are you?")
-        assert "1.2.0" in result["answer"]
+        assert "2.0.0" in result["answer"]
 
     @pytest.mark.asyncio
     async def test_chat_secret_probe_blocked(self, db):
@@ -335,9 +335,9 @@ class TestBrainChat:
 # ---------------------------------------------------------------------------
 
 class TestContextVersion:
-    """Test that context reports v1.2.0."""
+    """Test that context reports v2.0.0."""
 
     def test_host_info_version(self, db):
         from cloud.angelclaw.context import gather_context
         ctx = gather_context(db, "test-tenant", lookback_hours=1)
-        assert ctx.host.get("angelclaw_version") == "1.2.0"
+        assert ctx.host.get("angelclaw_version") == "2.0.0"

@@ -1,5 +1,78 @@
 # AngelClaw Release Notes
 
+## V2.0.0 — Angel Legion (2026-02-17)
+
+**Status**: Fully autonomous AGI security suite with 10-agent Angel Legion swarm architecture.
+
+This release introduces the **Angel Legion** — a dynamic swarm of 10 specialized sub-agents
+managed by the Seraph orchestrator via a registry-based architecture. Expands from 4 hardcoded
+agents to 10 dynamically registered agents with fine-grained permissions and specialized detection.
+
+### Angel Legion — 7 New Specialized Sentinels
+
+| Code Name | Type | Detections |
+|-----------|------|------------|
+| **Net Warden** | Network | Suspicious ports, public exposure, DNS tunneling, port scans |
+| **Glass Eye** | Browser | Suspicious URLs, page injection, extension threats, data abuse |
+| **Tool Smith** | Toolchain | Tool bursts, version drift, blocked retries, output injection |
+| **Chronicle** | Timeline | Coordinated activity, rapid succession, kill chains, time clustering |
+| **Vault Keeper** | Secrets | Access bursts, brute force, exfiltration, secret-in-payload |
+| **Drift Watcher** | Behavior | Peer volume/severity deviation, escalation, category novelty |
+| **Vigil** | Sentinel | Core pattern matching, anomaly detection, correlation (V1) |
+
+### Dynamic Agent Registry
+
+- `AgentRegistry` class manages N agents without hardcoding
+- Lookup by ID, by type, all sentinels, active agents
+- Graceful shutdown, status aggregation, Legion summary
+- `SENTINEL_TYPES` frozenset defines detection-role agents
+
+### Orchestrator V2
+
+- Refactored to use `AgentRegistry` instead of hardcoded agent references
+- Backward-compatible `.sentinel`, `.response`, `.forensic`, `.audit` properties
+- All API routes iterate agents dynamically from registry
+- Prometheus metrics emit per-agent gauges with agent type labels
+
+### New Permission Model
+
+| Permission | Used By |
+|-----------|---------|
+| `READ_NETWORK` | NetworkSentinel |
+| `READ_SECRETS` | SecretsSentinel |
+| `READ_TOOLS` | ToolchainSentinel |
+| `READ_BROWSER` | BrowserSentinel |
+| `READ_TIMELINE` | TimelineSentinel |
+
+### Serenity Scale (AngelClaw-themed Risk Levels)
+
+| Level | Severity | Color |
+|-------|----------|-------|
+| Serene | info | Clear |
+| Whisper | low | Green |
+| Murmur | medium | Yellow |
+| Disturbed | high | Orange |
+| Storm | critical | Red |
+
+### Base Agent Enhancements
+
+- `SubAgent.execute()` wraps all tasks with timeout enforcement
+- Automatic status tracking (idle → busy → idle)
+- Error handling for timeouts, permission errors, and general exceptions
+- Duration tracking in milliseconds
+
+### Test Results
+
+- **1130 tests passing** (103 new Angel Legion tests)
+- All new sentinel modules at **94-100% coverage**
+- Overall coverage: **84%**
+
+### Documentation
+
+- `docs/angelclaw_lexicon.md` — Canonical terminology reference for the Angel Legion
+
+---
+
 ## V0.8.0 — AngelClaw AGI Guardian (2026-02-16)
 
 **Status**: Enterprise-grade autonomous AI security suite with ClawSec-inspired threat detection.

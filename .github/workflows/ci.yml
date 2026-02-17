@@ -182,6 +182,13 @@ jobs:
           from cloud.guardian.response_agent import ResponseAgent
           from cloud.guardian.forensic_agent import ForensicAgent
           from cloud.guardian.audit_agent import AuditAgent
+          from cloud.guardian.network_sentinel import NetworkSentinel
+          from cloud.guardian.browser_sentinel import BrowserSentinel
+          from cloud.guardian.toolchain_sentinel import ToolchainSentinel
+          from cloud.guardian.timeline_sentinel import TimelineSentinel
+          from cloud.guardian.secrets_sentinel import SecretsSentinel
+          from cloud.guardian.behavior_sentinel import BehaviorSentinel
+          from cloud.guardian.registry import AgentRegistry
           from cloud.guardian.learning import LearningEngine
           from cloud.guardian.self_audit import SelfAuditReport
           from cloud.auth.models import UserRole, AuthUser

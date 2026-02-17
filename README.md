@@ -15,7 +15,34 @@ analysis, reading, summarizing, reasoning, creating -- flows freely.
 
 ---
 
-## What's New in V1.1.0 -- Comprehensive Summary
+## What's New in V2.0.0 -- Angel Legion
+
+AngelClaw V2.0.0 introduces the **Angel Legion** -- a swarm of 10 specialized sub-agents orchestrated by the Seraph (orchestrator) with a dynamic registry. The system has evolved from 4 hardcoded agents to a fully extensible, registry-based architecture.
+
+### Angel Legion -- 7 New Specialized Sentinels
+
+| Code Name | Agent Type | Role |
+|-----------|-----------|------|
+| **Vigil** | Sentinel | Core threat detection (patterns, anomalies, correlation) |
+| **Net Warden** | Network | Network exposure, port scans, suspicious DNS, C2 detection |
+| **Glass Eye** | Browser | Suspicious URLs, page injection, extension threats, data abuse |
+| **Tool Smith** | Toolchain | Tool abuse, supply chain integrity, output injection detection |
+| **Chronicle** | Timeline | Temporal correlation, kill chain sequences, time clustering |
+| **Vault Keeper** | Secrets | Secret access bursts, brute force, exfiltration detection |
+| **Drift Watcher** | Behavior | Behavioral baselines, peer deviation, severity escalation |
+| **Iron Wing** | Response | Playbook execution and incident response |
+| **Deep Quill** | Forensic | Evidence collection and forensic investigation |
+| **Scroll Keeper** | Audit | Action verification and compliance auditing |
+
+### V2.0.0 Architecture Changes
+- **Dynamic Agent Registry** -- `AgentRegistry` manages N agents without hardcoding; agents register by type
+- **Serenity Scale** -- AngelClaw-themed risk levels (Serene/Whisper/Murmur/Disturbed/Storm)
+- **Registry-based orchestrator** -- all API routes and metrics iterate agents dynamically
+- **Per-sentinel permissions** -- fine-grained permission model (READ_NETWORK, READ_SECRETS, READ_TOOLS, READ_BROWSER, READ_TIMELINE)
+- **Base agent timeout enforcement** -- `SubAgent.execute()` wraps all tasks with timeout, error handling, and status tracking
+- **1130 tests passing** -- 84% code coverage, all new sentinels at 94-100% coverage
+
+### V1.1.0 Summary (Previous Release)
 
 AngelClaw has evolved from a simple policy engine into a **full-stack, enterprise-grade, autonomous AGI security suite** across 38 commits. Here is a complete summary of all major improvements and changes:
 
@@ -82,7 +109,7 @@ AngelClaw has evolved from a simple policy engine into a **full-stack, enterpris
 - **systemd integration** -- automatic start on boot for Linux servers
 - **Cross-platform installers** -- one-command install for Linux, macOS, and Windows
 - **Wazuh SIEM integration** -- Filebeat log shipping with custom detection rules
-- **979 tests passing** -- 93% code coverage across the entire codebase
+- **1130 tests passing** -- 84% code coverage across the entire codebase
 - **CI/CD pipeline** -- GitHub Actions with linting (ruff), testing (pytest), and cross-platform validation
 - **Windows compatibility** -- path handling, PowerShell installer, and CI validation on Windows
 
@@ -285,13 +312,15 @@ uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
 
 ---
 
-## AngelClaw AGI Guardian (V1.1.0)
+## AngelClaw AGI Guardian (V2.0.0)
 
-AngelClaw is a **full-stack, enterprise-grade, autonomous AGI security suite**:
+AngelClaw is a **full-stack, enterprise-grade, autonomous AGI security suite** with the **Angel Legion** -- 10 specialized sub-agents:
 
-- **Autonomous Brain** -- 29 NLP intents, natural language security chat, context-aware responses
+- **Angel Legion** -- 10 sub-agents: 7 sentinels (network, browser, toolchain, timeline, secrets, behavior, core) + response + forensic + audit
+- **Seraph Orchestrator** -- Dynamic agent registry, parallel sentinel dispatch, autonomy modes (Observe/Suggest/Auto-Apply)
+- **Autonomous Brain** -- 32+ NLP intents, natural language security chat, context-aware responses
 - **Threat Shield** -- 13 prompt injection patterns, 6 data leakage detectors, 7 evil AGI patterns, Lethal Trifecta monitoring, 6-stage ATT&CK attack chain detection
-- **Always-On Daemon** -- Continuous scans, shield assessments, drift detection, agent health monitoring, security checks for prompt injection attempts and data exfil signs
+- **Always-On Daemon** -- Continuous scans, shield assessments, drift detection, agent health monitoring
 - **Action Framework** -- 11 action types with dry-run proposals, confirmation workflow, full audit trail
 - **Auth & RBAC** -- JWT authentication, 3 roles (viewer/secops/admin), no unauthenticated access by default
 - **Secret Protection** -- 40+ pattern secret scanner, 3-layer redaction pipeline, NEVER leaks secrets
@@ -300,7 +329,7 @@ AngelClaw is a **full-stack, enterprise-grade, autonomous AGI security suite**:
 - **Guardian Chat** -- Unified AI chat for incidents, threats, policies, scans, and general security guidance
 - **Enterprise Dashboard** -- Real-time fleet status, threat landscape, alerts, AngelClaw AI chat
 
-AngelClaw incorporates and extends security concepts from ClawSec, OpenClaw, and Moltbot agentic AI security research. See [docs/angelclaw_vs_clawsec.md](docs/angelclaw_vs_clawsec.md) for the capability mapping.
+See [docs/angelclaw_lexicon.md](docs/angelclaw_lexicon.md) for the canonical Angel Legion terminology reference.
 
 ## Repository Structure
 
@@ -333,7 +362,7 @@ AngelClaw/
 │   ├── docker/          #   Dockerfiles and compose configurations
 │   ├── wazuh/           #   Wazuh SIEM integration configs and rules
 │   └── infra/           #   Future: Terraform/Pulumi modules
-├── tests/               # 979 tests — 93% coverage
+├── tests/               # 1130 tests — 84% coverage
 └── docs/                # Architecture, threat model, concepts
 ```
 
