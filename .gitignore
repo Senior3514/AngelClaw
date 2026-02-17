@@ -26,6 +26,11 @@ Thumbs.db
 logs/
 *.jsonl
 angelgrid.db
+test_angelgrid.db
+test*.db
+coverage.xml
+htmlcov/
+.coverage
 
 # Secrets — NEVER commit these
 .env
