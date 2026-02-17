@@ -117,7 +117,6 @@ def _deserialize_events(events_data: list[dict]) -> list[EventRow]:
     for d in events_data:
         row = EventRow(
             id=d.get("id", ""),
-            tenant_id=d.get("tenant_id", "dev-tenant"),
             agent_id=d.get("agent_id", ""),
             type=d.get("type", ""),
             severity=d.get("severity", "low"),

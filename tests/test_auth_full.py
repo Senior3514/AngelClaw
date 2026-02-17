@@ -31,11 +31,23 @@ from cloud.auth.service import (
 
 
 class TestPasswordHashing:
-    def test_hash_deterministic(self):
-        """Same password produces same hash."""
+    def test_hash_produces_salt_and_dk(self):
+        """Hash output contains salt:dk hex pair."""
+        h = _hash_password("test-password")
+        assert ":" in h
+        salt_hex, dk_hex = h.split(":", 1)
+        # Both are valid hex strings
+        bytes.fromhex(salt_hex)
+        bytes.fromhex(dk_hex)
+
+    def test_hash_uses_random_salt(self):
+        """Each hash uses a unique random salt."""
         h1 = _hash_password("test-password")
         h2 = _hash_password("test-password")
-        assert h1 == h2
+        # Different salts → different hashes, but both verify
+        assert h1 != h2
+        assert _verify_password("test-password", h1)
+        assert _verify_password("test-password", h2)
 
     def test_different_passwords_different_hashes(self):
         """Different passwords produce different hashes."""
@@ -52,6 +64,11 @@ class TestPasswordHashing:
         """Wrong password fails verification."""
         hashed = _hash_password("my-secret")
         assert _verify_password("wrong-pass", hashed) is False
+
+    def test_verify_invalid_format(self):
+        """Malformed stored hash returns False."""
+        assert _verify_password("anything", "not-valid-hash") is False
+        assert _verify_password("anything", "") is False
 
 
 # ---------------------------------------------------------------------------

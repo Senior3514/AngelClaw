@@ -27,19 +27,36 @@ logger = logging.getLogger("angelgrid.cloud.auth")
 
 
 # ---------------------------------------------------------------------------
-# Password hashing (SHA-256 based — no bcrypt dependency needed)
+# Password hashing (PBKDF2-HMAC-SHA256 with per-user random salts)
 # ---------------------------------------------------------------------------
+
+_PBKDF2_ITERATIONS = 600_000  # OWASP 2024 recommendation
 
 
 def _hash_password(password: str) -> str:
-    """Hash a password with a salt using SHA-256."""
-    salt = "angelclaw-salt"  # Simple salt; for production use per-user salts
-    return hashlib.sha256(f"{salt}:{password}".encode()).hexdigest()
+    """Hash a password with a random salt using PBKDF2-HMAC-SHA256.
+
+    Returns ``<hex-salt>:<hex-derived-key>``.
+    """
+    salt = os.urandom(16)
+    dk = hashlib.pbkdf2_hmac(
+        "sha256", password.encode(), salt, _PBKDF2_ITERATIONS,
+    )
+    return f"{salt.hex()}:{dk.hex()}"
 
 
-def _verify_password(password: str, hashed: str) -> bool:
-    """Verify a password against its hash."""
-    return hmac.compare_digest(_hash_password(password), hashed)
+def _verify_password(password: str, stored: str) -> bool:
+    """Verify a password against a PBKDF2 hash (``salt:dk`` hex format)."""
+    try:
+        salt_hex, dk_hex = stored.split(":", 1)
+        salt = bytes.fromhex(salt_hex)
+        expected = bytes.fromhex(dk_hex)
+    except (ValueError, AttributeError):
+        return False
+    dk = hashlib.pbkdf2_hmac(
+        "sha256", password.encode(), salt, _PBKDF2_ITERATIONS,
+    )
+    return hmac.compare_digest(dk, expected)
 
 
 # ---------------------------------------------------------------------------

@@ -29,6 +29,9 @@ class WazuhClient:
         self.base_url = os.environ.get("ANGELCLAW_WAZUH_URL", "").rstrip("/")
         self.username = os.environ.get("ANGELCLAW_WAZUH_USER", "")
         self.password = os.environ.get("ANGELCLAW_WAZUH_PASSWORD", "")
+        self.verify_ssl: bool = os.environ.get(
+            "ANGELCLAW_WAZUH_VERIFY_SSL", "true",
+        ).lower() not in ("0", "false", "no")
         self._token: str | None = None
         self._token_expires: datetime | None = None
 
@@ -50,7 +53,7 @@ class WazuhClient:
             return self._token
 
         try:
-            async with httpx.AsyncClient(verify=False, timeout=10) as client:
+            async with httpx.AsyncClient(verify=self.verify_ssl, timeout=10) as client:
                 resp = await client.post(
                     f"{self.base_url}/security/user/authenticate",
                     auth=(self.username, self.password),
@@ -82,7 +85,7 @@ class WazuhClient:
             return {}
 
         try:
-            async with httpx.AsyncClient(verify=False, timeout=15) as client:
+            async with httpx.AsyncClient(verify=self.verify_ssl, timeout=15) as client:
                 resp = await client.request(
                     method,
                     f"{self.base_url}{path}",
