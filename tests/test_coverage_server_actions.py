@@ -1726,6 +1726,7 @@ class TestOrchestratorHandleIncidentEscalation:
     def test_response_failure_escalates(self):
         """When response execution fails, incident is escalated."""
         orch = AngelOrchestrator()
+        orch.set_autonomy_mode("auto_apply")
         db = _fresh_db()
         try:
             inc = Incident(

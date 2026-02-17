@@ -37,7 +37,7 @@ def test_orchestrator_agents(client):
     assert r.status_code == 200
     data = r.json()
     assert "agents" in data
-    assert len(data["agents"]) == 4
+    assert len(data["agents"]) >= 4  # V2: 10 agents (Angel Legion)
 
 
 def test_orchestrator_playbooks(client):

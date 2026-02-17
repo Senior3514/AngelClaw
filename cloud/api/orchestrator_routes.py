@@ -1,7 +1,7 @@
-"""AngelClaw – Orchestrator API routes.
+"""AngelClaw – Orchestrator API routes (V2.0).
 
-Exposes the ANGEL AGI Orchestrator status, incident management,
-sub-agent info, and approval workflow.
+Exposes the Seraph orchestrator: Angel Legion status, scan types,
+autonomy mode, incident management, approval workflow, and agent info.
 """
 
 from __future__ import annotations
@@ -17,10 +17,88 @@ from cloud.guardian.self_audit import run_self_audit
 router = APIRouter(prefix="/api/v1/orchestrator", tags=["orchestrator"])
 
 
+# ---------------------------------------------------------------------------
+# Status
+# ---------------------------------------------------------------------------
+
+
 @router.get("/status")
 async def orchestrator_status():
-    """Return orchestrator status: agents, incidents, stats."""
+    """Return full orchestrator status: legion, agents, incidents, stats."""
     return angel_orchestrator.status()
+
+
+# ---------------------------------------------------------------------------
+# Angel Legion
+# ---------------------------------------------------------------------------
+
+
+@router.get("/legion/status")
+async def legion_status():
+    """Return Angel Legion status: all agents, summary, circuit breakers."""
+    return {
+        "summary": angel_orchestrator.registry.summary(),
+        "agents": angel_orchestrator.registry.info_all(),
+        "circuit_breakers": dict(angel_orchestrator._sentinel_failures),
+        "autonomy_mode": angel_orchestrator.autonomy_mode,
+    }
+
+
+@router.get("/agents")
+async def list_agents():
+    """List all guardian sub-agents and their status."""
+    return {
+        "agents": [a.info() for a in angel_orchestrator.registry.all_agents()],
+    }
+
+
+# ---------------------------------------------------------------------------
+# Scan Types (Halo Sweep, Wing Scan, Pulse Check)
+# ---------------------------------------------------------------------------
+
+
+@router.post("/scan/halo-sweep")
+async def halo_sweep(db: Session = Depends(get_db)):
+    """Halo Sweep — full system scan, all sentinels fire."""
+    return await angel_orchestrator.halo_sweep(db)
+
+
+@router.post("/scan/wing/{domain}")
+async def wing_scan(domain: str, db: Session = Depends(get_db)):
+    """Wing Scan — targeted scan for a single sentinel domain."""
+    return await angel_orchestrator.wing_scan(db, domain)
+
+
+@router.get("/scan/pulse")
+async def pulse_check():
+    """Pulse Check — quick health of all agents."""
+    return angel_orchestrator.pulse_check()
+
+
+# ---------------------------------------------------------------------------
+# Autonomy Mode
+# ---------------------------------------------------------------------------
+
+
+@router.put("/autonomy/{mode}")
+async def set_autonomy_mode(mode: str):
+    """Set orchestrator autonomy mode: observe, suggest, or auto_apply."""
+    try:
+        new_mode = angel_orchestrator.set_autonomy_mode(mode)
+        return {"autonomy_mode": new_mode}
+    except ValueError as e:
+        return {"error": str(e)}
+
+
+@router.get("/autonomy")
+async def get_autonomy_mode():
+    """Get current autonomy mode."""
+    return {"autonomy_mode": angel_orchestrator.autonomy_mode}
+
+
+# ---------------------------------------------------------------------------
+# Incidents
+# ---------------------------------------------------------------------------
 
 
 @router.get("/incidents")
@@ -53,23 +131,15 @@ async def approve_incident(
     """Approve a pending incident response (operator action)."""
     result = await angel_orchestrator.approve_incident(
         incident_id=incident_id,
-        approved_by="operator",  # In production, extract from auth
+        approved_by="operator",
         db=db,
     )
     return result
 
 
-@router.get("/agents")
-async def list_agents():
-    """List all guardian sub-agents and their status."""
-    return {
-        "agents": [
-            angel_orchestrator.sentinel.info(),
-            angel_orchestrator.response.info(),
-            angel_orchestrator.forensic.info(),
-            angel_orchestrator.audit.info(),
-        ],
-    }
+# ---------------------------------------------------------------------------
+# Playbooks
+# ---------------------------------------------------------------------------
 
 
 @router.get("/playbooks")
@@ -145,7 +215,7 @@ async def self_audit(db: Session = Depends(get_db)):
 
 @router.get("/learning/summary")
 async def learning_summary():
-    """Return the learning engine state: reflections, playbook rankings, threshold suggestions."""
+    """Return the learning engine state."""
     return learning_engine.summary()
 
 

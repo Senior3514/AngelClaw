@@ -51,10 +51,10 @@ def readiness_check(db: Session = Depends(get_db)):
         "events_processed": orch_status["stats"]["events_processed"],
     }
 
-    # 3. Sub-agents
-    for name in ("sentinel", "response", "forensic", "audit"):
-        info = orch_status["agents"][name]
-        checks[f"agent_{name}"] = {
+    # 3. Sub-agents (iterate all agents from registry)
+    for agent_id, info in orch_status["agents"].items():
+        agent_type = info.get("agent_type", "unknown")
+        checks[f"agent_{agent_type}_{agent_id[:8]}"] = {
             "status": info["status"],
             "tasks_completed": info["tasks_completed"],
             "tasks_failed": info["tasks_failed"],
@@ -169,15 +169,21 @@ def prometheus_metrics(db: Session = Depends(get_db)):
         orch.get("incidents", {}).get("pending_approval", 0),
     )
 
-    # --- Sub-agent health ---
-    for name in ("sentinel", "response", "forensic", "audit"):
-        info = orch["agents"][name]
+    # --- Sub-agent health (all agents in registry) ---
+    lines.append("# HELP angelclaw_agent_healthy Sub-agent health (1=healthy)")
+    lines.append("# TYPE angelclaw_agent_healthy gauge")
+    for agent_id, info in orch["agents"].items():
+        agent_type = info.get("agent_type", "unknown")
         healthy = 1 if info["status"] in ("ok", "idle") else 0
-        lines.append("# HELP angelclaw_agent_healthy Sub-agent health (1=healthy)")
-        lines.append("# TYPE angelclaw_agent_healthy gauge")
-        lines.append(f'angelclaw_agent_healthy{{agent="{name}"}} {healthy}')
-        lines.append(f'angelclaw_agent_tasks_completed{{agent="{name}"}} {info["tasks_completed"]}')
-        lines.append(f'angelclaw_agent_tasks_failed{{agent="{name}"}} {info["tasks_failed"]}')
+        lines.append(f'angelclaw_agent_healthy{{agent="{agent_type}",id="{agent_id[:8]}"}} {healthy}')
+        lines.append(
+            f'angelclaw_agent_tasks_completed{{agent="{agent_type}",id="{agent_id[:8]}"}} '
+            f'{info["tasks_completed"]}'
+        )
+        lines.append(
+            f'angelclaw_agent_tasks_failed{{agent="{agent_type}",id="{agent_id[:8]}"}} '
+            f'{info["tasks_failed"]}'
+        )
 
     # --- Playbooks ---
     playbooks = orch.get("playbooks", [])

@@ -28,10 +28,18 @@ class IncidentState(str, Enum):
 
 
 class AgentType(str, Enum):
+    # V1 core agents
     SENTINEL = "sentinel"
     RESPONSE = "response"
     FORENSIC = "forensic"
     AUDIT = "audit"
+    # V2 specialized sentinels (Angel Legion)
+    NETWORK = "network"
+    SECRETS = "secrets"
+    TOOLCHAIN = "toolchain"
+    BEHAVIOR = "behavior"
+    TIMELINE = "timeline"
+    BROWSER = "browser"
 
 
 class AgentStatus(str, Enum):
@@ -50,6 +58,34 @@ class Permission(str, Enum):
     WRITE_POLICIES = "write_policies"
     CALL_EXTERNAL = "call_external"
     EXECUTE_RESPONSE = "execute_response"
+    # V2 specialized permissions
+    READ_NETWORK = "read_network"
+    READ_SECRETS = "read_secrets"
+    READ_TOOLS = "read_tools"
+    READ_BROWSER = "read_browser"
+    READ_TIMELINE = "read_timeline"
+
+
+class SerenityLevel(str, Enum):
+    """AngelClaw-themed risk levels (Serenity Scale)."""
+
+    SERENE = "serene"        # info
+    WHISPER = "whisper"      # low
+    MURMUR = "murmur"        # medium
+    DISTURBED = "disturbed"  # high
+    STORM = "storm"          # critical
+
+
+# Bidirectional severity <-> serenity mapping
+SERENITY_MAP: dict[str, SerenityLevel] = {
+    "info": SerenityLevel.SERENE,
+    "low": SerenityLevel.WHISPER,
+    "medium": SerenityLevel.MURMUR,
+    "high": SerenityLevel.DISTURBED,
+    "critical": SerenityLevel.STORM,
+}
+
+SEVERITY_MAP: dict[SerenityLevel, str] = {v: k for k, v in SERENITY_MAP.items()}
 
 
 class MitreTactic(str, Enum):

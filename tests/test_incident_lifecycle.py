@@ -275,13 +275,14 @@ class TestOrchestratorIncidents:
         assert "playbooks" in status
 
     def test_status_agents(self):
-        """All 4 sub-agents appear in status."""
+        """All 10 sub-agents appear in status (Angel Legion)."""
         orch = AngelOrchestrator()
         agents = orch.status()["agents"]
-        assert "sentinel" in agents
-        assert "response" in agents
-        assert "forensic" in agents
-        assert "audit" in agents
+        agent_types = {info["agent_type"] for info in agents.values()}
+        for expected in ("sentinel", "response", "forensic", "audit",
+                         "network", "secrets", "toolchain", "behavior",
+                         "timeline", "browser"):
+            assert expected in agent_types, f"Missing agent type: {expected}"
 
     @pytest.mark.asyncio
     async def test_approve_nonexistent(self):

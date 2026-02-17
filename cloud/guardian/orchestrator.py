@@ -1,8 +1,16 @@
-"""AngelClaw – ANGEL AGI Orchestrator.
+"""AngelClaw – Seraph AGI Orchestrator (V2.0).
 
-The central brain of the guardian system.  Receives events, dispatches
-them to sub-agents (Sentinel → Response → Forensic → Audit), manages
-incident lifecycle, and coordinates all autonomous behavior.
+The central brain of the Angel Legion.  Receives events, dispatches
+them to ALL sentinels in parallel (fan-out), manages incident lifecycle,
+and coordinates autonomous behavior.
+
+V2 upgrades:
+  - Dynamic AgentRegistry replaces hard-coded agent attributes
+  - Multi-sentinel fan-out via asyncio.gather
+  - Autonomy modes: observe / suggest / auto_apply
+  - Halo Sweep, Wing Scan, Pulse Check scan types
+  - Circuit breaker for failing sentinels
+  - Backward-compatible .sentinel/.response/.forensic/.audit properties
 
 Runs as a singleton background service inside the Cloud process.
 """
@@ -18,28 +26,57 @@ from sqlalchemy.orm import Session
 
 from cloud.db.models import EventRow, GuardianAlertRow
 from cloud.guardian.audit_agent import AuditAgent
+from cloud.guardian.behavior_sentinel import BehaviorSentinel
+from cloud.guardian.browser_sentinel import BrowserSentinel
 from cloud.guardian.forensic_agent import ForensicAgent
 from cloud.guardian.models import (
     AgentTask,
+    AgentType,
     Incident,
     IncidentState,
     ThreatIndicator,
 )
+from cloud.guardian.network_sentinel import NetworkSentinel
+from cloud.guardian.registry import AgentRegistry
 from cloud.guardian.response_agent import ResponseAgent
+from cloud.guardian.secrets_sentinel import SecretsSentinel
 from cloud.guardian.sentinel_agent import SentinelAgent
+from cloud.guardian.timeline_sentinel import TimelineSentinel
+from cloud.guardian.toolchain_sentinel import ToolchainSentinel
 
 logger = logging.getLogger("angelgrid.cloud.guardian.orchestrator")
 
+# Circuit breaker: skip a sentinel after this many consecutive failures
+_CIRCUIT_BREAKER_THRESHOLD = 3
+
 
 class AngelOrchestrator:
-    """Central guardian orchestrator — the brain of ANGEL AGI."""
+    """Seraph — the central guardian orchestrator of the Angel Legion."""
 
     def __init__(self) -> None:
-        # Sub-agent registry
-        self.sentinel = SentinelAgent()
-        self.response = ResponseAgent()
-        self.forensic = ForensicAgent()
-        self.audit = AuditAgent()
+        # Dynamic agent registry
+        self.registry = AgentRegistry()
+
+        # Create and register V1 core agents
+        self._sentinel = SentinelAgent()
+        self._response = ResponseAgent()
+        self._forensic = ForensicAgent()
+        self._audit = AuditAgent()
+        for agent in [self._sentinel, self._response, self._forensic, self._audit]:
+            self.registry.register(agent)
+
+        # Create and register V2 Angel Legion sentinels
+        self._network = NetworkSentinel()
+        self._secrets = SecretsSentinel()
+        self._toolchain = ToolchainSentinel()
+        self._behavior = BehaviorSentinel()
+        self._timeline = TimelineSentinel()
+        self._browser = BrowserSentinel()
+        for agent in [
+            self._network, self._secrets, self._toolchain,
+            self._behavior, self._timeline, self._browser,
+        ]:
+            self.registry.register(agent)
 
         # Incident tracking
         self._incidents: dict[str, Incident] = {}
@@ -55,6 +92,50 @@ class AngelOrchestrator:
         self._audit_task: asyncio.Task | None = None
         self._running: bool = False
 
+        # Autonomy mode: observe | suggest | auto_apply
+        self._autonomy_mode: str = "suggest"
+
+        # Circuit breaker state: agent_id -> consecutive failures
+        self._sentinel_failures: dict[str, int] = {}
+
+    # ------------------------------------------------------------------
+    # Backward-compatible properties
+    # ------------------------------------------------------------------
+
+    @property
+    def sentinel(self) -> SentinelAgent:
+        return self._sentinel
+
+    @property
+    def response(self) -> ResponseAgent:
+        return self._response
+
+    @property
+    def forensic(self) -> ForensicAgent:
+        return self._forensic
+
+    @property
+    def audit(self) -> AuditAgent:
+        return self._audit
+
+    # ------------------------------------------------------------------
+    # Autonomy mode
+    # ------------------------------------------------------------------
+
+    @property
+    def autonomy_mode(self) -> str:
+        return self._autonomy_mode
+
+    def set_autonomy_mode(self, mode: str) -> str:
+        """Set autonomy mode. Returns the new mode."""
+        valid = {"observe", "suggest", "auto_apply"}
+        if mode not in valid:
+            raise ValueError(f"Invalid autonomy mode: {mode!r}. Must be one of {valid}")
+        old = self._autonomy_mode
+        self._autonomy_mode = mode
+        logger.info("[SERAPH] Autonomy mode changed: %s → %s", old, mode)
+        return mode
+
     # ------------------------------------------------------------------
     # Lifecycle
     # ------------------------------------------------------------------
@@ -64,11 +145,10 @@ class AngelOrchestrator:
         self._running = True
         self._audit_task = asyncio.create_task(self._audit_loop())
         logger.info(
-            "[ORCHESTRATOR] Started — agents: sentinel=%s, response=%s, forensic=%s, audit=%s",
-            self.sentinel.agent_id,
-            self.response.agent_id,
-            self.forensic.agent_id,
-            self.audit.agent_id,
+            "[SERAPH] Started — Angel Legion: %d agents (%d sentinels), mode=%s",
+            self.registry.count,
+            len(self.registry.all_sentinels()),
+            self._autonomy_mode,
         )
 
     async def stop(self) -> None:
@@ -81,13 +161,10 @@ class AngelOrchestrator:
             except asyncio.CancelledError:
                 pass
 
-        await self.sentinel.shutdown()
-        await self.response.shutdown()
-        await self.forensic.shutdown()
-        await self.audit.shutdown()
+        await self.registry.shutdown_all()
 
         logger.info(
-            "[ORCHESTRATOR] Stopped — events=%d, indicators=%d, incidents=%d, responses=%d",
+            "[SERAPH] Stopped — events=%d, indicators=%d, incidents=%d, responses=%d",
             self._events_processed,
             self._indicators_found,
             self._incidents_created,
@@ -106,21 +183,27 @@ class AngelOrchestrator:
     ) -> list[ThreatIndicator]:
         """Main entry point: analyze events through the full pipeline.
 
-        Called from the event ingestion path (server.py / event_bus.py).
-
-        Pipeline: Events → Sentinel → Indicators → Incidents → Response
+        Pipeline: Events → All Sentinels (fan-out) → Indicators → Incidents → Response
         """
         if not events:
             return []
 
         self._events_processed += len(events)
 
-        # Step 1: Dispatch to Sentinel for detection
+        # Step 1: Fan-out to ALL sentinels for detection
         indicators = await self._run_detection(events)
         self._indicators_found += len(indicators)
 
         if not indicators:
             return []
+
+        # In observe mode, stop here — log only
+        if self._autonomy_mode == "observe":
+            logger.info(
+                "[SERAPH] Observe mode — %d indicators logged, no action taken",
+                len(indicators),
+            )
+            return indicators
 
         # Step 2: Create incidents from indicators
         new_incidents = self._create_incidents(indicators, tenant_id)
@@ -136,53 +219,223 @@ class AngelOrchestrator:
         return indicators
 
     # ------------------------------------------------------------------
-    # Detection (Sentinel)
+    # Detection — Multi-Sentinel Fan-Out
     # ------------------------------------------------------------------
 
     async def _run_detection(
         self,
         events: list[EventRow],
     ) -> list[ThreatIndicator]:
-        """Send events to the Sentinel for analysis."""
+        """Fan out events to ALL sentinels, aggregate and deduplicate indicators."""
+        serialized = [
+            {
+                "id": e.id,
+                "tenant_id": getattr(e, "tenant_id", "dev-tenant"),
+                "agent_id": e.agent_id,
+                "type": e.type,
+                "severity": e.severity,
+                "details": e.details or {},
+                "source": e.source or "",
+                "timestamp": e.timestamp.isoformat() if e.timestamp else "",
+            }
+            for e in events
+        ]
+
+        sentinels = self.registry.all_sentinels()
+
+        # Filter out circuit-broken sentinels
+        active_sentinels = [
+            s for s in sentinels
+            if self._sentinel_failures.get(s.agent_id, 0) < _CIRCUIT_BREAKER_THRESHOLD
+        ]
+
+        if not active_sentinels:
+            logger.warning("[SERAPH] All sentinels circuit-broken! Resetting.")
+            self._sentinel_failures.clear()
+            active_sentinels = sentinels
+
+        # Create tasks for all active sentinels
+        coroutines = []
+        for sentinel in active_sentinels:
+            task = AgentTask(
+                correlation_id=str(uuid.uuid4()),
+                task_type="detect",
+                priority=1,
+                payload={"events": serialized, "window_seconds": 300},
+            )
+            coroutines.append(sentinel.execute(task))
+
+        # Fan-out: run all sentinels in parallel
+        results = await asyncio.gather(*coroutines, return_exceptions=True)
+
+        # Aggregate indicators from all sentinels
+        all_indicators: list[ThreatIndicator] = []
+        for sentinel, result in zip(active_sentinels, results):
+            if isinstance(result, Exception):
+                self._sentinel_failures[sentinel.agent_id] = (
+                    self._sentinel_failures.get(sentinel.agent_id, 0) + 1
+                )
+                logger.error(
+                    "[SERAPH] %s (%s) raised exception: %s",
+                    sentinel.agent_id, sentinel.agent_type.value, result,
+                )
+                continue
+
+            if not result.success:
+                self._sentinel_failures[sentinel.agent_id] = (
+                    self._sentinel_failures.get(sentinel.agent_id, 0) + 1
+                )
+                logger.error(
+                    "[SERAPH] %s (%s) failed: %s",
+                    sentinel.agent_id, sentinel.agent_type.value, result.error,
+                )
+                continue
+
+            # Success — reset circuit breaker
+            self._sentinel_failures.pop(sentinel.agent_id, None)
+
+            indicator_dicts = result.result_data.get("indicators", [])
+            for d in indicator_dicts:
+                try:
+                    all_indicators.append(ThreatIndicator(**d))
+                except Exception:
+                    logger.debug("Failed to parse indicator from %s", sentinel.agent_id)
+
+        # Deduplicate by pattern_name + agent combo
+        seen: set[tuple] = set()
+        unique: list[ThreatIndicator] = []
+        for ind in all_indicators:
+            key = (ind.pattern_name, tuple(sorted(ind.related_agent_ids)))
+            if key not in seen:
+                seen.add(key)
+                unique.append(ind)
+
+        if unique:
+            logger.info(
+                "[SERAPH] %d sentinels → %d raw indicators → %d unique (from %d events)",
+                len(active_sentinels),
+                len(all_indicators),
+                len(unique),
+                len(events),
+            )
+
+        return unique
+
+    # ------------------------------------------------------------------
+    # Scan types (Halo Sweep, Wing Scan, Pulse Check)
+    # ------------------------------------------------------------------
+
+    async def halo_sweep(self, db: Session, tenant_id: str = "dev-tenant") -> dict:
+        """Halo Sweep — full system scan. All sentinels fire."""
+        # Gather recent events from DB for scanning
+        recent_events = (
+            db.query(EventRow)
+            .order_by(EventRow.timestamp.desc())
+            .limit(500)
+            .all()
+        )
+
+        indicators = await self._run_detection(recent_events)
+
+        return {
+            "scan_type": "halo_sweep",
+            "events_scanned": len(recent_events),
+            "sentinels_active": len(self.registry.all_sentinels()),
+            "indicators_found": len(indicators),
+            "indicators": [ind.model_dump(mode="json") for ind in indicators[:50]],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+    async def wing_scan(
+        self,
+        db: Session,
+        domain: str,
+        tenant_id: str = "dev-tenant",
+    ) -> dict:
+        """Wing Scan — targeted scan for a single sentinel domain."""
+        domain_map: dict[str, AgentType] = {
+            "network": AgentType.NETWORK,
+            "secrets": AgentType.SECRETS,
+            "toolchain": AgentType.TOOLCHAIN,
+            "behavior": AgentType.BEHAVIOR,
+            "timeline": AgentType.TIMELINE,
+            "browser": AgentType.BROWSER,
+            "sentinel": AgentType.SENTINEL,
+        }
+
+        agent_type = domain_map.get(domain.lower())
+        if not agent_type:
+            return {"error": f"Unknown domain: {domain}. Valid: {list(domain_map.keys())}"}
+
+        sentinel = self.registry.get_first(agent_type)
+        if not sentinel:
+            return {"error": f"No sentinel for domain: {domain}"}
+
+        recent_events = (
+            db.query(EventRow)
+            .order_by(EventRow.timestamp.desc())
+            .limit(200)
+            .all()
+        )
+
+        serialized = [
+            {
+                "id": e.id,
+                "tenant_id": getattr(e, "tenant_id", "dev-tenant"),
+                "agent_id": e.agent_id,
+                "type": e.type,
+                "severity": e.severity,
+                "details": e.details or {},
+                "source": e.source or "",
+                "timestamp": e.timestamp.isoformat() if e.timestamp else "",
+            }
+            for e in recent_events
+        ]
+
         task = AgentTask(
             correlation_id=str(uuid.uuid4()),
             task_type="detect",
             priority=1,
-            payload={
-                "events": [
-                    {
-                        "id": e.id,
-                        "tenant_id": getattr(e, "tenant_id", "dev-tenant"),
-                        "agent_id": e.agent_id,
-                        "type": e.type,
-                        "severity": e.severity,
-                        "details": e.details or {},
-                        "source": e.source or "",
-                        "timestamp": e.timestamp.isoformat() if e.timestamp else "",
-                    }
-                    for e in events
-                ],
-                "window_seconds": 300,
-            },
+            payload={"events": serialized, "window_seconds": 300},
         )
 
-        result = await self.sentinel.execute(task)
+        result = await sentinel.execute(task)
+        indicators = []
+        if result.success:
+            for d in result.result_data.get("indicators", []):
+                try:
+                    indicators.append(ThreatIndicator(**d))
+                except Exception:
+                    pass
 
-        if not result.success:
-            logger.error("[ORCHESTRATOR] Sentinel failed: %s", result.error)
-            return []
+        return {
+            "scan_type": "wing_scan",
+            "domain": domain,
+            "sentinel": sentinel.info(),
+            "events_scanned": len(recent_events),
+            "indicators_found": len(indicators),
+            "indicators": [ind.model_dump(mode="json") for ind in indicators[:30]],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
 
-        indicator_dicts = result.result_data.get("indicators", [])
-        indicators = [ThreatIndicator(**d) for d in indicator_dicts]
+    def pulse_check(self) -> dict:
+        """Pulse Check — quick health of all agents."""
+        agents = self.registry.all_agents()
+        healthy = [a for a in agents if a.status.value in ("idle", "busy")]
+        degraded = [a for a in agents if a.status.value == "error"]
+        offline = [a for a in agents if a.status.value == "stopped"]
 
-        if indicators:
-            logger.info(
-                "[ORCHESTRATOR] Sentinel found %d indicators from %d events",
-                len(indicators),
-                len(events),
-            )
-
-        return indicators
+        return {
+            "scan_type": "pulse_check",
+            "total_agents": len(agents),
+            "healthy": len(healthy),
+            "degraded": len(degraded),
+            "offline": len(offline),
+            "agents": [a.info() for a in agents],
+            "circuit_breakers": dict(self._sentinel_failures),
+            "autonomy_mode": self._autonomy_mode,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
 
     # ------------------------------------------------------------------
     # Incident management
@@ -241,10 +494,11 @@ class AngelOrchestrator:
         incident.state = IncidentState.TRIAGING
         incident.updated_at = datetime.now(timezone.utc)
 
+        # No playbook → escalate regardless of mode
         if not incident.playbook_name:
             incident.state = IncidentState.ESCALATED
             logger.info(
-                "[ORCHESTRATOR] No playbook for incident %s — escalated",
+                "[SERAPH] No playbook for incident %s — escalated",
                 incident.incident_id[:8],
             )
             return
@@ -253,18 +507,28 @@ class AngelOrchestrator:
         if not playbook:
             incident.state = IncidentState.ESCALATED
             logger.warning(
-                "[ORCHESTRATOR] Playbook %s not found — escalated",
+                "[SERAPH] Playbook %s not found — escalated",
                 incident.playbook_name,
             )
             return
 
-        # Check if auto-respond is allowed
+        # In suggest mode, always require approval (even if playbook is auto_respond)
+        if self._autonomy_mode == "suggest":
+            incident.requires_approval = True
+            self._pending_approvals[incident.incident_id] = incident
+            logger.info(
+                "[SERAPH] Suggest mode — incident %s proposed for approval",
+                incident.incident_id[:8],
+            )
+            return
+
+        # auto_apply mode — check if auto-respond is allowed
         if not playbook.auto_respond:
             incident.requires_approval = True
             incident.state = IncidentState.TRIAGING
             self._pending_approvals[incident.incident_id] = incident
             logger.info(
-                "[ORCHESTRATOR] Incident %s awaiting approval for playbook %s",
+                "[SERAPH] Incident %s awaiting approval for playbook %s",
                 incident.incident_id[:8],
                 playbook.name,
             )
@@ -310,7 +574,7 @@ class AngelOrchestrator:
             incident.state = IncidentState.INVESTIGATING
             incident.updated_at = datetime.now(timezone.utc)
             logger.info(
-                "[ORCHESTRATOR] Response executed for incident %s",
+                "[SERAPH] Response executed for incident %s",
                 incident.incident_id[:8],
             )
 
@@ -321,7 +585,7 @@ class AngelOrchestrator:
             incident.state = IncidentState.ESCALATED
             incident.notes.append(f"Response failed: {result.error}")
             logger.error(
-                "[ORCHESTRATOR] Response failed for incident %s: %s",
+                "[SERAPH] Response failed for incident %s: %s",
                 incident.incident_id[:8],
                 result.error,
             )
@@ -357,7 +621,7 @@ class AngelOrchestrator:
             report = result.result_data.get("report", {})
             incident.notes.append(f"Forensic report: {report.get('root_cause', 'unknown')}")
             logger.info(
-                "[ORCHESTRATOR] Forensic report for incident %s: %s",
+                "[SERAPH] Forensic report for incident %s: %s",
                 incident.incident_id[:8],
                 report.get("root_cause", "unknown")[:80],
             )
@@ -374,7 +638,6 @@ class AngelOrchestrator:
                 if not self._running:
                     break
 
-                # Audit requires a DB session — we'll get one from the session factory
                 try:
                     from cloud.db.session import SessionLocal
 
@@ -391,7 +654,7 @@ class AngelOrchestrator:
                             report = result.result_data.get("report", {})
                             if not report.get("clean", True):
                                 logger.warning(
-                                    "[ORCHESTRATOR] Audit found discrepancies: %s",
+                                    "[SERAPH] Audit found discrepancies: %s",
                                     report.get("summary", "")[:120],
                                 )
                     finally:
@@ -402,7 +665,7 @@ class AngelOrchestrator:
             except asyncio.CancelledError:
                 break
             except Exception:
-                logger.exception("[ORCHESTRATOR] Audit loop error")
+                logger.exception("[SERAPH] Audit loop error")
 
     # ------------------------------------------------------------------
     # Approval workflow
@@ -492,18 +755,15 @@ class AngelOrchestrator:
         """Return orchestrator status for dashboards and APIs."""
         return {
             "running": self._running,
+            "autonomy_mode": self._autonomy_mode,
             "stats": {
                 "events_processed": self._events_processed,
                 "indicators_found": self._indicators_found,
                 "incidents_created": self._incidents_created,
                 "responses_executed": self._responses_executed,
             },
-            "agents": {
-                "sentinel": self.sentinel.info(),
-                "response": self.response.info(),
-                "forensic": self.forensic.info(),
-                "audit": self.audit.info(),
-            },
+            "legion": self.registry.summary(),
+            "agents": self.registry.info_all(),
             "incidents": {
                 "total": len(self._incidents),
                 "pending_approval": len(self._pending_approvals),

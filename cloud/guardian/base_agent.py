@@ -1,11 +1,12 @@
-"""AngelClaw – Sub-Agent base class.
+"""AngelClaw – Sub-Agent base class (Angel Legion).
 
-Every guardian sub-agent (Sentinel, Response, Forensic, Audit) extends
-this ABC.  The Orchestrator dispatches tasks and enforces permissions.
+Every guardian sub-agent extends this ABC.  The Seraph (orchestrator)
+dispatches tasks and enforces permissions.  V2 adds timeout enforcement.
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 import uuid
@@ -67,7 +68,11 @@ class SubAgent(ABC):
         start = time.monotonic()
 
         try:
-            result = await self.handle_task(task)
+            timeout = task.timeout_seconds
+            if timeout and timeout > 0:
+                result = await asyncio.wait_for(self.handle_task(task), timeout=timeout)
+            else:
+                result = await self.handle_task(task)
             self._tasks_completed += 1
             return AgentResult(
                 task_id=task.task_id,
@@ -76,6 +81,22 @@ class SubAgent(ABC):
                 success=result.success,
                 result_data=result.result_data,
                 error=result.error,
+                duration_ms=(time.monotonic() - start) * 1000,
+            )
+        except asyncio.TimeoutError:
+            self._tasks_failed += 1
+            logger.error(
+                "[%s] Task %s timed out after %ds",
+                self.agent_id,
+                task.task_id,
+                task.timeout_seconds,
+            )
+            return AgentResult(
+                task_id=task.task_id,
+                agent_id=self.agent_id,
+                agent_type=self.agent_type.value,
+                success=False,
+                error=f"Task timed out after {task.timeout_seconds}s",
                 duration_ms=(time.monotonic() - start) * 1000,
             )
         except PermissionError as exc:
