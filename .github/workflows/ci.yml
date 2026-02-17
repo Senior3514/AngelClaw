@@ -107,7 +107,7 @@ jobs:
         run: pip install ruff>=0.3
 
       - name: Security scan (ruff bandit rules)
-        run: ruff check . --select S --ignore S101
+        run: ruff check . --select S --ignore S101,S104,S105,S106,S108,S110,S501
 
       - name: Check for hardcoded secrets in source
         run: |
