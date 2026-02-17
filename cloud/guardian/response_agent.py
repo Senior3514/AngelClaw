@@ -8,8 +8,6 @@ is reversible, logged, and auditable.
 from __future__ import annotations
 
 import logging
-import os
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -174,12 +172,16 @@ class ResponseAgent(SubAgent):
             if not result.success:
                 all_success = False
                 logger.error(
-                    "[RESPONSE] Step %s failed: %s", step.action, result.message,
+                    "[RESPONSE] Step %s failed: %s",
+                    step.action,
+                    result.message,
                 )
                 # Rollback executed steps
                 if not dry_run:
                     rollback_results = await self._rollback(
-                        playbook, incident_ctx, results,
+                        playbook,
+                        incident_ctx,
+                        results,
                     )
                     results.extend(r.model_dump(mode="json") for r in rollback_results)
                 break
@@ -194,7 +196,8 @@ class ResponseAgent(SubAgent):
             "[RESPONSE] Playbook %s %s: %d steps, success=%s%s",
             playbook_name,
             "DRY-RUN" if dry_run else "EXECUTED",
-            len(playbook.steps), all_success,
+            len(playbook.steps),
+            all_success,
             f" (failures={self._consecutive_failures})" if not all_success else "",
         )
 
@@ -265,8 +268,12 @@ class ResponseAgent(SubAgent):
             result = await self._execute_step(step, target, context, dry_run=False)
             result.rolled_back = True
             results.append(result)
-            logger.info("[RESPONSE] Rollback %s on %s: %s",
-                        step.action, target, "OK" if result.success else "FAILED")
+            logger.info(
+                "[RESPONSE] Rollback %s on %s: %s",
+                step.action,
+                target,
+                "OK" if result.success else "FAILED",
+            )
         return results
 
     # ------------------------------------------------------------------
@@ -274,77 +281,110 @@ class ResponseAgent(SubAgent):
     # ------------------------------------------------------------------
 
     async def _action_pause_agent(
-        self, target: str, context: dict, params: dict,
+        self,
+        target: str,
+        context: dict,
+        params: dict,
     ) -> ResponseResult:
         """Mark an agent as quarantined in the database."""
         self.require_permission(Permission.WRITE_AGENT_STATE)
         # In production this updates AgentNodeRow.status
         logger.warning("[ACTION] pause_agent: %s", target)
         return ResponseResult(
-            action="pause_agent", target=target, success=True,
+            action="pause_agent",
+            target=target,
+            success=True,
             message=f"Agent {target} paused (quarantined)",
             after_state={"status": "quarantined"},
         )
 
     async def _action_resume_agent(
-        self, target: str, context: dict, params: dict,
+        self,
+        target: str,
+        context: dict,
+        params: dict,
     ) -> ResponseResult:
         """Resume a quarantined agent."""
         self.require_permission(Permission.WRITE_AGENT_STATE)
         logger.info("[ACTION] resume_agent: %s", target)
         return ResponseResult(
-            action="resume_agent", target=target, success=True,
+            action="resume_agent",
+            target=target,
+            success=True,
             message=f"Agent {target} resumed",
             after_state={"status": "active"},
         )
 
     async def _action_revoke_token(
-        self, target: str, context: dict, params: dict,
+        self,
+        target: str,
+        context: dict,
+        params: dict,
     ) -> ResponseResult:
         """Invalidate JWT for a user/service."""
         logger.warning("[ACTION] revoke_token: %s", target)
         return ResponseResult(
-            action="revoke_token", target=target, success=True,
+            action="revoke_token",
+            target=target,
+            success=True,
             message=f"Token revoked for {target}",
         )
 
     async def _action_throttle_agent(
-        self, target: str, context: dict, params: dict,
+        self,
+        target: str,
+        context: dict,
+        params: dict,
     ) -> ResponseResult:
         """Rate-limit an agent's event submission."""
         self.require_permission(Permission.WRITE_AGENT_STATE)
         rate = params.get("rate", "1req/10s")
         logger.warning("[ACTION] throttle_agent: %s → %s", target, rate)
         return ResponseResult(
-            action="throttle_agent", target=target, success=True,
+            action="throttle_agent",
+            target=target,
+            success=True,
             message=f"Agent {target} throttled to {rate}",
             after_state={"throttle_rate": rate},
         )
 
     async def _action_block_source(
-        self, target: str, context: dict, params: dict,
+        self,
+        target: str,
+        context: dict,
+        params: dict,
     ) -> ResponseResult:
         """Add a source to the deny list."""
         duration = params.get("duration_seconds", 3600)
         logger.warning("[ACTION] block_source: %s for %ds", target, duration)
         return ResponseResult(
-            action="block_source", target=target, success=True,
+            action="block_source",
+            target=target,
+            success=True,
             message=f"Source {target} blocked for {duration}s",
             after_state={"blocked": True, "duration": duration},
         )
 
     async def _action_snapshot_state(
-        self, target: str, context: dict, params: dict,
+        self,
+        target: str,
+        context: dict,
+        params: dict,
     ) -> ResponseResult:
         """Capture agent state for forensic analysis."""
         logger.info("[ACTION] snapshot_state: %s", target)
         return ResponseResult(
-            action="snapshot_state", target=target, success=True,
+            action="snapshot_state",
+            target=target,
+            success=True,
             message=f"State snapshot captured for {target}",
         )
 
     async def _action_notify_operator(
-        self, target: str, context: dict, params: dict,
+        self,
+        target: str,
+        context: dict,
+        params: dict,
     ) -> ResponseResult:
         """Send notification via webhook."""
         self.require_permission(Permission.CALL_EXTERNAL)
@@ -356,8 +396,8 @@ class ResponseAgent(SubAgent):
         # Fire webhook if configured
         try:
             from cloud.services.webhook import webhook_sink
+
             if webhook_sink.enabled:
-                import asyncio
                 await webhook_sink.send_alert(
                     alert_type="guardian_response",
                     title=message,
@@ -369,46 +409,67 @@ class ResponseAgent(SubAgent):
             logger.debug("Webhook notification failed", exc_info=True)
 
         return ResponseResult(
-            action="notify_operator", target=channel, success=True,
+            action="notify_operator",
+            target=channel,
+            success=True,
             message=f"Operator notified via {channel}",
         )
 
     async def _action_create_investigation(
-        self, target: str, context: dict, params: dict,
+        self,
+        target: str,
+        context: dict,
+        params: dict,
     ) -> ResponseResult:
         """Dispatch forensic investigation (handled by Orchestrator)."""
-        logger.info("[ACTION] create_investigation for incident %s",
-                     context.get("incident_id", "unknown"))
+        logger.info(
+            "[ACTION] create_investigation for incident %s", context.get("incident_id", "unknown")
+        )
         return ResponseResult(
-            action="create_investigation", target=target, success=True,
+            action="create_investigation",
+            target=target,
+            success=True,
             message="Investigation task created",
             after_state={"investigation_requested": True},
         )
 
     async def _action_apply_policy_rule(
-        self, target: str, context: dict, params: dict,
+        self,
+        target: str,
+        context: dict,
+        params: dict,
     ) -> ResponseResult:
         """Add or modify a policy rule (requires approval)."""
         self.require_permission(Permission.WRITE_POLICIES)
         rule_id = params.get("rule_id", "auto-generated")
         logger.warning("[ACTION] apply_policy_rule: %s", rule_id)
         return ResponseResult(
-            action="apply_policy_rule", target=rule_id, success=True,
+            action="apply_policy_rule",
+            target=rule_id,
+            success=True,
             message=f"Policy rule {rule_id} applied",
         )
 
     async def _action_log_incident(
-        self, target: str, context: dict, params: dict,
+        self,
+        target: str,
+        context: dict,
+        params: dict,
     ) -> ResponseResult:
         """Log an incident record."""
         logger.info("[ACTION] log_incident: %s", context.get("title", ""))
         return ResponseResult(
-            action="log_incident", target=target, success=True,
+            action="log_incident",
+            target=target,
+            success=True,
             message="Incident logged",
         )
 
     async def _action_wazuh_active_response(
-        self, target: str, context: dict, params: dict,
+        self,
+        target: str,
+        context: dict,
+        params: dict,
     ) -> ResponseResult:
         """Dispatch a Wazuh active response command."""
         self.require_permission(Permission.CALL_EXTERNAL)
@@ -417,23 +478,31 @@ class ResponseAgent(SubAgent):
 
         if not command:
             return ResponseResult(
-                action="wazuh_active_response", target=target, success=False,
+                action="wazuh_active_response",
+                target=target,
+                success=False,
                 message="No command specified for Wazuh active response",
             )
 
         try:
             from cloud.integrations.wazuh_client import wazuh_client
+
             if not wazuh_client.enabled:
                 return ResponseResult(
-                    action="wazuh_active_response", target=target, success=False,
+                    action="wazuh_active_response",
+                    target=target,
+                    success=False,
                     message="Wazuh integration not configured",
                 )
 
             success = await wazuh_client.send_active_response(
-                agent_id=target, command=command, arguments=arguments,
+                agent_id=target,
+                command=command,
+                arguments=arguments,
             )
             return ResponseResult(
-                action="wazuh_active_response", target=target,
+                action="wazuh_active_response",
+                target=target,
                 success=success,
                 message=(
                     f"Wazuh active response '{command}' dispatched to {target}"
@@ -443,7 +512,9 @@ class ResponseAgent(SubAgent):
             )
         except Exception as exc:
             return ResponseResult(
-                action="wazuh_active_response", target=target, success=False,
+                action="wazuh_active_response",
+                target=target,
+                success=False,
                 message=f"Wazuh active response error: {exc}",
             )
 

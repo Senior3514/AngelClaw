@@ -78,13 +78,17 @@ class WebhookSink:
             if resp.status_code < 300:
                 logger.info(
                     "[WEBHOOK] Alert sent: %s (%s) → %d",
-                    alert_type, severity, resp.status_code,
+                    alert_type,
+                    severity,
+                    resp.status_code,
                 )
                 return True
             else:
                 logger.warning(
                     "[WEBHOOK] Alert delivery failed: %s → %d %s",
-                    alert_type, resp.status_code, resp.text[:200],
+                    alert_type,
+                    resp.status_code,
+                    resp.text[:200],
                 )
                 return False
         except Exception:

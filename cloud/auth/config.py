@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import hashlib
 import os
-import secrets
-
 
 # Whether auth is enabled (secure by default)
-AUTH_ENABLED: bool = os.environ.get("ANGELCLAW_AUTH_ENABLED", "true").lower() in ("true", "1", "yes")
+AUTH_ENABLED: bool = os.environ.get("ANGELCLAW_AUTH_ENABLED", "true").lower() in (
+    "true",
+    "1",
+    "yes",
+)
 
 # Auth mode: "local" (username/password with bcrypt) or "bearer" (static tokens)
 AUTH_MODE: str = os.environ.get("ANGELCLAW_AUTH_MODE", "local")

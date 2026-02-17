@@ -13,9 +13,7 @@ from base64 import urlsafe_b64decode, urlsafe_b64encode
 from .config import (
     ADMIN_PASSWORD,
     ADMIN_USER,
-    AUTH_MODE,
     BEARER_TOKENS,
-    JWT_ALGORITHM,
     JWT_EXPIRE_HOURS,
     JWT_SECRET,
     SECOPS_PASSWORD,
@@ -32,6 +30,7 @@ logger = logging.getLogger("angelgrid.cloud.auth")
 # Password hashing (SHA-256 based — no bcrypt dependency needed)
 # ---------------------------------------------------------------------------
 
+
 def _hash_password(password: str) -> str:
     """Hash a password with a salt using SHA-256."""
     salt = "angelclaw-salt"  # Simple salt; for production use per-user salts
@@ -46,6 +45,7 @@ def _verify_password(password: str, hashed: str) -> bool:
 # ---------------------------------------------------------------------------
 # Local authentication
 # ---------------------------------------------------------------------------
+
 
 def authenticate_local(username: str, password: str) -> AuthUser | None:
     """Authenticate against configured local credentials."""
@@ -96,6 +96,7 @@ def change_password(username: str, current_password: str, new_password: str) -> 
 # ---------------------------------------------------------------------------
 # JWT (minimal implementation — no PyJWT dependency)
 # ---------------------------------------------------------------------------
+
 
 def _b64encode(data: bytes) -> str:
     return urlsafe_b64encode(data).rstrip(b"=").decode()
@@ -161,6 +162,7 @@ def verify_jwt(token: str) -> AuthUser | None:
 # ---------------------------------------------------------------------------
 # Bearer token authentication
 # ---------------------------------------------------------------------------
+
 
 def verify_bearer(token: str) -> AuthUser | None:
     """Check a static bearer token against configured tokens."""

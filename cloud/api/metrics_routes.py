@@ -27,6 +27,7 @@ _START_TIME = time.monotonic()
 # GET /ready — deep readiness check
 # ---------------------------------------------------------------------------
 
+
 @router.get("/ready")
 def readiness_check(db: Session = Depends(get_db)):
     """Deep readiness probe: DB, orchestrator, and sub-agent health."""
@@ -34,8 +35,11 @@ def readiness_check(db: Session = Depends(get_db)):
 
     # 1. Database connectivity
     try:
-        db.execute(db.bind.dialect.do_ping(db.connection()) if False else
-                   __import__("sqlalchemy").text("SELECT 1"))
+        db.execute(
+            db.bind.dialect.do_ping(db.connection())
+            if False
+            else __import__("sqlalchemy").text("SELECT 1")
+        )
         checks["database"] = {"status": "ok"}
     except Exception as exc:
         checks["database"] = {"status": "fail", "error": str(exc)[:200]}
@@ -57,9 +61,7 @@ def readiness_check(db: Session = Depends(get_db)):
         }
 
     # Overall verdict
-    all_ok = all(
-        c.get("status") in ("ok", "idle") for c in checks.values()
-    )
+    all_ok = all(c.get("status") in ("ok", "idle") for c in checks.values())
     status_code = 200 if all_ok else 503
 
     return {
@@ -72,6 +74,7 @@ def readiness_check(db: Session = Depends(get_db)):
 # ---------------------------------------------------------------------------
 # GET /metrics — Prometheus text exposition
 # ---------------------------------------------------------------------------
+
 
 @router.get("/metrics", response_class=PlainTextResponse)
 def prometheus_metrics(db: Session = Depends(get_db)):
@@ -170,17 +173,11 @@ def prometheus_metrics(db: Session = Depends(get_db)):
     for name in ("sentinel", "response", "forensic", "audit"):
         info = orch["agents"][name]
         healthy = 1 if info["status"] in ("ok", "idle") else 0
-        lines.append(f'# HELP angelclaw_agent_healthy Sub-agent health (1=healthy)')
-        lines.append(f'# TYPE angelclaw_agent_healthy gauge')
+        lines.append("# HELP angelclaw_agent_healthy Sub-agent health (1=healthy)")
+        lines.append("# TYPE angelclaw_agent_healthy gauge")
         lines.append(f'angelclaw_agent_healthy{{agent="{name}"}} {healthy}')
-        lines.append(
-            f'angelclaw_agent_tasks_completed{{agent="{name}"}} '
-            f'{info["tasks_completed"]}'
-        )
-        lines.append(
-            f'angelclaw_agent_tasks_failed{{agent="{name}"}} '
-            f'{info["tasks_failed"]}'
-        )
+        lines.append(f'angelclaw_agent_tasks_completed{{agent="{name}"}} {info["tasks_completed"]}')
+        lines.append(f'angelclaw_agent_tasks_failed{{agent="{name}"}} {info["tasks_failed"]}')
 
     # --- Playbooks ---
     playbooks = orch.get("playbooks", [])

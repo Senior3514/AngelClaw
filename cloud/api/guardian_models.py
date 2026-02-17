@@ -11,10 +11,10 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # Guardian Reports
 # ---------------------------------------------------------------------------
+
 
 class GuardianReport(BaseModel):
     id: str
@@ -35,6 +35,7 @@ class GuardianReport(BaseModel):
 # Guardian Alerts
 # ---------------------------------------------------------------------------
 
+
 class GuardianAlert(BaseModel):
     id: str
     tenant_id: str
@@ -50,6 +51,7 @@ class GuardianAlert(BaseModel):
 # ---------------------------------------------------------------------------
 # Guardian Chat
 # ---------------------------------------------------------------------------
+
 
 class ActionSuggestion(BaseModel):
     """A suggested action the user can take. Never auto-applied."""
@@ -78,6 +80,7 @@ class ChatResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Event Context
 # ---------------------------------------------------------------------------
+
 
 class EvaluationResult(BaseModel):
     """Policy evaluation result for an event."""
@@ -110,6 +113,7 @@ class EventContext(BaseModel):
 # Timeline
 # ---------------------------------------------------------------------------
 
+
 class TimelineEntry(BaseModel):
     timestamp: datetime
     entry_type: str = Field(description="event, policy_change, session_start, ai_tool_call")
@@ -128,6 +132,7 @@ class AgentTimeline(BaseModel):
 # ---------------------------------------------------------------------------
 # Guardian Changes
 # ---------------------------------------------------------------------------
+
 
 class GuardianChange(BaseModel):
     id: str

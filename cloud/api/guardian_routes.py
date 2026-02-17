@@ -10,7 +10,7 @@ Router prefix: /api/v1/guardian
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
@@ -39,6 +39,7 @@ router = APIRouter(prefix="/api/v1/guardian", tags=["Guardian V2"])
 # Auth dependency
 # ---------------------------------------------------------------------------
 
+
 async def _require_tenant(
     x_tenant_id: Optional[str] = Header(default=None),
 ) -> str:
@@ -48,6 +49,7 @@ async def _require_tenant(
 # ---------------------------------------------------------------------------
 # GET /api/v1/guardian/reports/recent
 # ---------------------------------------------------------------------------
+
 
 @router.get(
     "/reports/recent",
@@ -91,6 +93,7 @@ def recent_reports(
 # GET /api/v1/guardian/alerts/recent
 # ---------------------------------------------------------------------------
 
+
 @router.get(
     "/alerts/recent",
     response_model=list[GuardianAlert],
@@ -130,6 +133,7 @@ def recent_alerts(
 # POST /api/v1/guardian/chat
 # ---------------------------------------------------------------------------
 
+
 @router.post(
     "/chat",
     response_model=ChatResponse,
@@ -145,6 +149,7 @@ async def guardian_chat(
 # ---------------------------------------------------------------------------
 # GET /api/v1/guardian/event_context
 # ---------------------------------------------------------------------------
+
 
 @router.get(
     "/event_context",
@@ -199,8 +204,10 @@ def event_context(
 
     try:
         from pathlib import Path as _Path
-        from shared.models.event import Event as _Event, EventCategory, Severity
+
         from angelnode.core.engine import PolicyEngine
+        from shared.models.event import Event as _Event
+        from shared.models.event import EventCategory, Severity
 
         ev = _Event(
             id=event.id,
@@ -214,7 +221,9 @@ def event_context(
         )
         policy_path = (
             _Path(__file__).resolve().parent.parent.parent
-            / "angelnode" / "config" / "default_policy.json"
+            / "angelnode"
+            / "config"
+            / "default_policy.json"
         )
         if policy_path.exists():
             eng = PolicyEngine.from_file(policy_path)
@@ -295,6 +304,7 @@ def event_context(
 # ---------------------------------------------------------------------------
 # GET /api/v1/guardian/changes
 # ---------------------------------------------------------------------------
+
 
 @router.get(
     "/changes",

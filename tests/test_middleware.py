@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import time
-from unittest.mock import patch
 
 from cloud.middleware.security import (
     MAX_BODY_SIZE,
@@ -15,7 +14,6 @@ from cloud.middleware.security import (
 
 
 class TestRateLimiting:
-
     def setup_method(self):
         """Clear rate limit state between tests."""
         _rate_windows.clear()
@@ -73,7 +71,6 @@ class TestSecurityHeaders:
 
 
 class TestBodySizeLimit:
-
     def test_oversized_post_rejected(self, client):
         """POST with Content-Length exceeding limit returns 413."""
         # We send a header claiming a huge body
@@ -95,7 +92,6 @@ class TestBodySizeLimit:
 
 
 class TestRateLimitEndpoint:
-
     def setup_method(self):
         _rate_windows.clear()
 

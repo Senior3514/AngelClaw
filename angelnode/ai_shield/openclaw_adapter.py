@@ -49,6 +49,7 @@ router = APIRouter(prefix="/ai/openclaw", tags=["AI Shield – OpenClaw"])
 # Request / Response models
 # ---------------------------------------------------------------------------
 
+
 class ToolCallRequest(BaseModel):
     """Metadata about an AI agent's tool invocation.
 
@@ -92,6 +93,7 @@ class ToolCallResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoint
 # ---------------------------------------------------------------------------
+
 
 @router.post("/evaluate_tool", response_model=ToolCallResponse)
 async def evaluate_tool(request: ToolCallRequest):
@@ -146,7 +148,8 @@ async def evaluate_tool(request: ToolCallRequest):
     except httpx.HTTPError as exc:
         logger.error(
             "Failed to reach local evaluation engine (correlation_id=%s): %s",
-            correlation_id, exc,
+            correlation_id,
+            exc,
         )
         # SECURITY: fail-closed — if the engine is unreachable, block the action
         return ToolCallResponse(
@@ -165,18 +168,27 @@ async def evaluate_tool(request: ToolCallRequest):
     if not allowed:
         logger.warning(
             "[AI SHIELD BLOCK] tool=%s agent=%s reason='%s' risk=%s correlation=%s",
-            request.tool_name, request.agent_id[:8], decision["reason"],
-            decision.get("risk_level", "none"), correlation_id[:8],
+            request.tool_name,
+            request.agent_id[:8],
+            decision["reason"],
+            decision.get("risk_level", "none"),
+            correlation_id[:8],
         )
     elif secret_detected:
         logger.warning(
-            "[AI SHIELD SECRET] Secrets detected in tool=%s from agent=%s — action=%s correlation=%s",
-            request.tool_name, request.agent_id[:8], action, correlation_id[:8],
+            "[AI SHIELD SECRET] Secrets detected in tool=%s "
+            "from agent=%s — action=%s correlation=%s",
+            request.tool_name,
+            request.agent_id[:8],
+            action,
+            correlation_id[:8],
         )
     else:
         logger.info(
             "[AI SHIELD] tool=%s agent=%s action=%s risk=%s",
-            request.tool_name, request.agent_id[:8], action,
+            request.tool_name,
+            request.agent_id[:8],
+            action,
             decision.get("risk_level", "none"),
         )
 
@@ -192,6 +204,7 @@ async def evaluate_tool(request: ToolCallRequest):
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _infer_severity(tool_name: str, secret_detected: bool) -> Severity:
     """Assign a base severity based on the tool name and secret access.

@@ -10,16 +10,14 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
-import os
 import time
-from base64 import urlsafe_b64encode
 
 import pytest
 
-from cloud.auth.models import AuthUser, UserRole, role_at_least, ROLE_HIERARCHY
+from cloud.auth.models import ROLE_HIERARCHY, AuthUser, UserRole, role_at_least
 from cloud.auth.service import (
-    _b64encode,
     _b64decode,
+    _b64encode,
     _hash_password,
     _verify_password,
     create_jwt,
@@ -27,13 +25,12 @@ from cloud.auth.service import (
     verify_jwt,
 )
 
-
 # ---------------------------------------------------------------------------
 # Password hashing
 # ---------------------------------------------------------------------------
 
-class TestPasswordHashing:
 
+class TestPasswordHashing:
     def test_hash_deterministic(self):
         """Same password produces same hash."""
         h1 = _hash_password("test-password")
@@ -61,8 +58,8 @@ class TestPasswordHashing:
 # JWT
 # ---------------------------------------------------------------------------
 
-class TestJWT:
 
+class TestJWT:
     def test_roundtrip(self):
         """Create + verify JWT succeeds with correct data."""
         user = AuthUser(username="admin", role=UserRole.ADMIN, tenant_id="t1")
@@ -126,12 +123,13 @@ class TestJWT:
 # Bearer tokens
 # ---------------------------------------------------------------------------
 
-class TestBearerAuth:
 
+class TestBearerAuth:
     def test_no_configured_tokens(self):
         """verify_bearer returns None when no tokens configured."""
         # Default state has no bearer tokens
         from cloud.auth.service import BEARER_TOKENS
+
         if BEARER_TOKENS:
             pytest.skip("Bearer tokens are configured in environment")
         assert verify_bearer("some-token") is None
@@ -139,6 +137,7 @@ class TestBearerAuth:
     def test_valid_bearer(self):
         """Valid bearer token returns operator user."""
         import cloud.auth.service as svc
+
         original = svc.BEARER_TOKENS
         try:
             svc.BEARER_TOKENS = ["test-token-abc123"]
@@ -152,6 +151,7 @@ class TestBearerAuth:
     def test_invalid_bearer(self):
         """Invalid bearer token returns None."""
         import cloud.auth.service as svc
+
         original = svc.BEARER_TOKENS
         try:
             svc.BEARER_TOKENS = ["correct-token"]
@@ -164,8 +164,8 @@ class TestBearerAuth:
 # RBAC
 # ---------------------------------------------------------------------------
 
-class TestRBAC:
 
+class TestRBAC:
     def test_admin_has_all_access(self):
         """Admin role meets all required role levels."""
         for required in UserRole:
@@ -193,8 +193,8 @@ class TestRBAC:
 # Auth middleware integration
 # ---------------------------------------------------------------------------
 
-class TestAuthMiddleware:
 
+class TestAuthMiddleware:
     def test_public_paths_bypass_auth(self, client):
         """Public paths work without authentication."""
         for path in ["/health", "/ready", "/metrics"]:
@@ -219,8 +219,8 @@ class TestAuthMiddleware:
 # Base64 helpers
 # ---------------------------------------------------------------------------
 
-class TestBase64Helpers:
 
+class TestBase64Helpers:
     def test_roundtrip(self):
         """b64encode → b64decode is lossless."""
         data = b'{"test": "data", "num": 42}'
@@ -230,7 +230,7 @@ class TestBase64Helpers:
 
     def test_url_safe(self):
         """Encoded output uses URL-safe characters."""
-        data = b'\xff\xfe\xfd'
+        data = b"\xff\xfe\xfd"
         encoded = _b64encode(data)
         assert "+" not in encoded
         assert "/" not in encoded

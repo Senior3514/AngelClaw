@@ -17,20 +17,20 @@ from pydantic import BaseModel, Field
 class AgentType(str, Enum):
     """Deployment type of the agent."""
 
-    ENDPOINT = "endpoint"          # Workstation / developer machine
-    SERVER = "server"              # Production server
-    AI_HOST = "ai_host"           # Host running AI agents (OpenClaw, MoltBot, etc.)
-    CONTAINER = "container"        # Ephemeral container sidecar
-    AGENTLESS = "agentless"        # Cloud connector (no resident process)
+    ENDPOINT = "endpoint"  # Workstation / developer machine
+    SERVER = "server"  # Production server
+    AI_HOST = "ai_host"  # Host running AI agents (OpenClaw, MoltBot, etc.)
+    CONTAINER = "container"  # Ephemeral container sidecar
+    AGENTLESS = "agentless"  # Cloud connector (no resident process)
 
 
 class AgentStatus(str, Enum):
     """Lifecycle status of the agent."""
 
-    PENDING = "pending"            # Registered but not yet reporting
-    ACTIVE = "active"              # Healthy and reporting
-    DEGRADED = "degraded"          # Reporting but with errors
-    OFFLINE = "offline"            # Not reporting within expected interval
+    PENDING = "pending"  # Registered but not yet reporting
+    ACTIVE = "active"  # Healthy and reporting
+    DEGRADED = "degraded"  # Reporting but with errors
+    OFFLINE = "offline"  # Not reporting within expected interval
     DECOMMISSIONED = "decommissioned"
 
 

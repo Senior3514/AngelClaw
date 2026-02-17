@@ -41,9 +41,7 @@ SYNC_INTERVAL: int = int(os.environ.get("ANGELGRID_SYNC_INTERVAL", "60"))
 AGENT_TYPE: str = os.environ.get("ANGELNODE_AGENT_TYPE", "server")
 AGENT_VERSION: str = os.environ.get("ANGELNODE_VERSION", "0.2.0")
 AGENT_TAGS: list[str] = [
-    t.strip()
-    for t in os.environ.get("ANGELNODE_TAGS", "").split(",")
-    if t.strip()
+    t.strip() for t in os.environ.get("ANGELNODE_TAGS", "").split(",") if t.strip()
 ]
 
 
@@ -134,7 +132,8 @@ class CloudSyncClient:
         self._task = asyncio.create_task(self._poll_loop())
         logger.info(
             "Policy sync polling started — interval=%ds, cloud=%s",
-            SYNC_INTERVAL, self._cloud_url,
+            SYNC_INTERVAL,
+            self._cloud_url,
         )
 
     async def stop(self) -> None:
@@ -185,7 +184,8 @@ class CloudSyncClient:
             self._apply_policy(policy_data)
             logger.info(
                 "Policy updated: %s → %s",
-                self._current_version, new_version,
+                self._current_version,
+                new_version,
             )
             self._log_sync_event(
                 "policy_sync",
@@ -209,10 +209,7 @@ class CloudSyncClient:
 
     def _apply_policy(self, policy_data: dict[str, Any]) -> None:
         """Parse a Cloud policy response and hot-reload the engine."""
-        rules = [
-            PolicyRule.model_validate(r)
-            for r in policy_data.get("rules", [])
-        ]
+        rules = [PolicyRule.model_validate(r) for r in policy_data.get("rules", [])]
         policy_set = PolicySet(
             id=policy_data.get("id", "cloud-synced"),
             name=policy_data.get("name", "cloud-policy"),

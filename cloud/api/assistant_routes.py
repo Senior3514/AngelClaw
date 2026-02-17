@@ -11,10 +11,10 @@ proper auth middleware (JWT, OAuth2) when deploying to production.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -36,6 +36,7 @@ router = APIRouter(prefix="/api/v1/assistant", tags=["AI Assistant"])
 # Auth dependency (pluggable)
 # ---------------------------------------------------------------------------
 
+
 async def _require_tenant(
     x_tenant_id: Optional[str] = Header(default=None),
 ) -> str:
@@ -53,6 +54,7 @@ async def _require_tenant(
 # ---------------------------------------------------------------------------
 # Response models for /explain
 # ---------------------------------------------------------------------------
+
 
 class EventExplanation(BaseModel):
     """Explains why a specific event was blocked/alerted/allowed."""
@@ -82,6 +84,7 @@ class EventExplanation(BaseModel):
 # GET /api/v1/assistant/incidents
 # ---------------------------------------------------------------------------
 
+
 @router.get(
     "/incidents",
     response_model=IncidentSummary,
@@ -108,6 +111,7 @@ def get_incident_summary(
 # ---------------------------------------------------------------------------
 # POST /api/v1/assistant/propose
 # ---------------------------------------------------------------------------
+
 
 class ProposeRequest(BaseModel):
     """Request body for policy tightening proposals."""
@@ -145,6 +149,7 @@ def propose_tightening(
 # GET /api/v1/assistant/explain
 # ---------------------------------------------------------------------------
 
+
 @router.get(
     "/explain",
     response_model=EventExplanation,
@@ -157,7 +162,9 @@ def propose_tightening(
 )
 def explain_event(
     event_id: str = Query(..., description="The event ID to explain"),
-    include_context: bool = Query(default=False, description="Include surrounding events and AI traffic"),
+    include_context: bool = Query(
+        default=False, description="Include surrounding events and AI traffic"
+    ),
     tenant_id: str = Depends(_require_tenant),
     db: Session = Depends(get_db),
 ) -> EventExplanation:
@@ -167,11 +174,10 @@ def explain_event(
 
     # Re-evaluate the event against the current default policy to produce
     # an explanation.  We import here to avoid circular imports at module level.
-    import json
     from pathlib import Path
 
-    from shared.models.event import Event, EventCategory, Severity
     from angelnode.core.engine import PolicyEngine
+    from shared.models.event import Event, EventCategory, Severity
 
     # Reconstruct the Event from the stored row
     event = Event(
@@ -186,7 +192,12 @@ def explain_event(
     )
 
     # Load the bootstrap policy for evaluation
-    policy_path = Path(__file__).resolve().parent.parent.parent / "angelnode" / "config" / "default_policy.json"
+    policy_path = (
+        Path(__file__).resolve().parent.parent.parent
+        / "angelnode"
+        / "config"
+        / "default_policy.json"
+    )
     if policy_path.exists():
         engine = PolicyEngine.from_file(policy_path)
         decision = engine.evaluate(event)
@@ -215,6 +226,7 @@ def explain_event(
     ai_traffic_data: list[dict] = []
     if include_context:
         from datetime import timedelta
+
         window_start = event_row.timestamp - timedelta(minutes=5)
         window_end = event_row.timestamp + timedelta(minutes=5)
         history = (

@@ -10,10 +10,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from cloud.db.session import get_db
-from cloud.guardian.orchestrator import angel_orchestrator
-
-from cloud.guardian.self_audit import run_self_audit
 from cloud.guardian.learning import learning_engine
+from cloud.guardian.orchestrator import angel_orchestrator
+from cloud.guardian.self_audit import run_self_audit
 
 router = APIRouter(prefix="/api/v1/orchestrator", tags=["orchestrator"])
 
@@ -80,14 +79,16 @@ async def list_playbooks():
     for name in angel_orchestrator.response.list_playbooks():
         pb = angel_orchestrator.response.get_playbook(name)
         if pb:
-            playbooks.append({
-                "name": pb.name,
-                "description": pb.description,
-                "trigger_patterns": pb.trigger_patterns,
-                "severity_threshold": pb.severity_threshold,
-                "auto_respond": pb.auto_respond,
-                "steps": [s.action for s in pb.steps],
-            })
+            playbooks.append(
+                {
+                    "name": pb.name,
+                    "description": pb.description,
+                    "trigger_patterns": pb.trigger_patterns,
+                    "severity_threshold": pb.severity_threshold,
+                    "auto_respond": pb.auto_respond,
+                    "steps": [s.action for s in pb.steps],
+                }
+            )
     return {"playbooks": playbooks}
 
 
@@ -129,6 +130,7 @@ async def dry_run_playbook(
 # Self-Audit
 # ---------------------------------------------------------------------------
 
+
 @router.get("/self-audit")
 async def self_audit(db: Session = Depends(get_db)):
     """Run a self-audit and return findings."""
@@ -139,6 +141,7 @@ async def self_audit(db: Session = Depends(get_db)):
 # ---------------------------------------------------------------------------
 # Learning Engine
 # ---------------------------------------------------------------------------
+
 
 @router.get("/learning/summary")
 async def learning_summary():

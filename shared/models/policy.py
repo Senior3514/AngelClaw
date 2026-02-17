@@ -22,8 +22,8 @@ class PolicyAction(str, Enum):
 
     ALLOW = "allow"
     BLOCK = "block"
-    ALERT = "alert"          # Allow but raise an alert / incident
-    AUDIT = "audit"          # Allow and log (no alert)
+    ALERT = "alert"  # Allow but raise an alert / incident
+    AUDIT = "audit"  # Allow and log (no alert)
 
 
 class RiskLevel(str, Enum):

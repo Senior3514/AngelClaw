@@ -22,10 +22,9 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Header, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from cloud.db.models import AgentNodeRow, EventRow, IncidentRow, PolicySetRow
+from cloud.db.models import AgentNodeRow, EventRow, PolicySetRow
 from cloud.db.session import get_db
 from shared.security.secret_scanner import redact_dict
 
@@ -38,6 +37,7 @@ router = APIRouter(tags=["Analytics & Fleet"])
 # Auth dependency
 # ---------------------------------------------------------------------------
 
+
 async def _require_tenant(
     x_tenant_id: Optional[str] = Header(default=None),
 ) -> str:
@@ -47,6 +47,7 @@ async def _require_tenant(
 # ---------------------------------------------------------------------------
 # Response models
 # ---------------------------------------------------------------------------
+
 
 class AgentSummary(BaseModel):
     agent_id: str
@@ -123,6 +124,7 @@ class SessionSummary(BaseModel):
 # GET /api/v1/agents – Fleet listing
 # ---------------------------------------------------------------------------
 
+
 @router.get(
     "/api/v1/agents",
     response_model=list[AgentSummary],
@@ -152,6 +154,7 @@ def list_agents(
 # ---------------------------------------------------------------------------
 # GET /api/v1/incidents/recent – Recent events feed
 # ---------------------------------------------------------------------------
+
 
 @router.get(
     "/api/v1/incidents/recent",
@@ -190,6 +193,7 @@ def recent_events(
 # GET /api/v1/analytics/policy/evolution
 # ---------------------------------------------------------------------------
 
+
 @router.get(
     "/api/v1/analytics/policy/evolution",
     response_model=list[PolicyEvolutionEntry],
@@ -215,6 +219,7 @@ def policy_evolution(
 # GET /api/v1/analytics/threat-matrix
 # ---------------------------------------------------------------------------
 
+
 @router.get(
     "/api/v1/analytics/threat-matrix",
     response_model=list[ThreatMatrixEntry],
@@ -235,36 +240,39 @@ def threat_matrix(
 
     # Get predicted threat vectors
     from cloud.services.predictive import predict_threat_vectors
+
     predictions = predict_threat_vectors(db, lookback_hours=lookback_hours)
     pred_by_cat: dict[str, list[dict[str, Any]]] = {}
     for p in predictions:
         for cat in p.contributing_categories:
-            pred_by_cat.setdefault(cat, []).append({
-                "vector_name": p.vector_name,
-                "confidence": p.confidence,
-                "rationale": p.rationale,
-            })
+            pred_by_cat.setdefault(cat, []).append(
+                {
+                    "vector_name": p.vector_name,
+                    "confidence": p.confidence,
+                    "rationale": p.rationale,
+                }
+            )
 
     result = []
     for cat, cat_events in sorted(by_cat.items(), key=lambda x: -len(x[1])):
         sev_counter: Counter[str] = Counter(e.severity for e in cat_events)
         type_counter: Counter[str] = Counter(e.type for e in cat_events)
-        result.append(ThreatMatrixEntry(
-            category=cat,
-            total_events=len(cat_events),
-            by_severity=dict(sev_counter.most_common()),
-            top_types=[
-                {"type": t, "count": c}
-                for t, c in type_counter.most_common(5)
-            ],
-            predicted_vectors=pred_by_cat.get(cat, []),
-        ))
+        result.append(
+            ThreatMatrixEntry(
+                category=cat,
+                total_events=len(cat_events),
+                by_severity=dict(sev_counter.most_common()),
+                top_types=[{"type": t, "count": c} for t, c in type_counter.most_common(5)],
+                predicted_vectors=pred_by_cat.get(cat, []),
+            )
+        )
     return result
 
 
 # ---------------------------------------------------------------------------
 # GET /api/v1/analytics/ai-traffic
 # ---------------------------------------------------------------------------
+
 
 @router.get(
     "/api/v1/analytics/ai-traffic",
@@ -304,6 +312,7 @@ def ai_traffic(
 # GET /api/v1/agents/identity
 # ---------------------------------------------------------------------------
 
+
 @router.get(
     "/api/v1/agents/identity",
     response_model=AgentIdentity,
@@ -317,14 +326,13 @@ def agent_identity(
     agent = db.query(AgentNodeRow).filter_by(id=agent_id).first()
     if not agent:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=404, detail=f"Agent '{agent_id}' not found")
 
     # Compute behavioral fingerprint from recent events
     cutoff = datetime.now(timezone.utc) - timedelta(hours=168)  # 7 days
     events = (
-        db.query(EventRow)
-        .filter(EventRow.agent_id == agent_id, EventRow.timestamp >= cutoff)
-        .all()
+        db.query(EventRow).filter(EventRow.agent_id == agent_id, EventRow.timestamp >= cutoff).all()
     )
 
     cat_counter: Counter[str] = Counter(e.category for e in events)
@@ -367,6 +375,7 @@ def agent_identity(
 # ---------------------------------------------------------------------------
 # GET /api/v1/analytics/sessions
 # ---------------------------------------------------------------------------
+
 
 @router.get(
     "/api/v1/analytics/sessions",
@@ -414,6 +423,7 @@ def session_analytics(
 # GET /api/v1/analytics/agent/timeline
 # ---------------------------------------------------------------------------
 
+
 @router.get(
     "/api/v1/analytics/agent/timeline",
     summary="Agent activity timeline",
@@ -425,6 +435,7 @@ def agent_timeline(
     db: Session = Depends(get_db),
 ):
     from cloud.services.timeline import build_agent_timeline
+
     return build_agent_timeline(db, agentId, hours=hours)
 
 

@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
-from cloud.db.models import EventRow, AgentNodeRow
+from cloud.db.models import AgentNodeRow, EventRow
 from cloud.guardian.base_agent import SubAgent
 from cloud.guardian.models import (
     AgentResult,
@@ -19,7 +19,6 @@ from cloud.guardian.models import (
     AgentType,
     ForensicEvidence,
     ForensicReport,
-    MitreTactic,
     Permission,
 )
 
@@ -87,14 +86,19 @@ class ForensicAgent(SubAgent):
             )
 
         report = await self._investigate(
-            db, incident_id, agent_id, related_ids, lookback,
+            db,
+            incident_id,
+            agent_id,
+            related_ids,
+            lookback,
         )
 
         logger.info(
-            "[FORENSIC] Report %s for incident %s: %d evidence items, "
-            "kill_chain=%s, root_cause=%s",
-            report.report_id[:8], incident_id[:8],
-            len(report.timeline), report.kill_chain,
+            "[FORENSIC] Report %s for incident %s: %d evidence items, kill_chain=%s, root_cause=%s",
+            report.report_id[:8],
+            incident_id[:8],
+            len(report.timeline),
+            report.kill_chain,
             report.root_cause[:50] if report.root_cause else "unknown",
         )
 
@@ -128,18 +132,20 @@ class ForensicAgent(SubAgent):
                 .all()
             )
             for e in related_events:
-                evidence.append(ForensicEvidence(
-                    evidence_type="event",
-                    timestamp=e.timestamp,
-                    data={
-                        "event_id": e.id,
-                        "type": e.type,
-                        "severity": e.severity,
-                        "agent_id": e.agent_id,
-                        "details": _safe_details(e.details),
-                    },
-                    source="related_events",
-                ))
+                evidence.append(
+                    ForensicEvidence(
+                        evidence_type="event",
+                        timestamp=e.timestamp,
+                        data={
+                            "event_id": e.id,
+                            "type": e.type,
+                            "severity": e.severity,
+                            "agent_id": e.agent_id,
+                            "details": _safe_details(e.details),
+                        },
+                        source="related_events",
+                    )
+                )
 
         # 2. Gather agent's full history in the lookback window
         if agent_id:
@@ -155,37 +161,37 @@ class ForensicAgent(SubAgent):
             )
             for e in agent_history:
                 if e.id not in related_ids:
-                    evidence.append(ForensicEvidence(
-                        evidence_type="event",
-                        timestamp=e.timestamp,
-                        data={
-                            "event_id": e.id,
-                            "type": e.type,
-                            "severity": e.severity,
-                            "details": _safe_details(e.details),
-                        },
-                        source="agent_history",
-                    ))
+                    evidence.append(
+                        ForensicEvidence(
+                            evidence_type="event",
+                            timestamp=e.timestamp,
+                            data={
+                                "event_id": e.id,
+                                "type": e.type,
+                                "severity": e.severity,
+                                "details": _safe_details(e.details),
+                            },
+                            source="agent_history",
+                        )
+                    )
 
             # 3. Agent registration info
-            agent_row = (
-                db.query(AgentNodeRow)
-                .filter(AgentNodeRow.agent_id == agent_id)
-                .first()
-            )
+            agent_row = db.query(AgentNodeRow).filter(AgentNodeRow.agent_id == agent_id).first()
             if agent_row:
-                evidence.append(ForensicEvidence(
-                    evidence_type="state_snapshot",
-                    timestamp=agent_row.last_seen_at or now,
-                    data={
-                        "agent_id": agent_row.agent_id,
-                        "hostname": agent_row.hostname,
-                        "status": agent_row.status,
-                        "version": agent_row.version,
-                        "registered_at": str(agent_row.registered_at),
-                    },
-                    source="agent_registry",
-                ))
+                evidence.append(
+                    ForensicEvidence(
+                        evidence_type="state_snapshot",
+                        timestamp=agent_row.last_seen_at or now,
+                        data={
+                            "agent_id": agent_row.agent_id,
+                            "hostname": agent_row.hostname,
+                            "status": agent_row.status,
+                            "version": agent_row.version,
+                            "registered_at": str(agent_row.registered_at),
+                        },
+                        source="agent_registry",
+                    )
+                )
 
         # Sort evidence chronologically
         evidence.sort(key=lambda e: e.timestamp)
@@ -239,7 +245,8 @@ class ForensicAgent(SubAgent):
             return "Insufficient evidence to determine root cause."
 
         first_event = next(
-            (e for e in evidence if e.evidence_type == "event"), None,
+            (e for e in evidence if e.evidence_type == "event"),
+            None,
         )
         if not first_event:
             return "No event evidence found."
@@ -274,9 +281,9 @@ class ForensicAgent(SubAgent):
             recs.append("Scan for unauthorized file modifications and backdoors.")
 
         secret_events = [
-            e for e in evidence
-            if e.evidence_type == "event"
-            and "secret" in (e.data.get("type") or "").lower()
+            e
+            for e in evidence
+            if e.evidence_type == "event" and "secret" in (e.data.get("type") or "").lower()
         ]
         if secret_events:
             recs.append(
@@ -295,4 +302,5 @@ def _safe_details(details: dict | None) -> dict:
     if not details:
         return {}
     from shared.security.secret_scanner import redact_dict
+
     return redact_dict(details)

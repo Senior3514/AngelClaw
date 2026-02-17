@@ -43,6 +43,7 @@ def set_correlation_id(cid: str) -> None:
 # JSON formatter
 # ---------------------------------------------------------------------------
 
+
 class StructuredJsonFormatter(logging.Formatter):
     """Emit log records as single-line JSON objects.
 
@@ -65,8 +66,16 @@ class StructuredJsonFormatter(logging.Formatter):
             entry["exception"] = self.formatException(record.exc_info)
 
         # Merge any extra fields injected via `logger.info("msg", extra={...})`
-        for key in ("component", "agent_id", "tenant_id", "incident_id",
-                     "duration_ms", "status_code", "method", "path"):
+        for key in (
+            "component",
+            "agent_id",
+            "tenant_id",
+            "incident_id",
+            "duration_ms",
+            "status_code",
+            "method",
+            "path",
+        ):
             val = getattr(record, key, None)
             if val is not None:
                 entry[key] = val
@@ -148,8 +157,10 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
         logger = logging.getLogger("angelgrid.cloud.http")
         logger.info(
             "%s %s → %d (%.1fms)",
-            request.method, request.url.path,
-            response.status_code, duration_ms,
+            request.method,
+            request.url.path,
+            response.status_code,
+            duration_ms,
             extra={
                 "method": request.method,
                 "path": request.url.path,

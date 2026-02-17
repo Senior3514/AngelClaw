@@ -1,9 +1,6 @@
 """Tests for self-audit and learning engine."""
 
-import pytest
-
-from cloud.guardian.learning import LearningEngine, ReflectionEntry
-from cloud.guardian.models import AuditReport
+from cloud.guardian.learning import LearningEngine
 
 
 def test_learning_engine_init():
@@ -44,8 +41,12 @@ def test_learning_record_false_positive():
 
 def test_learning_playbook_ranking():
     engine = LearningEngine()
-    engine.record_response_outcome("i1", "quarantine_agent", success=True, resolution_time_seconds=30)
-    engine.record_response_outcome("i2", "quarantine_agent", success=True, resolution_time_seconds=45)
+    engine.record_response_outcome(
+        "i1", "quarantine_agent", success=True, resolution_time_seconds=30
+    )
+    engine.record_response_outcome(
+        "i2", "quarantine_agent", success=True, resolution_time_seconds=45
+    )
     engine.record_response_outcome("i3", "throttle_agent", success=False)
 
     ranking = engine.get_playbook_ranking()

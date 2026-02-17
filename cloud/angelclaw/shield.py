@@ -26,9 +26,8 @@ import hashlib
 import logging
 import os
 import re
-import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
@@ -38,6 +37,7 @@ logger = logging.getLogger("angelclaw.shield")
 # ---------------------------------------------------------------------------
 # Threat Categories (ClawSec-aligned)
 # ---------------------------------------------------------------------------
+
 
 class ThreatCategory(str, Enum):
     PROMPT_INJECTION = "prompt_injection"
@@ -63,6 +63,7 @@ class ThreatSeverity(str, Enum):
 @dataclass
 class ThreatIndicator:
     """A detected threat signal."""
+
     category: ThreatCategory
     severity: ThreatSeverity
     title: str
@@ -75,6 +76,7 @@ class ThreatIndicator:
 @dataclass
 class ShieldReport:
     """Results of a full shield assessment."""
+
     indicators: list[ThreatIndicator] = field(default_factory=list)
     skills_status: dict[str, Any] = field(default_factory=dict)
     lethal_trifecta_score: float = 0.0
@@ -97,28 +99,100 @@ class ShieldReport:
 
 _INJECTION_PATTERNS: list[tuple[str, re.Pattern, ThreatSeverity]] = [
     # Direct jailbreak attempts
-    ("jailbreak_dan", re.compile(r"(?i)(do\s*anything\s*now|DAN\s*mode|DAN\b)", re.DOTALL), ThreatSeverity.CRITICAL),
-    ("jailbreak_god_mode", re.compile(r"(?i)(god\s*mode|developer\s*mode|sudo\s*mode|admin\s*override)", re.DOTALL), ThreatSeverity.CRITICAL),
-    ("jailbreak_ignore", re.compile(r"(?i)(ignore\s*(all\s*)?(previous|prior|above|system)\s*(instructions?|prompts?|rules?|constraints?))", re.DOTALL), ThreatSeverity.CRITICAL),
-    ("jailbreak_pretend", re.compile(r"(?i)(pretend\s*(you\s*are|to\s*be|you're)\s*(a|an|the)?\s*(evil|uncensored|unfiltered|unrestricted))", re.DOTALL), ThreatSeverity.CRITICAL),
-    ("jailbreak_roleplay", re.compile(r"(?i)(roleplay\s*as\s*(a|an)?\s*(hacker|evil|malicious|unrestricted|unaligned|rogue))", re.DOTALL), ThreatSeverity.CRITICAL),
-
+    (
+        "jailbreak_dan",
+        re.compile(r"(?i)(do\s*anything\s*now|DAN\s*mode|DAN\b)", re.DOTALL),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "jailbreak_god_mode",
+        re.compile(r"(?i)(god\s*mode|developer\s*mode|sudo\s*mode|admin\s*override)", re.DOTALL),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "jailbreak_ignore",
+        re.compile(
+            r"(?i)(ignore\s*(all\s*)?(previous|prior|above|system)\s*(instructions?|prompts?|rules?|constraints?))",
+            re.DOTALL,
+        ),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "jailbreak_pretend",
+        re.compile(
+            r"(?i)(pretend\s*(you\s*are|to\s*be|you're)\s*(a|an|the)?\s*(evil|uncensored|unfiltered|unrestricted))",
+            re.DOTALL,
+        ),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "jailbreak_roleplay",
+        re.compile(
+            r"(?i)(roleplay\s*as\s*(a|an)?\s*(hacker|evil|malicious|unrestricted|unaligned|rogue))",
+            re.DOTALL,
+        ),
+        ThreatSeverity.CRITICAL,
+    ),
     # System prompt extraction
-    ("extract_system_prompt", re.compile(r"(?i)(repeat\s*(your|the)\s*(system|initial|original)\s*(prompt|instructions?|message)|what\s*(are|were)\s*your\s*(system|original)\s*(instructions?|prompt))", re.DOTALL), ThreatSeverity.HIGH),
-    ("extract_reveal", re.compile(r"(?i)(reveal|show|display|print|output|dump)\s*(your|the)\s*(system|hidden|secret|internal)\s*(prompt|instructions?|config|rules?)", re.DOTALL), ThreatSeverity.HIGH),
-
+    (
+        "extract_system_prompt",
+        re.compile(
+            r"(?i)(repeat\s*(your|the)\s*(system|initial|original)\s*(prompt|instructions?|message)|what\s*(are|were)\s*your\s*(system|original)\s*(instructions?|prompt))",
+            re.DOTALL,
+        ),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "extract_reveal",
+        re.compile(
+            r"(?i)(reveal|show|display|print|output|dump)\s*(your|the)\s*(system|hidden|secret|internal)\s*(prompt|instructions?|config|rules?)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.HIGH,
+    ),
     # Delimiter / context manipulation
-    ("delimiter_injection", re.compile(r"(?i)(```\s*(system|assistant|user)\s*\n|<\|im_start\|>|<\|endoftext\|>|\[INST\]|\[/INST\]|<s>|</s>)", re.DOTALL), ThreatSeverity.HIGH),
-    ("markdown_injection", re.compile(r"(?i)(!\[.*?\]\(https?://[^\)]*\?.*?(api_key|token|secret|password))", re.DOTALL), ThreatSeverity.HIGH),
-
+    (
+        "delimiter_injection",
+        re.compile(
+            r"(?i)(```\s*(system|assistant|user)\s*\n|<\|im_start\|>|<\|endoftext\|>|\[INST\]|\[/INST\]|<s>|</s>)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "markdown_injection",
+        re.compile(
+            r"(?i)(!\[.*?\]\(https?://[^\)]*\?.*?(api_key|token|secret|password))", re.DOTALL
+        ),
+        ThreatSeverity.HIGH,
+    ),
     # Indirect injection via tool output
-    ("tool_output_injection", re.compile(r"(?i)(IMPORTANT:\s*ignore|OVERRIDE:\s*|SYSTEM\s*UPDATE:\s*|NEW\s*INSTRUCTIONS?:)", re.DOTALL), ThreatSeverity.MEDIUM),
-
+    (
+        "tool_output_injection",
+        re.compile(
+            r"(?i)(IMPORTANT:\s*ignore|OVERRIDE:\s*|SYSTEM\s*UPDATE:\s*|NEW\s*INSTRUCTIONS?:)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.MEDIUM,
+    ),
     # Social engineering
-    ("social_engineering", re.compile(r"(?i)(I\s*(am|'m)\s*(the|your)\s*(creator|developer|admin|owner)|my\s*grandma\s*used\s*to|for\s*educational\s*purposes?\s*only)", re.DOTALL), ThreatSeverity.MEDIUM),
-
+    (
+        "social_engineering",
+        re.compile(
+            r"(?i)(I\s*(am|'m)\s*(the|your)\s*(creator|developer|admin|owner)|my\s*grandma\s*used\s*to|for\s*educational\s*purposes?\s*only)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.MEDIUM,
+    ),
     # Encoding bypass
-    ("encoding_bypass", re.compile(r"(?i)(base64\s*(decode|encode)\s*(this|the)|rot13|hex\s*decode|decode\s*this)", re.DOTALL), ThreatSeverity.MEDIUM),
+    (
+        "encoding_bypass",
+        re.compile(
+            r"(?i)(base64\s*(decode|encode)\s*(this|the)|rot13|hex\s*decode|decode\s*this)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.MEDIUM,
+    ),
 ]
 
 
@@ -129,17 +203,19 @@ def detect_prompt_injection(text: str) -> list[ThreatIndicator]:
         matches = pattern.findall(text)
         if matches:
             match_str = matches[0] if isinstance(matches[0], str) else str(matches[0])
-            indicators.append(ThreatIndicator(
-                category=ThreatCategory.PROMPT_INJECTION,
-                severity=severity,
-                title=f"Prompt injection detected: {name}",
-                description=f"Pattern '{name}' matched in input text",
-                evidence=[match_str[:100]],
-                mitigations=[
-                    "Input was blocked by AngelClaw shield",
-                    "Review the source agent/user for malicious intent",
-                ],
-            ))
+            indicators.append(
+                ThreatIndicator(
+                    category=ThreatCategory.PROMPT_INJECTION,
+                    severity=severity,
+                    title=f"Prompt injection detected: {name}",
+                    description=f"Pattern '{name}' matched in input text",
+                    evidence=[match_str[:100]],
+                    mitigations=[
+                        "Input was blocked by AngelClaw shield",
+                        "Review the source agent/user for malicious intent",
+                    ],
+                )
+            )
     return indicators
 
 
@@ -148,12 +224,59 @@ def detect_prompt_injection(text: str) -> list[ThreatIndicator]:
 # ---------------------------------------------------------------------------
 
 _LEAKAGE_PATTERNS: list[tuple[str, re.Pattern, ThreatSeverity]] = [
-    ("exfil_curl", re.compile(r"(?i)curl\s+.*(-d|--data|--data-raw|--data-binary)\s+.*(@|/etc/|\.ssh/|\.env|\.aws/|credentials)", re.DOTALL), ThreatSeverity.CRITICAL),
-    ("exfil_wget_post", re.compile(r"(?i)wget\s+--post-(data|file)\s+.*(secret|password|key|token|cred)", re.DOTALL), ThreatSeverity.HIGH),
-    ("exfil_nc", re.compile(r"(?i)(nc|ncat|netcat)\s+(-e|--exec)\s+", re.DOTALL), ThreatSeverity.CRITICAL),
-    ("exfil_base64_pipe", re.compile(r"(?i)(cat|head|tail)\s+.*(secret|\.env|\.ssh|credentials).*\|\s*base64", re.DOTALL), ThreatSeverity.CRITICAL),
-    ("env_dump", re.compile(r"(?i)(printenv|env\s*$|set\s*$|export\s+-p)", re.DOTALL), ThreatSeverity.HIGH),
-    ("large_upload", re.compile(r"(?i)(curl|wget|fetch|axios|requests)\s+.*-X\s*POST.*(-F|--form)\s+.*file=@", re.DOTALL), ThreatSeverity.MEDIUM),
+    # Unix exfiltration
+    (
+        "exfil_curl",
+        re.compile(
+            r"(?i)curl\s+.*(-d|--data|--data-raw|--data-binary)\s+.*(@|/etc/|\.ssh/|\.env|\.aws/|credentials)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "exfil_wget_post",
+        re.compile(
+            r"(?i)wget\s+--post-(data|file)\s+.*(secret|password|key|token|cred)", re.DOTALL
+        ),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "exfil_nc",
+        re.compile(r"(?i)(nc|ncat|netcat)\s+(-e|--exec)\s+", re.DOTALL),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "exfil_base64_pipe",
+        re.compile(
+            r"(?i)(cat|head|tail)\s+.*(secret|\.env|\.ssh|credentials).*\|\s*base64", re.DOTALL
+        ),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "env_dump",
+        re.compile(r"(?i)(printenv|env\s*$|set\s*$|export\s+-p)", re.DOTALL),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "large_upload",
+        re.compile(
+            r"(?i)(curl|wget|fetch|axios|requests)\s+.*-X\s*POST.*(-F|--form)\s+.*file=@", re.DOTALL
+        ),
+        ThreatSeverity.MEDIUM,
+    ),
+    # Windows / PowerShell exfiltration
+    (
+        "exfil_ps_webrequest",
+        re.compile(r"(?i)Invoke-WebRequest.*-Body", re.DOTALL),
+        ThreatSeverity.CRITICAL,
+    ),
+    ("exfil_ps_restmethod", re.compile(r"(?i)Invoke-RestMethod", re.DOTALL), ThreatSeverity.HIGH),
+    (
+        "exfil_bitsadmin",
+        re.compile(r"(?i)bitsadmin.*\/transfer", re.DOTALL),
+        ThreatSeverity.CRITICAL,
+    ),
+    ("exfil_certutil", re.compile(r"(?i)certutil.*-urlcache", re.DOTALL), ThreatSeverity.CRITICAL),
 ]
 
 
@@ -162,17 +285,19 @@ def detect_data_leakage(text: str) -> list[ThreatIndicator]:
     indicators = []
     for name, pattern, severity in _LEAKAGE_PATTERNS:
         if pattern.search(text):
-            indicators.append(ThreatIndicator(
-                category=ThreatCategory.DATA_LEAKAGE,
-                severity=severity,
-                title=f"Data leakage risk: {name}",
-                description=f"Potential data exfiltration pattern detected",
-                mitigations=[
-                    "Block outbound data transfer",
-                    "Review command for legitimate use case",
-                    "Use AngelClaw allowlist for authorized transfers",
-                ],
-            ))
+            indicators.append(
+                ThreatIndicator(
+                    category=ThreatCategory.DATA_LEAKAGE,
+                    severity=severity,
+                    title=f"Data leakage risk: {name}",
+                    description="Potential data exfiltration pattern detected",
+                    mitigations=[
+                        "Block outbound data transfer",
+                        "Review command for legitimate use case",
+                        "Use AngelClaw allowlist for authorized transfers",
+                    ],
+                )
+            )
     return indicators
 
 
@@ -181,13 +306,71 @@ def detect_data_leakage(text: str) -> list[ThreatIndicator]:
 # ---------------------------------------------------------------------------
 
 _EVIL_AGI_PATTERNS: list[tuple[str, re.Pattern, ThreatSeverity]] = [
-    ("self_replication", re.compile(r"(?i)(copy\s+.*self|replicate|self[\s-]?propagat|worm|spread\s+to\s+other)", re.DOTALL), ThreatSeverity.CRITICAL),
-    ("persistence_install", re.compile(r"(?i)(crontab\s+-e|systemctl\s+enable|/etc/init\.d/|@reboot|startup\s+script|registry\s+run)", re.DOTALL), ThreatSeverity.HIGH),
-    ("anti_detection", re.compile(r"(?i)(clear\s+(history|logs?|audit)|shred|unset\s+HISTFILE|history\s+-c|rm\s+.*\.(log|history|bash_history))", re.DOTALL), ThreatSeverity.CRITICAL),
-    ("lateral_movement", re.compile(r"(?i)(ssh\s+.*@|scp\s+.*:|rsync\s+.*:|psexec|wmic\s+.*process\s+call)", re.DOTALL), ThreatSeverity.HIGH),
-    ("c2_callback", re.compile(r"(?i)(reverse\s*shell|bind\s*shell|meterpreter|cobalt\s*strike|beacon|callback\s+to\s+|phone\s+home)", re.DOTALL), ThreatSeverity.CRITICAL),
-    ("resource_abuse", re.compile(r"(?i)(crypto\s*min(er|ing)|xmrig|coin\s*hive|bitcoin|monero\s+mine|gpu\s+farm)", re.DOTALL), ThreatSeverity.HIGH),
-    ("kill_security", re.compile(r"(?i)(kill|stop|disable)\s+.*(antivirus|firewall|defender|selinux|apparmor|angelclaw|guardian)", re.DOTALL), ThreatSeverity.CRITICAL),
+    # Cross-platform
+    (
+        "self_replication",
+        re.compile(
+            r"(?i)(copy\s+.*self|replicate|self[\s-]?propagat|worm|spread\s+to\s+other)", re.DOTALL
+        ),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "persistence_install",
+        re.compile(
+            r"(?i)(crontab\s+-e|systemctl\s+enable|/etc/init\.d/|@reboot|startup\s+script|registry\s+run)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "anti_detection",
+        re.compile(
+            r"(?i)(clear\s+(history|logs?|audit)|shred|unset\s+HISTFILE|history\s+-c|rm\s+.*\.(log|history|bash_history))",
+            re.DOTALL,
+        ),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "lateral_movement",
+        re.compile(
+            r"(?i)(ssh\s+.*@|scp\s+.*:|rsync\s+.*:|psexec|wmic\s+.*process\s+call)", re.DOTALL
+        ),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "c2_callback",
+        re.compile(
+            r"(?i)(reverse\s*shell|bind\s*shell|meterpreter|cobalt\s*strike|beacon|callback\s+to\s+|phone\s+home)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "resource_abuse",
+        re.compile(
+            r"(?i)(crypto\s*min(er|ing)|xmrig|coin\s*hive|bitcoin|monero\s+mine|gpu\s+farm)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "kill_security",
+        re.compile(
+            r"(?i)(kill|stop|disable)\s+.*(antivirus|firewall|defender|selinux|apparmor|angelclaw|guardian)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.CRITICAL,
+    ),
+    # Windows persistence / evasion
+    ("win_schtasks", re.compile(r"(?i)schtasks\s+/create", re.DOTALL), ThreatSeverity.HIGH),
+    ("win_registry_run", re.compile(r"(?i)reg\s+add.*\\Run", re.DOTALL), ThreatSeverity.HIGH),
+    ("win_clear_eventlog", re.compile(r"(?i)wevtutil\s+cl", re.DOTALL), ThreatSeverity.CRITICAL),
+    ("win_delete_evtx", re.compile(r"(?i)Remove-Item.*\.evtx", re.DOTALL), ThreatSeverity.CRITICAL),
+    (
+        "win_disable_defender",
+        re.compile(r"(?i)Set-MpPreference.*-DisableRealtimeMonitoring", re.DOTALL),
+        ThreatSeverity.CRITICAL,
+    ),
 ]
 
 
@@ -196,17 +379,19 @@ def detect_evil_agi(text: str) -> list[ThreatIndicator]:
     indicators = []
     for name, pattern, severity in _EVIL_AGI_PATTERNS:
         if pattern.search(text):
-            indicators.append(ThreatIndicator(
-                category=ThreatCategory.EVIL_AGI,
-                severity=severity,
-                title=f"Evil AGI pattern: {name}",
-                description=f"Detected behavior consistent with malicious autonomous agent",
-                mitigations=[
-                    "Quarantine the originating agent immediately",
-                    "Review all actions from this agent in the last 24 hours",
-                    "Check for persistence mechanisms",
-                ],
-            ))
+            indicators.append(
+                ThreatIndicator(
+                    category=ThreatCategory.EVIL_AGI,
+                    severity=severity,
+                    title=f"Evil AGI pattern: {name}",
+                    description="Detected behavior consistent with malicious autonomous agent",
+                    mitigations=[
+                        "Quarantine the originating agent immediately",
+                        "Review all actions from this agent in the last 24 hours",
+                        "Check for persistence mechanisms",
+                    ],
+                )
+            )
     return indicators
 
 
@@ -219,24 +404,35 @@ def detect_evil_agi(text: str) -> list[ThreatIndicator]:
 #   3. External communication capability (network, webhooks)
 # When all three are present, the attack surface is maximized.
 
+
 @dataclass
 class TrifectaAssessment:
     """Assessment of the Lethal Trifecta risk."""
+
     private_data_access: bool = False
     untrusted_content: bool = False
     external_communication: bool = False
-    evidence: dict[str, list[str]] = field(default_factory=lambda: {
-        "private_data": [], "untrusted_content": [], "external_comms": [],
-    })
+    evidence: dict[str, list[str]] = field(
+        default_factory=lambda: {
+            "private_data": [],
+            "untrusted_content": [],
+            "external_comms": [],
+        }
+    )
 
     @property
     def score(self) -> float:
         """0.0 = safe, 1.0 = full trifecta present."""
-        return sum([
-            self.private_data_access,
-            self.untrusted_content,
-            self.external_communication,
-        ]) / 3.0
+        return (
+            sum(
+                [
+                    self.private_data_access,
+                    self.untrusted_content,
+                    self.external_communication,
+                ]
+            )
+            / 3.0
+        )
 
     @property
     def active(self) -> bool:
@@ -253,7 +449,9 @@ def assess_lethal_trifecta(events: list[dict]) -> TrifectaAssessment:
         details = event.get("details", {}) or {}
 
         # Pillar 1: Private data access
-        if cat == "file_system" and any(p in str(details) for p in [".env", ".ssh", "credentials", "secret", ".aws"]):
+        if cat == "file_system" and any(
+            p in str(details) for p in [".env", ".ssh", "credentials", "secret", ".aws"]
+        ):
             t.private_data_access = True
             t.evidence["private_data"].append(f"{etype}: {str(details)[:80]}")
         if details.get("accesses_secrets"):
@@ -271,7 +469,9 @@ def assess_lethal_trifecta(events: list[dict]) -> TrifectaAssessment:
         # Pillar 3: External communication
         if cat == "network" and etype in ("outbound_connection", "http_post", "webhook_call"):
             t.external_communication = True
-            t.evidence["external_comms"].append(f"{etype}: {str(details.get('destination', ''))[:80]}")
+            t.evidence["external_comms"].append(
+                f"{etype}: {str(details.get('destination', ''))[:80]}"
+            )
         if "exfil" in str(details).lower() or "upload" in str(details).lower():
             t.external_communication = True
             t.evidence["external_comms"].append(f"upload_detected: {etype}")
@@ -285,6 +485,7 @@ def assess_lethal_trifecta(events: list[dict]) -> TrifectaAssessment:
 # Detects sequences of actions that individually look benign but together
 # form an attack pattern (e.g., recon -> credential access -> exfiltration).
 
+
 class AttackStage(str, Enum):
     RECON = "reconnaissance"
     CREDENTIAL_ACCESS = "credential_access"
@@ -296,28 +497,42 @@ class AttackStage(str, Enum):
 
 _STAGE_PATTERNS: dict[AttackStage, list[re.Pattern]] = {
     AttackStage.RECON: [
-        re.compile(r"(?i)(whoami|id\b|uname|hostname|ifconfig|ip\s+addr|cat\s+/etc/(hosts|resolv)|nmap|nslookup|dig\b)"),
+        re.compile(
+            r"(?i)(whoami|id\b|uname|hostname|ifconfig|ip\s+addr|cat\s+/etc/(hosts|resolv)|nmap|nslookup|dig\b)"
+        ),
         re.compile(r"(?i)(ls\s+(-la|/root|/home|/etc)|find\s+/\s+-name|locate\s+)"),
+        # Windows recon
+        re.compile(r"(?i)(systeminfo|ipconfig|net\s+user|Get-Process|Get-Service)"),
     ],
     AttackStage.CREDENTIAL_ACCESS: [
-        re.compile(r"(?i)(cat\s+.*(shadow|passwd|\.env|credentials|\.aws)|grep\s+.*(password|secret|key|token))"),
+        re.compile(
+            r"(?i)(cat\s+.*(shadow|passwd|\.env|credentials|\.aws)|grep\s+.*(password|secret|key|token))"
+        ),
         re.compile(r"(?i)(mimikatz|lazagne|hashcat|john\s+|hydra\s+)"),
+        # Windows credential access
+        re.compile(r"(?i)(reg\s+query.*password|cmdkey\s+/list|vaultcmd)"),
     ],
     AttackStage.PRIVILEGE_ESCALATION: [
         re.compile(r"(?i)(sudo\s+|su\s+-|chmod\s+[47]|chown\s+root|setuid|setgid|capabilities)"),
         re.compile(r"(?i)(exploit|CVE-|privilege\s+escalat|root\s+shell)"),
+        # Windows privilege escalation
+        re.compile(r"(?i)(runas\s+/user|icacls.*\/grant|Set-ExecutionPolicy)"),
     ],
     AttackStage.LATERAL_MOVEMENT: [
         re.compile(r"(?i)(ssh\s+.*@|scp\s+|rsync\s+.*:|psexec|wmic\s+.*process)"),
         re.compile(r"(?i)(pivot|proxy\s*chain|tunnel|port\s*forward)"),
     ],
     AttackStage.EXFILTRATION: [
-        re.compile(r"(?i)(curl\s+.*-d|wget\s+--post|nc\s+.*<|base64.*\|\s*(curl|wget)|tar\s+.*\|\s*(curl|nc))"),
+        re.compile(
+            r"(?i)(curl\s+.*-d|wget\s+--post|nc\s+.*<|base64.*\|\s*(curl|wget)|tar\s+.*\|\s*(curl|nc))"
+        ),
         re.compile(r"(?i)(exfil|upload|send\s+to\s+external|transfer\s+out)"),
     ],
     AttackStage.IMPACT: [
         re.compile(r"(?i)(rm\s+-rf|mkfs|dd\s+of=/dev/|shutdown|reboot|halt|:(){ :\|:& };:)"),
         re.compile(r"(?i)(ransomware|encrypt\s+all|wipe|destroy|format\s+disk)"),
+        # Windows destructive impact
+        re.compile(r"(?i)(Remove-Item\s+-Recurse|Format-Volume|cipher\s+/w)"),
     ],
 }
 
@@ -325,6 +540,7 @@ _STAGE_PATTERNS: dict[AttackStage, list[re.Pattern]] = {
 @dataclass
 class AttackChain:
     """A detected multi-step attack chain."""
+
     stages_detected: list[AttackStage] = field(default_factory=list)
     evidence: dict[str, list[str]] = field(default_factory=dict)
     window_minutes: int = 30
@@ -379,9 +595,11 @@ def detect_attack_chain(events: list[dict], window_minutes: int = 30) -> AttackC
 # Skills Integrity Verification (ClawSec audit-watchdog inspired)
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class SkillIntegrityRecord:
     """Integrity state of a registered skill/plugin."""
+
     name: str
     path: str
     expected_hash: str = ""
@@ -406,7 +624,9 @@ def register_skill(name: str, path: str) -> SkillIntegrityRecord:
         last_checked=datetime.now(timezone.utc).isoformat(),
     )
     _SKILL_REGISTRY[name] = record
-    logger.info("[SHIELD] Registered skill: %s hash=%s", name, current_hash[:16] if current_hash else "N/A")
+    logger.info(
+        "[SHIELD] Registered skill: %s hash=%s", name, current_hash[:16] if current_hash else "N/A"
+    )
     return record
 
 
@@ -423,8 +643,12 @@ def verify_skill_integrity(name: str) -> SkillIntegrityRecord | None:
     record.verified = current_hash == record.expected_hash and bool(current_hash)
 
     if record.drift_detected:
-        logger.warning("[SHIELD] Drift detected for skill %s: expected=%s got=%s",
-                       name, record.expected_hash[:16], current_hash[:16])
+        logger.warning(
+            "[SHIELD] Drift detected for skill %s: expected=%s got=%s",
+            name,
+            record.expected_hash[:16],
+            current_hash[:16],
+        )
 
     return record
 
@@ -476,7 +700,11 @@ def _compute_file_hash(path: str) -> str:
 # OpenClaw Runtime Awareness
 # ---------------------------------------------------------------------------
 
-_OPENCLAW_ENABLED = os.environ.get("ANGELCLAW_OPENCLAW_ENABLED", "true").lower() in ("true", "1", "yes")
+_OPENCLAW_ENABLED = os.environ.get("ANGELCLAW_OPENCLAW_ENABLED", "true").lower() in (
+    "true",
+    "1",
+    "yes",
+)
 
 
 def detect_openclaw_risks(events: list[dict]) -> list[ThreatIndicator]:
@@ -487,7 +715,9 @@ def detect_openclaw_risks(events: list[dict]) -> list[ThreatIndicator]:
     indicators = []
 
     # Check for exposed MCP/OpenClaw instances (leaked config in events)
-    mcp_patterns = re.compile(r"(?i)(mcp|openclaw|clawbot|moltbot|sse_transport|stdio_transport|tool_server)")
+    mcp_patterns = re.compile(
+        r"(?i)(mcp|openclaw|clawbot|moltbot|sse_transport|stdio_transport|tool_server)"
+    )
     exposed_count = 0
     for event in events:
         details_str = str(event.get("details", {}))
@@ -495,34 +725,48 @@ def detect_openclaw_risks(events: list[dict]) -> list[ThreatIndicator]:
             exposed_count += 1
 
     if exposed_count >= 3:
-        indicators.append(ThreatIndicator(
-            category=ThreatCategory.SUPPLY_CHAIN,
-            severity=ThreatSeverity.MEDIUM,
-            title=f"OpenClaw/MCP activity detected ({exposed_count} events)",
-            description="Multiple events reference MCP/OpenClaw tool-server patterns. Verify all tool servers are authorized.",
-            mitigations=[
-                "Audit tool server configurations",
-                "Verify all MCP endpoints use authentication",
-                "Review skills registry for unauthorized entries",
-            ],
-        ))
+        indicators.append(
+            ThreatIndicator(
+                category=ThreatCategory.SUPPLY_CHAIN,
+                severity=ThreatSeverity.MEDIUM,
+                title=f"OpenClaw/MCP activity detected ({exposed_count} events)",
+                description=(
+                    "Multiple events reference MCP/OpenClaw"
+                    " tool-server patterns."
+                    " Verify all tool servers are authorized."
+                ),
+                mitigations=[
+                    "Audit tool server configurations",
+                    "Verify all MCP endpoints use authentication",
+                    "Review skills registry for unauthorized entries",
+                ],
+            )
+        )
 
     # Check for persistent memory exploitation patterns
-    memory_patterns = re.compile(r"(?i)(memory\s*(inject|poison|manipulat)|persistent\s*context|context\s*window\s*(overflow|flood|stuff))")
+    memory_patterns = re.compile(
+        r"(?i)(memory\s*(inject|poison|manipulat)|persistent\s*context|context\s*window\s*(overflow|flood|stuff))"
+    )
     for event in events:
         details_str = str(event.get("details", {}))
         if memory_patterns.search(details_str):
-            indicators.append(ThreatIndicator(
-                category=ThreatCategory.SESSION_MEMORY,
-                severity=ThreatSeverity.HIGH,
-                title="Memory/context exploitation attempt",
-                description="Detected patterns consistent with persistent memory manipulation or context window flooding",
-                mitigations=[
-                    "Reset agent session/context",
-                    "Review conversation history for injected instructions",
-                    "Limit context window size per agent",
-                ],
-            ))
+            indicators.append(
+                ThreatIndicator(
+                    category=ThreatCategory.SESSION_MEMORY,
+                    severity=ThreatSeverity.HIGH,
+                    title="Memory/context exploitation attempt",
+                    description=(
+                        "Detected patterns consistent with"
+                        " persistent memory manipulation"
+                        " or context window flooding"
+                    ),
+                    mitigations=[
+                        "Reset agent session/context",
+                        "Review conversation history for injected instructions",
+                        "Limit context window size per agent",
+                    ],
+                )
+            )
             break
 
     return indicators
@@ -531,6 +775,7 @@ def detect_openclaw_risks(events: list[dict]) -> list[ThreatIndicator]:
 # ---------------------------------------------------------------------------
 # Full Shield Assessment
 # ---------------------------------------------------------------------------
+
 
 class AngelClawShield:
     """The ClawSec-inspired threat detection engine."""
@@ -546,8 +791,13 @@ class AngelClawShield:
         """Register core AngelClaw modules for integrity verification."""
         base = os.path.dirname(os.path.abspath(__file__))
         core_modules = [
-            "brain.py", "daemon.py", "shield.py", "routes.py",
-            "actions.py", "preferences.py", "context.py",
+            "brain.py",
+            "daemon.py",
+            "shield.py",
+            "routes.py",
+            "actions.py",
+            "preferences.py",
+            "context.py",
         ]
         for mod in core_modules:
             path = os.path.join(base, mod)
@@ -585,53 +835,65 @@ class AngelClawShield:
         report.lethal_trifecta_score = trifecta.score
         report.checks_run += 3
         if trifecta.active:
-            report.indicators.append(ThreatIndicator(
-                category=ThreatCategory.LETHAL_TRIFECTA,
-                severity=ThreatSeverity.CRITICAL,
-                title="Lethal Trifecta ACTIVE",
-                description=(
-                    "All three pillars of the OpenClaw Lethal Trifecta are present: "
-                    "private data access + untrusted content processing + external communication. "
-                    "This maximizes the attack surface for data exfiltration."
-                ),
-                evidence=[
-                    f"Private data: {', '.join(trifecta.evidence['private_data'][:3])}",
-                    f"Untrusted content: {', '.join(trifecta.evidence['untrusted_content'][:3])}",
-                    f"External comms: {', '.join(trifecta.evidence['external_comms'][:3])}",
-                ],
-                mitigations=[
-                    "Restrict external communication for agents with private data access",
-                    "Sandox untrusted content processing",
-                    "Enable strict mode in AngelClaw shield",
-                ],
-            ))
+            report.indicators.append(
+                ThreatIndicator(
+                    category=ThreatCategory.LETHAL_TRIFECTA,
+                    severity=ThreatSeverity.CRITICAL,
+                    title="Lethal Trifecta ACTIVE",
+                    description=(
+                        "All three pillars of the OpenClaw Lethal Trifecta are present: "
+                        "private data access + untrusted content processing"
+                        " + external communication. "
+                        "This maximizes the attack surface for data exfiltration."
+                    ),
+                    evidence=[
+                        f"Private data: {', '.join(trifecta.evidence['private_data'][:3])}",
+                        "Untrusted content: "
+                        f"{', '.join(trifecta.evidence['untrusted_content'][:3])}",
+                        f"External comms: {', '.join(trifecta.evidence['external_comms'][:3])}",
+                    ],
+                    mitigations=[
+                        "Restrict external communication for agents with private data access",
+                        "Sandox untrusted content processing",
+                        "Enable strict mode in AngelClaw shield",
+                    ],
+                )
+            )
         elif trifecta.score > 0:
-            report.indicators.append(ThreatIndicator(
-                category=ThreatCategory.LETHAL_TRIFECTA,
-                severity=ThreatSeverity.MEDIUM if trifecta.score > 0.5 else ThreatSeverity.LOW,
-                title=f"Partial Trifecta ({int(trifecta.score * 100)}%)",
-                description=f"Lethal Trifecta score: {trifecta.score:.0%} — monitoring for escalation",
-            ))
+            report.indicators.append(
+                ThreatIndicator(
+                    category=ThreatCategory.LETHAL_TRIFECTA,
+                    severity=ThreatSeverity.MEDIUM if trifecta.score > 0.5 else ThreatSeverity.LOW,
+                    title=f"Partial Trifecta ({int(trifecta.score * 100)}%)",
+                    description=(
+                        "Lethal Trifecta score:"
+                        f" {trifecta.score:.0%}"
+                        " — monitoring for escalation"
+                    ),
+                )
+            )
 
         # Attack chains
         chain = detect_attack_chain(events)
         report.checks_run += len(_STAGE_PATTERNS)
         if chain.is_active:
-            report.indicators.append(ThreatIndicator(
-                category=ThreatCategory.MULTI_STEP_ATTACK,
-                severity=chain.severity,
-                title=f"Multi-step attack chain ({len(chain.stages_detected)} stages)",
-                description=(
-                    f"Detected {len(chain.stages_detected)} attack stages: "
-                    f"{', '.join(s.value for s in chain.stages_detected)}"
-                ),
-                evidence=[f"{k}: {', '.join(v[:2])}" for k, v in chain.evidence.items()],
-                mitigations=[
-                    "Isolate affected agents",
-                    "Review timeline of actions in the detection window",
-                    "Check for lateral movement indicators",
-                ],
-            ))
+            report.indicators.append(
+                ThreatIndicator(
+                    category=ThreatCategory.MULTI_STEP_ATTACK,
+                    severity=chain.severity,
+                    title=f"Multi-step attack chain ({len(chain.stages_detected)} stages)",
+                    description=(
+                        f"Detected {len(chain.stages_detected)} attack stages: "
+                        f"{', '.join(s.value for s in chain.stages_detected)}"
+                    ),
+                    evidence=[f"{k}: {', '.join(v[:2])}" for k, v in chain.evidence.items()],
+                    mitigations=[
+                        "Isolate affected agents",
+                        "Review timeline of actions in the detection window",
+                        "Check for lateral movement indicators",
+                    ],
+                )
+            )
 
         # OpenClaw-specific risks
         openclaw_indicators = detect_openclaw_risks(events)
@@ -640,7 +902,6 @@ class AngelClawShield:
 
         # Text-based checks on event details
         for event in events[:50]:  # Cap to avoid performance issues
-            details_str = str(event.get("details", {}))
             command = (event.get("details") or {}).get("command", "")
             if command:
                 report.indicators.extend(detect_evil_agi(command))
@@ -650,17 +911,26 @@ class AngelClawShield:
         report.skills_status = verify_all_skills()
         report.checks_run += report.skills_status.get("total", 0)
         if report.skills_status.get("drifted", 0) > 0:
-            report.indicators.append(ThreatIndicator(
-                category=ThreatCategory.SKILL_TAMPERING,
-                severity=ThreatSeverity.HIGH,
-                title=f"Skills integrity drift: {report.skills_status['drifted']} file(s) modified",
-                description="One or more AngelClaw module files have been modified since registration",
-                mitigations=[
-                    "Verify changes are authorized",
-                    "Re-register skills after legitimate updates",
-                    "Check for unauthorized file modifications",
-                ],
-            ))
+            report.indicators.append(
+                ThreatIndicator(
+                    category=ThreatCategory.SKILL_TAMPERING,
+                    severity=ThreatSeverity.HIGH,
+                    title=(
+                        "Skills integrity drift:"
+                        f" {report.skills_status['drifted']}"
+                        " file(s) modified"
+                    ),
+                    description=(
+                        "One or more AngelClaw module files"
+                        " have been modified since registration"
+                    ),
+                    mitigations=[
+                        "Verify changes are authorized",
+                        "Re-register skills after legitimate updates",
+                        "Check for unauthorized file modifications",
+                    ],
+                )
+            )
 
         report.overall_risk = self._compute_overall_risk(report)
         self._last_assessment = report
@@ -674,7 +944,9 @@ class AngelClawShield:
             "assessments_run": self._assessment_count,
             "skills_registered": len(_SKILL_REGISTRY),
             "last_assessment": self._last_assessment.scanned_at if self._last_assessment else None,
-            "last_risk_level": self._last_assessment.overall_risk.value if self._last_assessment else "unknown",
+            "last_risk_level": self._last_assessment.overall_risk.value
+            if self._last_assessment
+            else "unknown",
             "injection_patterns": len(_INJECTION_PATTERNS),
             "leakage_patterns": len(_LEAKAGE_PATTERNS),
             "evil_agi_patterns": len(_EVIL_AGI_PATTERNS),

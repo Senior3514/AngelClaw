@@ -3,7 +3,7 @@
 import os
 
 from cloud.auth.models import UserRole, role_at_least
-from cloud.auth.service import authenticate_local, create_jwt, verify_jwt
+from cloud.auth.service import create_jwt, verify_jwt
 
 
 def test_role_hierarchy():
@@ -17,6 +17,7 @@ def test_role_hierarchy():
 
 def test_jwt_roundtrip():
     from cloud.auth.models import AuthUser
+
     user = AuthUser(username="testuser", role=UserRole.ADMIN, tenant_id="test")
     token = create_jwt(user)
     assert token
@@ -36,9 +37,12 @@ def test_authenticate_local():
     os.environ["ANGELCLAW_ADMIN_PASSWORD"] = "test-pass-123"
     # Need to reload config to pick up the new env var
     import importlib
+
     import cloud.auth.config
+
     importlib.reload(cloud.auth.config)
     import cloud.auth.service
+
     importlib.reload(cloud.auth.service)
     from cloud.auth.service import authenticate_local as auth_local
 

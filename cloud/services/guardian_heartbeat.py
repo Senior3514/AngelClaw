@@ -59,21 +59,31 @@ def _run_heartbeat(tenant_id: str) -> GuardianReportRow:
         stale_cutoff = now - timedelta(minutes=10)
         for a in agents:
             if a.status == "active" and a.last_seen_at and a.last_seen_at < stale_cutoff:
-                anomalies.append(f"Agent {a.hostname} ({a.id[:8]}) may be offline — last seen {a.last_seen_at.isoformat()}")
+                anomalies.append(
+                    f"Agent {a.hostname} ({a.id[:8]})"
+                    f" may be offline"
+                    f" — last seen {a.last_seen_at.isoformat()}"
+                )
 
         # Check for severity spikes
         critical_count = sev_counter.get("critical", 0)
         high_count = sev_counter.get("high", 0)
         if critical_count >= 3:
-            anomalies.append(f"Severity spike: {critical_count} critical events in last {LOOKBACK_MINUTES}min")
+            anomalies.append(
+                f"Severity spike: {critical_count} critical events in last {LOOKBACK_MINUTES}min"
+            )
         if high_count >= 10:
-            anomalies.append(f"Severity spike: {high_count} high-severity events in last {LOOKBACK_MINUTES}min")
+            anomalies.append(
+                f"Severity spike: {high_count} high-severity events in last {LOOKBACK_MINUTES}min"
+            )
 
         # Check for repeated patterns
         type_counter: Counter[str] = Counter(e.type for e in events)
         for ev_type, count in type_counter.most_common(3):
             if count >= 10:
-                anomalies.append(f"Repeated pattern: {ev_type} occurred {count}x in last {LOOKBACK_MINUTES}min")
+                anomalies.append(
+                    f"Repeated pattern: {ev_type} occurred {count}x in last {LOOKBACK_MINUTES}min"
+                )
 
         # Policy changes since last report
         last_report = (
@@ -124,7 +134,9 @@ def _run_heartbeat(tenant_id: str) -> GuardianReportRow:
             for a in anomalies:
                 logger.warning("[GUARDIAN ANOMALY] %s", a)
         if offline > 0:
-            logger.warning("[GUARDIAN FLEET] %d agent(s) offline — investigate connectivity", offline)
+            logger.warning(
+                "[GUARDIAN FLEET] %d agent(s) offline — investigate connectivity", offline
+            )
         return row
     finally:
         db.close()

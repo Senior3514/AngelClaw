@@ -70,7 +70,8 @@ async def wazuh_ingest_loop(tenant_id: str = "dev-tenant") -> None:
 
     logger.info(
         "[WAZUH INGEST] Started (interval=%ds, url=%s)",
-        POLL_INTERVAL, wazuh_client.base_url,
+        POLL_INTERVAL,
+        wazuh_client.base_url,
     )
 
     while True:
@@ -96,7 +97,8 @@ async def wazuh_ingest_loop(tenant_id: str = "dev-tenant") -> None:
                 ingested = _ingest_alerts(new_alerts, tenant_id)
                 logger.info(
                     "[WAZUH INGEST] Ingested %d/%d new Wazuh alerts",
-                    ingested, len(new_alerts),
+                    ingested,
+                    len(new_alerts),
                 )
 
         except asyncio.CancelledError:

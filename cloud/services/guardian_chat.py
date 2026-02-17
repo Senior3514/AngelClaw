@@ -29,7 +29,6 @@ from cloud.db.models import (
     GuardianReportRow,
 )
 from cloud.services.predictive import predict_threat_vectors
-from cloud.services.timeline import build_agent_timeline
 from shared.security.secret_scanner import redact_secrets
 
 logger = logging.getLogger("angelgrid.cloud.guardian_chat")
@@ -41,19 +40,32 @@ logger = logging.getLogger("angelgrid.cloud.guardian_chat")
 _INTENT_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("threats", re.compile(r"(?i)(threat|predict|risk|vector|landscape|danger)")),
     ("alerts", re.compile(r"(?i)(guardian.*alert|critical.*notif|warning|alarm)")),
-    ("explain", re.compile(r"(?i)(explain|why.*(block|alert|allow)|what.happen|tell.*about.*event)")),
+    (
+        "explain",
+        re.compile(r"(?i)(explain|why.*(block|alert|allow)|what.happen|tell.*about.*event)"),
+    ),
     ("propose", re.compile(r"(?i)(propose|suggest|recommend|tighten|improve.*polic|fix.*polic)")),
     ("agent_status", re.compile(r"(?i)(agent|fleet|node|status|health|online|offline)")),
     ("changes", re.compile(r"(?i)(change|what.*change|recent.*update|modif|policy.*update)")),
     ("incidents", re.compile(r"(?i)(incident|breach|attack|event|blocked|critical|high.sev)")),
-    ("scan", re.compile(r"(?i)(scan|exposure|audit|check.*system|harden|security.*check|vulnerability)")),
+    (
+        "scan",
+        re.compile(r"(?i)(scan|exposure|audit|check.*system|harden|security.*check|vulnerability)"),
+    ),
     ("about", re.compile(r"(?i)(who.*are.*you|what.*are.*you|about|introduce|guardian)")),
-    ("status_report", re.compile(r"(?i)(what.*been.*doing|what.*you.*doing|status.*report|guardian.*report|doing.*lately|been.*up.*to|activity)")),
+    (
+        "status_report",
+        re.compile(
+            r"(?i)(what.*been.*doing|what.*you.*doing|status.*report|guardian.*report|doing.*lately|been.*up.*to|activity)"
+        ),
+    ),
     ("help", re.compile(r"(?i)(help|what.*can.*you|how.*do|command|feature)")),
 ]
 
 # UUID pattern for event ID extraction
-_EVENT_ID_RE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", re.IGNORECASE)
+_EVENT_ID_RE = re.compile(
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", re.IGNORECASE
+)
 
 
 def detect_intent(prompt: str) -> str:
@@ -68,10 +80,11 @@ def detect_intent(prompt: str) -> str:
 # Deterministic handlers
 # ---------------------------------------------------------------------------
 
+
 def _handle_incidents(db: Session, tenant_id: str) -> tuple[str, list[ActionSuggestion], list[str]]:
     summary = summarize_recent_incidents(db, tenant_id, lookback_hours=24)
     lines = [
-        f"Here's your security summary for the last 24 hours:\n",
+        "Here's your security summary for the last 24 hours:\n",
         f"Total incidents: **{summary.total_incidents}**",
     ]
     if summary.by_severity:
@@ -81,7 +94,9 @@ def _handle_incidents(db: Session, tenant_id: str) -> tuple[str, list[ActionSugg
         cls_parts = [f"{c.classification}: {c.count}" for c in summary.by_classification]
         lines.append(f"By type: {', '.join(cls_parts)}")
     if summary.top_affected_agents:
-        agent_parts = [f"{a.hostname} ({a.incident_count})" for a in summary.top_affected_agents[:3]]
+        agent_parts = [
+            f"{a.hostname} ({a.incident_count})" for a in summary.top_affected_agents[:3]
+        ]
         lines.append(f"Most active agents: {', '.join(agent_parts)}")
     if summary.recommended_focus:
         lines.append("\nRecommendations:")
@@ -90,12 +105,14 @@ def _handle_incidents(db: Session, tenant_id: str) -> tuple[str, list[ActionSugg
 
     actions = []
     if summary.total_incidents > 0:
-        actions.append(ActionSuggestion(
-            action_type="review_incidents",
-            title="Review incidents",
-            description="Open the incidents feed to see details",
-            metadata={"endpoint": "/api/v1/incidents/recent"},
-        ))
+        actions.append(
+            ActionSuggestion(
+                action_type="review_incidents",
+                title="Review incidents",
+                description="Open the incidents feed to see details",
+                metadata={"endpoint": "/api/v1/incidents/recent"},
+            )
+        )
     refs = ["/api/v1/assistant/incidents"]
     return "\n".join(lines), actions, refs
 
@@ -122,11 +139,13 @@ def _handle_agent_status(db: Session) -> tuple[str, list[ActionSuggestion], list
 
     actions = []
     if offline:
-        actions.append(ActionSuggestion(
-            action_type="review_agent",
-            title="Check offline agents",
-            description=f"{len(offline)} agent(s) need attention",
-        ))
+        actions.append(
+            ActionSuggestion(
+                action_type="review_agent",
+                title="Check offline agents",
+                description=f"{len(offline)} agent(s) need attention",
+            )
+        )
     return "\n".join(lines), actions, ["/api/v1/agents"]
 
 
@@ -136,7 +155,8 @@ def _handle_threats(db: Session) -> tuple[str, list[ActionSuggestion], list[str]
         return (
             "No threat vectors detected in the last 24 hours. "
             "Your systems look healthy — AngelClaw is watching quietly in the background.",
-            [], ["/api/v1/analytics/threat-matrix"],
+            [],
+            ["/api/v1/analytics/threat-matrix"],
         )
 
     lines = ["Predicted threat vectors (last 24h):\n"]
@@ -145,12 +165,14 @@ def _handle_threats(db: Session) -> tuple[str, list[ActionSuggestion], list[str]
         lines.append(f"  **{p.vector_name}** — {confidence_pct}% confidence")
         lines.append(f"    {p.rationale}")
 
-    actions = [ActionSuggestion(
-        action_type="review_threats",
-        title="View threat matrix",
-        description="Open the full threat landscape view",
-        metadata={"endpoint": "/api/v1/analytics/threat-matrix"},
-    )]
+    actions = [
+        ActionSuggestion(
+            action_type="review_threats",
+            title="View threat matrix",
+            description="Open the full threat landscape view",
+            metadata={"endpoint": "/api/v1/analytics/threat-matrix"},
+        )
+    ]
     return "\n".join(lines), actions, ["/api/v1/analytics/threat-matrix"]
 
 
@@ -166,7 +188,8 @@ def _handle_alerts(db: Session, tenant_id: str) -> tuple[str, list[ActionSuggest
         return (
             "No guardian alerts right now. I'm watching for critical patterns "
             "like secret exfiltration attempts, severity spikes, and agent flapping.",
-            [], [],
+            [],
+            [],
         )
 
     lines = [f"Recent guardian alerts ({len(alerts)}):\n"]
@@ -208,12 +231,14 @@ def _handle_propose(db: Session, tenant_id: str) -> tuple[str, list[ActionSugges
 
     actions = []
     if proposals.proposed_rules:
-        actions.append(ActionSuggestion(
-            action_type="propose_rule",
-            title="Review proposals",
-            description=f"{len(proposals.proposed_rules)} rule(s) proposed",
-            metadata={"endpoint": "/api/v1/assistant/propose"},
-        ))
+        actions.append(
+            ActionSuggestion(
+                action_type="propose_rule",
+                title="Review proposals",
+                description=f"{len(proposals.proposed_rules)} rule(s) proposed",
+                metadata={"endpoint": "/api/v1/assistant/propose"},
+            )
+        )
     return "\n".join(lines), actions, ["/api/v1/assistant/propose"]
 
 
@@ -226,14 +251,16 @@ def _handle_explain(db: Session, prompt: str) -> tuple[str, list[ActionSuggestio
         return (
             "To explain a specific event, I need an event ID. "
             "You can find event IDs in the alerts feed or incidents list, "
-            "then ask me: \"Explain event <id>\".\n\n"
+            'then ask me: "Explain event <id>".\n\n'
             "Or try asking about recent incidents to see what's been happening.",
-            [ActionSuggestion(
-                action_type="review_incidents",
-                title="View recent events",
-                description="See the alerts feed for event IDs",
-                metadata={"endpoint": "/api/v1/incidents/recent"},
-            )],
+            [
+                ActionSuggestion(
+                    action_type="review_incidents",
+                    title="View recent events",
+                    description="See the alerts feed for event IDs",
+                    metadata={"endpoint": "/api/v1/incidents/recent"},
+                )
+            ],
             ["/api/v1/assistant/explain"],
         )
 
@@ -243,7 +270,8 @@ def _handle_explain(db: Session, prompt: str) -> tuple[str, list[ActionSuggestio
     if "error" in result:
         return (
             f"I couldn't find event `{event_id}`. Double-check the ID and try again.",
-            [], [],
+            [],
+            [],
         )
 
     lines = [
@@ -257,18 +285,24 @@ def _handle_explain(db: Session, prompt: str) -> tuple[str, list[ActionSuggestio
     if ctx:
         lines.append(f"\n  **Context window** ({len(ctx)} events nearby):")
         for ev in ctx[:5]:
-            lines.append(f"    - {ev['category']}/{ev['type']} [{ev['severity']}] at {ev['timestamp']}")
+            lines.append(
+                f"    - {ev['category']}/{ev['type']} [{ev['severity']}] at {ev['timestamp']}"
+            )
 
-    actions = [ActionSuggestion(
-        action_type="check_event",
-        title="View full context",
-        description=f"Open event context for {event_id[:8]}...",
-        metadata={"endpoint": f"/api/v1/guardian/event_context?eventId={event_id}"},
-    )]
+    actions = [
+        ActionSuggestion(
+            action_type="check_event",
+            title="View full context",
+            description=f"Open event context for {event_id[:8]}...",
+            metadata={"endpoint": f"/api/v1/guardian/event_context?eventId={event_id}"},
+        )
+    ]
     return "\n".join(lines), actions, [f"/api/v1/guardian/event_context?eventId={event_id}"]
 
 
-def _handle_status_report(db: Session, tenant_id: str) -> tuple[str, list[ActionSuggestion], list[str]]:
+def _handle_status_report(
+    db: Session, tenant_id: str
+) -> tuple[str, list[ActionSuggestion], list[str]]:
     """Handle 'what have you been doing?' queries using guardian reports."""
     reports = (
         db.query(GuardianReportRow)
@@ -281,7 +315,8 @@ def _handle_status_report(db: Session, tenant_id: str) -> tuple[str, list[Action
         return (
             "I just started watching — no reports yet. "
             "I'll generate my first status report within 5 minutes.",
-            [], [],
+            [],
+            [],
         )
 
     latest = reports[0]
@@ -293,7 +328,11 @@ def _handle_status_report(db: Session, tenant_id: str) -> tuple[str, list[Action
     if latest.anomalies:
         lines.append(f"    Anomalies detected: {', '.join(latest.anomalies[:3])}")
     if len(reports) > 1:
-        lines.append(f"\n  I've generated {len(reports)} reports recently. All stored and available at /api/v1/guardian/reports/recent.")
+        lines.append(
+            f"\n  I've generated {len(reports)} reports recently."
+            f" All stored and available at"
+            f" /api/v1/guardian/reports/recent."
+        )
 
     lines.append(
         "\nI'm continuously monitoring your fleet, detecting critical patterns, "
@@ -302,7 +341,9 @@ def _handle_status_report(db: Session, tenant_id: str) -> tuple[str, list[Action
     return "\n".join(lines), [], ["/api/v1/guardian/reports/recent"]
 
 
-async def _handle_scan(db: Session, tenant_id: str) -> tuple[str, list[ActionSuggestion], list[str]]:
+async def _handle_scan(
+    db: Session, tenant_id: str
+) -> tuple[str, list[ActionSuggestion], list[str]]:
     """Handle scan/audit intent — run a guardian scan and format results."""
     from cloud.services.guardian_scan import run_guardian_scan
 
@@ -323,20 +364,26 @@ async def _handle_scan(db: Session, tenant_id: str) -> tuple[str, list[ActionSug
 
     actions = []
     for s in result.hardening_suggestions:
-        actions.append(ActionSuggestion(
-            action_type=s.action,
-            title=s.description[:60],
-            description=s.description,
-            metadata={"scope": s.scope, "rule_id": s.rule_id} if s.rule_id else {"scope": s.scope},
-        ))
+        actions.append(
+            ActionSuggestion(
+                action_type=s.action,
+                title=s.description[:60],
+                description=s.description,
+                metadata={"scope": s.scope, "rule_id": s.rule_id}
+                if s.rule_id
+                else {"scope": s.scope},
+            )
+        )
 
     if result.top_risks:
-        actions.append(ActionSuggestion(
-            action_type="propose_rule",
-            title="Get policy proposals",
-            description="Run 'suggest policy improvements' for targeted hardening rules",
-            metadata={"endpoint": "/api/v1/assistant/propose"},
-        ))
+        actions.append(
+            ActionSuggestion(
+                action_type="propose_rule",
+                title="Get policy proposals",
+                description="Run 'suggest policy improvements' for targeted hardening rules",
+                metadata={"endpoint": "/api/v1/assistant/propose"},
+            )
+        )
 
     return "\n".join(lines), actions, []
 
@@ -350,25 +397,27 @@ def _handle_about() -> tuple[str, list[ActionSuggestion], list[str]]:
         "destructive commands, critical file modifications, or risky external calls.\n\n"
         "Everything else — analysis, reading, summarizing, reasoning — flows freely. "
         "I'm here to help you use AI safely, not to slow you down.",
-        [], [],
+        [],
+        [],
     )
 
 
 def _handle_help() -> tuple[str, list[ActionSuggestion], list[str]]:
     return (
         "Here's what you can ask me:\n\n"
-        "  **Incidents** — \"What happened recently?\" / \"Show me incidents\"\n"
-        "  **Agent status** — \"How's my fleet?\" / \"Which agents are offline?\"\n"
-        "  **Threats** — \"Any threat predictions?\" / \"What risks do you see?\"\n"
-        "  **Alerts** — \"Any guardian alerts?\" / \"Critical notifications?\"\n"
-        "  **Changes** — \"What changed recently?\" / \"Policy updates?\"\n"
-        "  **Proposals** — \"Suggest policy improvements\" / \"Tighten security\"\n"
-        "  **Explain** — \"Explain event <event-id>\" / \"Why was <event-id> blocked?\"\n"
-        "  **Scan** — \"Scan the system\" / \"Check for exposures\" / \"Audit security\"\n"
-        "  **Status report** — \"What have you been doing?\" / \"Show me your reports\"\n"
-        "  **About** — \"Who are you?\" / \"What do you do?\"\n\n"
+        '  **Incidents** — "What happened recently?" / "Show me incidents"\n'
+        '  **Agent status** — "How\'s my fleet?" / "Which agents are offline?"\n'
+        '  **Threats** — "Any threat predictions?" / "What risks do you see?"\n'
+        '  **Alerts** — "Any guardian alerts?" / "Critical notifications?"\n'
+        '  **Changes** — "What changed recently?" / "Policy updates?"\n'
+        '  **Proposals** — "Suggest policy improvements" / "Tighten security"\n'
+        '  **Explain** — "Explain event <event-id>" / "Why was <event-id> blocked?"\n'
+        '  **Scan** — "Scan the system" / "Check for exposures" / "Audit security"\n'
+        '  **Status report** — "What have you been doing?" / "Show me your reports"\n'
+        '  **About** — "Who are you?" / "What do you do?"\n\n'
         "I'm always watching in the background. Ask me anything about your security posture!",
-        [], [],
+        [],
+        [],
     )
 
 
@@ -403,10 +452,13 @@ def _handle_general(db: Session, tenant_id: str) -> tuple[str, list[ActionSugges
 # Main chat handler
 # ---------------------------------------------------------------------------
 
+
 async def handle_chat(db: Session, req: ChatRequest) -> ChatResponse:
     """Process a chat request. Deterministic by default, LLM-backed if enabled."""
     intent = detect_intent(req.prompt)
-    logger.info("[GUARDIAN CHAT] intent=%s prompt_len=%d tenant=%s", intent, len(req.prompt), req.tenant_id)
+    logger.info(
+        "[GUARDIAN CHAT] intent=%s prompt_len=%d tenant=%s", intent, len(req.prompt), req.tenant_id
+    )
 
     # Handle async intents (scan)
     if intent == "scan":
@@ -432,7 +484,10 @@ async def handle_chat(db: Session, req: ChatRequest) -> ChatResponse:
 
 
 def _dispatch_intent(
-    db: Session, intent: str, tenant_id: str, prompt: str = "",
+    db: Session,
+    intent: str,
+    tenant_id: str,
+    prompt: str = "",
 ) -> tuple[str, list[ActionSuggestion], list[str]]:
     """Route to the appropriate deterministic handler."""
     if intent == "incidents":
@@ -463,6 +518,7 @@ async def _try_llm_enrichment(prompt: str, context_answer: str, intent: str) -> 
     """Try to enrich the answer via the LLM proxy. Returns None if unavailable."""
     try:
         from cloud.llm_proxy.config import LLM_ENABLED
+
         if not LLM_ENABLED:
             return None
     except ImportError:
@@ -470,7 +526,7 @@ async def _try_llm_enrichment(prompt: str, context_answer: str, intent: str) -> 
 
     try:
         enriched_prompt = (
-            f"You are the AngelClaw Guardian Angel. The user asked: \"{prompt}\"\n\n"
+            f'You are the AngelClaw Guardian Angel. The user asked: "{prompt}"\n\n'
             f"Here is the factual data from the system (intent: {intent}):\n"
             f"{context_answer}\n\n"
             "Please provide a friendly, concise response incorporating this data. "

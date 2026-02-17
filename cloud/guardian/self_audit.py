@@ -9,7 +9,6 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Any
 
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -73,8 +72,8 @@ async def run_self_audit(db: Session) -> SelfAuditReport:
         for f in findings:
             by_sev[f.severity] = by_sev.get(f.severity, 0) + 1
         summary_parts.append(
-            f"{len(findings)} finding(s): " +
-            ", ".join(f"{v} {k}" for k, v in sorted(by_sev.items()))
+            f"{len(findings)} finding(s): "
+            + ", ".join(f"{v} {k}" for k, v in sorted(by_sev.items()))
         )
     else:
         summary_parts.append("All checks passed — clean audit.")
@@ -89,7 +88,8 @@ async def run_self_audit(db: Session) -> SelfAuditReport:
     logger.info(
         "[SELF-AUDIT] %s — %d findings from %d checks",
         "CLEAN" if clean else "FINDINGS",
-        len(findings), checks,
+        len(findings),
+        checks,
     )
 
     return report
@@ -108,16 +108,18 @@ def _check_stale_agents(db: Session) -> list[AuditFinding]:
         .all()
     )
     for agent in stale:
-        findings.append(AuditFinding(
-            category="stale_agent",
-            severity="warn",
-            title=f"Stale agent: {agent.hostname}",
-            description=(
-                f"Agent {agent.hostname} ({agent.id[:8]}) is marked active but "
-                f"last seen at {agent.last_seen_at}."
-            ),
-            suggested_fix="Investigate connectivity or mark agent as degraded.",
-        ))
+        findings.append(
+            AuditFinding(
+                category="stale_agent",
+                severity="warn",
+                title=f"Stale agent: {agent.hostname}",
+                description=(
+                    f"Agent {agent.hostname} ({agent.id[:8]}) is marked active but "
+                    f"last seen at {agent.last_seen_at}."
+                ),
+                suggested_fix="Investigate connectivity or mark agent as degraded.",
+            )
+        )
     return findings
 
 
@@ -129,19 +131,25 @@ def _check_policy_drift(db: Session) -> list[AuditFinding]:
         return findings
 
     agents = db.query(AgentNodeRow).filter(AgentNodeRow.status == "active").all()
-    drifted = [a for a in agents if a.policy_version != current_policy.version_hash and a.policy_version != "0"]
+    drifted = [
+        a
+        for a in agents
+        if a.policy_version != current_policy.version_hash and a.policy_version != "0"
+    ]
     if drifted:
         hostnames = [a.hostname for a in drifted[:5]]
-        findings.append(AuditFinding(
-            category="config_drift",
-            severity="high",
-            title=f"Policy drift: {len(drifted)} agent(s) on old version",
-            description=(
-                f"Agents {', '.join(hostnames)} are not running the current "
-                f"policy version ({current_policy.version_hash[:8]})."
-            ),
-            suggested_fix="Force policy sync or investigate why agents aren't updating.",
-        ))
+        findings.append(
+            AuditFinding(
+                category="config_drift",
+                severity="high",
+                title=f"Policy drift: {len(drifted)} agent(s) on old version",
+                description=(
+                    f"Agents {', '.join(hostnames)} are not running the current "
+                    f"policy version ({current_policy.version_hash[:8]})."
+                ),
+                suggested_fix="Force policy sync or investigate why agents aren't updating.",
+            )
+        )
     return findings
 
 
@@ -158,50 +166,59 @@ def _check_orphan_alerts(db: Session) -> list[AuditFinding]:
         .count()
     )
     if old_alerts > 5:
-        findings.append(AuditFinding(
-            category="orphan_rule",
-            severity="warn",
-            title=f"{old_alerts} stale critical/high alerts (>24h old)",
-            description="Old alerts may need review or archival.",
-            suggested_fix="Review and archive resolved alerts.",
-        ))
+        findings.append(
+            AuditFinding(
+                category="orphan_rule",
+                severity="warn",
+                title=f"{old_alerts} stale critical/high alerts (>24h old)",
+                description="Old alerts may need review or archival.",
+                suggested_fix="Review and archive resolved alerts.",
+            )
+        )
     return findings
 
 
 def _check_auth_risks() -> list[AuditFinding]:
     """Check for authentication configuration risks."""
     import os
+
     findings = []
 
     auth_enabled = os.environ.get("ANGELCLAW_AUTH_ENABLED", "true").lower() in ("true", "1", "yes")
     if not auth_enabled:
-        findings.append(AuditFinding(
-            category="auth_risk",
-            severity="critical",
-            title="Authentication is DISABLED",
-            description="The API is accessible without credentials.",
-            suggested_fix="Set ANGELCLAW_AUTH_ENABLED=true and configure passwords.",
-        ))
+        findings.append(
+            AuditFinding(
+                category="auth_risk",
+                severity="critical",
+                title="Authentication is DISABLED",
+                description="The API is accessible without credentials.",
+                suggested_fix="Set ANGELCLAW_AUTH_ENABLED=true and configure passwords.",
+            )
+        )
 
     admin_pass = os.environ.get("ANGELCLAW_ADMIN_PASSWORD", "")
     if auth_enabled and not admin_pass:
-        findings.append(AuditFinding(
-            category="auth_risk",
-            severity="critical",
-            title="Admin password not configured",
-            description="ANGELCLAW_ADMIN_PASSWORD is empty — admin login will fail.",
-            suggested_fix="Set ANGELCLAW_ADMIN_PASSWORD in environment or env file.",
-        ))
+        findings.append(
+            AuditFinding(
+                category="auth_risk",
+                severity="critical",
+                title="Admin password not configured",
+                description="ANGELCLAW_ADMIN_PASSWORD is empty — admin login will fail.",
+                suggested_fix="Set ANGELCLAW_ADMIN_PASSWORD in environment or env file.",
+            )
+        )
 
     bind_host = os.environ.get("ANGELCLAW_BIND_HOST", "127.0.0.1")
     if bind_host == "0.0.0.0" and not auth_enabled:
-        findings.append(AuditFinding(
-            category="auth_risk",
-            severity="critical",
-            title="Public exposure without auth",
-            description="Server is bound to 0.0.0.0 with auth disabled.",
-            suggested_fix="Enable auth or bind to 127.0.0.1.",
-        ))
+        findings.append(
+            AuditFinding(
+                category="auth_risk",
+                severity="critical",
+                title="Public exposure without auth",
+                description="Server is bound to 0.0.0.0 with auth disabled.",
+                suggested_fix="Enable auth or bind to 127.0.0.1.",
+            )
+        )
 
     return findings
 
@@ -229,13 +246,15 @@ def _check_event_coverage(db: Session) -> list[AuditFinding]:
 
     uncovered = categories - covered_categories - {"system"}
     if uncovered:
-        findings.append(AuditFinding(
-            category="policy_gap",
-            severity="info",
-            title=f"Uncovered event categories: {', '.join(sorted(uncovered))}",
-            description="These categories have events but no specific policy rules.",
-            suggested_fix="Consider adding rules for these categories.",
-        ))
+        findings.append(
+            AuditFinding(
+                category="policy_gap",
+                severity="info",
+                title=f"Uncovered event categories: {', '.join(sorted(uncovered))}",
+                description="These categories have events but no specific policy rules.",
+                suggested_fix="Consider adding rules for these categories.",
+            )
+        )
 
     return findings
 
@@ -252,12 +271,14 @@ def _check_noisy_agents(db: Session) -> list[AuditFinding]:
 
     for agent_id, count in agent_counts.items():
         if count > 500:
-            findings.append(AuditFinding(
-                category="stale_agent",
-                severity="warn",
-                title=f"Noisy agent: {agent_id[:8]} ({count} events/hr)",
-                description=f"Agent {agent_id[:8]} generated {count} events in the last hour.",
-                suggested_fix="Check for misconfiguration or apply throttling.",
-            ))
+            findings.append(
+                AuditFinding(
+                    category="stale_agent",
+                    severity="warn",
+                    title=f"Noisy agent: {agent_id[:8]} ({count} events/hr)",
+                    description=f"Agent {agent_id[:8]} generated {count} events in the last hour.",
+                    suggested_fix="Check for misconfiguration or apply throttling.",
+                )
+            )
 
     return findings

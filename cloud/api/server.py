@@ -11,20 +11,18 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
-import os
-
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.orm import Session
 
 from shared.models.agent_node import AgentNode, AgentRegistrationRequest, AgentStatus
-from shared.models.event import Event, EventBatch
+from shared.models.event import EventBatch
 from shared.models.policy import PolicySet
 
 from ..ai_assistant.assistant import propose_policy_tightening, summarize_recent_incidents
@@ -39,29 +37,38 @@ _UI_DIR = Path(__file__).resolve().parent.parent / "ui"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create database tables on startup, start guardian heartbeat, orchestrator, and Wazuh ingest."""
+    """Create DB tables on startup, start heartbeat, orchestrator, and Wazuh ingest."""
     # Structured logging (before anything else logs)
     from cloud.services.structured_logger import setup_structured_logging
+
     setup_structured_logging()
 
     # Import AngelClaw models so their tables get created
-    from cloud.angelclaw.preferences import AngelClawPreferencesRow  # noqa: F401
     from cloud.angelclaw.actions import ActionLogRow  # noqa: F401
+    from cloud.angelclaw.preferences import AngelClawPreferencesRow  # noqa: F401
+
     Base.metadata.create_all(bind=engine)
     _ensure_default_policy_exists()
     # Start guardian heartbeat background task
     from cloud.services.guardian_heartbeat import heartbeat_loop
+
     heartbeat_task = asyncio.create_task(heartbeat_loop())
     # Start ANGEL AGI Orchestrator
     from cloud.guardian.orchestrator import angel_orchestrator
+
     await angel_orchestrator.start()
     # Start Wazuh XDR ingest loop (no-op if not configured)
     from cloud.integrations.wazuh_ingest import wazuh_ingest_loop
+
     wazuh_task = asyncio.create_task(wazuh_ingest_loop())
     # Start AngelClaw V5 Autonomous Daemon
     from cloud.angelclaw.daemon import start_daemon, stop_daemon
+
     await start_daemon()
-    logger.info("AngelClaw AGI Guardian 1.1.0 started — tables, heartbeat, orchestrator, Wazuh, shield, daemon")
+    logger.info(
+        "AngelClaw AGI Guardian 1.1.0 started"
+        " — tables, heartbeat, orchestrator, Wazuh, shield, daemon"
+    )
     yield
     await stop_daemon()
     wazuh_task.cancel()
@@ -134,7 +141,17 @@ from cloud.auth.config import AUTH_ENABLED  # noqa: E402
 from cloud.auth.service import verify_bearer, verify_jwt  # noqa: E402
 
 # Paths that never require auth
-_PUBLIC_PATHS = {"/health", "/ready", "/metrics", "/ui", "/api/v1/auth/login", "/api/v1/auth/logout", "/docs", "/openapi.json", "/redoc"}
+_PUBLIC_PATHS = {
+    "/health",
+    "/ready",
+    "/metrics",
+    "/ui",
+    "/api/v1/auth/login",
+    "/api/v1/auth/logout",
+    "/docs",
+    "/openapi.json",
+    "/redoc",
+}
 
 
 @app.middleware("http")
@@ -166,6 +183,7 @@ async def auth_middleware(request: Request, call_next):
     user = verify_jwt(token)
     if not user:
         from cloud.auth.config import AUTH_MODE
+
         if AUTH_MODE == "bearer":
             user = verify_bearer(token)
 
@@ -175,7 +193,12 @@ async def auth_middleware(request: Request, call_next):
     # Viewer role check: block POST/PUT/DELETE on non-chat endpoints
     if user.role.value == "viewer" and request.method in ("POST", "PUT", "DELETE"):
         # Allow chat, logout, and password change for viewers
-        _VIEWER_WRITE_PATHS = {"/api/v1/guardian/chat", "/api/v1/angelclaw/chat", "/api/v1/auth/logout", "/api/v1/auth/change-password"}
+        _VIEWER_WRITE_PATHS = {
+            "/api/v1/guardian/chat",
+            "/api/v1/angelclaw/chat",
+            "/api/v1/auth/logout",
+            "/api/v1/auth/change-password",
+        }
         if path not in _VIEWER_WRITE_PATHS:
             return JSONResponse(
                 status_code=403,
@@ -191,18 +214,17 @@ async def auth_middleware(request: Request, call_next):
 # GET /health — liveness probe
 # ---------------------------------------------------------------------------
 
+
 @app.get("/health", tags=["System"])
 def health_check():
     from cloud.guardian.orchestrator import angel_orchestrator
+
     orch = angel_orchestrator.status()
     return {
         "status": "ok",
         "version": "1.1.0",
         "orchestrator": orch["running"],
-        "agents": {
-            name: info["status"]
-            for name, info in orch.get("agents", {}).items()
-        },
+        "agents": {name: info["status"] for name, info in orch.get("agents", {}).items()},
     }
 
 
@@ -210,23 +232,28 @@ def health_check():
 # GET /ui — Guardian Angel Dashboard
 # ---------------------------------------------------------------------------
 
+
 @app.get("/ui", response_class=HTMLResponse, tags=["Dashboard"], include_in_schema=False)
 def serve_dashboard():
     """Serve the Guardian Angel web dashboard."""
     index = _UI_DIR / "index.html"
     if index.exists():
         return HTMLResponse(content=index.read_text(encoding="utf-8"))
-    return HTMLResponse(content="<h1>Dashboard not found</h1><p>Place index.html in cloud/ui/</p>", status_code=404)
+    return HTMLResponse(
+        content="<h1>Dashboard not found</h1><p>Place index.html in cloud/ui/</p>", status_code=404
+    )
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _ensure_default_policy_exists():
     """Seed the database with the bootstrap policy if none exists."""
-    from ..db.session import SessionLocal
     from pathlib import Path
+
+    from ..db.session import SessionLocal
 
     db = SessionLocal()
     try:
@@ -236,7 +263,9 @@ def _ensure_default_policy_exists():
         # Load the default policy shipped with ANGELNODE
         default_path = (
             Path(__file__).resolve().parent.parent.parent
-            / "angelnode" / "config" / "default_policy.json"
+            / "angelnode"
+            / "config"
+            / "default_policy.json"
         )
         if not default_path.exists():
             logger.warning("Default policy file not found at %s", default_path)
@@ -271,6 +300,7 @@ def _ensure_default_policy_exists():
 # ---------------------------------------------------------------------------
 # POST /api/v1/agents/register
 # ---------------------------------------------------------------------------
+
 
 @app.post("/api/v1/agents/register")
 def register_agent(
@@ -334,6 +364,7 @@ def register_agent(
 # POST /api/v1/events/batch
 # ---------------------------------------------------------------------------
 
+
 @app.post("/api/v1/events/batch")
 def ingest_events(
     batch: EventBatch,
@@ -347,40 +378,48 @@ def ingest_events(
 
     rows = []
     for event in batch.events:
-        rows.append(EventRow(
-            id=event.id,
-            agent_id=event.agent_id,
-            timestamp=event.timestamp,
-            category=event.category.value,
-            type=event.type,
-            severity=event.severity.value,
-            details=event.details,
-            source=event.source,
-        ))
+        rows.append(
+            EventRow(
+                id=event.id,
+                agent_id=event.agent_id,
+                timestamp=event.timestamp,
+                category=event.category.value,
+                type=event.type,
+                severity=event.severity.value,
+                details=event.details,
+                source=event.source,
+            )
+        )
 
     db.add_all(rows)
     db.commit()
 
     # V2: Check for critical patterns via the event bus
     from cloud.services.event_bus import check_for_alerts
+
     alerts_created = []
     try:
         alerts_created = check_for_alerts(db, rows)
         if alerts_created:
             logger.info(
                 "[EVENT INGEST] %d event(s) ingested from agent %s — %d alert(s) triggered",
-                len(rows), batch.agent_id[:8], len(alerts_created),
+                len(rows),
+                batch.agent_id[:8],
+                len(alerts_created),
             )
     except Exception:
         logger.exception("[EVENT INGEST] Event bus alert check failed (non-fatal)")
 
     # V3: Run events through ANGEL AGI Orchestrator (non-blocking)
     from cloud.guardian.orchestrator import angel_orchestrator
+
     indicators = []
     try:
-        indicators = asyncio.get_event_loop().run_until_complete(
-            angel_orchestrator.process_events(rows, db)
-        ) if not asyncio.get_event_loop().is_running() else []
+        indicators = (
+            asyncio.get_event_loop().run_until_complete(angel_orchestrator.process_events(rows, db))
+            if not asyncio.get_event_loop().is_running()
+            else []
+        )
         # If we're inside an async context, schedule as task
         if asyncio.get_event_loop().is_running():
             asyncio.create_task(_run_orchestrator(rows, db))
@@ -401,6 +440,7 @@ def ingest_events(
 async def _run_orchestrator(rows: list, db: Session) -> None:
     """Run orchestrator analysis as a background task."""
     from cloud.guardian.orchestrator import angel_orchestrator
+
     try:
         await angel_orchestrator.process_events(rows, db)
     except Exception:
@@ -410,6 +450,7 @@ async def _run_orchestrator(rows: list, db: Session) -> None:
 # ---------------------------------------------------------------------------
 # GET /api/v1/policies/current
 # ---------------------------------------------------------------------------
+
 
 @app.get("/api/v1/policies/current")
 def get_current_policy(
@@ -442,6 +483,7 @@ def get_current_policy(
 # GET /api/v1/ai/summary/incidents
 # ---------------------------------------------------------------------------
 
+
 @app.get(
     "/api/v1/ai/summary/incidents",
     response_model=IncidentSummary,
@@ -472,6 +514,7 @@ def ai_summary_incidents(
 # GET /api/v1/ai/propose/policy
 # ---------------------------------------------------------------------------
 
+
 @app.get(
     "/api/v1/ai/propose/policy",
     response_model=ProposedPolicyChanges,
@@ -479,7 +522,8 @@ def ai_summary_incidents(
 )
 def ai_propose_policy(
     agentGroupId: str = Query(
-        ..., description="Agent group tag to analyze (matches AgentNodeRow.tags)",
+        ...,
+        description="Agent group tag to analyze (matches AgentNodeRow.tags)",
     ),
     lookbackHours: int = Query(
         default=24,

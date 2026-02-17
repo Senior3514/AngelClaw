@@ -38,15 +38,16 @@ jobs:
         run: ruff check . --select E,F,W,I
 
   # ---------------------------------------------------------------------------
-  # Test suite (matrix: Python 3.11 + 3.12)
+  # Test suite (matrix: Python 3.11 + 3.12, OS: Linux + macOS + Windows)
   # ---------------------------------------------------------------------------
   test:
     needs: lint
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.12"]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -59,9 +60,9 @@ jobs:
       - name: Cache pip
         uses: actions/cache@v4
         with:
-          path: ~/.cache/pip
-          key: pip-test-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml') }}
-          restore-keys: pip-test-${{ matrix.python-version }}-
+          path: ${{ runner.os == 'Windows' && '~\\AppData\\Local\\pip\\Cache' || (runner.os == 'macOS' && '~/Library/Caches/pip' || '~/.cache/pip') }}
+          key: pip-test-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml') }}
+          restore-keys: pip-test-${{ matrix.os }}-${{ matrix.python-version }}-
 
       - name: Install dependencies
         run: pip install -e ".[cloud,dev]" pytest-cov
@@ -82,7 +83,7 @@ jobs:
         run: python scripts/test_secret_protection.py
 
       - name: Upload coverage artifact
-        if: matrix.python-version == '3.12'
+        if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report

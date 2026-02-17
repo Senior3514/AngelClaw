@@ -13,10 +13,10 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
+
 
 class IncidentState(str, Enum):
     NEW = "new"
@@ -68,8 +68,10 @@ class MitreTactic(str, Enum):
 # Detection models
 # ---------------------------------------------------------------------------
 
+
 class ThreatIndicator(BaseModel):
     """Output of the Sentinel detection layer."""
+
     indicator_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     indicator_type: str  # pattern_match, anomaly, correlation
     pattern_name: str = ""
@@ -86,6 +88,7 @@ class ThreatIndicator(BaseModel):
 
 class AnomalyScore(BaseModel):
     """Per-agent behavioral anomaly score."""
+
     agent_id: str
     score: float = Field(ge=0.0, le=1.0)
     baseline_event_rate: float = 0.0
@@ -97,6 +100,7 @@ class AnomalyScore(BaseModel):
 
 class CorrelationChain(BaseModel):
     """A sequence of related events forming a potential kill chain."""
+
     chain_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     event_ids: list[str] = Field(default_factory=list)
     agent_ids: list[str] = Field(default_factory=list)
@@ -111,8 +115,10 @@ class CorrelationChain(BaseModel):
 # Incident lifecycle
 # ---------------------------------------------------------------------------
 
+
 class Incident(BaseModel):
     """A tracked security incident managed by the Orchestrator."""
+
     incident_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     correlation_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     state: IncidentState = IncidentState.NEW
@@ -138,8 +144,10 @@ class Incident(BaseModel):
 # Response / Playbook models
 # ---------------------------------------------------------------------------
 
+
 class PlaybookStep(BaseModel):
     """A single step in a response playbook."""
+
     action: str
     target: str = ""
     description: str = ""
@@ -150,6 +158,7 @@ class PlaybookStep(BaseModel):
 
 class Playbook(BaseModel):
     """A response playbook definition."""
+
     name: str
     description: str = ""
     trigger_patterns: list[str] = Field(default_factory=list)
@@ -161,6 +170,7 @@ class Playbook(BaseModel):
 
 class ResponseResult(BaseModel):
     """Result of executing a single response action."""
+
     action: str
     target: str = ""
     success: bool = True
@@ -176,8 +186,10 @@ class ResponseResult(BaseModel):
 # Sub-agent task models
 # ---------------------------------------------------------------------------
 
+
 class AgentTask(BaseModel):
     """A task dispatched by the Orchestrator to a sub-agent."""
+
     task_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     correlation_id: str = ""
     task_type: str  # detect, respond, investigate, audit
@@ -189,6 +201,7 @@ class AgentTask(BaseModel):
 
 class AgentResult(BaseModel):
     """Result returned by a sub-agent after handling a task."""
+
     task_id: str
     agent_id: str
     agent_type: str
@@ -203,8 +216,10 @@ class AgentResult(BaseModel):
 # Forensic models
 # ---------------------------------------------------------------------------
 
+
 class ForensicEvidence(BaseModel):
     """A piece of evidence collected during forensic investigation."""
+
     evidence_type: str  # event, decision, policy_hit, state_snapshot
     timestamp: datetime
     data: dict[str, Any] = Field(default_factory=dict)
@@ -213,6 +228,7 @@ class ForensicEvidence(BaseModel):
 
 class ForensicReport(BaseModel):
     """Output of a forensic investigation."""
+
     report_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     incident_id: str
     agent_id: str = ""
@@ -228,8 +244,10 @@ class ForensicReport(BaseModel):
 # Audit models
 # ---------------------------------------------------------------------------
 
+
 class AuditDiscrepancy(BaseModel):
     """A mismatch between intended and actual agent behavior."""
+
     agent_id: str
     expected_action: str
     actual_action: str
@@ -240,6 +258,7 @@ class AuditDiscrepancy(BaseModel):
 
 class AuditReport(BaseModel):
     """Output of the audit agent's verification."""
+
     report_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     period_start: datetime
     period_end: datetime

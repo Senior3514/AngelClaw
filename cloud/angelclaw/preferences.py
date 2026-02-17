@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from pydantic import BaseModel, Field
-from sqlalchemy import Column, DateTime, Integer, JSON, String
+from sqlalchemy import JSON, Column, DateTime, Integer, String
 from sqlalchemy.orm import Session
 
 from cloud.db.models import Base
@@ -25,22 +25,24 @@ logger = logging.getLogger("angelclaw.preferences")
 # Enums
 # ---------------------------------------------------------------------------
 
+
 class AutonomyLevel(str, Enum):
-    OBSERVE_ONLY = "observe_only"       # Watch and report, never suggest
-    SUGGEST_ONLY = "suggest_only"       # Suggest actions, never auto-apply
-    ASSIST = "assist"                   # Suggest + apply with operator confirmation
-    AUTONOMOUS = "autonomous_apply"     # Auto-apply safe actions (future)
+    OBSERVE_ONLY = "observe_only"  # Watch and report, never suggest
+    SUGGEST_ONLY = "suggest_only"  # Suggest actions, never auto-apply
+    ASSIST = "assist"  # Suggest + apply with operator confirmation
+    AUTONOMOUS = "autonomous_apply"  # Auto-apply safe actions (future)
 
 
 class ReportingLevel(str, Enum):
-    QUIET = "quiet"         # Only critical findings
-    NORMAL = "normal"       # Standard reporting
-    VERBOSE = "verbose"     # Detailed reporting with context
+    QUIET = "quiet"  # Only critical findings
+    NORMAL = "normal"  # Standard reporting
+    VERBOSE = "verbose"  # Detailed reporting with context
 
 
 # ---------------------------------------------------------------------------
 # DB Model
 # ---------------------------------------------------------------------------
+
 
 class AngelClawPreferencesRow(Base):
     __tablename__ = "angelclaw_preferences"
@@ -58,6 +60,7 @@ class AngelClawPreferencesRow(Base):
 # ---------------------------------------------------------------------------
 # Pydantic Models
 # ---------------------------------------------------------------------------
+
 
 class Preferences(BaseModel):
     tenant_id: str = "dev-tenant"
@@ -79,6 +82,7 @@ class PreferencesUpdate(BaseModel):
 # ---------------------------------------------------------------------------
 # CRUD
 # ---------------------------------------------------------------------------
+
 
 def get_preferences(db: Session, tenant_id: str = "dev-tenant") -> Preferences:
     """Get preferences for a tenant, creating defaults if needed."""

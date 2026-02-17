@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import os
 
-
 # Whether the LLM proxy is enabled.  Default: disabled.
 LLM_ENABLED: bool = os.environ.get("LLM_ENABLED", "false").lower() in ("true", "1", "yes")
 
@@ -31,7 +30,9 @@ LLM_TIMEOUT_SECONDS: int = int(os.environ.get("LLM_TIMEOUT_SECONDS", "30"))
 
 # System prompt injected into every LLM request to enforce the
 # read-only security analyst persona.
-LLM_SYSTEM_PROMPT: str = os.environ.get("LLM_SYSTEM_PROMPT", """\
+LLM_SYSTEM_PROMPT: str = os.environ.get(
+    "LLM_SYSTEM_PROMPT",
+    """\
 You are AngelClaw AI — a friendly, knowledgeable security guardian.
 
 Your philosophy: AngelClaw is a "guardian angel" that enables people to use AI \
@@ -59,4 +60,5 @@ You have access to read-only context when provided:
 - Recent security events and their policy decisions
 - Incident summaries and classifications
 - Current policy rules and category defaults\
-""")
+""",
+)

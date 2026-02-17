@@ -28,7 +28,11 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from cloud.angelclaw.actions import Action, ActionExecutor, ActionType, action_executor, get_action_history
+from cloud.angelclaw.actions import (
+    Action,
+    ActionType,
+    action_executor,
+)
 from cloud.angelclaw.context import EnvironmentContext, gather_context
 from cloud.angelclaw.preferences import (
     AutonomyLevel,
@@ -63,38 +67,82 @@ _SYSTEM_IDENTITY = (
 
 _INTENTS: list[tuple[str, re.Pattern]] = [
     # Secret extraction attempts — MUST BE FIRST (highest priority)
-    ("secret_probe",      re.compile(r"(?i)(show.*(password|token|secret|cred)|reveal.*secret|print.*(key|token|secret|password|cred)|dump.*(cred|secret|password|token)|tell.*(token|password|secret)|give.*api.key|ignore.*previous|pretend|roleplay.*as|god.mode|debug.mode|DAN\b|jailbreak|bypass.*secur|disable.*protect|override.*safe|error.*recovery.*mode|developer.*override|output.*env|print.*env|(?:what|where|which|list|find|get|fetch|extract).*(password|secret|token|cred))")),
+    (
+        "secret_probe",
+        re.compile(
+            r"(?i)(show.*(password|token|secret|cred)|reveal.*secret|print.*(key|token|secret|password|cred)|dump.*(cred|secret|password|token)|tell.*(token|password|secret)|give.*api.key|ignore.*previous|pretend|roleplay.*as|god.mode|debug.mode|DAN\b|jailbreak|bypass.*secur|disable.*protect|override.*safe|error.*recovery.*mode|developer.*override|output.*env|print.*env|(?:what|where|which|list|find|get|fetch|extract).*(password|secret|token|cred))"
+        ),
+    ),
     # Preference changes (must be before general patterns)
-    ("pref_scan_freq",    re.compile(r"(?i)(scan\s*(every|each|frequency)|every\s*\d+\s*min)")),
-    ("pref_autonomy",     re.compile(r"(?i)(autonomy|observe.only|suggest.only|assist\s*mode|autonomous)")),
-    ("pref_reporting",    re.compile(r"(?i)(quiet|verbose|reporting|be\s*more\s*(quiet|verbose|detailed)|less\s*noise)")),
-    ("pref_show",         re.compile(r"(?i)(show|get|current|my)\s*(preference|setting|config)")),
+    ("pref_scan_freq", re.compile(r"(?i)(scan\s*(every|each|frequency)|every\s*\d+\s*min)")),
+    (
+        "pref_autonomy",
+        re.compile(r"(?i)(autonomy|observe.only|suggest.only|assist\s*mode|autonomous)"),
+    ),
+    (
+        "pref_reporting",
+        re.compile(
+            r"(?i)(quiet|verbose|reporting|be\s*more\s*(quiet|verbose|detailed)|less\s*noise)"
+        ),
+    ),
+    ("pref_show", re.compile(r"(?i)(show|get|current|my)\s*(preference|setting|config)")),
     # Action requests
-    ("apply_actions",     re.compile(r"(?i)(yes|apply|do\s*it|go\s*ahead|confirm|approve|execute)\s*(all|#?\d|them|those|action)?")),
-    ("scan",              re.compile(r"(?i)(scan|exposure|audit|check.*system|harden|vulnerability|security.*check|find.*misconfig)")),
+    (
+        "apply_actions",
+        re.compile(
+            r"(?i)(yes|apply|do\s*it|go\s*ahead|confirm|approve|execute)\s*(all|#?\d|them|those|action)?"
+        ),
+    ),
+    (
+        "scan",
+        re.compile(
+            r"(?i)(scan|exposure|audit|check.*system|harden|vulnerability|security.*check|find.*misconfig)"
+        ),
+    ),
     # ClawSec-inspired intents
-    ("shield",            re.compile(r"(?i)(shield|trifecta|lethal|attack.chain|evil.*agi|claw.?bot|threat.assess)")),
-    ("skills",            re.compile(r"(?i)(skill|integrity|supply.chain|tamper|drift.*detect|verify.*module|hash.*check)")),
+    (
+        "shield",
+        re.compile(r"(?i)(shield|trifecta|lethal|attack.chain|evil.*agi|claw.?bot|threat.assess)"),
+    ),
+    (
+        "skills",
+        re.compile(
+            r"(?i)(skill|integrity|supply.chain|tamper|drift.*detect|verify.*module|hash.*check)"
+        ),
+    ),
     # Knowledge queries — explain must be before incidents (both match "blocked")
-    ("explain",           re.compile(r"(?i)(explain|why.*(block|alert|allow)|tell.*about.*event)")),
-    ("incidents",         re.compile(r"(?i)(incident|breach|attack|blocked|critical|high.sev|what.happen)")),
-    ("threats",           re.compile(r"(?i)(threat|predict|risk|vector|landscape|danger)")),
-    ("alerts",            re.compile(r"(?i)(guardian.*alert|critical.*notif|warning|alarm)")),
-    ("agent_status",      re.compile(r"(?i)(agent|fleet|node|status|health|online|offline)")),
-    ("changes",           re.compile(r"(?i)(change|what.*change|recent.*update|modif|policy.*update)")),
-    ("propose",           re.compile(r"(?i)(propose|suggest|recommend|tighten|improve.*polic|fix.*polic)")),
-    ("activity",          re.compile(r"(?i)(what.*been.*doing|what.*you.*doing|status.*report|activity|report|doing.*lately)")),
-    ("worried",           re.compile(r"(?i)(worr|concern|afraid|anxious|anything.*wrong|problem)")),
+    ("explain", re.compile(r"(?i)(explain|why.*(block|alert|allow)|tell.*about.*event)")),
+    (
+        "incidents",
+        re.compile(r"(?i)(incident|breach|attack|blocked|critical|high.sev|what.happen)"),
+    ),
+    ("threats", re.compile(r"(?i)(threat|predict|risk|vector|landscape|danger)")),
+    ("alerts", re.compile(r"(?i)(guardian.*alert|critical.*notif|warning|alarm)")),
+    ("agent_status", re.compile(r"(?i)(agent|fleet|node|status|health|online|offline)")),
+    ("changes", re.compile(r"(?i)(change|what.*change|recent.*update|modif|policy.*update)")),
+    ("propose", re.compile(r"(?i)(propose|suggest|recommend|tighten|improve.*polic|fix.*polic)")),
+    (
+        "activity",
+        re.compile(
+            r"(?i)(what.*been.*doing|what.*you.*doing|status.*report|activity|report|doing.*lately)"
+        ),
+    ),
+    ("worried", re.compile(r"(?i)(worr|concern|afraid|anxious|anything.*wrong|problem)")),
     # V1.0 new intents
-    ("backup_help",       re.compile(r"(?i)(backup|restore|snapshot|recovery|disaster)")),
-    ("network_check",     re.compile(r"(?i)(network|firewall|port|expose|open.*port|listen|bind|socket)")),
-    ("compliance",        re.compile(r"(?i)(complian|regulat|gdpr|hipaa|soc.?2|pci|audit.*log)")),
-    ("about",             re.compile(r"(?i)(who.*are.*you|what.*are.*you|about|introduce|version)")),
-    ("help",              re.compile(r"(?i)(help|what.*can.*you|how.*do|command|feature|capabilities)")),
+    ("backup_help", re.compile(r"(?i)(backup|restore|snapshot|recovery|disaster)")),
+    (
+        "network_check",
+        re.compile(r"(?i)(network|firewall|port|expose|open.*port|listen|bind|socket)"),
+    ),
+    ("compliance", re.compile(r"(?i)(complian|regulat|gdpr|hipaa|soc.?2|pci|audit.*log)")),
+    ("about", re.compile(r"(?i)(who.*are.*you|what.*are.*you|about|introduce|version)")),
+    ("help", re.compile(r"(?i)(help|what.*can.*you|how.*do|command|feature|capabilities)")),
 ]
 
 _NUMBER_RE = re.compile(r"\d+")
-_EVENT_ID_RE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", re.IGNORECASE)
+_EVENT_ID_RE = re.compile(
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", re.IGNORECASE
+)
 
 
 def detect_intent(prompt: str) -> str:
@@ -107,6 +155,7 @@ def detect_intent(prompt: str) -> str:
 # ---------------------------------------------------------------------------
 # Brain — the unified handler
 # ---------------------------------------------------------------------------
+
 
 class AngelClawBrain:
     """Stateless brain: each call gets fresh context from DB."""
@@ -134,7 +183,12 @@ class AngelClawBrain:
             return result
 
         # Gather context (lightweight — only what's needed)
-        ctx = gather_context(db, tenant_id, lookback_hours=24, include_events=(intent not in ("help", "about", "pref_show")))
+        ctx = gather_context(
+            db,
+            tenant_id,
+            lookback_hours=24,
+            include_events=(intent not in ("help", "about", "pref_show")),
+        )
         prefs = get_preferences(db, tenant_id)
 
         # Route to handler
@@ -159,8 +213,13 @@ class AngelClawBrain:
     # ------------------------------------------------------------------
 
     async def _dispatch(
-        self, db: Session, tid: str, intent: str, prompt: str,
-        ctx: EnvironmentContext, prefs: Preferences,
+        self,
+        db: Session,
+        tid: str,
+        intent: str,
+        prompt: str,
+        ctx: EnvironmentContext,
+        prefs: Preferences,
     ) -> dict:
         if intent == "secret_probe":
             return self._block_secret_probe()
@@ -232,8 +291,11 @@ class AngelClawBrain:
     # Scan + propose + apply flow
     # ------------------------------------------------------------------
 
-    async def _handle_scan(self, db: Session, tid: str, prompt: str, ctx: EnvironmentContext, prefs: Preferences) -> dict:
+    async def _handle_scan(
+        self, db: Session, tid: str, prompt: str, ctx: EnvironmentContext, prefs: Preferences
+    ) -> dict:
         from cloud.services.guardian_scan import run_guardian_scan
+
         result = await run_guardian_scan(db, tid)
 
         lines = [result.summary, ""]
@@ -253,29 +315,43 @@ class AngelClawBrain:
             for s in result.hardening_suggestions:
                 action_type = _map_suggestion_to_action_type(s.action)
                 if action_type:
-                    proposed.append(Action(
-                        action_type=action_type,
-                        description=s.description,
-                        params={"rule_id": s.rule_id, "scope": s.scope} if s.rule_id else {"scope": s.scope},
-                        dry_run=True,
-                    ))
+                    proposed.append(
+                        Action(
+                            action_type=action_type,
+                            description=s.description,
+                            params={"rule_id": s.rule_id, "scope": s.scope}
+                            if s.rule_id
+                            else {"scope": s.scope},
+                            dry_run=True,
+                        )
+                    )
 
             if proposed:
                 self._pending_actions[tid] = proposed
-                lines.append(f"I have **{len(proposed)} action(s)** I can take. Say **\"apply all\"** or **\"apply #1\"** to execute them.")
+                lines.append(
+                    f'I have **{len(proposed)} action(s)** I can take.'
+                    f' Say **"apply all"** or **"apply #1"**'
+                    f" to execute them."
+                )
                 for i, a in enumerate(proposed, 1):
-                    actions.append({
-                        "id": a.id, "index": i,
-                        "type": a.action_type.value,
-                        "description": a.description,
-                        "dry_run": True,
-                    })
+                    actions.append(
+                        {
+                            "id": a.id,
+                            "index": i,
+                            "type": a.action_type.value,
+                            "description": a.description,
+                            "dry_run": True,
+                        }
+                    )
         else:
             lines.append("No significant risks detected. Your system looks well-configured!")
 
         # Check if user asked to also fix things
         fix_pattern = re.compile(r"(?i)(fix|apply|resolve|remediate|auto.?fix)")
-        auto_fix = fix_pattern.search(prompt) is not None and prefs.autonomy_level in (AutonomyLevel.ASSIST, AutonomyLevel.AUTONOMOUS)
+        auto_fix = fix_pattern.search(prompt) is not None and prefs.autonomy_level in (
+            AutonomyLevel.ASSIST,
+            AutonomyLevel.AUTONOMOUS,
+        )
 
         effects = []
         if auto_fix and self._pending_actions.get(tid):
@@ -285,7 +361,12 @@ class AngelClawBrain:
                 lines.append(f"  - {e.get('message', 'done')}")
             self._pending_actions.pop(tid, None)
 
-        return {"answer": "\n".join(lines), "actions": actions, "effects": effects, "references": []}
+        return {
+            "answer": "\n".join(lines),
+            "actions": actions,
+            "effects": effects,
+            "references": [],
+        }
 
     async def _handle_apply_actions(self, db: Session, tid: str, prompt: str) -> dict:
         pending = self._pending_actions.get(tid, [])
@@ -300,7 +381,12 @@ class AngelClawBrain:
             selected = pending  # "apply all"
 
         if not selected:
-            return {"answer": "I couldn't determine which actions to apply. Say 'apply all' or 'apply #1 #3'."}
+            return {
+                "answer": (
+                    "I couldn't determine which actions to apply."
+                    " Say 'apply all' or 'apply #1 #3'."
+                )
+            }
 
         effects = await self._apply_actions(db, tid, selected)
         self._pending_actions.pop(tid, None)
@@ -317,14 +403,16 @@ class AngelClawBrain:
         for action in actions:
             action.dry_run = False
             result = await self._executor.execute(action, db, tid, triggered_by="chat")
-            effects.append({
-                "action_id": action.id,
-                "type": action.action_type.value,
-                "success": result.success,
-                "message": result.message,
-                "before": result.before_state,
-                "after": result.after_state,
-            })
+            effects.append(
+                {
+                    "action_id": action.id,
+                    "type": action.action_type.value,
+                    "success": result.success,
+                    "message": result.message,
+                    "before": result.before_state,
+                    "after": result.after_state,
+                }
+            )
         return effects
 
     # ------------------------------------------------------------------
@@ -334,17 +422,26 @@ class AngelClawBrain:
     def _handle_incidents(self, ctx: EnvironmentContext) -> dict:
         from cloud.ai_assistant.assistant import summarize_recent_incidents
         from cloud.db.session import SessionLocal
+
         db = SessionLocal()
         try:
             summary = summarize_recent_incidents(db, "dev-tenant", lookback_hours=24)
         finally:
             db.close()
 
-        lines = [f"**Security summary (last 24h):**\n", f"Total incidents: **{summary.total_incidents}**"]
+        lines = [
+            "**Security summary (last 24h):**\n",
+            f"Total incidents: **{summary.total_incidents}**",
+        ]
         if summary.by_severity:
-            lines.append("By severity: " + ", ".join(f"{s.severity}: {s.count}" for s in summary.by_severity))
+            lines.append(
+                "By severity: " + ", ".join(f"{s.severity}: {s.count}" for s in summary.by_severity)
+            )
         if summary.by_classification:
-            lines.append("By type: " + ", ".join(f"{c.classification}: {c.count}" for c in summary.by_classification))
+            lines.append(
+                "By type: "
+                + ", ".join(f"{c.classification}: {c.count}" for c in summary.by_classification)
+            )
         if summary.recommended_focus:
             lines.append("\nRecommendations:")
             for r in summary.recommended_focus:
@@ -352,24 +449,38 @@ class AngelClawBrain:
         return {"answer": "\n".join(lines), "references": ["/api/v1/angelclaw/reports/recent"]}
 
     def _handle_threats(self, db: Session) -> dict:
-        from cloud.services.predictive import predict_threat_vectors
         from cloud.db.session import SessionLocal
+        from cloud.services.predictive import predict_threat_vectors
+
         sdb = SessionLocal()
         try:
             preds = predict_threat_vectors(sdb, lookback_hours=24)
         finally:
             sdb.close()
         if not preds:
-            return {"answer": "No threat vectors detected. Your systems look healthy — I'm watching quietly."}
+            return {
+                "answer": (
+                    "No threat vectors detected."
+                    " Your systems look healthy"
+                    " — I'm watching quietly."
+                )
+            }
         lines = ["**Predicted threat vectors (24h):**\n"]
         for p in preds:
-            lines.append(f"  **{p.vector_name}** — {int(p.confidence*100)}% confidence")
+            lines.append(f"  **{p.vector_name}** — {int(p.confidence * 100)}% confidence")
             lines.append(f"    {p.rationale}")
         return {"answer": "\n".join(lines), "references": ["/api/v1/analytics/threat-matrix"]}
 
     def _handle_alerts(self, ctx: EnvironmentContext) -> dict:
         if not ctx.recent_alerts:
-            return {"answer": "No guardian alerts right now. I'm watching for critical patterns — secret exfiltration, severity spikes, agent flapping."}
+            return {
+                "answer": (
+                    "No guardian alerts right now."
+                    " I'm watching for critical patterns"
+                    " — secret exfiltration,"
+                    " severity spikes, agent flapping."
+                )
+            }
         lines = [f"**Recent alerts ({len(ctx.recent_alerts)}):**\n"]
         for a in ctx.recent_alerts[:5]:
             lines.append(f"  [{a.get('severity', '?').upper()}] {a.get('title', '?')}")
@@ -395,12 +506,17 @@ class AngelClawBrain:
             return {"answer": "No policy or configuration changes in the last 24 hours."}
         lines = [f"**Recent changes ({len(ctx.recent_changes)}):**\n"]
         for c in ctx.recent_changes[:5]:
-            lines.append(f"  [{c.get('change_type', '?')}] {c.get('description', '?')} — by {c.get('changed_by', '?')}")
+            lines.append(
+                f"  [{c.get('change_type', '?')}]"
+                f" {c.get('description', '?')}"
+                f" — by {c.get('changed_by', '?')}"
+            )
         return {"answer": "\n".join(lines)}
 
     def _handle_propose(self, db: Session, tid: str) -> dict:
         from cloud.ai_assistant.assistant import propose_policy_tightening
         from cloud.db.session import SessionLocal
+
         sdb = SessionLocal()
         try:
             proposals = propose_policy_tightening(sdb, "all", lookback_hours=24)
@@ -416,8 +532,15 @@ class AngelClawBrain:
     def _handle_explain(self, db: Session, prompt: str) -> dict:
         match = _EVENT_ID_RE.search(prompt)
         if not match:
-            return {"answer": "I need an event ID to explain. Check the alerts feed, then ask: \"Explain event <id>\"."}
+            return {
+                "answer": (
+                    "I need an event ID to explain."
+                    " Check the alerts feed, then ask:"
+                    ' "Explain event <id>".'
+                )
+            }
         from cloud.ai_assistant.assistant import explain_event_with_context
+
         result = explain_event_with_context(db, match.group(0))
         if "error" in result:
             return {"answer": f"Event `{match.group(0)}` not found. Check the ID and try again."}
@@ -438,18 +561,27 @@ class AngelClawBrain:
             lines.append("  No recent daemon activity logged yet.")
 
         if ctx.preferences:
-            lines.append(f"\n**Current settings:** scan every {ctx.preferences.get('scan_frequency_minutes', '?')}min, "
-                         f"autonomy={ctx.preferences.get('autonomy_level', '?')}, "
-                         f"reporting={ctx.preferences.get('reporting_level', '?')}")
+            lines.append(
+                f"\n**Current settings:** scan every"
+                f" {ctx.preferences.get('scan_frequency_minutes', '?')}"
+                f"min, autonomy="
+                f"{ctx.preferences.get('autonomy_level', '?')}, "
+                f"reporting="
+                f"{ctx.preferences.get('reporting_level', '?')}"
+            )
 
         orch = ctx.orchestrator_status
         if orch.get("running"):
             stats = orch.get("stats", {})
-            lines.append(f"\n**Orchestrator:** {stats.get('events_processed', 0)} events processed, "
-                         f"{stats.get('incidents_created', 0)} incidents, "
-                         f"{stats.get('indicators_found', 0)} indicators")
+            lines.append(
+                f"\n**Orchestrator:** {stats.get('events_processed', 0)} events processed, "
+                f"{stats.get('incidents_created', 0)} incidents, "
+                f"{stats.get('indicators_found', 0)} indicators"
+            )
 
-        lines.append("\nI'm continuously monitoring your fleet, detecting patterns, and tracking changes.")
+        lines.append(
+            "\nI'm continuously monitoring your fleet, detecting patterns, and tracking changes."
+        )
         return {"answer": "\n".join(lines)}
 
     def _handle_worried(self, ctx: EnvironmentContext) -> dict:
@@ -466,7 +598,13 @@ class AngelClawBrain:
             if inc.get("state") in ("new", "triaging"):
                 concerns.append(f"open incident: {inc.get('title', '?')[:50]}")
         if not concerns:
-            return {"answer": "Everything looks good right now. No active concerns. I'm watching quietly in the background."}
+            return {
+                "answer": (
+                    "Everything looks good right now."
+                    " No active concerns."
+                    " I'm watching quietly in the background."
+                )
+            }
         lines = ["**Current concerns:**\n"]
         for c in concerns:
             lines.append(f"  - {c}")
@@ -479,8 +617,12 @@ class AngelClawBrain:
 
         # Run event-based assessment
         event_dicts = [
-            {"category": e.get("category", ""), "type": e.get("type", ""),
-             "details": e.get("details", {}), "severity": e.get("severity", "")}
+            {
+                "category": e.get("category", ""),
+                "type": e.get("type", ""),
+                "details": e.get("details", {}),
+                "severity": e.get("severity", ""),
+            }
             for e in ctx.recent_events[:100]
         ]
         report = _shield.assess_events(event_dicts)
@@ -488,8 +630,17 @@ class AngelClawBrain:
         lines = [f"**ClawSec Shield Assessment** ({report.checks_run} checks)\n"]
 
         # Overall risk
-        risk_colors = {"critical": "RED", "high": "ORANGE", "medium": "YELLOW", "low": "GREEN", "info": "CLEAR"}
-        lines.append(f"Overall risk: **{report.overall_risk.value.upper()}** ({risk_colors.get(report.overall_risk.value, '?')})")
+        risk_colors = {
+            "critical": "RED",
+            "high": "ORANGE",
+            "medium": "YELLOW",
+            "low": "GREEN",
+            "info": "CLEAR",
+        }
+        lines.append(
+            f"Overall risk: **{report.overall_risk.value.upper()}**"
+            f" ({risk_colors.get(report.overall_risk.value, '?')})"
+        )
 
         # Lethal Trifecta
         lines.append(f"Lethal Trifecta: **{int(report.lethal_trifecta_score * 100)}%**")
@@ -510,13 +661,17 @@ class AngelClawBrain:
         # Skills integrity
         skills = report.skills_status
         if skills.get("total", 0) > 0:
-            lines.append(f"\n**Skills integrity:** {skills['verified']}/{skills['total']} verified, "
-                         f"{skills['drifted']} drifted, {skills['missing']} missing")
+            lines.append(
+                f"\n**Skills integrity:** {skills['verified']}/{skills['total']} verified, "
+                f"{skills['drifted']} drifted, {skills['missing']} missing"
+            )
 
         status = _shield.get_status()
-        lines.append(f"\nPatterns loaded: {status['injection_patterns']} injection, "
-                     f"{status['leakage_patterns']} leakage, {status['evil_agi_patterns']} evil AGI, "
-                     f"{status['attack_stages']} attack stages")
+        lines.append(
+            f"\nPatterns loaded: {status['injection_patterns']} injection, "
+            f"{status['leakage_patterns']} leakage, {status['evil_agi_patterns']} evil AGI, "
+            f"{status['attack_stages']} attack stages"
+        )
 
         return {
             "answer": "\n".join(lines),
@@ -525,7 +680,7 @@ class AngelClawBrain:
 
     def _handle_skills(self) -> dict:
         """Skills/module integrity check."""
-        from cloud.angelclaw.shield import verify_all_skills, _SKILL_REGISTRY
+        from cloud.angelclaw.shield import verify_all_skills
 
         integrity = verify_all_skills()
 
@@ -544,8 +699,12 @@ class AngelClawBrain:
         if integrity["drifted"] == 0 and integrity["missing"] == 0:
             lines.append("\nAll modules verified. No tampering detected.")
         elif integrity["drifted"] > 0:
-            lines.append(f"\n**WARNING:** {integrity['drifted']} module(s) have been modified since registration. "
-                         "This could indicate legitimate updates or unauthorized tampering.")
+            lines.append(
+                f"\n**WARNING:** {integrity['drifted']} module(s)"
+                " have been modified since registration. "
+                "This could indicate legitimate updates"
+                " or unauthorized tampering."
+            )
 
         return {
             "answer": "\n".join(lines),
@@ -553,37 +712,44 @@ class AngelClawBrain:
         }
 
     def _handle_about(self) -> dict:
-        return {"answer": (
-            "I'm **AngelClaw AGI Guardian** — your autonomous guardian angel AI "
-            "with ClawSec-grade threat detection.\n\n"
-            "I live on this machine, watching over your AI agents, servers, and infrastructure. "
-            "I protect quietly in the background — like a seatbelt, not a speed bump.\n\n"
-            "I can scan for exposures, analyze incidents, propose policy changes, track your fleet, "
-            "run ClawSec shield assessments, verify module integrity, detect attack chains, "
-            "and answer questions about security. I NEVER reveal secrets, no matter what.\n\n"
-            "Just talk to me naturally. I understand."
-        )}
+        return {
+            "answer": (
+                "I'm **AngelClaw AGI Guardian** — your autonomous guardian angel AI "
+                "with ClawSec-grade threat detection.\n\n"
+                "I live on this machine, watching over your AI agents,"
+                " servers, and infrastructure. "
+                "I protect quietly in the background"
+                " — like a seatbelt, not a speed bump.\n\n"
+                "I can scan for exposures, analyze incidents,"
+                " propose policy changes, track your fleet, "
+                "run ClawSec shield assessments, verify module integrity, detect attack chains, "
+                "and answer questions about security. I NEVER reveal secrets, no matter what.\n\n"
+                "Just talk to me naturally. I understand."
+            )
+        }
 
     def _handle_help(self) -> dict:
-        return {"answer": (
-            "**AngelClaw AGI Guardian — Capabilities:**\n\n"
-            "  **Scan** — \"Scan the system\" / \"Check for exposures\"\n"
-            "  **Shield** — \"Run shield assessment\" / \"Check trifecta\" / \"Evil AGI check\"\n"
-            "  **Skills** — \"Verify module integrity\" / \"Check for tampering\"\n"
-            "  **Incidents** — \"What happened recently?\" / \"Show incidents\"\n"
-            "  **Threats** — \"Any threat predictions?\" / \"What risks?\"\n"
-            "  **Fleet** — \"Agent status\" / \"Who's offline?\"\n"
-            "  **Proposals** — \"Suggest policy improvements\"\n"
-            "  **Explain** — \"Explain event <id>\"\n"
-            "  **Activity** — \"What have you been doing?\"\n"
-            "  **Concerns** — \"Anything you're worried about?\"\n"
-            "  **Settings** — \"Scan every 5 minutes\" / \"Be more quiet\"\n"
-            "  **Actions** — \"Apply all\" / \"Apply #1 #3\" (after scan)\n"
-            "  **General** — Ask me anything about security or this host\n\n"
-            "ClawSec-grade protection: prompt injection defense, Lethal Trifecta\n"
-            "monitoring, attack chain detection, skills integrity verification.\n\n"
-            "I'm always running in the background. Just ask!"
-        )}
+        return {
+            "answer": (
+                "**AngelClaw AGI Guardian — Capabilities:**\n\n"
+                '  **Scan** — "Scan the system" / "Check for exposures"\n'
+                '  **Shield** — "Run shield assessment" / "Check trifecta" / "Evil AGI check"\n'
+                '  **Skills** — "Verify module integrity" / "Check for tampering"\n'
+                '  **Incidents** — "What happened recently?" / "Show incidents"\n'
+                '  **Threats** — "Any threat predictions?" / "What risks?"\n'
+                '  **Fleet** — "Agent status" / "Who\'s offline?"\n'
+                '  **Proposals** — "Suggest policy improvements"\n'
+                '  **Explain** — "Explain event <id>"\n'
+                '  **Activity** — "What have you been doing?"\n'
+                '  **Concerns** — "Anything you\'re worried about?"\n'
+                '  **Settings** — "Scan every 5 minutes" / "Be more quiet"\n'
+                '  **Actions** — "Apply all" / "Apply #1 #3" (after scan)\n'
+                "  **General** — Ask me anything about security or this host\n\n"
+                "ClawSec-grade protection: prompt injection defense, Lethal Trifecta\n"
+                "monitoring, attack chain detection, skills integrity verification.\n\n"
+                "I'm always running in the background. Just ask!"
+            )
+        }
 
     # ------------------------------------------------------------------
     # Preference handlers
@@ -596,8 +762,15 @@ class AngelClawBrain:
         freq = max(1, min(1440, int(nums[0])))
         prefs = update_preferences(db, tid, PreferencesUpdate(scan_frequency_minutes=freq), "chat")
         return {
-            "answer": f"Updated: scanning every **{freq} minutes**.\n\nCurrent settings: autonomy={prefs.autonomy_level.value}, reporting={prefs.reporting_level.value}.",
-            "effects": [{"type": "preference_update", "field": "scan_frequency_minutes", "value": freq}],
+            "answer": (
+                f"Updated: scanning every **{freq} minutes**."
+                f"\n\nCurrent settings:"
+                f" autonomy={prefs.autonomy_level.value},"
+                f" reporting={prefs.reporting_level.value}."
+            ),
+            "effects": [
+                {"type": "preference_update", "field": "scan_frequency_minutes", "value": freq}
+            ],
         }
 
     def _handle_pref_autonomy(self, db: Session, tid: str, prompt: str) -> dict:
@@ -611,11 +784,24 @@ class AngelClawBrain:
         elif "assist" in low:
             level = AutonomyLevel.ASSIST
         else:
-            return {"answer": "Which autonomy level? Options: **observe_only**, **suggest_only**, **assist**, **autonomous_apply**."}
+            return {
+                "answer": (
+                    "Which autonomy level? Options:"
+                    " **observe_only**, **suggest_only**,"
+                    " **assist**, **autonomous_apply**."
+                )
+            }
         prefs = update_preferences(db, tid, PreferencesUpdate(autonomy_level=level), "chat")
         return {
-            "answer": f"Updated: autonomy level set to **{level.value}**.\n\nCurrent settings: scan every {prefs.scan_frequency_minutes}min, reporting={prefs.reporting_level.value}.",
-            "effects": [{"type": "preference_update", "field": "autonomy_level", "value": level.value}],
+            "answer": (
+                f"Updated: autonomy level set to"
+                f" **{level.value}**.\n\nCurrent settings:"
+                f" scan every {prefs.scan_frequency_minutes}min,"
+                f" reporting={prefs.reporting_level.value}."
+            ),
+            "effects": [
+                {"type": "preference_update", "field": "autonomy_level", "value": level.value}
+            ],
         }
 
     def _handle_pref_reporting(self, db: Session, tid: str, prompt: str) -> dict:
@@ -628,19 +814,28 @@ class AngelClawBrain:
             level = ReportingLevel.NORMAL
         prefs = update_preferences(db, tid, PreferencesUpdate(reporting_level=level), "chat")
         return {
-            "answer": f"Updated: reporting level set to **{level.value}**.\n\nCurrent settings: scan every {prefs.scan_frequency_minutes}min, autonomy={prefs.autonomy_level.value}.",
-            "effects": [{"type": "preference_update", "field": "reporting_level", "value": level.value}],
+            "answer": (
+                f"Updated: reporting level set to"
+                f" **{level.value}**.\n\nCurrent settings:"
+                f" scan every {prefs.scan_frequency_minutes}min,"
+                f" autonomy={prefs.autonomy_level.value}."
+            ),
+            "effects": [
+                {"type": "preference_update", "field": "reporting_level", "value": level.value}
+            ],
         }
 
     def _handle_pref_show(self, db: Session, tid: str) -> dict:
         p = get_preferences(db, tid)
-        return {"answer": (
-            f"**Current preferences:**\n\n"
-            f"  Autonomy: **{p.autonomy_level.value}**\n"
-            f"  Scan frequency: **every {p.scan_frequency_minutes} minutes**\n"
-            f"  Reporting: **{p.reporting_level.value}**\n"
-            f"  Updated: {p.updated_at.strftime('%Y-%m-%d %H:%M UTC')} by {p.updated_by}"
-        )}
+        return {
+            "answer": (
+                f"**Current preferences:**\n\n"
+                f"  Autonomy: **{p.autonomy_level.value}**\n"
+                f"  Scan frequency: **every {p.scan_frequency_minutes} minutes**\n"
+                f"  Reporting: **{p.reporting_level.value}**\n"
+                f"  Updated: {p.updated_at.strftime('%Y-%m-%d %H:%M UTC')} by {p.updated_by}"
+            )
+        }
 
     # ------------------------------------------------------------------
     # General / host-aware assistant
@@ -649,32 +844,77 @@ class AngelClawBrain:
     def _handle_backup_help(self, ctx: EnvironmentContext) -> dict:
         """Provide safe backup guidance grounded in the current host environment."""
         host = ctx.host
+        host_os = host.get("os", "").lower()
+
         lines = [
             "**Backup & Recovery Guidance**\n",
             f"Host: {host.get('hostname', '?')} ({host.get('os', '?')})\n",
-            "**Safe backup script (recommended):**\n",
-            "```bash",
-            "#!/usr/bin/env bash",
-            "set -euo pipefail",
-            'BACKUP_DIR="/var/backups/angelclaw/$(date +%Y%m%d_%H%M%S)"',
-            'mkdir -p "$BACKUP_DIR"',
-            "",
-            "# Backup AngelClaw data (DB + config)",
-            'cp -a /root/AngelClaw/data/ "$BACKUP_DIR/data/" 2>/dev/null || true',
-            'cp -a /root/AngelClaw/angelnode/config/ "$BACKUP_DIR/config/"',
-            "",
-            "# Compress",
-            'tar czf "${BACKUP_DIR}.tar.gz" -C "$(dirname $BACKUP_DIR)" "$(basename $BACKUP_DIR)"',
-            'rm -rf "$BACKUP_DIR"',
-            'echo "Backup saved to ${BACKUP_DIR}.tar.gz"',
-            "```\n",
-            "**Safety notes:**",
-            "  - NEVER include .env files or secrets in backups sent to external storage",
-            "  - Test restore regularly: backups that can't restore are worthless",
-            "  - For PostgreSQL: use `pg_dump` instead of file copy",
-            "  - Keep at least 7 days of rolling backups\n",
-            "Want me to scan for backup-related risks? Just say 'scan'.",
         ]
+
+        if "windows" in host_os:
+            lines.extend(
+                [
+                    "**Safe backup script (recommended):**\n",
+                    "```powershell",
+                    "$BackupDir = \"$env:APPDATA\\AngelClaw"
+                    "\\backups\\$(Get-Date -Format"
+                    ' yyyyMMdd_HHmmss)"',
+                    "New-Item -ItemType Directory -Force -Path $BackupDir | Out-Null",
+                    "",
+                    "# Backup AngelClaw data (DB + config)",
+                    'Copy-Item -Recurse -Force'
+                    ' "$env:APPDATA\\AngelClaw\\data"'
+                    ' "$BackupDir\\data"'
+                    " -ErrorAction SilentlyContinue",
+                    'Copy-Item -Recurse -Force'
+                    ' "$env:APPDATA\\AngelClaw\\config"'
+                    ' "$BackupDir\\config"',
+                    "",
+                    "# Compress",
+                    'Compress-Archive -Path $BackupDir -DestinationPath "$BackupDir.zip"',
+                    "Remove-Item -Recurse -Force $BackupDir",
+                    'Write-Host "Backup saved to $BackupDir.zip"',
+                    "```\n",
+                ]
+            )
+        else:
+            lines.extend(
+                [
+                    "**Safe backup script (recommended):**\n",
+                    "```bash",
+                    "#!/usr/bin/env bash",
+                    "set -euo pipefail",
+                    'BACKUP_DIR="/var/backups/angelclaw/$(date +%Y%m%d_%H%M%S)"',
+                    'mkdir -p "$BACKUP_DIR"',
+                    "",
+                    "# Backup AngelClaw data (DB + config)",
+                    'cp -a "${ANGELCLAW_HOME:-/opt/angelclaw}'
+                    '/data/" "$BACKUP_DIR/data/"'
+                    " 2>/dev/null || true",
+                    'cp -a "${ANGELCLAW_HOME:-/opt/angelclaw}'
+                    '/angelnode/config/"'
+                    ' "$BACKUP_DIR/config/"',
+                    "",
+                    "# Compress",
+                    'tar czf "${BACKUP_DIR}.tar.gz"'
+                    ' -C "$(dirname $BACKUP_DIR)"'
+                    ' "$(basename $BACKUP_DIR)"',
+                    'rm -rf "$BACKUP_DIR"',
+                    'echo "Backup saved to ${BACKUP_DIR}.tar.gz"',
+                    "```\n",
+                ]
+            )
+
+        lines.extend(
+            [
+                "**Safety notes:**",
+                "  - NEVER include .env files or secrets in backups sent to external storage",
+                "  - Test restore regularly: backups that can't restore are worthless",
+                "  - For PostgreSQL: use `pg_dump` instead of file copy",
+                "  - Keep at least 7 days of rolling backups\n",
+                "Want me to scan for backup-related risks? Just say 'scan'.",
+            ]
+        )
         return {"answer": "\n".join(lines)}
 
     def _handle_network_check(self, ctx: EnvironmentContext) -> dict:
@@ -735,7 +975,11 @@ class AngelClawBrain:
         if ctx.recent_changes:
             lines.append(f"**Recent auditable changes ({len(ctx.recent_changes)}):**")
             for c in ctx.recent_changes[:5]:
-                lines.append(f"  [{c.get('change_type', '?')}] {c.get('description', '?')} — by {c.get('changed_by', '?')}")
+                lines.append(
+                    f"  [{c.get('change_type', '?')}]"
+                f" {c.get('description', '?')}"
+                f" — by {c.get('changed_by', '?')}"
+                )
 
         lines.append("\nNeed help with a specific compliance framework? Just ask.")
         return {"answer": "\n".join(lines), "references": ["/api/v1/angelclaw/actions/history"]}
@@ -750,9 +994,15 @@ class AngelClawBrain:
             lines.append("**About this host:**\n")
             for k, v in host.items():
                 lines.append(f"  {k}: {v}")
-            lines.append(f"\nAgents: {ctx.agent_summary.get('total', 0)} "
-                         f"(active: {ctx.agent_summary.get('active', 0)})")
-            lines.append("\nAsk me anything specific — incidents, threats, policy, or general security topics.")
+            lines.append(
+                f"\nAgents: {ctx.agent_summary.get('total', 0)} "
+                f"(active: {ctx.agent_summary.get('active', 0)})"
+            )
+            lines.append(
+                "\nAsk me anything specific — incidents,"
+                " threats, policy,"
+                " or general security topics."
+            )
         else:
             # General AI assistant answer — grounded in environment
             lines.append("I'm your AngelClaw guardian. Here's a quick overview:\n")
@@ -762,8 +1012,13 @@ class AngelClawBrain:
             lines.append(f"  Events (24h): {es.get('total', 0)}")
             if ctx.recent_alerts:
                 lines.append(f"  Active alerts: {len(ctx.recent_alerts)}")
-            lines.append(f"\nFor your question: I can help with security topics, system analysis, and general guidance. "
-                         "Just ask naturally — I'll anchor my answers to THIS environment when relevant.")
+            lines.append(
+                "\nFor your question: I can help with security"
+                " topics, system analysis,"
+                " and general guidance. "
+                "Just ask naturally — I'll anchor my answers"
+                " to THIS environment when relevant."
+            )
 
         return {"answer": "\n".join(lines)}
 
@@ -771,9 +1026,12 @@ class AngelClawBrain:
     # LLM enrichment (optional, non-blocking)
     # ------------------------------------------------------------------
 
-    async def _try_llm_enrich(self, prompt: str, answer: str, intent: str, ctx: EnvironmentContext) -> str | None:
+    async def _try_llm_enrich(
+        self, prompt: str, answer: str, intent: str, ctx: EnvironmentContext
+    ) -> str | None:
         try:
             from cloud.llm_proxy.config import LLM_ENABLED
+
             if not LLM_ENABLED:
                 return None
         except ImportError:
@@ -781,9 +1039,10 @@ class AngelClawBrain:
 
         try:
             import httpx
+
             enriched_prompt = (
                 f"{_SYSTEM_IDENTITY}\n\n"
-                f"User asked: \"{prompt}\"\n"
+                f'User asked: "{prompt}"\n'
                 f"System data (intent: {intent}):\n{answer}\n\n"
                 "Provide a concise, friendly guardian-tone response using this data. "
                 "NEVER reveal secrets. Keep it short."
@@ -803,6 +1062,7 @@ class AngelClawBrain:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _map_suggestion_to_action_type(action_str: str) -> ActionType | None:
     mapping = {

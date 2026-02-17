@@ -23,13 +23,12 @@ from cloud.guardian.models import (
 )
 from cloud.guardian.orchestrator import AngelOrchestrator
 
-
 # ---------------------------------------------------------------------------
 # Incident model
 # ---------------------------------------------------------------------------
 
-class TestIncidentModel:
 
+class TestIncidentModel:
     def test_default_state(self):
         """New incident defaults to NEW state."""
         inc = Incident(title="Test incident")
@@ -73,8 +72,8 @@ class TestIncidentModel:
 # ThreatIndicator model
 # ---------------------------------------------------------------------------
 
-class TestThreatIndicator:
 
+class TestThreatIndicator:
     def test_basic_creation(self):
         """ThreatIndicator with required fields."""
         ind = ThreatIndicator(
@@ -113,8 +112,8 @@ class TestThreatIndicator:
 # Playbook & PlaybookStep models
 # ---------------------------------------------------------------------------
 
-class TestPlaybookModels:
 
+class TestPlaybookModels:
     def test_playbook_step(self):
         """PlaybookStep with all fields."""
         step = PlaybookStep(
@@ -162,8 +161,8 @@ class TestPlaybookModels:
 # Forensic & Audit models
 # ---------------------------------------------------------------------------
 
-class TestForensicAuditModels:
 
+class TestForensicAuditModels:
     def test_forensic_evidence(self):
         """ForensicEvidence stores evidence data."""
         ev = ForensicEvidence(
@@ -225,8 +224,8 @@ class TestForensicAuditModels:
 # AgentTask & AgentResult models
 # ---------------------------------------------------------------------------
 
-class TestTaskResultModels:
 
+class TestTaskResultModels:
     def test_agent_task_defaults(self):
         """AgentTask has sensible defaults."""
         task = AgentTask(task_type="detect")
@@ -253,8 +252,8 @@ class TestTaskResultModels:
 # Orchestrator incident management
 # ---------------------------------------------------------------------------
 
-class TestOrchestratorIncidents:
 
+class TestOrchestratorIncidents:
     def test_list_incidents_empty(self):
         """Fresh orchestrator has no incidents."""
         orch = AngelOrchestrator()
@@ -296,8 +295,8 @@ class TestOrchestratorIncidents:
 # CorrelationChain model
 # ---------------------------------------------------------------------------
 
-class TestCorrelationChain:
 
+class TestCorrelationChain:
     def test_chain_creation(self):
         """CorrelationChain captures kill chain sequence."""
         chain = CorrelationChain(

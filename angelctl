@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import platform
 import sys
 from pathlib import Path
 
@@ -299,7 +300,8 @@ def cmd_login(_args):
             data = r.json()
             token = data.get("access_token", "")
             TOKEN_FILE.write_text(token)
-            TOKEN_FILE.chmod(0o600)
+            if platform.system() != "Windows":
+                TOKEN_FILE.chmod(0o600)
             print(f"  Logged in as {data.get('username')} (role: {data.get('role')})")
             print(f"  Token saved to {TOKEN_FILE}")
         elif r.status_code == 400:

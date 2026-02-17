@@ -57,6 +57,7 @@ async def get_current_user(
 
 def require_role(required_role: UserRole):
     """Return a dependency that checks the user has the required role."""
+
     async def _check_role(
         request: Request,
         authorization: Optional[str] = Header(default=None),

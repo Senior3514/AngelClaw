@@ -7,7 +7,7 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 # Force test settings before importing app modules
@@ -17,7 +17,6 @@ os.environ["ANGELGRID_DATABASE_URL"] = "sqlite:///test_angelgrid.db"
 
 from cloud.db.models import Base
 from cloud.db.session import get_db
-
 
 # In-memory test database — StaticPool ensures all sessions share the same DB
 TEST_ENGINE = create_engine(

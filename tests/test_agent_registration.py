@@ -4,25 +4,25 @@ from __future__ import annotations
 
 import uuid
 
-import pytest
-
-
 # ---------------------------------------------------------------------------
 # Agent registration
 # ---------------------------------------------------------------------------
 
-class TestAgentRegistration:
 
+class TestAgentRegistration:
     def test_register_new_agent(self, client, db):
         """Register a brand-new agent and receive policy set."""
         hostname = f"test-host-{uuid.uuid4().hex[:8]}"
-        r = client.post("/api/v1/agents/register", json={
-            "type": "endpoint",
-            "os": "linux",
-            "hostname": hostname,
-            "tags": ["test"],
-            "version": "0.4.0",
-        })
+        r = client.post(
+            "/api/v1/agents/register",
+            json={
+                "type": "endpoint",
+                "os": "linux",
+                "hostname": hostname,
+                "tags": ["test"],
+                "version": "0.4.0",
+            },
+        )
         assert r.status_code == 200
         data = r.json()
         assert data["status"] == "registered"
@@ -55,11 +55,14 @@ class TestAgentRegistration:
         """All agent types can be registered."""
         for agent_type in ["endpoint", "server", "ai_host", "container", "agentless"]:
             hostname = f"{agent_type}-{uuid.uuid4().hex[:6]}"
-            r = client.post("/api/v1/agents/register", json={
-                "type": agent_type,
-                "os": "linux",
-                "hostname": hostname,
-            })
+            r = client.post(
+                "/api/v1/agents/register",
+                json={
+                    "type": agent_type,
+                    "os": "linux",
+                    "hostname": hostname,
+                },
+            )
             assert r.status_code == 200, f"Failed for type: {agent_type}"
 
     def test_register_missing_required_fields(self, client):
@@ -72,25 +75,31 @@ class TestAgentRegistration:
 # Event ingestion
 # ---------------------------------------------------------------------------
 
-class TestEventIngestion:
 
+class TestEventIngestion:
     def _register_agent(self, client) -> str:
         """Helper: register an agent and return its ID."""
         hostname = f"ingest-test-{uuid.uuid4().hex[:8]}"
-        r = client.post("/api/v1/agents/register", json={
-            "type": "endpoint",
-            "os": "linux",
-            "hostname": hostname,
-        })
+        r = client.post(
+            "/api/v1/agents/register",
+            json={
+                "type": "endpoint",
+                "os": "linux",
+                "hostname": hostname,
+            },
+        )
         return r.json()["agent_id"]
 
     def test_ingest_empty_batch(self, client, db):
         """Empty event batch is accepted."""
         agent_id = self._register_agent(client)
-        r = client.post("/api/v1/events/batch", json={
-            "agent_id": agent_id,
-            "events": [],
-        })
+        r = client.post(
+            "/api/v1/events/batch",
+            json={
+                "agent_id": agent_id,
+                "events": [],
+            },
+        )
         assert r.status_code == 200
         data = r.json()
         assert data["accepted"] == 0
@@ -99,17 +108,22 @@ class TestEventIngestion:
     def test_ingest_single_event(self, client, db):
         """Single event is persisted."""
         agent_id = self._register_agent(client)
-        r = client.post("/api/v1/events/batch", json={
-            "agent_id": agent_id,
-            "events": [{
+        r = client.post(
+            "/api/v1/events/batch",
+            json={
                 "agent_id": agent_id,
-                "category": "shell",
-                "type": "exec",
-                "severity": "info",
-                "details": {"command": "ls -la"},
-                "source": "bash",
-            }],
-        })
+                "events": [
+                    {
+                        "agent_id": agent_id,
+                        "category": "shell",
+                        "type": "exec",
+                        "severity": "info",
+                        "details": {"command": "ls -la"},
+                        "source": "bash",
+                    }
+                ],
+            },
+        )
         assert r.status_code == 200
         data = r.json()
         assert data["accepted"] == 1
@@ -128,10 +142,13 @@ class TestEventIngestion:
             }
             for i in range(5)
         ]
-        r = client.post("/api/v1/events/batch", json={
-            "agent_id": agent_id,
-            "events": events,
-        })
+        r = client.post(
+            "/api/v1/events/batch",
+            json={
+                "agent_id": agent_id,
+                "events": events,
+            },
+        )
         assert r.status_code == 200
         assert r.json()["accepted"] == 5
 
@@ -149,10 +166,13 @@ class TestEventIngestion:
             }
             for _ in range(3)
         ]
-        r = client.post("/api/v1/events/batch", json={
-            "agent_id": agent_id,
-            "events": events,
-        })
+        r = client.post(
+            "/api/v1/events/batch",
+            json={
+                "agent_id": agent_id,
+                "events": events,
+            },
+        )
         assert r.status_code == 200
         data = r.json()
         assert data["accepted"] == 3
@@ -160,7 +180,18 @@ class TestEventIngestion:
     def test_ingest_all_categories(self, client, db):
         """Events of all categories are accepted."""
         agent_id = self._register_agent(client)
-        categories = ["shell", "file", "network", "db", "ai_tool", "auth", "config", "system", "logging", "metric"]
+        categories = [
+            "shell",
+            "file",
+            "network",
+            "db",
+            "ai_tool",
+            "auth",
+            "config",
+            "system",
+            "logging",
+            "metric",
+        ]
         events = [
             {
                 "agent_id": agent_id,
@@ -171,36 +202,49 @@ class TestEventIngestion:
             }
             for cat in categories
         ]
-        r = client.post("/api/v1/events/batch", json={
-            "agent_id": agent_id,
-            "events": events,
-        })
+        r = client.post(
+            "/api/v1/events/batch",
+            json={
+                "agent_id": agent_id,
+                "events": events,
+            },
+        )
         assert r.status_code == 200
         assert r.json()["accepted"] == len(categories)
 
     def test_ingest_invalid_category(self, client, db):
         """Invalid event category returns 422."""
-        r = client.post("/api/v1/events/batch", json={
-            "agent_id": "agent-1",
-            "events": [{
+        r = client.post(
+            "/api/v1/events/batch",
+            json={
                 "agent_id": "agent-1",
-                "category": "nonexistent_category",
-                "type": "test",
-            }],
-        })
+                "events": [
+                    {
+                        "agent_id": "agent-1",
+                        "category": "nonexistent_category",
+                        "type": "test",
+                    }
+                ],
+            },
+        )
         assert r.status_code == 422
 
     def test_ingest_invalid_severity(self, client, db):
         """Invalid severity returns 422."""
-        r = client.post("/api/v1/events/batch", json={
-            "agent_id": "agent-1",
-            "events": [{
+        r = client.post(
+            "/api/v1/events/batch",
+            json={
                 "agent_id": "agent-1",
-                "category": "shell",
-                "type": "test",
-                "severity": "nonexistent",
-            }],
-        })
+                "events": [
+                    {
+                        "agent_id": "agent-1",
+                        "category": "shell",
+                        "type": "test",
+                        "severity": "nonexistent",
+                    }
+                ],
+            },
+        )
         assert r.status_code == 422
 
 
@@ -208,16 +252,19 @@ class TestEventIngestion:
 # Policy distribution
 # ---------------------------------------------------------------------------
 
-class TestPolicyDistribution:
 
+class TestPolicyDistribution:
     def test_policy_for_registered_agent(self, client, db):
         """Registered agent can fetch its policy."""
         hostname = f"policy-test-{uuid.uuid4().hex[:8]}"
-        reg = client.post("/api/v1/agents/register", json={
-            "type": "endpoint",
-            "os": "linux",
-            "hostname": hostname,
-        })
+        reg = client.post(
+            "/api/v1/agents/register",
+            json={
+                "type": "endpoint",
+                "os": "linux",
+                "hostname": hostname,
+            },
+        )
         agent_id = reg.json()["agent_id"]
 
         r = client.get(f"/api/v1/policies/current?agentId={agent_id}")

@@ -12,23 +12,21 @@ from __future__ import annotations
 import asyncio
 import logging
 import uuid
-from datetime import datetime, timedelta, timezone
-from typing import Any
+from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
 from cloud.db.models import EventRow, GuardianAlertRow
+from cloud.guardian.audit_agent import AuditAgent
+from cloud.guardian.forensic_agent import ForensicAgent
 from cloud.guardian.models import (
     AgentTask,
-    AgentType,
     Incident,
     IncidentState,
     ThreatIndicator,
 )
-from cloud.guardian.sentinel_agent import SentinelAgent
 from cloud.guardian.response_agent import ResponseAgent
-from cloud.guardian.forensic_agent import ForensicAgent
-from cloud.guardian.audit_agent import AuditAgent
+from cloud.guardian.sentinel_agent import SentinelAgent
 
 logger = logging.getLogger("angelgrid.cloud.guardian.orchestrator")
 
@@ -66,10 +64,11 @@ class AngelOrchestrator:
         self._running = True
         self._audit_task = asyncio.create_task(self._audit_loop())
         logger.info(
-            "[ORCHESTRATOR] Started — agents: sentinel=%s, response=%s, "
-            "forensic=%s, audit=%s",
-            self.sentinel.agent_id, self.response.agent_id,
-            self.forensic.agent_id, self.audit.agent_id,
+            "[ORCHESTRATOR] Started — agents: sentinel=%s, response=%s, forensic=%s, audit=%s",
+            self.sentinel.agent_id,
+            self.response.agent_id,
+            self.forensic.agent_id,
+            self.audit.agent_id,
         )
 
     async def stop(self) -> None:
@@ -88,10 +87,11 @@ class AngelOrchestrator:
         await self.audit.shutdown()
 
         logger.info(
-            "[ORCHESTRATOR] Stopped — events=%d, indicators=%d, "
-            "incidents=%d, responses=%d",
-            self._events_processed, self._indicators_found,
-            self._incidents_created, self._responses_executed,
+            "[ORCHESTRATOR] Stopped — events=%d, indicators=%d, incidents=%d, responses=%d",
+            self._events_processed,
+            self._indicators_found,
+            self._incidents_created,
+            self._responses_executed,
         )
 
     # ------------------------------------------------------------------
@@ -140,7 +140,8 @@ class AngelOrchestrator:
     # ------------------------------------------------------------------
 
     async def _run_detection(
-        self, events: list[EventRow],
+        self,
+        events: list[EventRow],
     ) -> list[ThreatIndicator]:
         """Send events to the Sentinel for analysis."""
         task = AgentTask(
@@ -177,7 +178,8 @@ class AngelOrchestrator:
         if indicators:
             logger.info(
                 "[ORCHESTRATOR] Sentinel found %d indicators from %d events",
-                len(indicators), len(events),
+                len(indicators),
+                len(events),
             )
 
         return indicators
@@ -220,8 +222,10 @@ class AngelOrchestrator:
 
             logger.warning(
                 "[INCIDENT] %s | %s | severity=%s | playbook=%s | agents=%s",
-                incident.incident_id[:8], incident.title[:60],
-                incident.severity, incident.playbook_name,
+                incident.incident_id[:8],
+                incident.title[:60],
+                incident.severity,
+                incident.playbook_name,
                 ",".join(a[:8] for a in incident.related_agent_ids[:3]),
             )
 
@@ -261,7 +265,8 @@ class AngelOrchestrator:
             self._pending_approvals[incident.incident_id] = incident
             logger.info(
                 "[ORCHESTRATOR] Incident %s awaiting approval for playbook %s",
-                incident.incident_id[:8], playbook.name,
+                incident.incident_id[:8],
+                playbook.name,
             )
             return
 
@@ -317,7 +322,8 @@ class AngelOrchestrator:
             incident.notes.append(f"Response failed: {result.error}")
             logger.error(
                 "[ORCHESTRATOR] Response failed for incident %s: %s",
-                incident.incident_id[:8], result.error,
+                incident.incident_id[:8],
+                result.error,
             )
 
         return result.success
@@ -327,7 +333,9 @@ class AngelOrchestrator:
     # ------------------------------------------------------------------
 
     async def _investigate(
-        self, incident: Incident, db: Session,
+        self,
+        incident: Incident,
+        db: Session,
     ) -> None:
         """Dispatch a forensic investigation for an incident."""
         task = AgentTask(
@@ -347,9 +355,7 @@ class AngelOrchestrator:
 
         if result.success:
             report = result.result_data.get("report", {})
-            incident.notes.append(
-                f"Forensic report: {report.get('root_cause', 'unknown')}"
-            )
+            incident.notes.append(f"Forensic report: {report.get('root_cause', 'unknown')}")
             logger.info(
                 "[ORCHESTRATOR] Forensic report for incident %s: %s",
                 incident.incident_id[:8],
@@ -371,6 +377,7 @@ class AngelOrchestrator:
                 # Audit requires a DB session — we'll get one from the session factory
                 try:
                     from cloud.db.session import SessionLocal
+
                     db = SessionLocal()
                     try:
                         task = AgentTask(
@@ -423,7 +430,10 @@ class AngelOrchestrator:
         incident.requires_approval = False
 
         success = await self._execute_response(
-            incident, db, tenant_id, approved=True,
+            incident,
+            db,
+            tenant_id,
+            approved=True,
         )
 
         return {
@@ -512,7 +522,9 @@ class AngelOrchestrator:
         return self._incidents.get(incident_id)
 
     def list_incidents(
-        self, limit: int = 20, state: str | None = None,
+        self,
+        limit: int = 20,
+        state: str | None = None,
     ) -> list[Incident]:
         incidents = sorted(
             self._incidents.values(),

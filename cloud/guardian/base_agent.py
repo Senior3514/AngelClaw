@@ -81,7 +81,9 @@ class SubAgent(ABC):
         except PermissionError as exc:
             self._tasks_failed += 1
             logger.error(
-                "[%s] Permission denied: %s", self.agent_id, exc,
+                "[%s] Permission denied: %s",
+                self.agent_id,
+                exc,
             )
             return AgentResult(
                 task_id=task.task_id,
@@ -94,7 +96,10 @@ class SubAgent(ABC):
         except Exception as exc:
             self._tasks_failed += 1
             logger.exception(
-                "[%s] Task %s failed: %s", self.agent_id, task.task_id, exc,
+                "[%s] Task %s failed: %s",
+                self.agent_id,
+                task.task_id,
+                exc,
             )
             return AgentResult(
                 task_id=task.task_id,
@@ -123,8 +128,12 @@ class SubAgent(ABC):
     async def shutdown(self) -> None:
         """Graceful shutdown hook."""
         self.status = AgentStatus.STOPPED
-        logger.info("[%s] Shut down (completed=%d, failed=%d)",
-                     self.agent_id, self._tasks_completed, self._tasks_failed)
+        logger.info(
+            "[%s] Shut down (completed=%d, failed=%d)",
+            self.agent_id,
+            self._tasks_completed,
+            self._tasks_failed,
+        )
 
     # ------------------------------------------------------------------
     # Info

@@ -25,6 +25,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class SecretMatch:
     """A detected secret occurrence."""
+
     pattern_name: str
     matched_text: str
     start: int
@@ -46,24 +47,42 @@ _SECRET_VALUE_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("github_pat_fine", re.compile(r"github_pat_[0-9a-zA-Z_]{80,}")),
     ("github_oauth", re.compile(r"gho_[0-9a-zA-Z]{36}")),
     # Generic API keys
-    ("generic_api_key", re.compile(r"(?i)(api[_-]?key|apikey)\s*[:=]\s*['\"]?[0-9a-zA-Z\-_]{20,}['\"]?")),
+    (
+        "generic_api_key",
+        re.compile(r"(?i)(api[_-]?key|apikey)\s*[:=]\s*['\"]?[0-9a-zA-Z\-_]{20,}['\"]?"),
+    ),
     ("bearer_token", re.compile(r"(?i)bearer\s+[0-9a-zA-Z\-_.~+/]+=*")),
     # JWT
     ("jwt", re.compile(r"eyJ[0-9a-zA-Z_-]{10,}\.eyJ[0-9a-zA-Z_-]{10,}\.[0-9a-zA-Z_-]+")),
     # SSH private key
-    ("ssh_private_key", re.compile(r"-----BEGIN (RSA |EC |ED25519 |DSA |OPENSSH )?PRIVATE KEY-----")),
+    (
+        "ssh_private_key",
+        re.compile(r"-----BEGIN (RSA |EC |ED25519 |DSA |OPENSSH )?PRIVATE KEY-----"),
+    ),
     # Generic passwords in config
-    ("password_assignment", re.compile(r"(?i)(password|passwd|pwd)\s*[:=]\s*['\"]?[^\s'\"]{8,}['\"]?")),
+    (
+        "password_assignment",
+        re.compile(r"(?i)(password|passwd|pwd)\s*[:=]\s*['\"]?[^\s'\"]{8,}['\"]?"),
+    ),
     # Generic secret/token assignment
-    ("secret_assignment", re.compile(r"(?i)(secret|token|credential)\s*[:=]\s*['\"]?[^\s'\"]{8,}['\"]?")),
+    (
+        "secret_assignment",
+        re.compile(r"(?i)(secret|token|credential)\s*[:=]\s*['\"]?[^\s'\"]{8,}['\"]?"),
+    ),
     # Slack tokens
     ("slack_token", re.compile(r"xox[bpors]-[0-9a-zA-Z\-]{10,}")),
     # Stripe
     ("stripe_key", re.compile(r"[sr]k_(test|live)_[0-9a-zA-Z]{20,}")),
     # Generic hex secrets (32+ chars)
-    ("hex_secret", re.compile(r"(?i)(secret|token|key|password)\s*[:=]\s*['\"]?[0-9a-f]{32,}['\"]?")),
+    (
+        "hex_secret",
+        re.compile(r"(?i)(secret|token|key|password)\s*[:=]\s*['\"]?[0-9a-f]{32,}['\"]?"),
+    ),
     # Database connection strings with passwords
-    ("db_connection_string", re.compile(r"(?i)(postgres(?:ql)?|mysql|mongodb|redis|mariadb)://[^:]+:[^@]+@")),
+    (
+        "db_connection_string",
+        re.compile(r"(?i)(postgres(?:ql)?|mysql|mongodb|redis|mariadb)://[^:]+:[^@]+@"),
+    ),
     # OpenAI (classic sk-... and project sk-proj-...)
     ("openai_key", re.compile(r"sk-[0-9a-zA-Z\-_]{20,}")),
     # Anthropic
@@ -90,6 +109,7 @@ _SENSITIVE_KEY_PATTERNS: list[re.Pattern] = [
 # ---------------------------------------------------------------------------
 
 _SENSITIVE_PATH_PATTERNS: list[re.Pattern] = [
+    # Unix-style paths (Linux/macOS)
     re.compile(r"\.ssh/(id_|authorized_keys|known_hosts|config)"),
     re.compile(r"\.env($|\.)"),
     re.compile(r"\.aws/(credentials|config)"),
@@ -106,6 +126,11 @@ _SENSITIVE_PATH_PATTERNS: list[re.Pattern] = [
     re.compile(r"\.p12$"),
     re.compile(r"\.pfx$"),
     re.compile(r"\.keystore$"),
+    # Windows-style paths
+    re.compile(r"AppData.*\.ssh"),
+    re.compile(r"\.aws\\\\"),
+    re.compile(r"\.kube\\\\config"),
+    re.compile(r"\.docker\\\\config\.json"),
 ]
 
 # Redaction placeholder
@@ -116,17 +141,20 @@ _REDACTED = "[REDACTED by AngelClaw]"
 # Public API
 # ---------------------------------------------------------------------------
 
+
 def scan_text(text: str) -> list[SecretMatch]:
     """Scan a string for secret patterns. Returns all matches found."""
     matches: list[SecretMatch] = []
     for name, pattern in _SECRET_VALUE_PATTERNS:
         for m in pattern.finditer(text):
-            matches.append(SecretMatch(
-                pattern_name=name,
-                matched_text=m.group(),
-                start=m.start(),
-                end=m.end(),
-            ))
+            matches.append(
+                SecretMatch(
+                    pattern_name=name,
+                    matched_text=m.group(),
+                    start=m.start(),
+                    end=m.end(),
+                )
+            )
     return matches
 
 
@@ -174,8 +202,10 @@ def redact_dict(data: dict, depth: int = 0, max_depth: int = 10) -> dict:
 
     def _process_list(items: list) -> list:
         return [
-            redact_dict(item, depth + 1, max_depth) if isinstance(item, dict)
-            else redact_secrets(item) if isinstance(item, str)
+            redact_dict(item, depth + 1, max_depth)
+            if isinstance(item, dict)
+            else redact_secrets(item)
+            if isinstance(item, str)
             else item
             for item in items
         ]

@@ -70,6 +70,7 @@ def _log_activity(summary: str, category: str = "scan", details: dict | None = N
 # Main daemon loop
 # ---------------------------------------------------------------------------
 
+
 async def daemon_loop(tenant_id: str = "dev-tenant") -> None:
     """Main autonomous loop. Runs until cancelled."""
     global _running, _cycles_completed, _last_scan_summary
@@ -87,7 +88,8 @@ async def daemon_loop(tenant_id: str = "dev-tenant") -> None:
             db = SessionLocal()
 
             # Get current preferences for scan frequency
-            from cloud.angelclaw.preferences import get_preferences, ReportingLevel
+            from cloud.angelclaw.preferences import ReportingLevel, get_preferences
+
             prefs = get_preferences(db, tenant_id)
             interval = max(60, prefs.scan_frequency_minutes * 60)  # min 1 minute
             reporting = prefs.reporting_level
@@ -118,10 +120,7 @@ async def daemon_loop(tenant_id: str = "dev-tenant") -> None:
 
             # 7. Log cycle summary
             elapsed = (datetime.now(timezone.utc) - cycle_start).total_seconds()
-            cycle_summary = (
-                f"Cycle #{_cycles_completed} complete ({elapsed:.1f}s) — "
-                f"{scan_summary}"
-            )
+            cycle_summary = f"Cycle #{_cycles_completed} complete ({elapsed:.1f}s) — {scan_summary}"
             if shield_summary:
                 cycle_summary += f", shield: {shield_summary}"
             if drift_findings:
@@ -160,21 +159,30 @@ async def daemon_loop(tenant_id: str = "dev-tenant") -> None:
 # Scan
 # ---------------------------------------------------------------------------
 
+
 async def _run_scan(db, tenant_id: str, reporting) -> str:
     """Run lightweight guardian scan."""
     try:
         from cloud.services.guardian_scan import run_guardian_scan
+
         result = await run_guardian_scan(db, tenant_id)
 
         critical = sum(1 for r in result.top_risks if r.severity == "critical")
         high = sum(1 for r in result.top_risks if r.severity == "high")
         medium = sum(1 for r in result.top_risks if r.severity == "medium")
 
-        summary = f"{result.total_checks} checks, {len(result.top_risks)} risks ({critical}C/{high}H/{medium}M)"
+        summary = (
+            f"{result.total_checks} checks,"
+            f" {len(result.top_risks)} risks"
+            f" ({critical}C/{high}H/{medium}M)"
+        )
 
         if critical > 0:
-            _log_activity(f"CRITICAL: {critical} critical exposure(s) found", "alert",
-                          {"risks": [r.title for r in result.top_risks if r.severity == "critical"]})
+            _log_activity(
+                f"CRITICAL: {critical} critical exposure(s) found",
+                "alert",
+                {"risks": [r.title for r in result.top_risks if r.severity == "critical"]},
+            )
         elif high > 0 and str(reporting) != "quiet":
             _log_activity(f"Scan: {high} high-severity exposure(s)", "scan")
 
@@ -188,11 +196,13 @@ async def _run_scan(db, tenant_id: str, reporting) -> str:
 # Report generation
 # ---------------------------------------------------------------------------
 
+
 def _generate_report(db, tenant_id: str) -> None:
     """Generate a guardian report (same format as heartbeat)."""
     try:
-        from cloud.db.models import AgentNodeRow, EventRow, GuardianChangeRow
         from collections import Counter
+
+        from cloud.db.models import AgentNodeRow, EventRow, GuardianChangeRow
 
         now = datetime.now(timezone.utc)
         cutoff = now - timedelta(minutes=10)
@@ -224,10 +234,12 @@ def _generate_report(db, tenant_id: str) -> None:
             .first()
         )
         changes_cutoff = last_report.timestamp if last_report else cutoff
-        from cloud.db.models import GuardianChangeRow
         policy_changes = (
             db.query(GuardianChangeRow)
-            .filter(GuardianChangeRow.tenant_id == tenant_id, GuardianChangeRow.created_at >= changes_cutoff)
+            .filter(
+                GuardianChangeRow.tenant_id == tenant_id,
+                GuardianChangeRow.created_at >= changes_cutoff,
+            )
             .count()
         )
 
@@ -264,6 +276,7 @@ def _generate_report(db, tenant_id: str) -> None:
 # Shield assessment (ClawSec-inspired)
 # ---------------------------------------------------------------------------
 
+
 def _run_shield_assessment(db, tenant_id: str) -> str:
     """Run ClawSec shield assessment on recent events."""
     try:
@@ -275,8 +288,12 @@ def _run_shield_assessment(db, tenant_id: str) -> str:
         events = db.query(EventRow).filter(EventRow.timestamp >= cutoff).limit(100).all()
 
         event_dicts = [
-            {"category": e.category, "type": e.type,
-             "details": e.details or {}, "severity": e.severity}
+            {
+                "category": e.category,
+                "type": e.type,
+                "details": e.details or {},
+                "severity": e.severity,
+            }
             for e in events
         ]
 
@@ -286,7 +303,11 @@ def _run_shield_assessment(db, tenant_id: str) -> str:
             _log_activity(
                 f"SHIELD CRITICAL: {report.critical_count} critical threat(s) detected",
                 "shield_alert",
-                {"indicators": [i.title for i in report.indicators if i.severity.value == "critical"]},
+                {
+                    "indicators": [
+                        i.title for i in report.indicators if i.severity.value == "critical"
+                    ]
+                },
             )
         elif report.high_count > 0:
             _log_activity(
@@ -305,17 +326,21 @@ def _run_shield_assessment(db, tenant_id: str) -> str:
 # Drift detection
 # ---------------------------------------------------------------------------
 
+
 def _check_drift(db, tenant_id: str) -> list[str]:
     """Check for policy drift between recommended and actual."""
     findings = []
     try:
         from cloud.db.models import AgentNodeRow, PolicySetRow
+
         ps = db.query(PolicySetRow).first()
         if not ps:
             return findings
 
         agents = db.query(AgentNodeRow).filter(AgentNodeRow.status == "active").all()
-        drifted = [a for a in agents if a.policy_version != ps.version_hash and a.policy_version != "0"]
+        drifted = [
+            a for a in agents if a.policy_version != ps.version_hash and a.policy_version != "0"
+        ]
         if drifted:
             msg = f"Policy drift: {len(drifted)} agent(s) on old policy version"
             findings.append(msg)
@@ -329,6 +354,7 @@ def _check_drift(db, tenant_id: str) -> list[str]:
 # ClawSec-aligned security checks
 # ---------------------------------------------------------------------------
 
+
 def _run_security_checks(db, tenant_id: str) -> list[str]:
     """Run ClawSec-aligned security checks on recent events.
 
@@ -340,8 +366,8 @@ def _run_security_checks(db, tenant_id: str) -> list[str]:
     """
     findings = []
     try:
+        from cloud.angelclaw.shield import detect_data_leakage, detect_prompt_injection
         from cloud.db.models import EventRow
-        from cloud.angelclaw.shield import detect_prompt_injection, detect_data_leakage
 
         now = datetime.now(timezone.utc)
         cutoff = now - timedelta(minutes=30)
@@ -376,7 +402,12 @@ def _run_security_checks(db, tenant_id: str) -> list[str]:
                 if tool_name:
                     tool_names.add(tool_name)
             if len(tool_names) > 15:
-                msg = f"Suspicious tool pattern: {len(tool_events)} calls across {len(tool_names)} unique tools in 30min"
+                msg = (
+                    f"Suspicious tool pattern:"
+                    f" {len(tool_events)} calls across"
+                    f" {len(tool_names)} unique tools"
+                    f" in 30min"
+                )
                 findings.append(msg)
                 _log_activity(msg, "security_alert")
 
@@ -418,18 +449,23 @@ def _run_security_checks(db, tenant_id: str) -> list[str]:
 # Agent health
 # ---------------------------------------------------------------------------
 
+
 def _check_agent_health(db) -> list[str]:
     """Check for unhealthy agents."""
     issues = []
     try:
         from cloud.db.models import AgentNodeRow
+
         now = datetime.now(timezone.utc)
         stale_cutoff = now - timedelta(minutes=15)
         agents = db.query(AgentNodeRow).filter(AgentNodeRow.status == "active").all()
 
         for a in agents:
             if a.last_seen_at and a.last_seen_at < stale_cutoff:
-                msg = f"Agent {a.hostname} unresponsive (last seen {a.last_seen_at.strftime('%H:%M')})"
+                msg = (
+                    f"Agent {a.hostname} unresponsive"
+                    f" (last seen {a.last_seen_at.strftime('%H:%M')})"
+                )
                 issues.append(msg)
     except Exception:
         pass
@@ -439,6 +475,7 @@ def _check_agent_health(db) -> list[str]:
 # ---------------------------------------------------------------------------
 # Start / stop helpers
 # ---------------------------------------------------------------------------
+
 
 async def start_daemon(tenant_id: str = "dev-tenant") -> None:
     """Start the daemon as a background task."""

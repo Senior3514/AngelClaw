@@ -7,11 +7,9 @@ fail-closed fallback, disabled rules, hot-reload, and BurstTracker.
 
 from __future__ import annotations
 
-import time
-
 import pytest
 
-from angelnode.core.engine import BurstTracker, PolicyEngine, _load_category_defaults
+from angelnode.core.engine import BurstTracker, PolicyEngine
 from shared.models.decision import Decision
 from shared.models.event import Event, EventCategory, Severity
 from shared.models.policy import (
@@ -22,10 +20,10 @@ from shared.models.policy import (
     RiskLevel,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _event(**kwargs) -> Event:
     """Create an Event with sensible defaults."""
@@ -75,8 +73,8 @@ def _engine(*rules: PolicyRule, category_defaults: dict | None = None) -> Policy
 # Basic matching
 # ---------------------------------------------------------------------------
 
-class TestPolicyEngineBasicMatching:
 
+class TestPolicyEngineBasicMatching:
     def test_category_match(self):
         """Rule with categories=['shell'] matches a shell event."""
         engine = _engine(_rule(categories=["shell"], action=PolicyAction.BLOCK))
@@ -125,17 +123,25 @@ class TestPolicyEngineBasicMatching:
 
     def test_combined_category_and_type(self):
         """Rule requiring both category and type matches when both match."""
-        engine = _engine(_rule(
-            categories=["shell"], types=["exec"], action=PolicyAction.BLOCK,
-        ))
+        engine = _engine(
+            _rule(
+                categories=["shell"],
+                types=["exec"],
+                action=PolicyAction.BLOCK,
+            )
+        )
         decision = engine.evaluate(_event(category=EventCategory.SHELL, type="exec"))
         assert decision.action == PolicyAction.BLOCK
 
     def test_combined_mismatch(self):
         """Rule requiring both category and type fails if type mismatches."""
-        engine = _engine(_rule(
-            categories=["shell"], types=["read"], action=PolicyAction.BLOCK,
-        ))
+        engine = _engine(
+            _rule(
+                categories=["shell"],
+                types=["read"],
+                action=PolicyAction.BLOCK,
+            )
+        )
         # Falls through
         decision = engine.evaluate(_event(category=EventCategory.SHELL, type="exec"))
         assert decision.matched_rule_id is None
@@ -151,122 +157,148 @@ class TestPolicyEngineBasicMatching:
 # Detail conditions
 # ---------------------------------------------------------------------------
 
-class TestDetailConditions:
 
+class TestDetailConditions:
     def test_exact_match(self):
         """Exact detail condition: 'command': 'rm -rf /'."""
-        engine = _engine(_rule(
-            detail_conditions={"command": "rm -rf /"},
-            action=PolicyAction.BLOCK,
-        ))
+        engine = _engine(
+            _rule(
+                detail_conditions={"command": "rm -rf /"},
+                action=PolicyAction.BLOCK,
+            )
+        )
         decision = engine.evaluate(_event(details={"command": "rm -rf /"}))
         assert decision.action == PolicyAction.BLOCK
 
     def test_exact_no_match(self):
         """Exact detail condition does not match different value."""
-        engine = _engine(_rule(
-            detail_conditions={"command": "rm -rf /"},
-            action=PolicyAction.BLOCK,
-        ))
+        engine = _engine(
+            _rule(
+                detail_conditions={"command": "rm -rf /"},
+                action=PolicyAction.BLOCK,
+            )
+        )
         decision = engine.evaluate(_event(details={"command": "ls -la"}))
         assert decision.matched_rule_id is None
 
     def test_pattern_match(self):
         """Regex pattern: 'command_pattern': 'rm\\s+-rf'."""
-        engine = _engine(_rule(
-            detail_conditions={"command_pattern": r"rm\s+-rf"},
-            action=PolicyAction.BLOCK,
-        ))
+        engine = _engine(
+            _rule(
+                detail_conditions={"command_pattern": r"rm\s+-rf"},
+                action=PolicyAction.BLOCK,
+            )
+        )
         decision = engine.evaluate(_event(details={"command": "rm -rf /tmp/test"}))
         assert decision.action == PolicyAction.BLOCK
 
     def test_pattern_no_match(self):
         """Regex pattern does not match safe command."""
-        engine = _engine(_rule(
-            detail_conditions={"command_pattern": r"rm\s+-rf"},
-            action=PolicyAction.BLOCK,
-        ))
+        engine = _engine(
+            _rule(
+                detail_conditions={"command_pattern": r"rm\s+-rf"},
+                action=PolicyAction.BLOCK,
+            )
+        )
         decision = engine.evaluate(_event(details={"command": "ls -la"}))
         assert decision.matched_rule_id is None
 
     def test_pattern_missing_key(self):
         """Pattern condition fails when base key is missing from details."""
-        engine = _engine(_rule(
-            detail_conditions={"command_pattern": r".*"},
-            action=PolicyAction.BLOCK,
-        ))
+        engine = _engine(
+            _rule(
+                detail_conditions={"command_pattern": r".*"},
+                action=PolicyAction.BLOCK,
+            )
+        )
         decision = engine.evaluate(_event(details={}))
         assert decision.matched_rule_id is None
 
     def test_in_match(self):
         """List membership: 'method_in': ['DELETE', 'DROP']."""
-        engine = _engine(_rule(
-            detail_conditions={"method_in": ["DELETE", "DROP"]},
-            action=PolicyAction.BLOCK,
-        ))
+        engine = _engine(
+            _rule(
+                detail_conditions={"method_in": ["DELETE", "DROP"]},
+                action=PolicyAction.BLOCK,
+            )
+        )
         decision = engine.evaluate(_event(details={"method": "DELETE"}))
         assert decision.action == PolicyAction.BLOCK
 
     def test_in_no_match(self):
         """List membership fails for unlisted value."""
-        engine = _engine(_rule(
-            detail_conditions={"method_in": ["DELETE", "DROP"]},
-            action=PolicyAction.BLOCK,
-        ))
+        engine = _engine(
+            _rule(
+                detail_conditions={"method_in": ["DELETE", "DROP"]},
+                action=PolicyAction.BLOCK,
+            )
+        )
         decision = engine.evaluate(_event(details={"method": "SELECT"}))
         assert decision.matched_rule_id is None
 
     def test_in_missing_key(self):
         """List membership fails when key is missing."""
-        engine = _engine(_rule(
-            detail_conditions={"method_in": ["DELETE"]},
-            action=PolicyAction.BLOCK,
-        ))
+        engine = _engine(
+            _rule(
+                detail_conditions={"method_in": ["DELETE"]},
+                action=PolicyAction.BLOCK,
+            )
+        )
         decision = engine.evaluate(_event(details={}))
         assert decision.matched_rule_id is None
 
     def test_gt_match(self):
         """Numeric GT: 'payload_size_gt': 1000000."""
-        engine = _engine(_rule(
-            detail_conditions={"payload_size_gt": 1000000},
-            action=PolicyAction.BLOCK,
-        ))
+        engine = _engine(
+            _rule(
+                detail_conditions={"payload_size_gt": 1000000},
+                action=PolicyAction.BLOCK,
+            )
+        )
         decision = engine.evaluate(_event(details={"payload_size": 5000000}))
         assert decision.action == PolicyAction.BLOCK
 
     def test_gt_no_match(self):
         """Numeric GT fails for value below threshold."""
-        engine = _engine(_rule(
-            detail_conditions={"payload_size_gt": 1000000},
-            action=PolicyAction.BLOCK,
-        ))
+        engine = _engine(
+            _rule(
+                detail_conditions={"payload_size_gt": 1000000},
+                action=PolicyAction.BLOCK,
+            )
+        )
         decision = engine.evaluate(_event(details={"payload_size": 500}))
         assert decision.matched_rule_id is None
 
     def test_gt_equal_no_match(self):
         """Numeric GT fails for value equal to threshold (strict >)."""
-        engine = _engine(_rule(
-            detail_conditions={"payload_size_gt": 1000},
-            action=PolicyAction.BLOCK,
-        ))
+        engine = _engine(
+            _rule(
+                detail_conditions={"payload_size_gt": 1000},
+                action=PolicyAction.BLOCK,
+            )
+        )
         decision = engine.evaluate(_event(details={"payload_size": 1000}))
         assert decision.matched_rule_id is None
 
     def test_gt_missing_key(self):
         """Numeric GT fails when key is missing."""
-        engine = _engine(_rule(
-            detail_conditions={"payload_size_gt": 100},
-            action=PolicyAction.BLOCK,
-        ))
+        engine = _engine(
+            _rule(
+                detail_conditions={"payload_size_gt": 100},
+                action=PolicyAction.BLOCK,
+            )
+        )
         decision = engine.evaluate(_event(details={}))
         assert decision.matched_rule_id is None
 
     def test_gt_non_numeric(self):
         """Numeric GT fails gracefully for non-numeric values."""
-        engine = _engine(_rule(
-            detail_conditions={"payload_size_gt": 100},
-            action=PolicyAction.BLOCK,
-        ))
+        engine = _engine(
+            _rule(
+                detail_conditions={"payload_size_gt": 100},
+                action=PolicyAction.BLOCK,
+            )
+        )
         decision = engine.evaluate(_event(details={"payload_size": "not-a-number"}))
         assert decision.matched_rule_id is None
 
@@ -275,8 +307,8 @@ class TestDetailConditions:
 # Rule ordering & disabled rules
 # ---------------------------------------------------------------------------
 
-class TestRuleOrdering:
 
+class TestRuleOrdering:
     def test_first_match_wins(self):
         """First matching rule wins — order matters."""
         engine = _engine(
@@ -300,8 +332,8 @@ class TestRuleOrdering:
 # Category defaults & fail-closed
 # ---------------------------------------------------------------------------
 
-class TestCategoryDefaults:
 
+class TestCategoryDefaults:
     def test_category_default_allow(self):
         """Low-risk category falls back to its default ALLOW action."""
         defaults = {
@@ -357,17 +389,20 @@ class TestCategoryDefaults:
 # Hot-reload
 # ---------------------------------------------------------------------------
 
-class TestHotReload:
 
+class TestHotReload:
     def test_reload_changes_policy(self):
         """Hot-reload replaces the active policy set."""
         engine = _engine(_rule(categories=["shell"], action=PolicyAction.BLOCK))
         decision = engine.evaluate(_event(category=EventCategory.SHELL))
         assert decision.action == PolicyAction.BLOCK
 
-        new_ps = PolicySet(name="reloaded", rules=[
-            _rule(categories=["shell"], action=PolicyAction.ALLOW),
-        ])
+        new_ps = PolicySet(
+            name="reloaded",
+            rules=[
+                _rule(categories=["shell"], action=PolicyAction.ALLOW),
+            ],
+        )
         engine.reload(new_ps)
         decision = engine.evaluate(_event(category=EventCategory.SHELL))
         assert decision.action == PolicyAction.ALLOW
@@ -377,9 +412,12 @@ class TestHotReload:
         engine = _engine(_rule(action=PolicyAction.ALLOW))
         v1 = engine.policy_version
 
-        new_ps = PolicySet(name="v2", rules=[
-            _rule(action=PolicyAction.BLOCK),
-        ])
+        new_ps = PolicySet(
+            name="v2",
+            rules=[
+                _rule(action=PolicyAction.BLOCK),
+            ],
+        )
         engine.reload(new_ps)
         v2 = engine.policy_version
         assert v1 != v2
@@ -389,8 +427,8 @@ class TestHotReload:
 # BurstTracker
 # ---------------------------------------------------------------------------
 
-class TestBurstTracker:
 
+class TestBurstTracker:
     def test_below_threshold(self):
         """Events below threshold do not trigger burst."""
         tracker = BurstTracker()
@@ -421,20 +459,22 @@ class TestBurstTracker:
 # Burst detection via policy rules
 # ---------------------------------------------------------------------------
 
-class TestBurstDetectionIntegration:
 
+class TestBurstDetectionIntegration:
     def test_burst_rule_triggers(self):
         """Rule with burst_window_seconds+burst_threshold triggers after enough events."""
-        engine = _engine(_rule(
-            categories=["shell"],
-            types=["exec"],
-            detail_conditions={
-                "burst_window_seconds": 60,
-                "burst_threshold": 3,
-            },
-            action=PolicyAction.BLOCK,
-            description="Burst shell exec",
-        ))
+        engine = _engine(
+            _rule(
+                categories=["shell"],
+                types=["exec"],
+                detail_conditions={
+                    "burst_window_seconds": 60,
+                    "burst_threshold": 3,
+                },
+                action=PolicyAction.BLOCK,
+                description="Burst shell exec",
+            )
+        )
         # First 3 events: threshold not yet exceeded
         for _ in range(3):
             decision = engine.evaluate(_event(category=EventCategory.SHELL, type="exec"))
@@ -449,8 +489,8 @@ class TestBurstDetectionIntegration:
 # Factory: from_file
 # ---------------------------------------------------------------------------
 
-class TestFromFile:
 
+class TestFromFile:
     def test_from_file_missing(self):
         """from_file raises FileNotFoundError for missing policy file."""
         with pytest.raises(FileNotFoundError):
@@ -459,6 +499,7 @@ class TestFromFile:
     def test_from_file_loads_default_policy(self):
         """from_file loads the shipped default_policy.json."""
         import os
+
         policy_path = os.path.join(
             os.path.dirname(__file__), "..", "angelnode", "config", "default_policy.json"
         )

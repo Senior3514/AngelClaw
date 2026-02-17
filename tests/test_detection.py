@@ -2,13 +2,14 @@
 
 from datetime import datetime, timezone
 
-from cloud.guardian.detection.patterns import PatternDetector
 from cloud.guardian.detection.anomaly import AnomalyDetector
 from cloud.guardian.detection.correlator import CorrelationEngine
+from cloud.guardian.detection.patterns import PatternDetector
 
 
 class FakeEvent:
     """Minimal event-like object for testing."""
+
     def __init__(self, **kwargs):
         self.id = kwargs.get("id", "evt-1")
         self.agent_id = kwargs.get("agent_id", "agent-1")
@@ -41,10 +42,7 @@ def test_pattern_detector_secret_exfil():
 
 def test_pattern_detector_burst():
     """Five high-severity events from one agent should trigger high_severity_burst."""
-    events = [
-        FakeEvent(id=f"e{i}", severity="critical", agent_id="agent-x")
-        for i in range(5)
-    ]
+    events = [FakeEvent(id=f"e{i}", severity="critical", agent_id="agent-x") for i in range(5)]
     detector = PatternDetector()
     indicators = detector.detect(events)
     names = [i.pattern_name for i in indicators]
@@ -68,15 +66,30 @@ def test_correlation_engine_empty():
 def test_correlation_engine_chain():
     """Multiple high-severity events with different tactics should produce a chain."""
     events = [
-        FakeEvent(id="e1", agent_id="a1", type="auth_failure", category="auth",
-                  severity="high",
-                  timestamp=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)),
-        FakeEvent(id="e2", agent_id="a1", type="file_write", category="file_system",
-                  severity="high",
-                  timestamp=datetime(2024, 1, 1, 0, 1, 0, tzinfo=timezone.utc)),
-        FakeEvent(id="e3", agent_id="a1", type="shell_exec", category="shell",
-                  severity="high",
-                  timestamp=datetime(2024, 1, 1, 0, 2, 0, tzinfo=timezone.utc)),
+        FakeEvent(
+            id="e1",
+            agent_id="a1",
+            type="auth_failure",
+            category="auth",
+            severity="high",
+            timestamp=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+        ),
+        FakeEvent(
+            id="e2",
+            agent_id="a1",
+            type="file_write",
+            category="file_system",
+            severity="high",
+            timestamp=datetime(2024, 1, 1, 0, 1, 0, tzinfo=timezone.utc),
+        ),
+        FakeEvent(
+            id="e3",
+            agent_id="a1",
+            type="shell_exec",
+            category="shell",
+            severity="high",
+            timestamp=datetime(2024, 1, 1, 0, 2, 0, tzinfo=timezone.utc),
+        ),
     ]
     engine = CorrelationEngine()
     chains = engine.correlate(events)

@@ -4,26 +4,23 @@ from __future__ import annotations
 
 import pytest
 
-from cloud.guardian.base_agent import SubAgent
+from cloud.guardian.audit_agent import AuditAgent
+from cloud.guardian.forensic_agent import ForensicAgent
 from cloud.guardian.models import (
-    AgentResult,
     AgentStatus,
     AgentTask,
     AgentType,
     Permission,
 )
-from cloud.guardian.sentinel_agent import SentinelAgent
 from cloud.guardian.response_agent import ResponseAgent
-from cloud.guardian.forensic_agent import ForensicAgent
-from cloud.guardian.audit_agent import AuditAgent
-
+from cloud.guardian.sentinel_agent import SentinelAgent
 
 # ---------------------------------------------------------------------------
 # Permission enforcement
 # ---------------------------------------------------------------------------
 
-class TestPermissions:
 
+class TestPermissions:
     def test_sentinel_has_read_permissions(self):
         """Sentinel agent has READ_EVENTS and READ_AGENTS."""
         agent = SentinelAgent()
@@ -59,8 +56,8 @@ class TestPermissions:
 # Agent lifecycle
 # ---------------------------------------------------------------------------
 
-class TestAgentLifecycle:
 
+class TestAgentLifecycle:
     def test_initial_status_idle(self):
         """Agents start in IDLE status."""
         for AgentClass in [SentinelAgent, ResponseAgent, ForensicAgent, AuditAgent]:
@@ -92,8 +89,8 @@ class TestAgentLifecycle:
 # Agent info
 # ---------------------------------------------------------------------------
 
-class TestAgentInfo:
 
+class TestAgentInfo:
     def test_info_structure(self):
         """info() returns expected fields."""
         agent = SentinelAgent()
@@ -126,8 +123,8 @@ class TestAgentInfo:
 # Task execution
 # ---------------------------------------------------------------------------
 
-class TestTaskExecution:
 
+class TestTaskExecution:
     @pytest.mark.asyncio
     async def test_sentinel_detect_empty(self):
         """Sentinel handles empty detection task."""
@@ -200,8 +197,8 @@ class TestTaskExecution:
 # Playbook loading
 # ---------------------------------------------------------------------------
 
-class TestPlaybookLoading:
 
+class TestPlaybookLoading:
     def test_playbooks_loaded(self):
         """Response agent loads playbooks from YAML files."""
         agent = ResponseAgent()

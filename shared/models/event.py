@@ -18,16 +18,16 @@ from pydantic import BaseModel, Field
 class EventCategory(str, Enum):
     """Top-level classification of an event."""
 
-    SHELL = "shell"            # Shell / process execution
-    FILE = "file"              # File system access
-    NETWORK = "network"        # Outbound / inbound network activity
-    DB = "db"                  # Database query or connection
-    AI_TOOL = "ai_tool"        # AI agent tool invocation
-    AUTH = "auth"              # Authentication / privilege change
-    CONFIG = "config"          # Configuration modification
-    SYSTEM = "system"          # OS-level / kernel event
-    LOGGING = "logging"        # Internal log emission (low risk)
-    METRIC = "metric"          # Telemetry / metric collection (low risk)
+    SHELL = "shell"  # Shell / process execution
+    FILE = "file"  # File system access
+    NETWORK = "network"  # Outbound / inbound network activity
+    DB = "db"  # Database query or connection
+    AI_TOOL = "ai_tool"  # AI agent tool invocation
+    AUTH = "auth"  # Authentication / privilege change
+    CONFIG = "config"  # Configuration modification
+    SYSTEM = "system"  # OS-level / kernel event
+    LOGGING = "logging"  # Internal log emission (low risk)
+    METRIC = "metric"  # Telemetry / metric collection (low risk)
 
 
 class Severity(str, Enum):

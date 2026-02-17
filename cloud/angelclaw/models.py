@@ -6,15 +6,14 @@ Lightweight: no extra dependencies beyond Pydantic.
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # Chat
 # ---------------------------------------------------------------------------
+
 
 class AngelClawChatRequest(BaseModel):
     tenant_id: str = Field(alias="tenantId", default="dev-tenant")
@@ -37,6 +36,7 @@ class AngelClawChatResponse(BaseModel):
 # Activity
 # ---------------------------------------------------------------------------
 
+
 class ActivityEntry(BaseModel):
     id: str
     timestamp: str
@@ -49,6 +49,7 @@ class ActivityEntry(BaseModel):
 # Daemon Status
 # ---------------------------------------------------------------------------
 
+
 class DaemonStatus(BaseModel):
     running: bool = False
     cycles_completed: int = 0
@@ -59,6 +60,7 @@ class DaemonStatus(BaseModel):
 # ---------------------------------------------------------------------------
 # Shield
 # ---------------------------------------------------------------------------
+
 
 class ShieldIndicator(BaseModel):
     category: str

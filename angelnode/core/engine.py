@@ -33,7 +33,7 @@ from pathlib import Path
 
 from shared.models.decision import Decision
 from shared.models.event import Event
-from shared.models.policy import PolicyAction, PolicyMatch, PolicyRule, PolicySet, RiskLevel
+from shared.models.policy import PolicyAction, PolicyMatch, PolicySet, RiskLevel
 
 logger = logging.getLogger("angelnode.engine")
 
@@ -206,14 +206,17 @@ class PolicyEngine:
         if default is not None:
             logger.debug(
                 "No rule matched event %s; category default '%s' → %s",
-                event.id, category_key, default.action.value,
+                event.id,
+                category_key,
+                default.action.value,
             )
             return default
 
         # Category not in defaults — BLOCK (fail-closed)
         logger.warning(
             "No rule matched event %s and no category default for '%s'; BLOCKING (fail-closed)",
-            event.id, category_key,
+            event.id,
+            category_key,
         )
         return _ULTIMATE_FALLBACK
 
@@ -226,7 +229,8 @@ class PolicyEngine:
 
         Supports extended detail_conditions:
           - "key": value           → exact match against event.details[key]
-          - "key_pattern": "re"    → regex match against event.details[key] (key without _pattern suffix)
+          - "key_pattern": "re"    → regex match against
+            event.details[key] (key without _pattern suffix)
           - "key_in": [...]        → event.details[key] must be in the list
           - "key_gt": number       → event.details[key] must be > number
           - "burst_window_seconds" + "burst_threshold" → sliding-window burst detection

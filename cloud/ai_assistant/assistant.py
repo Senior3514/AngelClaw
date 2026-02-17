@@ -18,6 +18,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
 from cloud.db.models import AgentNodeRow, EventRow, IncidentRow
+
 from .models import (
     AffectedAgent,
     ClassificationCount,
@@ -49,11 +50,7 @@ def summarize_recent_incidents(
     cutoff = datetime.now(timezone.utc) - timedelta(hours=lookback_hours)
 
     # Fetch recent incidents
-    incidents = (
-        db.query(IncidentRow)
-        .filter(IncidentRow.created_at >= cutoff)
-        .all()
-    )
+    incidents = db.query(IncidentRow).filter(IncidentRow.created_at >= cutoff).all()
 
     if not incidents:
         return IncidentSummary(
@@ -73,7 +70,7 @@ def summarize_recent_incidents(
         classification_counter[inc.classification] += 1
         severity_counter[inc.severity] += 1
         # Count affected agents via event IDs (stored as JSON list)
-        for eid in (inc.event_ids or []):
+        for eid in inc.event_ids or []:
             event_row = db.query(EventRow).filter_by(id=eid).first()
             if event_row:
                 agent_counter[event_row.agent_id] += 1
@@ -82,11 +79,13 @@ def summarize_recent_incidents(
     top_agents: list[AffectedAgent] = []
     for agent_id, count in agent_counter.most_common(5):
         agent_row = db.query(AgentNodeRow).filter_by(id=agent_id).first()
-        top_agents.append(AffectedAgent(
-            agent_id=agent_id,
-            hostname=agent_row.hostname if agent_row else "unknown",
-            incident_count=count,
-        ))
+        top_agents.append(
+            AffectedAgent(
+                agent_id=agent_id,
+                hostname=agent_row.hostname if agent_row else "unknown",
+                incident_count=count,
+            )
+        )
 
     # Generate recommendations based on patterns
     recommendations = _generate_recommendations(classification_counter, severity_counter)
@@ -100,10 +99,7 @@ def summarize_recent_incidents(
             ClassificationCount(classification=c, count=n)
             for c, n in classification_counter.most_common()
         ],
-        by_severity=[
-            SeverityCount(severity=s, count=n)
-            for s, n in severity_counter.most_common()
-        ],
+        by_severity=[SeverityCount(severity=s, count=n) for s, n in severity_counter.most_common()],
         top_affected_agents=top_agents,
         recommended_focus=recommendations,
     )
@@ -129,9 +125,7 @@ def propose_policy_tightening(
 
     # Fetch recent high-severity events for agents in this group
     # For the MVP, agent_group_id maps to a tag on AgentNodeRow
-    agents = db.query(AgentNodeRow).filter(
-        AgentNodeRow.tags.contains(agent_group_id)
-    ).all()
+    agents = db.query(AgentNodeRow).filter(AgentNodeRow.tags.contains(agent_group_id)).all()
     agent_ids = {a.id for a in agents}
 
     if not agent_ids:
@@ -153,7 +147,10 @@ def propose_policy_tightening(
     if not events:
         return ProposedPolicyChanges(
             agent_group_id=agent_group_id,
-            analysis_summary="No high-severity events in the lookback period. Current policy appears adequate.",
+            analysis_summary=(
+                "No high-severity events in the lookback period."
+                " Current policy appears adequate."
+            ),
         )
 
     # Analyze patterns: group by category + type
@@ -166,24 +163,34 @@ def propose_policy_tightening(
         # Only propose rules for patterns that recur
         if count < 2:
             continue
-        proposed_rules.append(ProposedRule(
-            description=f"Tighten policy for {category}/{ev_type} events (seen {count}x)",
-            match_summary=f"category={category}, type={ev_type}",
-            action="block" if count >= 5 else "alert",
-            risk_level="high" if count >= 5 else "medium",
-            rationale=(
-                f"Observed {count} high-severity events of type '{ev_type}' in category "
-                f"'{category}' within the last {lookback_hours}h. "
-                f"{'Recommend blocking — pattern is persistent.' if count >= 5 else 'Recommend alerting for further investigation.'}"
-            ),
-        ))
+        proposed_rules.append(
+            ProposedRule(
+                description=f"Tighten policy for {category}/{ev_type} events (seen {count}x)",
+                match_summary=f"category={category}, type={ev_type}",
+                action="block" if count >= 5 else "alert",
+                risk_level="high" if count >= 5 else "medium",
+                rationale=(
+                    f"Observed {count} high-severity events of"
+                    f" type '{ev_type}' in category"
+                    f" '{category}' within the last"
+                    f" {lookback_hours}h. "
+                    + (
+                        "Recommend blocking — pattern is persistent."
+                        if count >= 5
+                        else "Recommend alerting for further"
+                        " investigation."
+                    )
+                ),
+            )
+        )
 
     return ProposedPolicyChanges(
         agent_group_id=agent_group_id,
         proposed_rules=proposed_rules,
         analysis_summary=(
             f"Analyzed {len(events)} high-severity events across {len(agent_ids)} agents. "
-            f"Identified {len(proposed_rules)} recurring patterns that could benefit from explicit rules."
+            f"Identified {len(proposed_rules)} recurring patterns"
+            f" that could benefit from explicit rules."
         ),
     )
 
@@ -191,6 +198,7 @@ def propose_policy_tightening(
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 def explain_event_with_context(
     db: Session,
@@ -212,10 +220,10 @@ def explain_event_with_context(
     # Build explanation via policy engine
     explanation = f"Event {event_row.category}/{event_row.type} with severity {event_row.severity}"
     try:
-        import json
         from pathlib import Path
-        from shared.models.event import Event, EventCategory, Severity
+
         from angelnode.core.engine import PolicyEngine
+        from shared.models.event import Event, EventCategory, Severity
 
         event = Event(
             id=event_row.id,
@@ -229,7 +237,9 @@ def explain_event_with_context(
         )
         policy_path = (
             Path(__file__).resolve().parent.parent.parent
-            / "angelnode" / "config" / "default_policy.json"
+            / "angelnode"
+            / "config"
+            / "default_policy.json"
         )
         if policy_path.exists():
             engine = PolicyEngine.from_file(policy_path)
@@ -307,14 +317,16 @@ def _generate_recommendations(
 
     if classifications.get("data_exfiltration", 0) > 0:
         recommendations.append(
-            "Potential data exfiltration was flagged. If your AI agents need to call external APIs, "
-            "add those domains to the network egress allowlist so legitimate traffic flows freely."
+            "Potential data exfiltration was flagged. If your AI agents need to call"
+            " external APIs, add those domains to the network egress allowlist so"
+            " legitimate traffic flows freely."
         )
 
     if classifications.get("malicious_tool_use", 0) > 0:
         recommendations.append(
-            "Some tool calls were flagged as risky. Review the specific tools involved — if they're "
-            "safe for your workflow, add them to the AI tool allowlist so your agents aren't slowed down."
+            "Some tool calls were flagged as risky. Review the specific tools"
+            " involved — if they're safe for your workflow, add them to the AI"
+            " tool allowlist so your agents aren't slowed down."
         )
 
     if high_count > 3:

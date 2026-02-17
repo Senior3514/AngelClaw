@@ -50,6 +50,7 @@ def test_redact_dict():
 def test_wazuh_client_disabled():
     """Wazuh client should be disabled when no URL is configured."""
     from cloud.integrations.wazuh_client import WazuhClient
+
     client = WazuhClient()
     assert not client.enabled
 
@@ -57,10 +58,9 @@ def test_wazuh_client_disabled():
 def test_structured_logger_imports():
     """Structured logger components should import cleanly."""
     from cloud.services.structured_logger import (
-        CorrelationMiddleware,
         get_correlation_id,
-        set_correlation_id,
         setup_structured_logging,
     )
+
     assert callable(setup_structured_logging)
     assert callable(get_correlation_id)

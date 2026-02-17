@@ -65,8 +65,10 @@ class AuditAgent(SubAgent):
 
         logger.info(
             "[AUDIT] Report %s: audited=%d agents, discrepancies=%d, clean=%s",
-            report.report_id[:8], report.agents_audited,
-            len(report.discrepancies), report.clean,
+            report.report_id[:8],
+            report.agents_audited,
+            len(report.discrepancies),
+            report.clean,
         )
 
         return AgentResult(
@@ -77,7 +79,9 @@ class AuditAgent(SubAgent):
         )
 
     async def _run_audit(
-        self, db: Session, period_minutes: int,
+        self,
+        db: Session,
+        period_minutes: int,
     ) -> AuditReport:
         """Execute all audit checks."""
         now = datetime.now(timezone.utc)
@@ -134,7 +138,8 @@ class AuditAgent(SubAgent):
     # ------------------------------------------------------------------
 
     def _check_policy_enforcement(
-        self, events: list[EventRow],
+        self,
+        events: list[EventRow],
     ) -> list[AuditDiscrepancy]:
         """Verify that secret-access events were blocked."""
         discrepancies: list[AuditDiscrepancy] = []
@@ -145,22 +150,26 @@ class AuditAgent(SubAgent):
                 # This event should have been blocked by policy
                 action = details.get("action", details.get("decision", ""))
                 if action and action.lower() not in ("block", "blocked"):
-                    discrepancies.append(AuditDiscrepancy(
-                        agent_id=e.agent_id,
-                        expected_action="block",
-                        actual_action=str(action),
-                        event_id=e.id,
-                        severity="critical",
-                        description=(
-                            f"Secret-access event {e.id[:8]} from agent "
-                            f"{e.agent_id[:8]} was not blocked (action={action})"
-                        ),
-                    ))
+                    discrepancies.append(
+                        AuditDiscrepancy(
+                            agent_id=e.agent_id,
+                            expected_action="block",
+                            actual_action=str(action),
+                            event_id=e.id,
+                            severity="critical",
+                            description=(
+                                f"Secret-access event {e.id[:8]} from agent "
+                                f"{e.agent_id[:8]} was not blocked (action={action})"
+                            ),
+                        )
+                    )
 
         return discrepancies
 
     def _check_alert_response(
-        self, db: Session, period_start: datetime,
+        self,
+        db: Session,
+        period_start: datetime,
     ) -> list[AuditDiscrepancy]:
         """Check that critical alerts received a response."""
         critical_alerts = (
@@ -178,31 +187,32 @@ class AuditAgent(SubAgent):
             responded = (alert.details or {}).get("response_executed", False)
             if not responded:
                 agents = alert.related_agent_ids or []
-                discrepancies.append(AuditDiscrepancy(
-                    agent_id=agents[0] if agents else "system",
-                    expected_action="auto_response",
-                    actual_action="no_response",
-                    event_id=alert.id,
-                    severity="high",
-                    description=(
-                        f"Critical alert {alert.id[:8]} ({alert.alert_type}) "
-                        f"has no recorded response"
-                    ),
-                ))
+                discrepancies.append(
+                    AuditDiscrepancy(
+                        agent_id=agents[0] if agents else "system",
+                        expected_action="auto_response",
+                        actual_action="no_response",
+                        event_id=alert.id,
+                        severity="high",
+                        description=(
+                            f"Critical alert {alert.id[:8]} ({alert.alert_type}) "
+                            f"has no recorded response"
+                        ),
+                    )
+                )
 
         return discrepancies
 
     def _check_quarantine_compliance(
-        self, db: Session, events: list[EventRow], period_start: datetime,
+        self,
+        db: Session,
+        events: list[EventRow],
+        period_start: datetime,
     ) -> list[AuditDiscrepancy]:
         """Check that quarantined agents aren't still submitting events."""
         from cloud.db.models import AgentNodeRow
 
-        quarantined = (
-            db.query(AgentNodeRow)
-            .filter(AgentNodeRow.status == "quarantined")
-            .all()
-        )
+        quarantined = db.query(AgentNodeRow).filter(AgentNodeRow.status == "quarantined").all()
         quarantined_ids = {a.agent_id for a in quarantined}
         if not quarantined_ids:
             return []
@@ -210,16 +220,18 @@ class AuditAgent(SubAgent):
         discrepancies: list[AuditDiscrepancy] = []
         for e in events:
             if e.agent_id in quarantined_ids:
-                discrepancies.append(AuditDiscrepancy(
-                    agent_id=e.agent_id,
-                    expected_action="no_events (quarantined)",
-                    actual_action=f"submitted event {e.type}",
-                    event_id=e.id,
-                    severity="high",
-                    description=(
-                        f"Quarantined agent {e.agent_id[:8]} submitted "
-                        f"event {e.id[:8]} ({e.type})"
-                    ),
-                ))
+                discrepancies.append(
+                    AuditDiscrepancy(
+                        agent_id=e.agent_id,
+                        expected_action="no_events (quarantined)",
+                        actual_action=f"submitted event {e.type}",
+                        event_id=e.id,
+                        severity="high",
+                        description=(
+                            f"Quarantined agent {e.agent_id[:8]} submitted "
+                            f"event {e.id[:8]} ({e.type})"
+                        ),
+                    )
+                )
 
         return discrepancies

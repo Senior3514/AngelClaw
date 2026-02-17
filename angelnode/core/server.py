@@ -89,6 +89,7 @@ def _get_counters() -> dict:
 # Callbacks for CloudSyncClient
 # ---------------------------------------------------------------------------
 
+
 def _on_policy_update(policy_set: PolicySet) -> None:
     """Hot-reload the engine when Cloud provides a new PolicySet."""
     if engine is not None:
@@ -119,6 +120,7 @@ def _on_sync_timestamp(ts: datetime) -> None:
 # Lifespan
 # ---------------------------------------------------------------------------
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize engine, logger, and cloud sync on startup."""
@@ -134,7 +136,9 @@ async def lifespan(app: FastAPI):
     # 2. If Cloud URL is configured, register and start polling
     if CLOUD_URL:
         logger.info(
-            "Cloud sync enabled — url=%s, tenant=%s", CLOUD_URL, TENANT_ID,
+            "Cloud sync enabled — url=%s, tenant=%s",
+            CLOUD_URL,
+            TENANT_ID,
         )
         sync_client = CloudSyncClient(
             cloud_url=CLOUD_URL,
@@ -149,9 +153,7 @@ async def lifespan(app: FastAPI):
         # Start the background polling loop
         await sync_client.start_polling()
     else:
-        logger.info(
-            "Cloud sync disabled — set ANGELCLAW_CLOUD_URL to enable"
-        )
+        logger.info("Cloud sync disabled — set ANGELCLAW_CLOUD_URL to enable")
 
     yield
 
@@ -177,6 +179,7 @@ app.include_router(openclaw_router)
 # Token auth dependency for /status
 # ---------------------------------------------------------------------------
 
+
 async def _verify_status_token(
     x_angelnode_token: Optional[str] = Header(default=None),
 ) -> None:
@@ -199,6 +202,7 @@ async def _verify_status_token(
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @app.get("/health")
 async def health():

@@ -60,6 +60,7 @@ class WazuhClient:
                 self._token = data.get("data", {}).get("token", "")
                 # Wazuh tokens last ~15 min; refresh at 12 min
                 from datetime import timedelta
+
                 self._token_expires = now + timedelta(minutes=12)
                 logger.info("[WAZUH] Authenticated successfully")
                 return self._token
@@ -192,12 +193,14 @@ class WazuhClient:
         if success:
             logger.warning(
                 "[WAZUH] Active response dispatched: agent=%s cmd=%s",
-                agent_id, command,
+                agent_id,
+                command,
             )
         else:
             logger.warning(
                 "[WAZUH] Active response failed: agent=%s cmd=%s",
-                agent_id, command,
+                agent_id,
+                command,
             )
         return success
 

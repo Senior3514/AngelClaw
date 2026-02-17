@@ -85,8 +85,10 @@ class SentinelAgent(SubAgent):
         logger.info(
             "[SENTINEL] Analyzed %d events → %d indicators "
             "(patterns=%d, anomalies=%d, correlations=%d)",
-            len(events), len(unique),
-            len(pattern_indicators), len(anomaly_indicators),
+            len(events),
+            len(unique),
+            len(pattern_indicators),
+            len(anomaly_indicators),
             len(correlation_indicators),
         )
 

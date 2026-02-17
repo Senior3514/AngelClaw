@@ -17,7 +17,6 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-
 # ---------------------------------------------------------------------------
 # Rate Limiting
 # ---------------------------------------------------------------------------
@@ -56,6 +55,7 @@ MAX_BODY_SIZE = int(os.environ.get("ANGELCLAW_MAX_BODY_SIZE", str(1024 * 1024)))
 # ---------------------------------------------------------------------------
 # Setup function — call once on app startup
 # ---------------------------------------------------------------------------
+
 
 def setup_security_middleware(app: FastAPI) -> None:
     """Attach all security middleware to the FastAPI app."""

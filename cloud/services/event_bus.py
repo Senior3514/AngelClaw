@@ -14,7 +14,6 @@ from __future__ import annotations
 import logging
 import uuid
 from collections import Counter
-from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
@@ -23,7 +22,9 @@ from cloud.db.models import EventRow, GuardianAlertRow
 logger = logging.getLogger("angelgrid.cloud.event_bus")
 
 
-def check_for_alerts(db: Session, events: list[EventRow], tenant_id: str = "dev-tenant") -> list[GuardianAlertRow]:
+def check_for_alerts(
+    db: Session, events: list[EventRow], tenant_id: str = "dev-tenant"
+) -> list[GuardianAlertRow]:
     """Analyze a batch of ingested events for critical patterns.
 
     Called synchronously inside ingest_events(). Creates GuardianAlertRow
@@ -35,10 +36,7 @@ def check_for_alerts(db: Session, events: list[EventRow], tenant_id: str = "dev-
         return alerts
 
     # Pattern 1: Repeated secret exfiltration
-    secret_events = [
-        e for e in events
-        if (e.details or {}).get("accesses_secrets") is True
-    ]
+    secret_events = [e for e in events if (e.details or {}).get("accesses_secrets") is True]
     if len(secret_events) >= 2:
         agent_ids = list({e.agent_id for e in secret_events})
         alert = GuardianAlertRow(
@@ -57,7 +55,9 @@ def check_for_alerts(db: Session, events: list[EventRow], tenant_id: str = "dev-
         alerts.append(alert)
         logger.warning(
             "Guardian Alert [repeated_secret_exfil]: %s — %d related events from %d agents",
-            alert.title, len(secret_events), len(agent_ids),
+            alert.title,
+            len(secret_events),
+            len(agent_ids),
         )
 
     # Pattern 2: High-severity burst from one agent (>=5)
@@ -88,7 +88,8 @@ def check_for_alerts(db: Session, events: list[EventRow], tenant_id: str = "dev-
             alerts.append(alert)
             logger.warning(
                 "Guardian Alert [high_severity_burst]: %s — %d related events from 1 agent",
-                alert.title, count,
+                alert.title,
+                count,
             )
 
     # Pattern 3: Agent flapping (multiple different types from same agent in short burst)
@@ -114,7 +115,8 @@ def check_for_alerts(db: Session, events: list[EventRow], tenant_id: str = "dev-
             alerts.append(alert)
             logger.warning(
                 "Guardian Alert [agent_flapping]: %s — %d event types",
-                alert.title, len(types),
+                alert.title,
+                len(types),
             )
 
     if alerts:
@@ -123,7 +125,9 @@ def check_for_alerts(db: Session, events: list[EventRow], tenant_id: str = "dev-
         for a in alerts:
             logger.warning(
                 "[GUARDIAN ALERT] %s | severity=%s | %s | agents=%s",
-                a.alert_type, a.severity, a.title,
+                a.alert_type,
+                a.severity,
+                a.title,
                 ",".join(a.related_agent_ids[:3]) if a.related_agent_ids else "none",
             )
 
@@ -137,6 +141,7 @@ def _fire_webhooks(alerts: list[GuardianAlertRow], tenant_id: str) -> None:
     """Send webhook notifications for critical alerts (best-effort)."""
     try:
         import asyncio
+
         from cloud.services.webhook import webhook_sink
 
         if not webhook_sink.enabled:
@@ -147,23 +152,27 @@ def _fire_webhooks(alerts: list[GuardianAlertRow], tenant_id: str) -> None:
                 try:
                     loop = asyncio.get_event_loop()
                     if loop.is_running():
-                        loop.create_task(webhook_sink.send_alert(
-                            alert_type=a.alert_type,
-                            title=a.title,
-                            severity=a.severity,
-                            details=a.details,
-                            tenant_id=tenant_id,
-                            related_event_ids=a.related_event_ids,
-                        ))
+                        loop.create_task(
+                            webhook_sink.send_alert(
+                                alert_type=a.alert_type,
+                                title=a.title,
+                                severity=a.severity,
+                                details=a.details,
+                                tenant_id=tenant_id,
+                                related_event_ids=a.related_event_ids,
+                            )
+                        )
                     else:
-                        asyncio.run(webhook_sink.send_alert(
-                            alert_type=a.alert_type,
-                            title=a.title,
-                            severity=a.severity,
-                            details=a.details,
-                            tenant_id=tenant_id,
-                            related_event_ids=a.related_event_ids,
-                        ))
+                        asyncio.run(
+                            webhook_sink.send_alert(
+                                alert_type=a.alert_type,
+                                title=a.title,
+                                severity=a.severity,
+                                details=a.details,
+                                tenant_id=tenant_id,
+                                related_event_ids=a.related_event_ids,
+                            )
+                        )
                 except Exception:
                     logger.debug("Webhook fire failed for alert %s", a.id, exc_info=True)
     except Exception:

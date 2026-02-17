@@ -21,10 +21,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from shared.config.platform_paths import log_dir
 from shared.models.decision import Decision
 from shared.models.event import Event
 
-DEFAULT_LOG_PATH = Path("/var/log/angelgrid/decisions.jsonl")
+DEFAULT_LOG_PATH = log_dir() / "decisions.jsonl"
 
 
 class DecisionLogger:

@@ -3,7 +3,6 @@
 import pytest
 
 from cloud.guardian.orchestrator import AngelOrchestrator
-from cloud.guardian.models import IncidentState
 
 
 @pytest.fixture

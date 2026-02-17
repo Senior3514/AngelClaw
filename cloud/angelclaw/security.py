@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+import platform
 import re
 import shutil
 import time
@@ -22,19 +23,15 @@ from enum import Enum
 from typing import Any
 
 from cloud.angelclaw.shield import (
-    AngelClawShield,
-    ThreatCategory,
     ThreatIndicator,
     ThreatSeverity,
+    assess_lethal_trifecta,
+    detect_attack_chain,
     detect_data_leakage,
     detect_evil_agi,
     detect_prompt_injection,
-    assess_lethal_trifecta,
-    detect_attack_chain,
-    register_skill,
-    verify_skill_integrity,
     verify_all_skills,
-    _compute_file_hash,
+    verify_skill_integrity,
 )
 
 logger = logging.getLogger("angelclaw.security")
@@ -43,6 +40,7 @@ logger = logging.getLogger("angelclaw.security")
 # ===========================================================================
 # 1. PromptDefense — Prompt injection detection and blocking
 # ===========================================================================
+
 
 class PromptDefense:
     """AngelClaw Prompt Defense — wraps and extends shield.py injection detection.
@@ -158,15 +156,14 @@ class PromptDefense:
         for indicator in indicators:
             for evidence in indicator.evidence:
                 if evidence and evidence in sanitized:
-                    sanitized = sanitized.replace(
-                        evidence, "[BLOCKED by AngelClaw PromptDefense]"
-                    )
+                    sanitized = sanitized.replace(evidence, "[BLOCKED by AngelClaw PromptDefense]")
         return sanitized
 
 
 # ===========================================================================
 # 2. ToolGuard — Tool call validation and burst detection
 # ===========================================================================
+
 
 class ToolGuard:
     """AngelClaw Tool Guard — validates tool calls before execution.
@@ -185,30 +182,60 @@ class ToolGuard:
     # Tools that access secrets or perform destructive operations
     DEFAULT_BLOCKLIST: set[str] = {
         # Destructive filesystem operations
-        "rm", "rmdir", "shred", "mkfs", "dd",
-        "format", "fdisk", "wipefs",
+        "rm",
+        "rmdir",
+        "shred",
+        "mkfs",
+        "dd",
+        "format",
+        "fdisk",
+        "wipefs",
         # Secret / credential access
-        "cat_secrets", "read_env", "dump_credentials",
-        "export_keys", "extract_tokens",
+        "cat_secrets",
+        "read_env",
+        "dump_credentials",
+        "export_keys",
+        "extract_tokens",
         # Network exfiltration
-        "reverse_shell", "bind_shell", "netcat_send",
-        "exfiltrate", "upload_secrets",
+        "reverse_shell",
+        "bind_shell",
+        "netcat_send",
+        "exfiltrate",
+        "upload_secrets",
         # System modification
-        "chmod_suid", "install_rootkit", "disable_firewall",
-        "kill_guardian", "stop_angelclaw",
+        "chmod_suid",
+        "install_rootkit",
+        "disable_firewall",
+        "kill_guardian",
+        "stop_angelclaw",
     }
 
     # Analysis tools that are always safe
     DEFAULT_ALLOWLIST: set[str] = {
-        "read", "search", "summarize", "analyze", "grep",
-        "list_files", "get_status", "describe", "explain",
-        "count", "stats", "view", "inspect", "diff",
-        "help", "man", "info", "which", "type",
+        "read",
+        "search",
+        "summarize",
+        "analyze",
+        "grep",
+        "list_files",
+        "get_status",
+        "describe",
+        "explain",
+        "count",
+        "stats",
+        "view",
+        "inspect",
+        "diff",
+        "help",
+        "man",
+        "info",
+        "which",
+        "type",
     }
 
     # Burst detection defaults
     DEFAULT_BURST_WINDOW: float = 10.0  # seconds
-    DEFAULT_BURST_LIMIT: int = 20       # max calls within window
+    DEFAULT_BURST_LIMIT: int = 20  # max calls within window
 
     def __init__(
         self,
@@ -282,9 +309,7 @@ class ToolGuard:
         cutoff = now - self.burst_window
 
         # Prune old timestamps
-        self._call_timestamps = [
-            ts for ts in self._call_timestamps if ts > cutoff
-        ]
+        self._call_timestamps = [ts for ts in self._call_timestamps if ts > cutoff]
 
         if len(self._call_timestamps) >= self.burst_limit:
             return True, (
@@ -335,9 +360,11 @@ class ToolGuard:
 # 3. SkillIntegrity — Skill verification with auto-restore and audit chain
 # ===========================================================================
 
+
 @dataclass
 class AuditEntry:
     """A single entry in the tamper-evident audit chain."""
+
     timestamp: str
     action: str
     skill_name: str
@@ -352,8 +379,7 @@ class AuditEntry:
     def _compute_hash(self) -> str:
         """Compute SHA256 hash of this entry (including previous hash for chaining)."""
         content = (
-            f"{self.timestamp}|{self.action}|{self.skill_name}|"
-            f"{self.details}|{self.prev_hash}"
+            f"{self.timestamp}|{self.action}|{self.skill_name}|{self.details}|{self.prev_hash}"
         )
         return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
@@ -379,7 +405,7 @@ class SkillIntegrity:
 
     Usage::
 
-        si = SkillIntegrity(backup_dir="/opt/angelclaw/backups")
+        si = SkillIntegrity()  # uses platform-appropriate default
         si.create_baseline()
 
         # Later, check and auto-restore if tampered
@@ -412,9 +438,7 @@ class SkillIntegrity:
                 self._backup_skill(name, record.path)
 
         self._append_audit("create_baseline", "*", f"Baselined {len(self._baselines)} skills")
-        logger.info(
-            "[SkillIntegrity] Baseline created for %d skills", len(self._baselines)
-        )
+        logger.info("[SkillIntegrity] Baseline created for %d skills", len(self._baselines))
         return dict(self._baselines)
 
     def auto_restore(self, name: str) -> bool:
@@ -441,20 +465,20 @@ class SkillIntegrity:
         backup_path = self._backup_path_for(name)
         if not os.path.exists(backup_path):
             self._append_audit(
-                "auto_restore_failed", name,
-                f"Drift detected but no backup available at {backup_path}"
+                "auto_restore_failed",
+                name,
+                f"Drift detected but no backup available at {backup_path}",
             )
-            logger.error(
-                "[SkillIntegrity] Drift detected for '%s' but no backup found", name
-            )
+            logger.error("[SkillIntegrity] Drift detected for '%s' but no backup found", name)
             return False
 
         try:
             shutil.copy2(backup_path, record.path)
             self._append_audit(
-                "auto_restore_success", name,
+                "auto_restore_success",
+                name,
                 f"Restored from backup. Old hash={record.current_hash[:16]}, "
-                f"expected={record.expected_hash[:16]}"
+                f"expected={record.expected_hash[:16]}",
             )
             logger.info("[SkillIntegrity] Restored skill '%s' from backup", name)
 
@@ -467,9 +491,7 @@ class SkillIntegrity:
 
             return True
         except (OSError, IOError) as exc:
-            self._append_audit(
-                "auto_restore_error", name, f"Restore failed: {exc}"
-            )
+            self._append_audit("auto_restore_error", name, f"Restore failed: {exc}")
             logger.error("[SkillIntegrity] Failed to restore '%s': %s", name, exc)
             return False
 
@@ -484,14 +506,14 @@ class SkillIntegrity:
 
         for i, entry in enumerate(self._audit_chain):
             # Check prev_hash linkage
-            expected_prev = (
-                self.GENESIS_HASH if i == 0 else self._audit_chain[i - 1].entry_hash
-            )
+            expected_prev = self.GENESIS_HASH if i == 0 else self._audit_chain[i - 1].entry_hash
             if entry.prev_hash != expected_prev:
                 logger.error(
                     "[SkillIntegrity] Audit chain broken at index %d: "
                     "expected prev_hash=%s, got=%s",
-                    i, expected_prev[:16], entry.prev_hash[:16],
+                    i,
+                    expected_prev[:16],
+                    entry.prev_hash[:16],
                 )
                 return False
 
@@ -499,9 +521,10 @@ class SkillIntegrity:
             recomputed = entry._compute_hash()
             if entry.entry_hash != recomputed:
                 logger.error(
-                    "[SkillIntegrity] Audit chain tampered at index %d: "
-                    "stored=%s, recomputed=%s",
-                    i, entry.entry_hash[:16], recomputed[:16],
+                    "[SkillIntegrity] Audit chain tampered at index %d: stored=%s, recomputed=%s",
+                    i,
+                    entry.entry_hash[:16],
+                    recomputed[:16],
                 )
                 return False
 
@@ -515,11 +538,7 @@ class SkillIntegrity:
 
     def _append_audit(self, action: str, skill_name: str, details: str) -> None:
         """Add an entry to the tamper-evident audit chain."""
-        prev_hash = (
-            self._audit_chain[-1].entry_hash
-            if self._audit_chain
-            else self.GENESIS_HASH
-        )
+        prev_hash = self._audit_chain[-1].entry_hash if self._audit_chain else self.GENESIS_HASH
         entry = AuditEntry(
             timestamp=datetime.now(timezone.utc).isoformat(),
             action=action,
@@ -550,6 +569,7 @@ class SkillIntegrity:
 # 4. WorkspaceIsolation — Workspace boundary enforcement
 # ===========================================================================
 
+
 class WorkspaceIsolation:
     """AngelClaw Workspace Isolation — enforces workspace boundary rules.
 
@@ -566,19 +586,49 @@ class WorkspaceIsolation:
     """
 
     # System paths that should never be written to by agents
-    SYSTEM_WRITE_BLOCKLIST: list[str] = [
-        "/etc/", "/boot/", "/sbin/", "/usr/sbin/",
-        "/lib/", "/usr/lib/", "/var/lib/dpkg/",
-        "/proc/", "/sys/", "/dev/",
+    _UNIX_WRITE_BLOCKLIST: list[str] = [
+        "/etc/",
+        "/boot/",
+        "/sbin/",
+        "/usr/sbin/",
+        "/lib/",
+        "/usr/lib/",
+        "/var/lib/dpkg/",
+        "/proc/",
+        "/sys/",
+        "/dev/",
+    ]
+    _WINDOWS_WRITE_BLOCKLIST: list[str] = [
+        "C:\\Windows\\",
+        "C:\\Program Files\\",
+        "C:\\Program Files (x86)\\",
+        "C:\\ProgramData\\",
+        "C:\\Recovery\\",
     ]
 
     # Sensitive paths that should never be read by agents
-    SENSITIVE_READ_BLOCKLIST: list[str] = [
-        "/etc/shadow", "/etc/gshadow",
-        "/root/.ssh/", "/home/*/.ssh/id_",
-        "/root/.aws/", "/home/*/.aws/",
-        "/root/.gnupg/", "/home/*/.gnupg/",
+    _UNIX_READ_BLOCKLIST: list[str] = [
+        "/etc/shadow",
+        "/etc/gshadow",
+        "/root/.ssh/",
+        "/home/*/.ssh/id_",
+        "/root/.aws/",
+        "/home/*/.aws/",
+        "/root/.gnupg/",
+        "/home/*/.gnupg/",
     ]
+    _WINDOWS_READ_BLOCKLIST: list[str] = [
+        "*\\.ssh\\",
+        "*\\.aws\\",
+        "*\\.gnupg\\",
+    ]
+
+    if platform.system() == "Windows":
+        SYSTEM_WRITE_BLOCKLIST: list[str] = _WINDOWS_WRITE_BLOCKLIST
+        SENSITIVE_READ_BLOCKLIST: list[str] = _WINDOWS_READ_BLOCKLIST
+    else:
+        SYSTEM_WRITE_BLOCKLIST: list[str] = _UNIX_WRITE_BLOCKLIST
+        SENSITIVE_READ_BLOCKLIST: list[str] = _UNIX_READ_BLOCKLIST
 
     def __init__(
         self,
@@ -591,9 +641,7 @@ class WorkspaceIsolation:
         self.tenant_id = tenant_id
         self._violation_count: int = 0
 
-    def check_path_access(
-        self, path: str, operation: str = "read"
-    ) -> tuple[bool, str]:
+    def check_path_access(self, path: str, operation: str = "read") -> tuple[bool, str]:
         """Check whether a path access is allowed for the given operation.
 
         Args:
@@ -665,7 +713,9 @@ class WorkspaceIsolation:
                 )
                 logger.warning(
                     "[WorkspaceIsolation] Out-of-workspace %s: %s (root=%s)",
-                    op, path, self.workspace_root,
+                    op,
+                    path,
+                    self.workspace_root,
                 )
                 return False, reason
 
@@ -729,8 +779,10 @@ class WorkspaceIsolation:
 # 5. RiskScoring — Unified risk scoring engine
 # ===========================================================================
 
+
 class RiskLevel(str, Enum):
     """Normalized risk levels for AngelClaw scoring."""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -741,6 +793,7 @@ class RiskLevel(str, Enum):
 @dataclass
 class RiskFactor:
     """A single contributing factor to a risk score."""
+
     name: str
     category: str
     score: float  # 0-100 contribution
@@ -750,6 +803,7 @@ class RiskFactor:
 @dataclass
 class RiskScore:
     """Unified risk scoring result."""
+
     level: RiskLevel
     score: float  # 0-100 normalized
     confidence: float  # 0.0-1.0
@@ -864,12 +918,14 @@ class RiskScoring:
             injection_indicators, self.CATEGORY_WEIGHTS["prompt_injection"]
         )
         if injection_score > 0:
-            factors.append(RiskFactor(
-                name="prompt_injection",
-                category="prompt_injection",
-                score=injection_score,
-                description=f"{len(injection_indicators)} injection pattern(s) detected",
-            ))
+            factors.append(
+                RiskFactor(
+                    name="prompt_injection",
+                    category="prompt_injection",
+                    score=injection_score,
+                    description=f"{len(injection_indicators)} injection pattern(s) detected",
+                )
+            )
 
         # Data leakage
         leakage_indicators = detect_data_leakage(text)
@@ -877,25 +933,27 @@ class RiskScoring:
             leakage_indicators, self.CATEGORY_WEIGHTS["data_leakage"]
         )
         if leakage_score > 0:
-            factors.append(RiskFactor(
-                name="data_leakage",
-                category="data_leakage",
-                score=leakage_score,
-                description=f"{len(leakage_indicators)} leakage pattern(s) detected",
-            ))
+            factors.append(
+                RiskFactor(
+                    name="data_leakage",
+                    category="data_leakage",
+                    score=leakage_score,
+                    description=f"{len(leakage_indicators)} leakage pattern(s) detected",
+                )
+            )
 
         # Evil AGI
         agi_indicators = detect_evil_agi(text)
-        agi_score = self._indicators_to_score(
-            agi_indicators, self.CATEGORY_WEIGHTS["evil_agi"]
-        )
+        agi_score = self._indicators_to_score(agi_indicators, self.CATEGORY_WEIGHTS["evil_agi"])
         if agi_score > 0:
-            factors.append(RiskFactor(
-                name="evil_agi",
-                category="evil_agi",
-                score=agi_score,
-                description=f"{len(agi_indicators)} evil AGI pattern(s) detected",
-            ))
+            factors.append(
+                RiskFactor(
+                    name="evil_agi",
+                    category="evil_agi",
+                    score=agi_score,
+                    description=f"{len(agi_indicators)} evil AGI pattern(s) detected",
+                )
+            )
 
         total_score = sum(f.score for f in factors)
         total_score = min(total_score, 100.0)  # Cap at 100
@@ -919,29 +977,33 @@ class RiskScoring:
         trifecta = assess_lethal_trifecta(events)
         trifecta_score = trifecta.score * self.CATEGORY_WEIGHTS["lethal_trifecta"]
         if trifecta_score > 0:
-            factors.append(RiskFactor(
-                name="lethal_trifecta",
-                category="lethal_trifecta",
-                score=round(trifecta_score, 1),
-                description=(
-                    f"Trifecta score: {trifecta.score:.0%} — "
-                    f"{'ACTIVE' if trifecta.active else 'partial'}"
-                ),
-            ))
+            factors.append(
+                RiskFactor(
+                    name="lethal_trifecta",
+                    category="lethal_trifecta",
+                    score=round(trifecta_score, 1),
+                    description=(
+                        f"Trifecta score: {trifecta.score:.0%} — "
+                        f"{'ACTIVE' if trifecta.active else 'partial'}"
+                    ),
+                )
+            )
 
         # Attack chain
         chain = detect_attack_chain(events)
         if chain.is_active:
             chain_score = chain.chain_confidence * self.CATEGORY_WEIGHTS["attack_chain"]
-            factors.append(RiskFactor(
-                name="attack_chain",
-                category="attack_chain",
-                score=round(chain_score, 1),
-                description=(
-                    f"{len(chain.stages_detected)} attack stages detected: "
-                    f"{', '.join(s.value for s in chain.stages_detected)}"
-                ),
-            ))
+            factors.append(
+                RiskFactor(
+                    name="attack_chain",
+                    category="attack_chain",
+                    score=round(chain_score, 1),
+                    description=(
+                        f"{len(chain.stages_detected)} attack stages detected: "
+                        f"{', '.join(s.value for s in chain.stages_detected)}"
+                    ),
+                )
+            )
 
         # Also run text-based checks on event details
         text_factors: list[RiskFactor] = []
@@ -954,16 +1016,16 @@ class RiskScoring:
         # Aggregate text factors by category
         category_scores: dict[str, float] = {}
         for f in text_factors:
-            category_scores[f.category] = max(
-                category_scores.get(f.category, 0.0), f.score
-            )
+            category_scores[f.category] = max(category_scores.get(f.category, 0.0), f.score)
         for cat, cat_score in category_scores.items():
-            factors.append(RiskFactor(
-                name=f"event_{cat}",
-                category=cat,
-                score=round(cat_score, 1),
-                description=f"Detected in event command analysis",
-            ))
+            factors.append(
+                RiskFactor(
+                    name=f"event_{cat}",
+                    category=cat,
+                    score=round(cat_score, 1),
+                    description="Detected in event command analysis",
+                )
+            )
 
         total_score = min(sum(f.score for f in factors), 100.0)
         engines_triggered = len(set(f.category for f in factors))
@@ -986,12 +1048,14 @@ class RiskScoring:
         guard = ToolGuard()
         allowed, reason = guard.check_tool(tool_name, args)
         if not allowed:
-            factors.append(RiskFactor(
-                name="tool_blocked",
-                category="tool_guard",
-                score=40.0,
-                description=reason,
-            ))
+            factors.append(
+                RiskFactor(
+                    name="tool_blocked",
+                    category="tool_guard",
+                    score=40.0,
+                    description=reason,
+                )
+            )
 
         # Run text-based analysis on the combined tool name + args
         combined_text = f"{tool_name} {str(args)}"
@@ -1008,9 +1072,7 @@ class RiskScoring:
             factors=factors,
         )
 
-    def _indicators_to_score(
-        self, indicators: list[ThreatIndicator], max_weight: float
-    ) -> float:
+    def _indicators_to_score(self, indicators: list[ThreatIndicator], max_weight: float) -> float:
         """Convert a list of threat indicators to a weighted score."""
         if not indicators:
             return 0.0
@@ -1048,8 +1110,10 @@ class RiskScoring:
 # 6. AdvisoryMonitor — Security advisory monitoring
 # ===========================================================================
 
+
 class AdvisorySeverity(str, Enum):
     """Severity levels for security advisories."""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -1060,6 +1124,7 @@ class AdvisorySeverity(str, Enum):
 @dataclass
 class Advisory:
     """A security advisory tracked by AngelClaw."""
+
     id: str
     title: str
     severity: AdvisorySeverity
@@ -1092,6 +1157,7 @@ class Advisory:
 @dataclass
 class AdvisoryRule:
     """A custom advisory rule that triggers based on conditions."""
+
     id: str
     name: str
     description: str
@@ -1214,7 +1280,9 @@ class AdvisoryMonitor:
         self._advisories[advisory.id] = advisory
         logger.info(
             "[AdvisoryMonitor] Published advisory %s: %s [%s]",
-            advisory.id, advisory.title, advisory.severity.value,
+            advisory.id,
+            advisory.title,
+            advisory.severity.value,
         )
 
     def retract_advisory(self, advisory_id: str) -> bool:
@@ -1268,9 +1336,7 @@ class AdvisoryMonitor:
             rule: The AdvisoryRule to add.
         """
         self._custom_rules[rule.id] = rule
-        logger.info(
-            "[AdvisoryMonitor] Added custom rule %s: %s", rule.id, rule.name
-        )
+        logger.info("[AdvisoryMonitor] Added custom rule %s: %s", rule.id, rule.name)
 
     def remove_custom_rule(self, rule_id: str) -> bool:
         """Remove a custom advisory rule.
@@ -1343,7 +1409,8 @@ class AdvisoryMonitor:
                 self._advisories[adv.id] = adv
                 logger.info(
                     "[AdvisoryMonitor] Custom rule %s triggered: %s",
-                    rule.id, rule.name,
+                    rule.id,
+                    rule.name,
                 )
 
         return generated
@@ -1357,8 +1424,7 @@ class AdvisoryMonitor:
             "active_advisories": len(active),
             "custom_rules": len(self._custom_rules),
             "by_severity": {
-                sev.value: sum(1 for a in active if a.severity == sev)
-                for sev in AdvisorySeverity
+                sev.value: sum(1 for a in active if a.severity == sev) for sev in AdvisorySeverity
             },
         }
 

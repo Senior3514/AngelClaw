@@ -21,7 +21,6 @@ from cloud.db.models import (
     EventRow,
     GuardianAlertRow,
     GuardianChangeRow,
-    GuardianReportRow,
     PolicySetRow,
 )
 
@@ -33,6 +32,7 @@ _BOOT_TIME = time.monotonic()
 # ---------------------------------------------------------------------------
 # Context Snapshot
 # ---------------------------------------------------------------------------
+
 
 class EnvironmentContext:
     """A snapshot of everything AngelClaw knows about its environment."""
@@ -72,10 +72,12 @@ class EnvironmentContext:
         if self.agents:
             lines.append("  Recent agents:")
             for a in self.agents[:5]:
-                lines.append(f"    - {a.get('hostname', '?')} ({a.get('status', '?')}, {a.get('type', '?')})")
+                lines.append(
+                    f"    - {a.get('hostname', '?')} ({a.get('status', '?')}, {a.get('type', '?')})"
+                )
 
         lines.append("")
-        lines.append(f"--- EVENTS (last 24h) ---")
+        lines.append("--- EVENTS (last 24h) ---")
         for k, v in self.event_summary.items():
             lines.append(f"  {k}: {v}")
 
@@ -89,7 +91,11 @@ class EnvironmentContext:
             lines.append("")
             lines.append(f"--- INCIDENTS ({len(self.recent_incidents)} active) ---")
             for inc in self.recent_incidents[:5]:
-                lines.append(f"  [{inc.get('severity', '?')}] {inc.get('title', '?')} — {inc.get('state', '?')}")
+                lines.append(
+                    f"  [{inc.get('severity', '?')}]"
+                    f" {inc.get('title', '?')}"
+                    f" — {inc.get('state', '?')}"
+                )
 
         lines.append("")
         lines.append("--- POLICY ---")
@@ -113,7 +119,7 @@ class EnvironmentContext:
 
         if self.self_audit_summary:
             lines.append("")
-            lines.append(f"--- SELF-AUDIT ---")
+            lines.append("--- SELF-AUDIT ---")
             lines.append(f"  {self.self_audit_summary}")
 
         lines.append("")
@@ -136,6 +142,7 @@ class EnvironmentContext:
 # Context Gatherer
 # ---------------------------------------------------------------------------
 
+
 def gather_context(
     db: Session,
     tenant_id: str = "dev-tenant",
@@ -153,9 +160,14 @@ def gather_context(
     agents = db.query(AgentNodeRow).all()
     ctx.agents = [
         {
-            "id": a.id, "hostname": a.hostname, "type": a.type,
-            "os": a.os, "status": a.status, "version": a.version,
-            "tags": a.tags or [], "policy_version": a.policy_version,
+            "id": a.id,
+            "hostname": a.hostname,
+            "type": a.type,
+            "os": a.os,
+            "status": a.status,
+            "version": a.version,
+            "tags": a.tags or [],
+            "policy_version": a.policy_version,
             "last_seen": a.last_seen_at.isoformat() if a.last_seen_at else None,
         }
         for a in agents
@@ -178,8 +190,12 @@ def gather_context(
         )
         ctx.recent_events = [
             {
-                "id": e.id, "agent_id": e.agent_id, "category": e.category,
-                "type": e.type, "severity": e.severity, "source": e.source,
+                "id": e.id,
+                "agent_id": e.agent_id,
+                "category": e.category,
+                "type": e.type,
+                "severity": e.severity,
+                "source": e.source,
                 "timestamp": e.timestamp.isoformat() if e.timestamp else None,
             }
             for e in events[:20]
@@ -205,7 +221,9 @@ def gather_context(
     )
     ctx.recent_alerts = [
         {
-            "id": a.id, "alert_type": a.alert_type, "title": a.title,
+            "id": a.id,
+            "alert_type": a.alert_type,
+            "title": a.title,
             "severity": a.severity,
             "created_at": a.created_at.isoformat() if a.created_at else None,
         }
@@ -232,7 +250,8 @@ def gather_context(
     )
     ctx.recent_changes = [
         {
-            "change_type": c.change_type, "description": c.description,
+            "change_type": c.change_type,
+            "description": c.description,
             "changed_by": c.changed_by,
             "created_at": c.created_at.isoformat() if c.created_at else None,
         }
@@ -242,13 +261,16 @@ def gather_context(
     # Orchestrator
     try:
         from cloud.guardian.orchestrator import angel_orchestrator
+
         ctx.orchestrator_status = angel_orchestrator.status()
 
         incidents = angel_orchestrator.list_incidents(limit=10)
         ctx.recent_incidents = [
             {
-                "incident_id": inc.incident_id, "state": inc.state.value,
-                "severity": inc.severity, "title": inc.title,
+                "incident_id": inc.incident_id,
+                "state": inc.state.value,
+                "severity": inc.severity,
+                "title": inc.title,
                 "playbook": inc.playbook_name,
                 "created_at": inc.created_at.isoformat() if inc.created_at else None,
             }
@@ -259,8 +281,10 @@ def gather_context(
 
     # Self-audit summary
     try:
-        from cloud.guardian.self_audit import run_self_audit
         import asyncio
+
+        from cloud.guardian.self_audit import run_self_audit
+
         loop = asyncio.get_event_loop()
         if loop.is_running():
             ctx.self_audit_summary = "(audit available on demand)"
@@ -273,6 +297,7 @@ def gather_context(
     # Learning
     try:
         from cloud.guardian.learning import learning_engine
+
         ctx.learning_summary = learning_engine.summary()
     except Exception:
         ctx.learning_summary = {}
@@ -280,6 +305,7 @@ def gather_context(
     # Preferences
     try:
         from cloud.angelclaw.preferences import get_preferences
+
         prefs = get_preferences(db, tenant_id)
         ctx.preferences = prefs.model_dump(mode="json")
     except Exception:
@@ -288,6 +314,7 @@ def gather_context(
     # Recent daemon activity
     try:
         from cloud.angelclaw.daemon import get_recent_activity
+
         ctx.recent_activity = get_recent_activity(limit=10)
     except Exception:
         ctx.recent_activity = []

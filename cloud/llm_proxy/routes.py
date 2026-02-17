@@ -29,7 +29,7 @@ import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from shared.security.secret_scanner import contains_secret, redact_dict, redact_secrets
+from shared.security.secret_scanner import redact_dict, redact_secrets
 
 from .config import (
     LLM_BACKEND_URL,
@@ -48,6 +48,7 @@ router = APIRouter(prefix="/api/v1/llm", tags=["LLM Proxy"])
 # ---------------------------------------------------------------------------
 # Request / Response models
 # ---------------------------------------------------------------------------
+
 
 class LLMChatRequest(BaseModel):
     """Request body for the LLM chat endpoint."""
@@ -83,6 +84,7 @@ class LLMChatResponse(BaseModel):
 # POST /api/v1/llm/chat
 # ---------------------------------------------------------------------------
 
+
 @router.post(
     "/chat",
     response_model=LLMChatResponse,
@@ -109,7 +111,10 @@ async def llm_chat(req: LLMChatRequest) -> LLMChatResponse:
     safe_prompt = redact_secrets(req.prompt)
     prompt_had_secrets = safe_prompt != req.prompt
     if prompt_had_secrets:
-        logger.warning("[LLM PROXY SECRET BLOCK] Secrets detected and redacted from user prompt before sending to LLM")
+        logger.warning(
+            "[LLM PROXY SECRET BLOCK] Secrets detected and redacted"
+            " from user prompt before sending to LLM"
+        )
 
     # Build the messages array with the mandatory system prompt first
     messages: list[dict[str, str]] = [
@@ -124,10 +129,12 @@ async def llm_chat(req: LLMChatRequest) -> LLMChatResponse:
         if safe_context != req.context:
             logger.warning("Secrets detected and redacted from LLM context")
         context_str = _json.dumps(safe_context, indent=2, default=str)
-        messages.append({
-            "role": "system",
-            "content": f"--- READ-ONLY CONTEXT ---\n{context_str}\n--- END CONTEXT ---",
-        })
+        messages.append(
+            {
+                "role": "system",
+                "content": f"--- READ-ONLY CONTEXT ---\n{context_str}\n--- END CONTEXT ---",
+            }
+        )
 
     messages.append({"role": "user", "content": safe_prompt})
 
@@ -143,7 +150,9 @@ async def llm_chat(req: LLMChatRequest) -> LLMChatResponse:
 
     # Merge caller-provided options (but never override model or system prompt)
     if req.options:
-        safe_options = {k: v for k, v in req.options.items() if k not in ("model", "messages", "system")}
+        safe_options = {
+            k: v for k, v in req.options.items() if k not in ("model", "messages", "system")
+        }
         payload["options"].update(safe_options)
 
     logger.info(
@@ -192,7 +201,10 @@ async def llm_chat(req: LLMChatRequest) -> LLMChatResponse:
     # SECURITY: Redact any secrets from the LLM response before returning
     safe_answer = redact_secrets(answer or "(empty response from LLM)")
     if safe_answer != answer:
-        logger.warning("[LLM PROXY SECRET BLOCK] Secrets detected and redacted from LLM response before returning to user")
+        logger.warning(
+            "[LLM PROXY SECRET BLOCK] Secrets detected and redacted"
+            " from LLM response before returning to user"
+        )
 
     logger.info("LLM response — latency=%dms, answer_len=%d", latency_ms, len(safe_answer))
 

@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from datetime import timedelta
 
 from cloud.db.models import EventRow
 from cloud.guardian.models import CorrelationChain, MitreTactic, ThreatIndicator
@@ -57,7 +56,8 @@ class CorrelationEngine:
         self.max_chain_gap = max_chain_gap_seconds
 
     def correlate(
-        self, events: list[EventRow],
+        self,
+        events: list[EventRow],
     ) -> list[CorrelationChain]:
         """Find correlation chains in a set of events.
 
@@ -88,20 +88,22 @@ class CorrelationEngine:
         for c in significant:
             logger.info(
                 "[CORRELATION] chain=%s agents=%s tactics=%s events=%d",
-                c.chain_id[:8], c.agent_ids[:3], c.tactics, len(c.event_ids),
+                c.chain_id[:8],
+                c.agent_ids[:3],
+                c.tactics,
+                len(c.event_ids),
             )
 
         return significant
 
     def _build_agent_chains(
-        self, agent_id: str, events: list[EventRow],
+        self,
+        agent_id: str,
+        events: list[EventRow],
     ) -> list[CorrelationChain]:
         """Build chains from a single agent's events."""
         # Only consider medium+ severity
-        relevant = [
-            e for e in events
-            if e.severity in ("medium", "high", "critical")
-        ]
+        relevant = [e for e in events if e.severity in ("medium", "high", "critical")]
         if len(relevant) < 2:
             return []
 
@@ -128,22 +130,31 @@ class CorrelationEngine:
             else:
                 # Gap too large — close current chain
                 if len(current_chain_events) >= 2 and len(set(current_tactics)) >= 2:
-                    chains.append(self._make_chain(
-                        current_chain_events, [agent_id], current_tactics,
-                    ))
+                    chains.append(
+                        self._make_chain(
+                            current_chain_events,
+                            [agent_id],
+                            current_tactics,
+                        )
+                    )
                 current_chain_events = [curr]
                 current_tactics = [tactic] if tactic else []
 
         # Close last chain
         if len(current_chain_events) >= 2 and len(set(current_tactics)) >= 2:
-            chains.append(self._make_chain(
-                current_chain_events, [agent_id], current_tactics,
-            ))
+            chains.append(
+                self._make_chain(
+                    current_chain_events,
+                    [agent_id],
+                    current_tactics,
+                )
+            )
 
         return chains
 
     def _build_cross_agent_chains(
-        self, events: list[EventRow],
+        self,
+        events: list[EventRow],
     ) -> list[CorrelationChain]:
         """Detect coordinated activity across multiple agents.
 
@@ -175,9 +186,13 @@ class CorrelationEngine:
                     tactics.append(t)
 
             if len(agents) >= 2:
-                chains.append(self._make_chain(
-                    sorted_events, list(agents), tactics,
-                ))
+                chains.append(
+                    self._make_chain(
+                        sorted_events,
+                        list(agents),
+                        tactics,
+                    )
+                )
 
         return chains
 
@@ -218,27 +233,30 @@ class CorrelationEngine:
     # ------------------------------------------------------------------
 
     def chains_to_indicators(
-        self, chains: list[CorrelationChain],
+        self,
+        chains: list[CorrelationChain],
     ) -> list[ThreatIndicator]:
         """Convert significant chains into ThreatIndicators."""
         indicators = []
         for chain in chains:
-            indicators.append(ThreatIndicator(
-                indicator_type="correlation",
-                pattern_name="kill_chain",
-                severity=chain.severity,
-                confidence=chain.confidence,
-                description=chain.description,
-                related_event_ids=chain.event_ids[:20],
-                related_agent_ids=chain.agent_ids[:10],
-                suggested_playbook="escalate_to_human",
-                mitre_tactic=chain.tactics[-1] if chain.tactics else None,
-                metadata={
-                    "chain_id": chain.chain_id,
-                    "tactics": chain.tactics,
-                    "time_span_seconds": chain.time_span_seconds,
-                },
-            ))
+            indicators.append(
+                ThreatIndicator(
+                    indicator_type="correlation",
+                    pattern_name="kill_chain",
+                    severity=chain.severity,
+                    confidence=chain.confidence,
+                    description=chain.description,
+                    related_event_ids=chain.event_ids[:20],
+                    related_agent_ids=chain.agent_ids[:10],
+                    suggested_playbook="escalate_to_human",
+                    mitre_tactic=chain.tactics[-1] if chain.tactics else None,
+                    metadata={
+                        "chain_id": chain.chain_id,
+                        "tactics": chain.tactics,
+                        "time_span_seconds": chain.time_span_seconds,
+                    },
+                )
+            )
         return indicators
 
 

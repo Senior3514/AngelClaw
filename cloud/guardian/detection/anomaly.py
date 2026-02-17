@@ -8,12 +8,11 @@ deviation.
 from __future__ import annotations
 
 import logging
-import math
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from cloud.db.models import EventRow
-from cloud.guardian.models import AnomalyScore, MitreTactic, ThreatIndicator
+from cloud.guardian.models import AnomalyScore, ThreatIndicator
 
 logger = logging.getLogger("angelgrid.cloud.guardian.detection.anomaly")
 
@@ -74,7 +73,8 @@ class AnomalyDetector:
 
         logger.info(
             "Built baselines for %d agents from %d events",
-            len(per_agent), len(historical_events),
+            len(per_agent),
+            len(historical_events),
         )
         return len(per_agent)
 
@@ -83,7 +83,8 @@ class AnomalyDetector:
     # ------------------------------------------------------------------
 
     def score_events(
-        self, events: list[EventRow],
+        self,
+        events: list[EventRow],
     ) -> list[AnomalyScore]:
         """Score a batch of new events against baselines.
 
@@ -137,7 +138,8 @@ class AnomalyDetector:
                 cat = e.type.split(".")[0] if "." in e.type else e.type
                 current_cats[cat] += 1
         cat_deviation = self._distribution_divergence(
-            baseline.category_dist, current_cats,
+            baseline.category_dist,
+            current_cats,
         )
         sub_scores.append(cat_deviation)
 
@@ -147,12 +149,10 @@ class AnomalyDetector:
             if e.severity:
                 current_sev[e.severity] += 1
         high_ratio_baseline = (
-            (baseline.severity_dist.get("high", 0) + baseline.severity_dist.get("critical", 0))
-            / max(baseline.event_count, 1)
-        )
-        high_ratio_current = (
-            (current_sev.get("high", 0) + current_sev.get("critical", 0))
-            / max(len(events), 1)
+            baseline.severity_dist.get("high", 0) + baseline.severity_dist.get("critical", 0)
+        ) / max(baseline.event_count, 1)
+        high_ratio_current = (current_sev.get("high", 0) + current_sev.get("critical", 0)) / max(
+            len(events), 1
         )
         sev_score = min(1.0, max(0.0, high_ratio_current - high_ratio_baseline) * 2)
         sub_scores.append(sev_score)
@@ -186,7 +186,8 @@ class AnomalyDetector:
 
     @staticmethod
     def _distribution_divergence(
-        baseline: Counter, current: Counter,
+        baseline: Counter,
+        current: Counter,
     ) -> float:
         """Simple distribution divergence score between two counters."""
         if not baseline and not current:
@@ -212,31 +213,38 @@ class AnomalyDetector:
     # ------------------------------------------------------------------
 
     def scores_to_indicators(
-        self, scores: list[AnomalyScore],
+        self,
+        scores: list[AnomalyScore],
     ) -> list[ThreatIndicator]:
         """Convert high anomaly scores into ThreatIndicators."""
         indicators = []
         for s in scores:
             if s.score >= 0.7:
                 severity = "critical" if s.score >= 0.9 else "high"
-                indicators.append(ThreatIndicator(
-                    indicator_type="anomaly",
-                    pattern_name="behavioral_anomaly",
-                    severity=severity,
-                    confidence=round(s.score, 2),
-                    description=(
-                        f"Behavioral anomaly for agent {s.agent_id[:8]}: "
-                        f"score={s.score:.2f}, rate={s.current_event_rate:.0f}/h "
-                        f"(baseline {s.baseline_event_rate:.0f}/h)"
-                    ),
-                    related_agent_ids=[s.agent_id],
-                    suggested_playbook="throttle_agent" if s.score < 0.9 else "quarantine_agent",
-                    metadata={"anomaly_score": s.score},
-                ))
+                indicators.append(
+                    ThreatIndicator(
+                        indicator_type="anomaly",
+                        pattern_name="behavioral_anomaly",
+                        severity=severity,
+                        confidence=round(s.score, 2),
+                        description=(
+                            f"Behavioral anomaly for agent {s.agent_id[:8]}: "
+                            f"score={s.score:.2f}, rate={s.current_event_rate:.0f}/h "
+                            f"(baseline {s.baseline_event_rate:.0f}/h)"
+                        ),
+                        related_agent_ids=[s.agent_id],
+                        suggested_playbook="throttle_agent"
+                        if s.score < 0.9
+                        else "quarantine_agent",
+                        metadata={"anomaly_score": s.score},
+                    )
+                )
 
                 logger.warning(
                     "[ANOMALY] agent=%s score=%.2f severity=%s",
-                    s.agent_id[:8], s.score, severity,
+                    s.agent_id[:8],
+                    s.score,
+                    severity,
                 )
         return indicators
 
