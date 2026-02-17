@@ -72,12 +72,7 @@ jobs:
           ANGELCLAW_AUTH_ENABLED: "false"
           ANGELCLAW_LOG_FORMAT: "text"
           ANGELGRID_DATABASE_URL: "sqlite:///test.db"
-        run: |
-          pytest tests/ -v --tb=short \
-            --cov=shared --cov=angelnode --cov=cloud \
-            --cov-report=term-missing \
-            --cov-report=xml:coverage.xml \
-            --cov-fail-under=60
+        run: pytest tests/ -v --tb=short --cov=shared --cov=angelnode --cov=cloud --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=60
 
       - name: Run secret protection tests
         run: python scripts/test_secret_protection.py
@@ -179,7 +174,7 @@ jobs:
           from shared.models.event import Event, EventCategory, Severity
           from shared.models.policy import PolicySet, PolicyRule, PolicyAction
           from shared.models.decision import Decision
-          from shared.security.secret_scanner import contains_secret_value
+          from shared.security.secret_scanner import contains_secret
           from angelnode.core.engine import PolicyEngine, BurstTracker
           from cloud.guardian.orchestrator import AngelOrchestrator
           from cloud.guardian.models import Incident, IncidentState, ThreatIndicator
