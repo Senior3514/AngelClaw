@@ -1,39 +1,311 @@
-# AngelClaw – Autonomous AI Defense Guardian
+# AngelClaw -- Autonomous AI Defense Guardian
 
 **Guardian angel, not gatekeeper.**
 
 > The Python package is named `angelgrid` for internal compatibility. The product name is **AngelClaw**.
 
 AngelClaw is a security fabric that lets people use AI agents, local models,
-cloud APIs, and automations **as freely as they want** — while quietly protecting
+cloud APIs, and automations **as freely as they want** -- while quietly protecting
 their systems, data, and infrastructure in the background.
 
 We don't block AI. We embrace it. AngelClaw only intervenes when AI is about to
 do something genuinely dangerous: destructive shell commands, accessing secrets,
-modifying critical files, or calling risky external endpoints. Everything else —
-analysis, reading, summarizing, reasoning, creating — flows freely.
+modifying critical files, or calling risky external endpoints. Everything else --
+analysis, reading, summarizing, reasoning, creating -- flows freely.
+
+---
+
+## What's New in V1.1.0 -- Comprehensive Summary
+
+AngelClaw has evolved from a simple policy engine into a **full-stack, enterprise-grade, autonomous AGI security suite** across 38 commits. Here is a complete summary of all major improvements and changes:
+
+### Architecture & Core Engine
+- **Complete stack redesign** -- from a single policy evaluator to a 3-tier architecture: ANGELNODE (local agent) + Cloud API (SaaS backend) + Web Dashboard
+- **Policy engine rewrite** -- first-match-wins rule evaluation with 29 built-in rules across 5 categories (shell, network, file, database, AI tools)
+- **Extended match syntax** -- regex patterns, list membership, numeric comparisons, and burst detection in policy rules
+- **Category defaults** -- configurable fallback actions (BLOCK/ALLOW/ALERT/AUDIT) per category when no rule matches
+- **Fail-closed design** -- if the engine is unreachable, all actions are blocked as a safety net
+
+### Autonomous Brain (V0.5.0+)
+- **29 NLP intents** -- natural language understanding for security commands ("scan the system", "show me threats", "block that agent")
+- **Context-aware responses** -- the AI brain considers recent events, agent state, and threat landscape when answering
+- **Always-on daemon** -- continuous background scans, shield assessments, drift detection, and agent health monitoring
+- **Action framework** -- 11 action types (block_agent, tighten_policy, quarantine, etc.) with dry-run proposals, confirmation workflow, and full audit trail
+
+### Threat Detection Shield (V0.7.0+)
+- **13 prompt injection patterns** -- detects jailbreak attempts, role override, instruction manipulation
+- **6 data leakage detectors** -- catches exfiltration of PII, credentials, internal data
+- **7 evil AGI patterns** -- identifies deceptive behavior, goal manipulation, sandbox escape attempts
+- **Lethal Trifecta monitoring** -- simultaneous detection of resource acquisition + deception + goal divergence
+- **6-stage MITRE ATT&CK chain detection** -- tracks reconnaissance through exfiltration across correlated events
+
+### Secret Protection
+- **40+ regex patterns** -- detects API keys, tokens, passwords, SSH keys, JWTs, connection strings, AWS credentials, and more
+- **3-layer redaction pipeline** -- secrets are scrubbed at ANGELNODE (before logging), at Cloud API (before responses), and at LLM Proxy (before/after inference)
+- **Zero-leak guarantee** -- no raw secret ever leaves the system through any API, log, or LLM response
+
+### Security Hardening (V1.1.0)
+- **JWT authentication** -- all API endpoints require authentication by default
+- **3-role RBAC** -- viewer (read-only), secops (operational), admin (full control)
+- **Input sanitization** -- XSS prevention, SQL injection protection, path traversal blocking on all inputs
+- **SHA256 skills integrity** -- cryptographic verification of all core modules with drift detection alerts
+- **Security-first defaults** -- loopback-only binding, auth enabled, LLM disabled, Ollama network-isolated
+
+### Fleet Management & Cloud
+- **Agent registration** -- ANGELNODE agents auto-register with Cloud on startup
+- **Policy distribution** -- centralized policy management with automatic sync every 60 seconds
+- **Heartbeat monitoring** -- agent health tracking with last-seen timestamps
+- **Behavioral fingerprinting** -- agent identity verification based on behavioral patterns
+- **Multi-tenant support** -- tenant isolation via `X-TENANT-ID` header scoping
+
+### AI Shield & Integrations
+- **AI agent adapters** -- built-in support for OpenClaw, MoltBot, and Claude Code agent frameworks
+- **Tool-call mediation** -- every AI tool call is evaluated against the policy engine before execution
+- **Secret-aware blocking** -- any tool call flagged with `accesses_secrets: true` is blocked regardless of tool name
+- **Burst detection** -- alerts when >30 AI tool calls occur within 10 seconds
+
+### Enterprise Dashboard
+- **Single-page web UI** -- served at `/ui` with zero build step (single HTML file)
+- **Real-time fleet status** -- agent list with health, tags, trust state, last sync
+- **Threat landscape chart** -- events by category over the last 24 hours
+- **Active alerts feed** -- live security events with severity icons
+- **AngelClaw AI chat** -- ask questions about incidents, policies, and security posture directly from the dashboard
+
+### LLM Proxy
+- **Guardian angel for LLMs** -- optional proxy at `/api/v1/llm/chat` for safe local AI usage
+- **Mandatory system prompt** -- enforced security-analyst persona that cannot be overridden
+- **Bidirectional scrubbing** -- user prompts scrubbed before LLM, LLM responses scrubbed before user
+- **Network isolation** -- Ollama has no host port; only reachable from Docker internal network
+
+### DevOps & Quality
+- **Docker Compose deployment** -- single-command production deployment with 3 services (angelnode, cloud, ollama)
+- **systemd integration** -- automatic start on boot for Linux servers
+- **Cross-platform installers** -- one-command install for Linux, macOS, and Windows
+- **Wazuh SIEM integration** -- Filebeat log shipping with custom detection rules
+- **979 tests passing** -- 93% code coverage across the entire codebase
+- **CI/CD pipeline** -- GitHub Actions with linting (ruff), testing (pytest), and cross-platform validation
+- **Windows compatibility** -- path handling, PowerShell installer, and CI validation on Windows
+
+### API Surface
+- **40+ REST endpoints** -- comprehensive API covering agents, events, policies, analytics, assistant, guardian, auth, and LLM proxy
+- **AI Assistant API** -- incident summarization, policy proposals, and event explanation endpoints
+- **Guardian Chat API** -- unified chat interface for security operations
+- **Analytics API** -- threat matrix, AI traffic inspection, session analytics, agent timeline, policy evolution
+
+---
+
+## Installation
+
+### Prerequisites
+
+| Requirement | Version | Notes |
+|-------------|---------|-------|
+| Docker | 20.10+ | Docker Desktop (macOS/Windows) or Docker Engine (Linux) |
+| Docker Compose | v2+ | Included with Docker Desktop; `docker compose` plugin on Linux |
+| Git | 2.x+ | For cloning the repository |
+| Python | 3.11+ | Only needed for local development (not Docker) |
+
+---
+
+### Linux -- One-Command Install
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
+```
+
+**What it does:** Installs Docker (if missing), clones the repo, builds and starts the full stack (ANGELNODE + Cloud + Ollama), registers a systemd service for auto-start on boot.
+
+<details>
+<summary>Manual steps (if you prefer not to pipe to bash)</summary>
+
+```bash
+# 1. Install Docker
+curl -fsSL https://get.docker.com | sh
+systemctl enable docker && systemctl start docker
+
+# 2. Clone AngelClaw
+git clone https://github.com/Senior3514/AngelClaw.git /root/AngelClaw
+
+# 3. Start the stack
+cd /root/AngelClaw/ops
+docker compose up -d --build
+
+# 4. Verify
+curl http://127.0.0.1:8400/health   # ANGELNODE
+curl http://127.0.0.1:8500/health   # Cloud API
+```
+
+</details>
+
+<details>
+<summary>Optional environment variables</summary>
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ANGELCLAW_DIR` | `/root/AngelClaw` | Install directory |
+| `ANGELCLAW_TENANT_ID` | `default` | Tenant identifier |
+| `ANGELCLAW_CLOUD_URL` | `http://cloud:8500` | Cloud URL for agents |
+| `LLM_ENABLED` | `false` | Enable LLM proxy |
+
+Example with custom options:
+```bash
+ANGELCLAW_TENANT_ID=prod LLM_ENABLED=true curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
+```
+
+</details>
+
+**After install:**
+
+```bash
+systemctl status angelclaw          # check stack status
+journalctl -u angelclaw -f          # follow logs
+curl http://127.0.0.1:8500/ui       # open dashboard
+```
+
+---
+
+### macOS -- One-Command Install
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_macos.sh | bash
+```
+
+**What it does:** Installs Homebrew (if missing), installs Docker Desktop (if missing), clones the repo, builds and starts the full stack.
+
+<details>
+<summary>Manual steps</summary>
+
+```bash
+# 1. Install Docker Desktop (via Homebrew)
+brew install --cask docker
+# Open Docker Desktop and wait for it to start
+
+# 2. Clone AngelClaw
+git clone https://github.com/Senior3514/AngelClaw.git ~/AngelClaw
+
+# 3. Start the stack
+cd ~/AngelClaw/ops
+docker compose up -d --build
+
+# 4. Verify
+curl http://127.0.0.1:8400/health   # ANGELNODE
+curl http://127.0.0.1:8500/health   # Cloud API
+```
+
+</details>
+
+**After install:**
+
+```bash
+docker ps                              # check containers
+open http://127.0.0.1:8500/ui          # open dashboard in browser
+~/AngelClaw/ops/cli/angelclawctl status  # CLI status check
+```
+
+---
+
+### Windows -- One-Command Install
+
+**Prerequisite:** [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/) must be installed and running.
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw; C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
+```
+
+> **Note:** Windows installs **ANGELNODE only** (the lightweight agent). The Cloud backend runs on your Linux/macOS server. Replace `YOUR-VPS-IP` with your server's IP address.
+
+<details>
+<summary>Manual steps</summary>
+
+```powershell
+# 1. Install Docker Desktop from https://docs.docker.com/desktop/install/windows-install/
+
+# 2. Open PowerShell as Administrator
+Set-ExecutionPolicy Bypass -Scope Process -Force
+
+# 3. Clone AngelClaw
+git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw
+
+# 4. Run the installer (connects to your remote Cloud)
+C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500" -TenantId "default"
+
+# 5. Verify
+curl http://127.0.0.1:8400/status
+```
+
+</details>
+
+<details>
+<summary>Parameters</summary>
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `-CloudUrl` | `http://your-cloud-server:8500` | Your VPS Cloud API URL |
+| `-TenantId` | `default` | Tenant identifier |
+| `-InstallDir` | `C:\AngelClaw` | Install directory |
+
+</details>
+
+**Example** -- connecting to a VPS at `168.231.110.18`:
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw; C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl http://168.231.110.18:8500
+```
+
+---
+
+### Development Setup (All Platforms)
+
+```bash
+# Option 1: Docker Compose (recommended)
+git clone https://github.com/Senior3514/AngelClaw.git
+cd AngelClaw/ops
+docker compose up --build
+
+# Option 2: Local Python
+git clone https://github.com/Senior3514/AngelClaw.git
+cd AngelClaw
+pip install -e ".[dev,cloud]"
+uvicorn angelnode.core.server:app --host 127.0.0.1 --port 8400 &
+uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
+```
+
+---
+
+### Quick Reference -- Post-Install
+
+| What | URL / Command |
+|------|---------------|
+| Dashboard | `http://127.0.0.1:8500/ui` |
+| ANGELNODE health | `curl http://127.0.0.1:8400/health` |
+| Cloud API health | `curl http://127.0.0.1:8500/health` |
+| CLI status | `./ops/cli/angelclawctl status` |
+| Chat with AngelClaw | `curl -X POST http://127.0.0.1:8500/api/v1/angelclaw/chat -H 'Content-Type: application/json' -d '{"tenantId":"default","prompt":"Scan the system"}'` |
+| Remote access (SSH tunnel) | `ssh -L 8500:127.0.0.1:8500 user@your-vps` |
+
+---
 
 ## AngelClaw AGI Guardian (V1.1.0)
 
 AngelClaw is a **full-stack, enterprise-grade, autonomous AGI security suite**:
 
-- **Autonomous Brain** — 29 NLP intents, natural language security chat, context-aware responses
-- **Threat Shield** — 13 prompt injection patterns, 6 data leakage detectors, 7 evil AGI patterns, Lethal Trifecta monitoring, 6-stage ATT&CK attack chain detection
-- **Always-On Daemon** — Continuous scans, shield assessments, drift detection, agent health monitoring, security checks for prompt injection attempts and data exfil signs
-- **Action Framework** — 11 action types with dry-run proposals, confirmation workflow, full audit trail
-- **Auth & RBAC** — JWT authentication, 3 roles (viewer/secops/admin), no unauthenticated access by default
-- **Secret Protection** — 40+ pattern secret scanner, 3-layer redaction pipeline, NEVER leaks secrets
-- **Skills Integrity** — SHA256 verification of all core modules, drift detection with HIGH severity alerts
-- **Fleet Management** — Agent registration, policy distribution, heartbeat monitoring
-- **Guardian Chat** — Unified AI chat for incidents, threats, policies, scans, and general security guidance
-- **Enterprise Dashboard** — Real-time fleet status, threat landscape, alerts, AngelClaw AI chat
+- **Autonomous Brain** -- 29 NLP intents, natural language security chat, context-aware responses
+- **Threat Shield** -- 13 prompt injection patterns, 6 data leakage detectors, 7 evil AGI patterns, Lethal Trifecta monitoring, 6-stage ATT&CK attack chain detection
+- **Always-On Daemon** -- Continuous scans, shield assessments, drift detection, agent health monitoring, security checks for prompt injection attempts and data exfil signs
+- **Action Framework** -- 11 action types with dry-run proposals, confirmation workflow, full audit trail
+- **Auth & RBAC** -- JWT authentication, 3 roles (viewer/secops/admin), no unauthenticated access by default
+- **Secret Protection** -- 40+ pattern secret scanner, 3-layer redaction pipeline, NEVER leaks secrets
+- **Skills Integrity** -- SHA256 verification of all core modules, drift detection with HIGH severity alerts
+- **Fleet Management** -- Agent registration, policy distribution, heartbeat monitoring
+- **Guardian Chat** -- Unified AI chat for incidents, threats, policies, scans, and general security guidance
+- **Enterprise Dashboard** -- Real-time fleet status, threat landscape, alerts, AngelClaw AI chat
 
 AngelClaw incorporates and extends security concepts from ClawSec, OpenClaw, and Moltbot agentic AI security research. See [docs/angelclaw_vs_clawsec.md](docs/angelclaw_vs_clawsec.md) for the capability mapping.
 
 ## Repository Structure
 
 ```
-angelgrid/
+AngelClaw/
 ├── angelnode/           # Local autonomous protection agent
 │   ├── core/            #   Policy engine, evaluation API, structured logging
 │   ├── ai_shield/       #   AI agent adapters (OpenClaw, MoltBot, Claude Code)
@@ -54,13 +326,14 @@ angelgrid/
 │   ├── security/        #   Cryptographic helpers and input sanitization
 │   └── config/          #   Configuration schemas
 ├── ops/                 # Deployment and integrations
-│   ├── cli/             #   angelgridctl operator CLI
-│   ├── install/         #   Linux and Windows installers
+│   ├── cli/             #   angelclawctl operator CLI
+│   ├── install/         #   Linux, macOS, and Windows installers
 │   ├── systemd/         #   systemd unit files
 │   ├── config/          #   Environment config templates
 │   ├── docker/          #   Dockerfiles and compose configurations
 │   ├── wazuh/           #   Wazuh SIEM integration configs and rules
 │   └── infra/           #   Future: Terraform/Pulumi modules
+├── tests/               # 979 tests — 93% coverage
 └── docs/                # Architecture, threat model, concepts
 ```
 
@@ -76,92 +349,13 @@ angelgrid/
 | Containers      | Docker + docker-compose             |
 | LLM (optional)  | Ollama (internal, disabled by default) |
 
-## Installation
-
-### Linux Quick Install
-
-On a fresh Ubuntu/Debian server (as root):
-
-```bash
-curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
-```
-
-This installs the full stack (AngelClaw Node + AngelClaw Cloud + Ollama) with Docker Compose
-and registers a systemd service for automatic start on boot.
-
-Optional environment variables:
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `ANGELCLAW_DIR` | `/root/AngelClaw` | Install directory |
-| `ANGELCLAW_TENANT_ID` | `default` | Tenant identifier |
-| `ANGELCLAW_CLOUD_URL` | `http://cloud:8500` | Cloud URL for agents |
-| `LLM_ENABLED` | `false` | Enable LLM proxy |
-
-After install:
-
-```bash
-systemctl status angelclaw          # check stack status
-journalctl -u angelclaw -f          # follow logs
-curl http://127.0.0.1:8500/ui       # open dashboard
-```
-
-### Windows Agent Quick Install
-
-On a Windows machine with Docker Desktop installed (PowerShell as Administrator):
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force
-git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw
-C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500" -TenantId "my-tenant"
-```
-
-This installs **AngelClaw Node only** — the lightweight agent that connects to your
-remote AngelClaw Cloud running on the Linux VPS.
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `-CloudUrl` | `http://your-cloud-server:8500` | Your VPS Cloud API URL |
-| `-TenantId` | `default` | Tenant identifier |
-| `-InstallDir` | `C:\AngelClaw` | Install directory |
-
-### Windows Agent Quickstart (VPS Example)
-
-If your AngelClaw Cloud is running on a VPS at `168.231.110.18`:
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force
-git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw
-C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl http://168.231.110.18:8500
-```
-
-The agent will register with the remote AngelClaw Cloud automatically and begin
-syncing policies. Verify with:
-
-```powershell
-curl http://127.0.0.1:8400/status
-```
-
-### Quick Start (Development)
-
-```bash
-# Docker Compose (recommended)
-cd ops
-docker compose up --build
-
-# Or run locally:
-pip install -e ".[dev,cloud]"
-uvicorn angelnode.core.server:app --host 127.0.0.1 --port 8400
-uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
-```
-
 ## Core Concepts
 
-- **Guardian Angel** – AngelClaw protects quietly. Most operations pass through with zero friction — only genuinely dangerous actions get blocked.
-- **AI-First** – We support any model (Ollama, Claude, OpenAI), any agent framework (OpenClaw, Claude Code, MoltBot), and any workflow. Use AI however you like.
-- **ANGELNODE** – Lightweight agent that evaluates actions locally. Fast, autonomous, always-on.
-- **AI Shield** – Mediator for AI agent tool calls. Safe tools flow freely; risky ones get flagged.
-- **Fail-Closed** – If the engine is unreachable, actions are blocked. Safety net of last resort, not the normal mode.
+- **Guardian Angel** -- AngelClaw protects quietly. Most operations pass through with zero friction -- only genuinely dangerous actions get blocked.
+- **AI-First** -- We support any model (Ollama, Claude, OpenAI), any agent framework (OpenClaw, Claude Code, MoltBot), and any workflow. Use AI however you like.
+- **ANGELNODE** -- Lightweight agent that evaluates actions locally. Fast, autonomous, always-on.
+- **AI Shield** -- Mediator for AI agent tool calls. Safe tools flow freely; risky ones get flagged.
+- **Fail-Closed** -- If the engine is unreachable, actions are blocked. Safety net of last resort, not the normal mode.
 
 See [docs/concepts/glossary.md](docs/concepts/glossary.md) for the full glossary and
 [docs/concepts/angelgrid_ai.md](docs/concepts/angelgrid_ai.md) for our product philosophy.
@@ -221,7 +415,7 @@ organized by category. Rules are evaluated top-down; **first match wins**.
 
 | Rule ID | Action | What it does |
 |---------|--------|--------------|
-| `block-ai-tool-secrets-access` | **BLOCK** | Any tool call flagged with `accesses_secrets: true` — **evaluated first** |
+| `block-ai-tool-secrets-access` | **BLOCK** | Any tool call flagged with `accesses_secrets: true` -- **evaluated first** |
 | `allow-ai-tool-read-file` | AUDIT | `read_file`, `search`, `grep`, `glob`, `list_files` |
 | `allow-ai-tool-analysis` | ALLOW | `summarize`, `explain`, `analyze`, `diff`, `status` |
 | `alert-ai-tool-shell` | ALERT | `bash`, `shell`, `exec`, `terminal`, `run_command` |
@@ -240,16 +434,16 @@ Policy rules support enhanced `detail_conditions`:
 // Exact match (existing)
 "key": "value"
 
-// Regex pattern — matches event.details["command"] via re.search
+// Regex pattern -- matches event.details["command"] via re.search
 "command_pattern": "rm\\s+-rf"
 
-// List membership — matches if event.details["tool_name"] is in the list
+// List membership -- matches if event.details["tool_name"] is in the list
 "tool_name_in": ["bash", "shell", "exec"]
 
-// Numeric greater-than — matches if event.details["payload_bytes"] > 1048576
+// Numeric greater-than -- matches if event.details["payload_bytes"] > 1048576
 "payload_bytes_gt": 1048576
 
-// Burst detection — triggers when event count exceeds threshold in window
+// Burst detection -- triggers when event count exceeds threshold in window
 "burst_window_seconds": 10,
 "burst_threshold": 20
 ```
@@ -257,8 +451,8 @@ Policy rules support enhanced `detail_conditions`:
 ### Overriding / Extending Policies
 
 1. Edit `angelnode/config/default_policy.json` directly (bind-mounted read-only in Docker)
-2. Or push updated rules via AngelClaw Cloud → the ANGELNODE polls every 60s
-3. Rules are first-match-wins — put more specific rules **before** generic catch-alls
+2. Or push updated rules via AngelClaw Cloud -- the ANGELNODE polls every 60s
+3. Rules are first-match-wins -- put more specific rules **before** generic catch-alls
 
 ---
 
@@ -293,7 +487,7 @@ curl "http://127.0.0.1:8500/api/v1/assistant/explain?event_id=<uuid>"
 
 ## Secret Protection
 
-AngelClaw embraces AI usage — but **absolutely refuses to leak secrets**.
+AngelClaw embraces AI usage -- but **absolutely refuses to leak secrets**.
 
 Every layer in the stack scans for and redacts API keys, tokens, passwords,
 SSH keys, JWTs, connection strings, and sensitive file paths. The secret
@@ -305,7 +499,7 @@ scanner (`shared/security/secret_scanner.py`) is used by:
 | **Cloud AI Assistant** | Redacts event details and explanations in all API responses |
 | **LLM Proxy** | Scrubs user prompt *before* LLM, scrubs LLM response *before* user |
 
-**No raw secret ever leaves the system** — not through the API, not through
+**No raw secret ever leaves the system** -- not through the API, not through
 the LLM, not through event explanations. This is the one rule that is never relaxed.
 
 See [docs/architecture/overview.md](docs/architecture/overview.md) for the full
@@ -313,7 +507,7 @@ secret protection pipeline diagram.
 
 ---
 
-## LLM Proxy — Guardian Angel for LLMs
+## LLM Proxy -- Guardian Angel for LLMs
 
 An optional LLM proxy endpoint at `/api/v1/llm/chat` forwards requests to an
 Ollama (or OpenAI-compatible) backend with an enforced guardian-angel system prompt.
@@ -341,7 +535,7 @@ Environment variables:
 | `LLM_MAX_TOKENS` | `1024` | Max tokens per response |
 | `LLM_TIMEOUT_SECONDS` | `60` | Request timeout |
 
-**Security**: The Ollama service has **no host port** — it's reachable only
+**Security**: The Ollama service has **no host port** -- it's reachable only
 from the Docker network at `http://ollama:11434`. Never expose it to the internet.
 
 ### Request schema
@@ -350,11 +544,11 @@ from the Docker network at `http://ollama:11434`. Never expose it to the interne
 POST /api/v1/llm/chat
 {
   "prompt": "Why was agent dev-01 blocked from writing to /etc?",  // required string
-  "context": {                      // optional dict — structured data for the LLM
+  "context": {                      // optional dict -- structured data for the LLM
     "agent_id": "dev-01",
     "recent_events": ["file_write blocked /etc/passwd"]
   },
-  "options": {                      // optional dict — model params forwarded to Ollama
+  "options": {                      // optional dict -- model params forwarded to Ollama
     "temperature": 0.3
   }
 }
@@ -414,13 +608,13 @@ ANGELNODE_URL=http://10.0.0.5:8400 CLOUD_URL=http://10.0.0.5:8500 ./ops/cli/ange
 The Guardian Angel dashboard is served at **`http://127.0.0.1:8500/ui`**.
 
 It shows:
-- **Fleet status** — registered agents, health, tags, last sync
-- **Network trust bar** — % of agents in verified/conditional/untrusted state
-- **Active alerts feed** — real-time security events with severity icons
-- **Threat landscape chart** — events by category over the last 24h
-- **AngelClaw AI chat** — ask questions about incidents, policies, and security posture
+- **Fleet status** -- registered agents, health, tags, last sync
+- **Network trust bar** -- % of agents in verified/conditional/untrusted state
+- **Active alerts feed** -- real-time security events with severity icons
+- **Threat landscape chart** -- events by category over the last 24h
+- **AngelClaw AI chat** -- ask questions about incidents, policies, and security posture
 
-No build step needed — it's a single HTML file served by FastAPI.
+No build step needed -- it's a single HTML file served by FastAPI.
 
 ---
 
@@ -478,15 +672,16 @@ No build step needed — it's a single HTML file served by FastAPI.
 
 AngelClaw Cloud is accessible from any device with a browser:
 
-- **Linux server** — Direct access at `http://127.0.0.1:8500/ui` or via SSH tunnel
-- **Windows host** — Install AngelClaw Node for local protection, access Cloud UI via browser
-- **Tablets/mobile** (e.g., Xiaomi Pad) — Access via browser at `http://YOUR-VPS-IP:8500/ui` (requires auth when exposed)
-- **SSH + CLI** — Use `angelclawctl` via SSH for command-line access from any device
+- **Linux server** -- Direct access at `http://127.0.0.1:8500/ui` or via SSH tunnel
+- **macOS** -- Direct access at `http://127.0.0.1:8500/ui` after Docker install
+- **Windows host** -- Install AngelClaw Node for local protection, access Cloud UI via browser
+- **Tablets/mobile** (e.g., Xiaomi Pad) -- Access via browser at `http://YOUR-VPS-IP:8500/ui` (requires auth when exposed)
+- **SSH + CLI** -- Use `angelclawctl` via SSH for command-line access from any device
 
 To expose the dashboard securely for remote access:
 
 ```bash
-# Option 1: SSH tunnel (recommended — no auth bypass needed)
+# Option 1: SSH tunnel (recommended -- no auth bypass needed)
 ssh -L 8500:127.0.0.1:8500 user@your-vps
 
 # Option 2: Reverse proxy with HTTPS (nginx/caddy)
