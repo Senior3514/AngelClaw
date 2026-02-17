@@ -44,12 +44,38 @@ def get_recent_activity(limit: int = 20) -> list[dict]:
     return items[:limit]
 
 
+def get_next_scan_time(tenant_id: str = "dev-tenant") -> str | None:
+    """Compute when the next daemon scan cycle will fire."""
+    if not _running or _cycles_completed == 0:
+        return None
+    try:
+        db = SessionLocal()
+        from cloud.angelclaw.preferences import get_preferences
+
+        prefs = get_preferences(db, tenant_id)
+        interval = max(60, prefs.scan_frequency_minutes * 60)
+        db.close()
+    except Exception:
+        interval = 600
+    # Estimate from last activity entry
+    if _activity_log:
+        last_ts = _activity_log[-1].get("timestamp", "")
+        try:
+            last_dt = datetime.fromisoformat(last_ts.replace("Z", "+00:00"))
+            next_dt = last_dt + timedelta(seconds=interval)
+            return next_dt.isoformat()
+        except Exception:
+            pass
+    return (datetime.now(timezone.utc) + timedelta(seconds=interval)).isoformat()
+
+
 def get_daemon_status() -> dict:
     return {
         "running": _running,
         "cycles_completed": _cycles_completed,
         "last_scan_summary": _last_scan_summary,
         "activity_count": len(_activity_log),
+        "next_scan_time": get_next_scan_time(),
     }
 
 

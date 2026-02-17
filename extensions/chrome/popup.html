@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=380">
+  <link rel="stylesheet" href="styles.css">
+  <style>body { width: 360px; min-height: 400px; }</style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-icon">&#128737;</div>
+    <div class="header-text">
+      <h1>AngelClaw AGI Guardian</h1>
+      <p>v1.2.0 — Fully Autonomous</p>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span class="status-dot checking" id="statusDot"></span>
+    <span class="status-label" id="statusLabel">Checking connection...</span>
+    <span class="status-version" id="statusVersion"></span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Quick Actions</div>
+    <div class="actions">
+      <button class="btn btn-primary" id="btnScan">Scan Now</button>
+      <button class="btn btn-secondary" id="btnShield">Shield Check</button>
+      <button class="btn btn-secondary" id="btnDashboard">Dashboard</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Ask AngelClaw</div>
+    <div class="chat-quick">
+      <input type="text" class="form-input" id="chatInput" placeholder="Ask AngelClaw anything...">
+      <button class="btn btn-accent" id="btnChat">Send</button>
+    </div>
+    <div id="chatResponse" class="mt-2 text-muted" style="max-height:120px;overflow-y:auto;"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Settings</div>
+    <div class="form-group">
+      <label class="form-label">API URL</label>
+      <input type="text" class="form-input" id="apiUrl" placeholder="http://localhost:8500">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Auth Token</label>
+      <input type="password" class="form-input" id="authToken" placeholder="Paste your JWT token">
+    </div>
+    <button class="btn btn-secondary" id="btnSave" style="margin-top:8px;flex:none;padding:8px 16px;">Save Settings</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -28,8 +28,10 @@ class AngelClawChatResponse(BaseModel):
     answer: str
     actions: list[dict[str, Any]] = Field(default_factory=list)
     effects: list[dict[str, Any]] = Field(default_factory=list)
-    references: list[str] = Field(default_factory=list)
+    references: list[str] = Field(default_factory=list, alias="refs")
     meta: dict[str, Any] = Field(default_factory=dict)
+
+    model_config = {"populate_by_name": True}
 
 
 # ---------------------------------------------------------------------------

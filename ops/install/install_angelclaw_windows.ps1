@@ -1,5 +1,5 @@
 # ============================================================================
-# AngelClaw AGI Guardian — Windows ANGELNODE Installer (V1.1.0)
+# AngelClaw AGI Guardian — Windows ANGELNODE Installer (V1.2.0)
 #
 # Installs the ANGELNODE agent only, connecting to a remote AngelClaw Cloud.
 # Requires Docker Desktop for Windows.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AngelClaw AGI Guardian — macOS Installer (V1.1.0)
+# AngelClaw AGI Guardian — macOS Installer (V1.2.0)
 #
 # Installs the full AngelClaw stack (ANGELNODE + Cloud + Ollama) on macOS
 # using Docker Desktop + Docker Compose.

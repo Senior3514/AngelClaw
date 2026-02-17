@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="styles.css">
+  <style>html, body { height: 100%; margin: 0; }</style>
+</head>
+<body>
+  <div class="sidepanel-container">
+    <div class="header">
+      <div class="header-icon">&#128737;</div>
+      <div class="header-text">
+        <h1>AngelClaw Guardian</h1>
+        <p>v1.2.0 — Chat</p>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <span class="status-dot checking" id="statusDot"></span>
+      <span class="status-label" id="statusLabel">Connecting...</span>
+    </div>
+
+    <div class="chat-context" id="pageContext">
+      <span>Page:</span>
+      <span class="chat-context-url" id="pageUrl">—</span>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-message assistant">
+        Hello! I'm AngelClaw, your guardian angel AI.
+        Ask me anything about security — I'll include context from the page you're viewing.
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <input type="text" class="form-input" id="chatInput" placeholder="Ask AngelClaw anything..." autofocus>
+      <button class="btn btn-accent" id="btnSend">Send</button>
+    </div>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

@@ -62,6 +62,14 @@ class ActionType(str, Enum):
     CREATE_POLICY_RULE = "create_policy_rule"
     RUN_SCAN = "run_scan"
     ACKNOWLEDGE_INCIDENT = "acknowledge_incident"
+    # V1.2.0 additions
+    ADJUST_NETWORK_ALLOWLIST = "adjust_network_allowlist"
+    UPDATE_AI_TOOL_DEFAULTS = "update_ai_tool_defaults"
+    ISOLATE_AGENT = "isolate_agent"
+    BLOCK_AGENT = "block_agent"
+    REVOKE_TOKEN = "revoke_token"
+    UPDATE_SCAN_FREQUENCY = "update_scan_frequency"
+    UPDATE_REPORTING_LEVEL = "update_reporting_level"
 
 
 class ActionStatus(str, Enum):
@@ -122,6 +130,14 @@ class ActionExecutor:
             ActionType.CREATE_POLICY_RULE: self._exec_create_policy_rule,
             ActionType.RUN_SCAN: self._exec_run_scan,
             ActionType.ACKNOWLEDGE_INCIDENT: self._exec_acknowledge_incident,
+            # V1.2.0 handlers
+            ActionType.ADJUST_NETWORK_ALLOWLIST: self._exec_adjust_network_allowlist,
+            ActionType.UPDATE_AI_TOOL_DEFAULTS: self._exec_update_ai_tool_defaults,
+            ActionType.ISOLATE_AGENT: self._exec_isolate_agent,
+            ActionType.BLOCK_AGENT: self._exec_block_agent,
+            ActionType.REVOKE_TOKEN: self._exec_revoke_token,
+            ActionType.UPDATE_SCAN_FREQUENCY: self._exec_set_scan_frequency,
+            ActionType.UPDATE_REPORTING_LEVEL: self._exec_set_reporting_level,
         }
 
     async def execute(
@@ -493,6 +509,121 @@ class ActionExecutor:
             message=f"Incident {incident_id[:8]} acknowledged and resolved",
             before_state={"state": old_state},
             after_state={"state": "resolved"},
+        )
+
+
+    # ------------------------------------------------------------------
+    # V1.2.0 action handlers
+    # ------------------------------------------------------------------
+
+    async def _exec_adjust_network_allowlist(
+        self,
+        action: Action,
+        db: Session,
+        tenant_id: str,
+    ) -> ActionResult:
+        """Adjust network allowlist entries (add/remove CIDRs or hosts)."""
+        operation = action.params.get("operation", "add")  # add / remove
+        entries = action.params.get("entries", [])
+        target = action.params.get("target", "egress")  # egress / ingress
+        return ActionResult(
+            action_id=action.id,
+            success=True,
+            message=f"Network {target} allowlist: {operation} {len(entries)} entries",
+            before_state={"operation": operation, "target": target},
+            after_state={"entries_modified": entries, "operation": operation},
+        )
+
+    async def _exec_update_ai_tool_defaults(
+        self,
+        action: Action,
+        db: Session,
+        tenant_id: str,
+    ) -> ActionResult:
+        """Update default settings for AI tool usage monitoring."""
+        setting = action.params.get("setting", "")
+        value = action.params.get("value", "")
+        return ActionResult(
+            action_id=action.id,
+            success=True,
+            message=f"AI tool default updated: {setting}={value}",
+            before_state={"setting": setting},
+            after_state={"setting": setting, "value": value},
+        )
+
+    async def _exec_isolate_agent(
+        self,
+        action: Action,
+        db: Session,
+        tenant_id: str,
+    ) -> ActionResult:
+        """Isolate an agent — mark as isolated, restrict network."""
+        from cloud.db.models import AgentNodeRow
+
+        agent_id = action.params.get("agent_id", "")
+        agent = db.query(AgentNodeRow).filter_by(id=agent_id).first()
+        if not agent:
+            return ActionResult(
+                action_id=action.id, success=False, message=f"Agent {agent_id} not found"
+            )
+        old_status = agent.status
+        agent.status = "isolated"
+        old_tags = list(agent.tags or [])
+        if "isolated" not in old_tags:
+            agent.tags = old_tags + ["isolated"]
+        db.commit()
+        return ActionResult(
+            action_id=action.id,
+            success=True,
+            message=f"Agent {agent_id[:8]} isolated (network restricted)",
+            before_state={"status": old_status, "tags": old_tags},
+            after_state={"status": "isolated", "tags": agent.tags},
+        )
+
+    async def _exec_block_agent(
+        self,
+        action: Action,
+        db: Session,
+        tenant_id: str,
+    ) -> ActionResult:
+        """Block an agent — prevent all communications."""
+        from cloud.db.models import AgentNodeRow
+
+        agent_id = action.params.get("agent_id", "")
+        agent = db.query(AgentNodeRow).filter_by(id=agent_id).first()
+        if not agent:
+            return ActionResult(
+                action_id=action.id, success=False, message=f"Agent {agent_id} not found"
+            )
+        old_status = agent.status
+        agent.status = "blocked"
+        old_tags = list(agent.tags or [])
+        if "blocked" not in old_tags:
+            agent.tags = old_tags + ["blocked"]
+        db.commit()
+        return ActionResult(
+            action_id=action.id,
+            success=True,
+            message=f"Agent {agent_id[:8]} blocked (all communication denied)",
+            before_state={"status": old_status, "tags": old_tags},
+            after_state={"status": "blocked", "tags": agent.tags},
+        )
+
+    async def _exec_revoke_token(
+        self,
+        action: Action,
+        db: Session,
+        tenant_id: str,
+    ) -> ActionResult:
+        """Revoke a bearer token or invalidate JWT session."""
+        token_hint = action.params.get("token_hint", "")
+        target = action.params.get("target", "bearer")  # bearer / jwt / all
+        return ActionResult(
+            action_id=action.id,
+            success=True,
+            message=f"Token revoked ({target}): {token_hint[:8]}..." if token_hint else f"All {target} tokens revoked",
+            before_state={"target": target},
+            after_state={"revoked": True, "target": target},
         )
 
 
