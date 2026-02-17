@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import platform
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -34,6 +35,8 @@ from cloud.angelclaw.security import (
     WorkspaceIsolation,
 )
 from cloud.angelclaw.shield import ThreatCategory, ThreatIndicator, ThreatSeverity
+
+_IS_WINDOWS = platform.system() == "Windows"
 
 # ===========================================================================
 # 1. PromptDefense Tests
@@ -617,12 +620,14 @@ class TestSkillIntegrity:
     def test_backup_path_for(self):
         si = SkillIntegrity(backup_dir="/tmp/backups")
         path = si._backup_path_for("angelclaw.brain")
-        assert path == "/tmp/backups/angelclaw_brain.py.bak"
+        expected = os.path.join("/tmp/backups", "angelclaw_brain.py.bak")
+        assert path == expected
 
     def test_backup_path_for_with_slash(self):
         si = SkillIntegrity(backup_dir="/tmp/backups")
         path = si._backup_path_for("cloud/module")
-        assert path == "/tmp/backups/cloud_module.py.bak"
+        expected = os.path.join("/tmp/backups", "cloud_module.py.bak")
+        assert path == expected
 
 
 # ===========================================================================
@@ -650,63 +655,75 @@ class TestWorkspaceIsolation:
         assert wi.output_dirs == ["/data/tenants/acme/output"]
         assert wi.tenant_id == "acme"
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_read_allowed_normal_path(self):
         wi = WorkspaceIsolation(workspace_root="/data/tenants/acme")
         allowed, reason = wi.check_path_access("/data/tenants/acme/file.txt", "read")
         assert allowed is True
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_read_blocked_etc_shadow(self):
         wi = WorkspaceIsolation()
         allowed, reason = wi.check_path_access("/etc/shadow", "read")
         assert allowed is False
         assert "sensitive" in reason.lower() or "blocked" in reason.lower()
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_read_blocked_ssh_keys(self):
         wi = WorkspaceIsolation()
         allowed, reason = wi.check_path_access("/root/.ssh/id_rsa", "read")
         assert allowed is False
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_read_blocked_aws_credentials(self):
         wi = WorkspaceIsolation()
         allowed, reason = wi.check_path_access("/root/.aws/credentials", "read")
         assert allowed is False
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_read_blocked_gnupg(self):
         wi = WorkspaceIsolation()
         allowed, reason = wi.check_path_access("/root/.gnupg/private.key", "read")
         assert allowed is False
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_read_blocked_home_ssh(self):
         wi = WorkspaceIsolation()
         allowed, reason = wi.check_path_access("/home/user/.ssh/id_ed25519", "read")
         assert allowed is False
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_write_blocked_system_etc(self):
         wi = WorkspaceIsolation(workspace_root="/data/workspace")
         allowed, reason = wi.check_path_access("/etc/passwd", "write")
         assert allowed is False
-        assert "blocked" in reason.lower() or "protected" in reason.lower()
+        assert "blocked" in reason.lower() or "outside" in reason.lower()
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_write_blocked_boot(self):
         wi = WorkspaceIsolation(workspace_root="/data/workspace")
         allowed, reason = wi.check_path_access("/boot/vmlinuz", "write")
         assert allowed is False
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_write_blocked_proc(self):
         wi = WorkspaceIsolation(workspace_root="/data/workspace")
         allowed, reason = wi.check_path_access("/proc/self/mem", "write")
         assert allowed is False
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_write_blocked_sys(self):
         wi = WorkspaceIsolation(workspace_root="/data/workspace")
         allowed, reason = wi.check_path_access("/sys/kernel/something", "write")
         assert allowed is False
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_delete_blocked_system_paths(self):
         wi = WorkspaceIsolation(workspace_root="/data/workspace")
         allowed, reason = wi.check_path_access("/usr/lib/libfoo.so", "delete")
         assert allowed is False
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_execute_blocked_system_paths(self):
         wi = WorkspaceIsolation(workspace_root="/data/workspace")
         allowed, reason = wi.check_path_access("/sbin/iptables", "execute")
@@ -737,6 +754,7 @@ class TestWorkspaceIsolation:
         assert allowed is False
         assert "traversal" in reason.lower()
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_cross_tenant_detection(self):
         wi = WorkspaceIsolation(
             workspace_root="/data/tenants/acme",
@@ -746,6 +764,7 @@ class TestWorkspaceIsolation:
         assert allowed is False
         assert "cross-tenant" in reason.lower() or "Cross-tenant" in reason
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_cross_tenant_user_pattern(self):
         wi = WorkspaceIsolation(
             workspace_root="/data/users/alice",
@@ -754,6 +773,7 @@ class TestWorkspaceIsolation:
         allowed, reason = wi.check_path_access("/data/users/bob/private.txt", "read")
         assert allowed is False
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_cross_tenant_workspace_pattern(self):
         wi = WorkspaceIsolation(
             workspace_root="/data/workspaces/ws1",
@@ -762,6 +782,7 @@ class TestWorkspaceIsolation:
         allowed, reason = wi.check_path_access("/data/workspaces/ws2/data.txt", "read")
         assert allowed is False
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_cross_tenant_org_pattern(self):
         wi = WorkspaceIsolation(
             workspace_root="/data/orgs/org1",
@@ -770,6 +791,7 @@ class TestWorkspaceIsolation:
         allowed, reason = wi.check_path_access("/data/orgs/org2/config.yml", "read")
         assert allowed is False
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_same_tenant_allowed(self):
         wi = WorkspaceIsolation(
             workspace_root="/data/tenants/acme",
@@ -778,6 +800,7 @@ class TestWorkspaceIsolation:
         allowed, reason = wi.check_path_access("/data/tenants/acme/notes.txt", "read")
         assert allowed is True
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_get_stats(self):
         wi = WorkspaceIsolation(
             workspace_root="/data/workspace",
@@ -791,6 +814,7 @@ class TestWorkspaceIsolation:
         assert stats["tenant_id"] == "test"
         assert stats["violation_count"] == 1
 
+    @pytest.mark.skipif(_IS_WINDOWS, reason="Unix path test")
     def test_violation_count_increments(self):
         wi = WorkspaceIsolation(workspace_root="/data/workspace")
         wi.check_path_access("/etc/shadow", "read")
