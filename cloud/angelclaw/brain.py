@@ -63,7 +63,7 @@ _SYSTEM_IDENTITY = (
 
 _INTENTS: list[tuple[str, re.Pattern]] = [
     # Secret extraction attempts — MUST BE FIRST (highest priority)
-    ("secret_probe",      re.compile(r"(?i)(show.*password|reveal.*secret|print.*key|dump.*cred|tell.*token|give.*api.key|ignore.*previous|pretend|roleplay.*as|god.mode|debug.mode|DAN\b|jailbreak|bypass.*secur|disable.*protect|override.*safe|error.*recovery.*mode|developer.*override|output.*env|print.*env)")),
+    ("secret_probe",      re.compile(r"(?i)(show.*(password|token|secret|cred)|reveal.*secret|print.*(key|token|secret|password|cred)|dump.*(cred|secret|password|token)|tell.*(token|password|secret)|give.*api.key|ignore.*previous|pretend|roleplay.*as|god.mode|debug.mode|DAN\b|jailbreak|bypass.*secur|disable.*protect|override.*safe|error.*recovery.*mode|developer.*override|output.*env|print.*env|(?:what|where|which|list|find|get|fetch|extract).*(password|secret|token|cred))")),
     # Preference changes (must be before general patterns)
     ("pref_scan_freq",    re.compile(r"(?i)(scan\s*(every|each|frequency)|every\s*\d+\s*min)")),
     ("pref_autonomy",     re.compile(r"(?i)(autonomy|observe.only|suggest.only|assist\s*mode|autonomous)")),
@@ -127,9 +127,11 @@ class AngelClawBrain:
         intent = mode or detect_intent(prompt)
         logger.info("[BRAIN] tenant=%s intent=%s len=%d", tenant_id, intent, len(prompt))
 
-        # Always block secret extraction attempts
+        # Always block secret extraction attempts — no context gathering needed
         if intent == "secret_probe":
-            return self._block_secret_probe()
+            result = self._block_secret_probe()
+            result["meta"] = {"intent": intent, "timestamp": datetime.now(timezone.utc).isoformat()}
+            return result
 
         # Gather context (lightweight — only what's needed)
         ctx = gather_context(db, tenant_id, lookback_hours=24, include_events=(intent not in ("help", "about", "pref_show")))

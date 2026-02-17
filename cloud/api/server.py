@@ -197,7 +197,7 @@ def health_check():
     orch = angel_orchestrator.status()
     return {
         "status": "ok",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "orchestrator": orch["running"],
         "agents": {
             name: info["status"]

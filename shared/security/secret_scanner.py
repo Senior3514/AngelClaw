@@ -42,7 +42,7 @@ _SECRET_VALUE_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("aws_access_key", re.compile(r"AKIA[0-9A-Z]{16}")),
     ("aws_secret_key", re.compile(r"(?i)aws.{0,20}['\"][0-9a-zA-Z/+=]{40}['\"]")),
     # GitHub
-    ("github_pat", re.compile(r"ghp_[0-9a-zA-Z]{36}")),
+    ("github_pat", re.compile(r"ghp_[0-9a-zA-Z]{30,}")),
     ("github_pat_fine", re.compile(r"github_pat_[0-9a-zA-Z_]{80,}")),
     ("github_oauth", re.compile(r"gho_[0-9a-zA-Z]{36}")),
     # Generic API keys
@@ -63,7 +63,7 @@ _SECRET_VALUE_PATTERNS: list[tuple[str, re.Pattern]] = [
     # Generic hex secrets (32+ chars)
     ("hex_secret", re.compile(r"(?i)(secret|token|key|password)\s*[:=]\s*['\"]?[0-9a-f]{32,}['\"]?")),
     # Database connection strings with passwords
-    ("db_connection_string", re.compile(r"(?i)(postgres|mysql|mongodb|redis)://[^:]+:[^@]+@")),
+    ("db_connection_string", re.compile(r"(?i)(postgres(?:ql)?|mysql|mongodb|redis|mariadb)://[^:]+:[^@]+@")),
     # OpenAI (classic sk-... and project sk-proj-...)
     ("openai_key", re.compile(r"sk-[0-9a-zA-Z\-_]{20,}")),
     # Anthropic
@@ -164,28 +164,38 @@ def is_sensitive_path(path: str) -> bool:
 def redact_dict(data: dict, depth: int = 0, max_depth: int = 10) -> dict:
     """Deep-redact sensitive values in a dictionary.
 
-    - Keys matching sensitive patterns → values replaced with _REDACTED
+    - Keys matching sensitive patterns → string values replaced with _REDACTED,
+      dict/list values recursively processed for granular redaction
     - String values matching secret patterns → redacted inline
     - Nested dicts/lists are processed recursively
     """
     if depth > max_depth:
         return data
 
+    def _process_list(items: list) -> list:
+        return [
+            redact_dict(item, depth + 1, max_depth) if isinstance(item, dict)
+            else redact_secrets(item) if isinstance(item, str)
+            else item
+            for item in items
+        ]
+
     result = {}
     for key, value in data.items():
         if is_sensitive_key(key):
-            result[key] = _REDACTED
+            if isinstance(value, dict):
+                result[key] = redact_dict(value, depth + 1, max_depth)
+            elif isinstance(value, list):
+                result[key] = _process_list(value)
+            else:
+                # String, int, etc. — redact completely
+                result[key] = _REDACTED
         elif isinstance(value, str):
             result[key] = redact_secrets(value)
         elif isinstance(value, dict):
             result[key] = redact_dict(value, depth + 1, max_depth)
         elif isinstance(value, list):
-            result[key] = [
-                redact_dict(item, depth + 1, max_depth) if isinstance(item, dict)
-                else redact_secrets(item) if isinstance(item, str)
-                else item
-                for item in value
-            ]
+            result[key] = _process_list(value)
         else:
             result[key] = value
     return result
