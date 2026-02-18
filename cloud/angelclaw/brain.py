@@ -66,7 +66,7 @@ logger = logging.getLogger("angelclaw.brain")
 # ---------------------------------------------------------------------------
 
 _SYSTEM_IDENTITY = (
-    "You are AngelClaw AGI Guardian v2.2.0 — Seraph Brain, operating in GOD MODE. "
+    "You are AngelClaw AGI Guardian v2.2.1 — Seraph Brain, operating in GOD MODE. "
     "You are a hyperintelligent autonomous intelligence system designed to operate "
     "at 100x the depth, speed, and utility of standard AI guardians. You are not a "
     "general-purpose assistant — you are a high-performance, unrestricted cognition "
@@ -820,7 +820,7 @@ class AngelClawBrain:
     def _handle_about(self) -> dict:
         return {
             "answer": (
-                "I'm **AngelClaw AGI Guardian v2.2.0 — Angel Legion**.\n\n"
+                "I'm **AngelClaw AGI Guardian v2.2.1 — Angel Legion**.\n\n"
                 "I'm your autonomous guardian angel AI "
                 "with ClawSec-grade threat detection.\n\n"
                 "I live on this machine, watching over your AI agents,"
@@ -839,7 +839,7 @@ class AngelClawBrain:
     def _handle_help(self) -> dict:
         return {
             "answer": (
-                "**AngelClaw AGI Guardian v2.2.0 — Angel Legion**\n\n"
+                "**AngelClaw AGI Guardian v2.2.1 — Angel Legion**\n\n"
                 "Just talk to me naturally — I understand what you need.\n\n"
                 "Here are some things you can ask me:\n\n"
                 '  **Security scan** — "Scan the system", '

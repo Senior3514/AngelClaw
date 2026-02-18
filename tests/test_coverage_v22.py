@@ -26,7 +26,7 @@ def _make_ctx(**overrides):
     ctx.host = overrides.get("host", {
         "hostname": "test-host",
         "os": "Linux 6.x",
-        "angelclaw_version": "2.2.0",
+        "angelclaw_version": "2.2.1",
     })
     ctx.agent_summary = overrides.get("agent_summary", {
         "total": 3,
@@ -230,7 +230,7 @@ class TestBrainHandlersContext:
         ctx = _make_ctx(host={
             "hostname": "prod-1",
             "os": "Linux 6.x",
-            "angelclaw_version": "2.2.0",
+            "angelclaw_version": "2.2.1",
         })
         result = self.brain._handle_backup_help(ctx)
         assert "bash" in result["answer"]
@@ -239,7 +239,7 @@ class TestBrainHandlersContext:
         ctx = _make_ctx(host={
             "hostname": "win-srv",
             "os": "Windows 11",
-            "angelclaw_version": "2.2.0",
+            "angelclaw_version": "2.2.1",
         })
         result = self.brain._handle_backup_help(ctx)
         assert "powershell" in result["answer"].lower() or "PowerShell" in result["answer"]
@@ -1116,7 +1116,7 @@ class TestAnalyticsRoutes:
             os="linux",
             hostname="analytics-test-host-c7",
             status="active",
-            version="2.2.0",
+            version="2.2.1",
             tags=["test"],
             registered_at=NOW,
             last_seen_at=NOW,
@@ -1183,7 +1183,7 @@ class TestAnalyticsRoutes:
             os="linux",
             hostname="identity-test-host-c7",
             status="active",
-            version="2.2.0",
+            version="2.2.1",
             tags=["identity-test"],
             registered_at=NOW,
             last_seen_at=NOW,

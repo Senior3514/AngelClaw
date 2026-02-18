@@ -1,4 +1,4 @@
-"""AngelClaw V2.2.0 Upgrade — Comprehensive Test Suite.
+"""AngelClaw V2.2.1 Upgrade — Comprehensive Test Suite.
 
 Tests ALL V2.2 features across every upgraded subsystem:
   - Base agent: health metrics, auto-degradation, recovery
@@ -906,7 +906,7 @@ class TestBrainV22:
     def test_about_v22_version(self):
         from cloud.angelclaw.brain import brain
         result = brain._handle_about()
-        assert "2.2.0" in result["answer"]
+        assert "2.2.1" in result["answer"]
 
     def test_help_includes_v22_commands(self):
         from cloud.angelclaw.brain import brain
@@ -943,14 +943,14 @@ class TestDetectionExports:
 
 
 class TestVersion:
-    """Test version is updated to 2.2.0."""
+    """Test version is updated to 2.2.1."""
 
     def test_brain_version(self):
         from cloud.angelclaw.brain import _SYSTEM_IDENTITY
-        assert "v2.2.0" in _SYSTEM_IDENTITY
+        assert "v2.2.1" in _SYSTEM_IDENTITY
 
     def test_pyproject_version(self):
         import tomllib
         with open("pyproject.toml", "rb") as f:
             data = tomllib.load(f)
-        assert data["project"]["version"] == "2.2.0"
+        assert data["project"]["version"] == "2.2.1"
