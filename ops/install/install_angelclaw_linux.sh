@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AngelClaw AGI Guardian -- Linux Installer (V2.1.0)
+# AngelClaw AGI Guardian -- Linux Server Installer (V2.2.1)
 #
 # Installs the full AngelClaw stack (ANGELNODE + Cloud + Ollama) on a Linux
-# server using Docker Compose + systemd.
-# Includes the Angel Legion: 10-agent swarm with 7 specialized wardens.
+# server using Docker Compose + systemd. All dependencies are auto-installed.
 #
-# Usage:
+# ONE-LINE INSTALL:
 #   curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
 #
 # Or download and run manually:
@@ -63,8 +62,8 @@ trap cleanup EXIT
 # ---------------------------------------------------------------------------
 echo ""
 echo -e "${B}${C}================================================${N}"
-echo -e "${B}${C}  AngelClaw AGI Guardian -- Linux Installer${N}"
-echo -e "${B}${C}  V2.1.0 -- Angel Legion${N}"
+echo -e "${B}${C}  AngelClaw AGI Guardian -- Linux Server Installer${N}"
+echo -e "${B}${C}  V2.2.1 -- Angel Legion${N}"
 echo -e "${B}${C}================================================${N}"
 echo ""
 
@@ -74,8 +73,26 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
+# Detect package manager
+install_pkg() {
+    if command -v apt-get &>/dev/null; then
+        apt-get update -qq && apt-get install -y -qq "$@"
+    elif command -v dnf &>/dev/null; then
+        dnf install -y -q "$@"
+    elif command -v yum &>/dev/null; then
+        yum install -y -q "$@"
+    elif command -v pacman &>/dev/null; then
+        pacman -Sy --noconfirm "$@"
+    elif command -v apk &>/dev/null; then
+        apk add --quiet "$@"
+    else
+        err "No supported package manager found. Install $* manually."
+        exit 1
+    fi
+}
+
 # ---------------------------------------------------------------------------
-# Step 1: Check Docker
+# Step 1: Install Docker (auto-install if missing)
 # ---------------------------------------------------------------------------
 step "Checking Docker..."
 
@@ -83,24 +100,30 @@ if command -v docker &>/dev/null; then
   DOCKER_VER=$(docker --version 2>/dev/null || echo "unknown")
   ok "Docker found: $DOCKER_VER"
 else
-  warn "Docker is not installed."
-  echo ""
-  echo "  Install Docker with the official convenience script:"
-  echo ""
-  echo "    curl -fsSL https://get.docker.com | sh"
-  echo ""
-  read -rp "  Install Docker now? [y/N] " INSTALL_DOCKER
-  if [[ "$INSTALL_DOCKER" =~ ^[Yy]$ ]]; then
-    echo -e "  ${C}Installing Docker...${N}"
+  warn "Docker is not installed. Installing automatically..."
+  if command -v curl &>/dev/null; then
     curl -fsSL https://get.docker.com | sh
-    systemctl enable docker
-    systemctl start docker
-    ok "Docker installed and started."
+  elif command -v wget &>/dev/null; then
+    wget -qO- https://get.docker.com | sh
   else
-    err "Docker is required. Please install it and re-run this script."
+    install_pkg curl
+    curl -fsSL https://get.docker.com | sh
+  fi
+  systemctl enable docker
+  systemctl start docker
+  ok "Docker installed and started."
+fi
+
+# Ensure Docker is running
+if ! docker info &>/dev/null 2>&1; then
+  systemctl start docker 2>/dev/null || true
+  sleep 3
+  if ! docker info &>/dev/null 2>&1; then
+    err "Docker daemon failed to start. Check: systemctl status docker"
     exit 1
   fi
 fi
+ok "Docker daemon is running."
 
 # ---------------------------------------------------------------------------
 # Step 2: Check docker compose
@@ -117,35 +140,41 @@ elif command -v docker-compose &>/dev/null; then
   ok "docker-compose found: $DC_VER"
   DC_CMD="docker-compose"
 else
-  warn "docker compose is not installed."
-  echo -e "  ${C}Installing docker-compose via pip...${N}"
-  if command -v pip3 &>/dev/null; then
-    pip3 install docker-compose --break-system-packages 2>/dev/null || pip3 install docker-compose
-  elif command -v pip &>/dev/null; then
-    pip install docker-compose --break-system-packages 2>/dev/null || pip install docker-compose
-  else
-    apt-get update -qq && apt-get install -y -qq python3-pip
-    pip3 install docker-compose --break-system-packages 2>/dev/null || pip3 install docker-compose
+  warn "docker compose not found. Installing docker-compose-plugin..."
+  if command -v apt-get &>/dev/null; then
+    apt-get update -qq && apt-get install -y -qq docker-compose-plugin 2>/dev/null || true
   fi
-  DC_CMD="docker-compose"
-  ok "docker-compose installed."
+  # Re-check after install attempt
+  if docker compose version &>/dev/null 2>&1; then
+    DC_CMD="docker compose"
+    ok "docker compose plugin installed."
+  else
+    # Fallback: install via pip
+    warn "Plugin not available. Installing docker-compose via pip..."
+    if ! command -v pip3 &>/dev/null; then
+      install_pkg python3-pip
+    fi
+    pip3 install docker-compose --break-system-packages 2>/dev/null || pip3 install docker-compose
+    DC_CMD="docker-compose"
+    ok "docker-compose installed."
+  fi
 fi
 
 # ---------------------------------------------------------------------------
-# Step 3: Check git
+# Step 3: Check git + curl
 # ---------------------------------------------------------------------------
 step "Checking prerequisites..."
 
 if ! command -v git &>/dev/null; then
   echo -e "  ${C}Installing git...${N}"
-  apt-get update -qq && apt-get install -y -qq git curl
+  install_pkg git
   ok "git installed."
 else
   ok "git found."
 fi
 
 if ! command -v curl &>/dev/null; then
-  apt-get update -qq && apt-get install -y -qq curl
+  install_pkg curl
 fi
 
 # Quick network check
@@ -300,16 +329,16 @@ echo "    Dashboard  : http://127.0.0.1:8500/ui"
 echo "    ANGELNODE  : http://127.0.0.1:8400"
 echo "    Cloud API  : http://127.0.0.1:8500"
 echo ""
-echo "  Chat with AngelClaw:"
-echo "    curl -X POST http://127.0.0.1:8500/api/v1/angelclaw/chat \\"
-echo "      -H 'Content-Type: application/json' \\"
-echo "      -d '{\"tenantId\":\"default\",\"prompt\":\"Scan the system\"}'"
+echo "  Default login: admin / angelclaw (change immediately!)"
 echo ""
 echo "  Useful commands:"
 echo "    systemctl status angelclaw          # check stack status"
 echo "    systemctl restart angelclaw         # restart"
 echo "    journalctl -u angelclaw -f          # follow logs"
 echo "    $INSTALL_DIR/ops/cli/angelclawctl status    # CLI status"
+echo ""
+echo "  Connect clients (Windows/macOS):"
+echo "    Point them to: http://YOUR-VPS-IP:8500"
 echo ""
 echo "  Remote access (from tablet/phone/laptop):"
 echo "    ssh -L 8500:127.0.0.1:8500 root@YOUR-VPS-IP"
@@ -322,5 +351,5 @@ if [ "$LLM" = "true" ]; then
   echo ""
 fi
 
-echo -e "  ${C}AngelClaw V2.1.0 -- Angel Legion -- guardian angel, not gatekeeper.${N}"
+echo -e "  ${C}AngelClaw V2.2.1 -- Angel Legion -- guardian angel, not gatekeeper.${N}"
 echo ""

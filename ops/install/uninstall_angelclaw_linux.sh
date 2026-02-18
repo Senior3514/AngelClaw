@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AngelClaw AGI Guardian -- Linux Uninstaller (V2.1.0)
+# AngelClaw AGI Guardian -- Linux Uninstaller (V2.2.1)
 #
 # Stops all AngelClaw containers, removes systemd service, Docker images,
 # volumes, and optionally deletes the install directory.
 #
-# Usage:
+# ONE-LINE UNINSTALL:
 #   curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_linux.sh | bash
 #
 # Or download and run manually:
@@ -36,6 +36,7 @@ err()  { echo -e "  ${R}[X]${N} $1"; }
 echo ""
 echo -e "${B}${R}================================================${N}"
 echo -e "${B}${R}  AngelClaw AGI Guardian -- Linux Uninstaller${N}"
+echo -e "${B}${R}  V2.2.1${N}"
 echo -e "${B}${R}================================================${N}"
 echo ""
 

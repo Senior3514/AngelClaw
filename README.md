@@ -127,155 +127,56 @@ AngelClaw has evolved from a simple policy engine into a **full-stack, enterpris
 
 ## Installation
 
-### Prerequisites
+All installers **auto-install dependencies** (Docker, Git, Homebrew) -- no prerequisites needed.
 
-| Requirement | Version | Notes |
-|-------------|---------|-------|
-| Docker | 20.10+ | Docker Desktop (macOS/Windows) or Docker Engine (Linux) |
-| Docker Compose | v2+ | Included with Docker Desktop; `docker compose` plugin on Linux |
-| Git | 2.x+ | For cloning the repository |
-| Python | 3.11+ | Only needed for local development (not Docker) |
+> **Architecture:** Install the **Server** on your VPS (Linux). Install the **Agent** on end-user machines (Windows/macOS) to connect to your server.
 
 ---
 
-## Linux (Full Stack)
-
-### Install -- One Command
+### Server Install -- Linux VPS (one command)
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
 ```
 
-Installs Docker (if missing), clones the repo, builds all 3 containers, registers systemd service.
+Auto-installs Docker, clones repo, builds all 3 containers (ANGELNODE + Cloud + Ollama), registers systemd service.
 
-### Uninstall -- One Command
-
-```bash
-curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_linux.sh | bash
-```
-
-Stops containers, removes systemd service, Docker images, volumes, and the install directory.
-
-### Clean (keep files, reset containers)
-
-```bash
-cd /root/AngelClaw/ops && docker compose down --volumes --remove-orphans
-docker system prune -f
-```
-
-### Reinstall -- One Command
-
-```bash
-curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_linux.sh | bash && curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
-```
-
-### Verify
-
-```bash
-curl http://127.0.0.1:8400/health   # ANGELNODE
-curl http://127.0.0.1:8500/health   # Cloud API
-curl http://127.0.0.1:8500/ui       # Dashboard
-systemctl status angelclaw          # Service status
-```
-
----
-
-## macOS (Full Stack)
-
-### Install -- One Command
+### Server Install -- macOS (one command)
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_macos.sh | bash
 ```
 
-Installs Homebrew + Docker Desktop (if missing), clones the repo, builds the full stack.
+Auto-installs Homebrew + Docker Desktop, clones repo, builds the full stack.
 
-### Uninstall -- One Command
+### Agent Install -- Windows (one command, PowerShell as Admin)
 
-```bash
-curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_macos.sh | bash
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; iwr -Uri 'https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1' -OutFile "$env:TEMP\install_angelclaw.ps1"; & "$env:TEMP\install_angelclaw.ps1" -CloudUrl 'http://YOUR-VPS-IP:8500'
 ```
 
-Stops containers, removes Docker images, volumes, and the install directory.
+Auto-installs Docker Desktop + Git via winget, clones repo, builds ANGELNODE agent, connects to your server.
 
-### Clean (keep files, reset containers)
+---
 
-```bash
-cd ~/AngelClaw/ops && docker compose down --volumes --remove-orphans
-docker system prune -f
-```
+### Uninstall
 
-### Reinstall -- One Command
+| OS | Command |
+|----|---------|
+| **Linux** | `curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_linux.sh \| bash` |
+| **macOS** | `curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_macos.sh \| bash` |
+| **Windows** | `C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1` (PowerShell as Admin) |
 
-```bash
-curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_macos.sh | bash && curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_macos.sh | bash
-```
+Add `ANGELCLAW_KEEP_DATA=true` (Linux/macOS) or `-KeepData` (Windows) to keep files.
 
 ### Verify
 
 ```bash
 curl http://127.0.0.1:8400/health   # ANGELNODE
-curl http://127.0.0.1:8500/health   # Cloud API
-open http://127.0.0.1:8500/ui       # Dashboard
+curl http://127.0.0.1:8500/health   # Cloud API (server only)
 ```
 
----
-
-## Windows (ANGELNODE Agent Only)
-
-> Windows runs the lightweight ANGELNODE agent only. The Cloud backend runs on your Linux/macOS server. Replace `YOUR-VPS-IP` with your server's IP.
-
-### Install
-
-PowerShell (as Administrator):
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force
-git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw
-C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
-```
-
-**Already installed? The installer auto-detects and updates:**
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force
-C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
-```
-
-### Uninstall
-
-PowerShell (as Administrator):
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force
-C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1
-```
-
-### Clean (keep files, reset containers)
-
-```powershell
-cd C:\AngelClaw\ops; docker compose down --volumes --remove-orphans
-docker system prune -f
-```
-
-### Force Reinstall
-
-PowerShell (as Administrator):
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force
-C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1
-git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw
-C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500" -Force
-```
-
-### Verify
-
-```powershell
-curl http://127.0.0.1:8400/health
-curl http://127.0.0.1:8400/status
-docker ps
-```
+Dashboard: `http://127.0.0.1:8500/ui` -- Default login: `admin` / `angelclaw` (change immediately!)
 
 ---
 
@@ -313,6 +214,7 @@ uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
 | What | URL / Command |
 |------|---------------|
 | Dashboard | `http://127.0.0.1:8500/ui` |
+| Default login | `admin` / `angelclaw` (change immediately!) |
 | ANGELNODE health | `curl http://127.0.0.1:8400/health` |
 | Cloud API health | `curl http://127.0.0.1:8500/health` |
 | CLI status | `./ops/cli/angelclawctl status` |

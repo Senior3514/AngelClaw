@@ -1,5 +1,5 @@
 # ============================================================================
-# AngelClaw AGI Guardian -- Windows Uninstaller (V2.1.0)
+# AngelClaw AGI Guardian -- Windows Uninstaller (V2.2.1)
 #
 # Stops ANGELNODE container, removes Docker images, volumes,
 # and optionally deletes the install directory.
@@ -33,6 +33,7 @@ function Write-Err  { param([string]$msg) Write-Host "  [X]  $msg" -ForegroundCo
 Write-Host ""
 Write-Host "================================================" -ForegroundColor Red
 Write-Host "   AngelClaw AGI Guardian -- Windows Uninstaller" -ForegroundColor Red
+Write-Host "   V2.2.1"                                        -ForegroundColor Red
 Write-Host "================================================" -ForegroundColor Red
 Write-Host ""
 
@@ -43,15 +44,12 @@ Write-Step "Checking Docker..."
 
 $dockerOk = $false
 try {
-    docker info 2>$null | Out-Null
+    $null = docker info 2>&1
     if ($LASTEXITCODE -eq 0) { $dockerOk = $true }
-} catch {
-    $dockerOk = $false
-}
+} catch {}
 
 if (-not $dockerOk) {
-    Write-Warn "Docker Desktop is not running. Start it first for full cleanup."
-    Write-Warn "Continuing with file removal only..."
+    Write-Warn "Docker Desktop is not running. Continuing with file removal only..."
 } else {
     Write-Ok "Docker is running."
 }
@@ -162,8 +160,7 @@ if (-not $KeepData) {
 Write-Host ""
 Write-Host "  Docker Desktop was NOT removed."
 Write-Host ""
-Write-Host "  To reinstall:"
+Write-Host "  To reinstall (one-liner):"
 Write-Host "    Set-ExecutionPolicy Bypass -Scope Process -Force"
-Write-Host "    git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw"
-Write-Host "    C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl `"http://YOUR-VPS-IP:8500`""
+Write-Host "    iwr -Uri 'https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1' -OutFile `"`$env:TEMP\install_angelclaw.ps1`"; & `"`$env:TEMP\install_angelclaw.ps1`" -CloudUrl 'http://YOUR-VPS-IP:8500'"
 Write-Host ""

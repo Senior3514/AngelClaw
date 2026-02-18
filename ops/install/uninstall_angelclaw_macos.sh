@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AngelClaw AGI Guardian -- macOS Uninstaller (V2.1.0)
+# AngelClaw AGI Guardian -- macOS Uninstaller (V2.2.1)
 #
 # Stops all AngelClaw containers, removes Docker images, volumes,
 # and optionally deletes the install directory.
 #
-# Usage:
+# ONE-LINE UNINSTALL:
 #   curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_macos.sh | bash
 #
 # Or download and run manually:
@@ -36,6 +36,7 @@ err()  { echo -e "  ${R}[X]${N} $1"; }
 echo ""
 echo -e "${B}${R}================================================${N}"
 echo -e "${B}${R}  AngelClaw AGI Guardian -- macOS Uninstaller${N}"
+echo -e "${B}${R}  V2.2.1${N}"
 echo -e "${B}${R}================================================${N}"
 echo ""
 
@@ -50,8 +51,7 @@ if command -v docker &>/dev/null; then
     DOCKER_OK=true
     ok "Docker Desktop is running."
   else
-    warn "Docker Desktop is not running. Start it first for full cleanup."
-    warn "Continuing with file removal only..."
+    warn "Docker Desktop is not running. Continuing with file removal only..."
   fi
 else
   warn "Docker not found -- skipping container cleanup."

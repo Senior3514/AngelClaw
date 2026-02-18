@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AngelClaw AGI Guardian -- macOS Installer (V2.1.0)
+# AngelClaw AGI Guardian -- macOS Installer (V2.2.1)
 #
 # Installs the full AngelClaw stack (ANGELNODE + Cloud + Ollama) on macOS
-# using Docker Desktop + Docker Compose.
-# Includes the Angel Legion: 10-agent swarm with 7 specialized wardens.
+# using Docker Desktop + Docker Compose. Auto-installs Homebrew and Docker
+# Desktop if missing.
 #
-# One-command install:
+# ONE-LINE INSTALL:
 #   curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_macos.sh | bash
 #
 # Or download and run manually:
@@ -64,42 +64,36 @@ trap cleanup EXIT
 echo ""
 echo -e "${B}${C}================================================${N}"
 echo -e "${B}${C}  AngelClaw AGI Guardian -- macOS Installer${N}"
-echo -e "${B}${C}  V2.1.0 -- Angel Legion${N}"
+echo -e "${B}${C}  V2.2.1 -- Angel Legion${N}"
 echo -e "${B}${C}================================================${N}"
 echo ""
 
 # ---------------------------------------------------------------------------
-# Step 1: Check Homebrew (install if missing)
+# Step 1: Check/Install Homebrew
 # ---------------------------------------------------------------------------
 step "Checking Homebrew..."
 
 if command -v brew &>/dev/null; then
   ok "Homebrew found."
 else
-  warn "Homebrew is not installed."
-  echo ""
-  echo "  Homebrew is the recommended package manager for macOS."
-  read -rp "  Install Homebrew now? [Y/n] " INSTALL_BREW
-  if [[ ! "$INSTALL_BREW" =~ ^[Nn]$ ]]; then
-    echo -e "  ${C}Installing Homebrew...${N}"
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    # Add Homebrew to PATH for Apple Silicon Macs
-    if [ -f /opt/homebrew/bin/brew ]; then
-      eval "$(/opt/homebrew/bin/brew shellenv)"
-    fi
+  warn "Homebrew is not installed. Installing automatically..."
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  # Add Homebrew to PATH for Apple Silicon Macs
+  if [ -f /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [ -f /usr/local/bin/brew ]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+  if command -v brew &>/dev/null; then
     ok "Homebrew installed."
   else
-    err "Homebrew is required for automated Docker installation."
-    echo "  You can install Docker Desktop manually from:"
-    echo "  https://docs.docker.com/desktop/install/mac-install/"
-    echo ""
-    echo "  Then re-run this script."
+    err "Homebrew installation failed. Install manually: https://brew.sh"
     exit 1
   fi
 fi
 
 # ---------------------------------------------------------------------------
-# Step 2: Check Docker Desktop
+# Step 2: Check/Install Docker Desktop
 # ---------------------------------------------------------------------------
 step "Checking Docker..."
 
@@ -107,33 +101,52 @@ if command -v docker &>/dev/null; then
   DOCKER_VER=$(docker --version 2>/dev/null || echo "unknown")
   ok "Docker found: $DOCKER_VER"
 else
-  warn "Docker is not installed."
+  warn "Docker Desktop is not installed. Installing via Homebrew..."
+  brew install --cask docker
   echo ""
-  read -rp "  Install Docker Desktop via Homebrew? [Y/n] " INSTALL_DOCKER
-  if [[ ! "$INSTALL_DOCKER" =~ ^[Nn]$ ]]; then
-    echo -e "  ${C}Installing Docker Desktop...${N}"
-    brew install --cask docker
-    echo ""
-    echo -e "  ${Y}Docker Desktop has been installed but needs to be started.${N}"
-    echo "  Please open Docker Desktop from your Applications folder,"
-    echo "  wait for it to finish starting, then re-run this script."
-    echo ""
-    open -a Docker 2>/dev/null || true
-    exit 0
+  echo -e "  ${Y}Docker Desktop has been installed but needs to be started.${N}"
+  echo -e "  ${Y}Opening Docker Desktop now...${N}"
+  open -a Docker 2>/dev/null || true
+  echo -e "  ${C}Waiting for Docker to start (up to 90s)...${N}"
+  WAITED=0
+  while [ $WAITED -lt 90 ]; do
+    sleep 5
+    WAITED=$((WAITED + 5))
+    if command -v docker &>/dev/null && docker info &>/dev/null 2>&1; then
+      break
+    fi
+    echo -e "  ${Y}Waiting... (${WAITED}s)${N}"
+  done
+  if command -v docker &>/dev/null && docker info &>/dev/null 2>&1; then
+    ok "Docker Desktop is running."
   else
-    err "Docker is required. Install Docker Desktop and re-run this script."
-    echo "  https://docs.docker.com/desktop/install/mac-install/"
-    exit 1
+    echo ""
+    echo -e "  ${Y}================================================${N}"
+    echo -e "  ${Y}Docker Desktop was installed but is still starting.${N}"
+    echo -e "  ${Y}Please wait for Docker Desktop to fully load,${N}"
+    echo -e "  ${Y}then re-run this installer.${N}"
+    echo -e "  ${Y}================================================${N}"
+    echo ""
+    exit 0
   fi
 fi
 
 # Verify Docker daemon is running
 if ! docker info &>/dev/null 2>&1; then
-  err "Docker daemon is not running."
-  echo "  Please start Docker Desktop and wait for it to finish loading."
-  echo "  Then re-run this script."
+  warn "Docker daemon is not running. Attempting to start Docker Desktop..."
   open -a Docker 2>/dev/null || true
-  exit 1
+  echo -e "  ${C}Waiting for Docker to start (up to 60s)...${N}"
+  WAITED=0
+  while [ $WAITED -lt 60 ]; do
+    sleep 5
+    WAITED=$((WAITED + 5))
+    if docker info &>/dev/null 2>&1; then break; fi
+    echo -e "  ${Y}Waiting... (${WAITED}s)${N}"
+  done
+  if ! docker info &>/dev/null 2>&1; then
+    err "Docker daemon is not running. Please start Docker Desktop and re-run this script."
+    exit 1
+  fi
 fi
 ok "Docker daemon is running."
 
@@ -286,10 +299,7 @@ echo "    Dashboard  : http://127.0.0.1:8500/ui"
 echo "    ANGELNODE  : http://127.0.0.1:8400"
 echo "    Cloud API  : http://127.0.0.1:8500"
 echo ""
-echo "  Chat with AngelClaw:"
-echo "    curl -X POST http://127.0.0.1:8500/api/v1/angelclaw/chat \\"
-echo "      -H 'Content-Type: application/json' \\"
-echo "      -d '{\"tenantId\":\"default\",\"prompt\":\"Scan the system\"}'"
+echo "  Default login: admin / angelclaw (change immediately!)"
 echo ""
 echo "  Useful commands:"
 echo "    docker ps                              # check containers"
@@ -304,5 +314,5 @@ if [ "$LLM" = "true" ]; then
   echo ""
 fi
 
-echo -e "  ${C}AngelClaw V2.1.0 -- Angel Legion -- guardian angel, not gatekeeper.${N}"
+echo -e "  ${C}AngelClaw V2.2.1 -- Angel Legion -- guardian angel, not gatekeeper.${N}"
 echo ""

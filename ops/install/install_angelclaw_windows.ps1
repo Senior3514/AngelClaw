@@ -1,13 +1,15 @@
 # ============================================================================
-# AngelClaw AGI Guardian -- Windows ANGELNODE Installer (V2.1.0)
+# AngelClaw AGI Guardian -- Windows ANGELNODE Installer (V2.2.1)
 #
-# Installs the ANGELNODE agent only, connecting to a remote AngelClaw Cloud.
-# Requires Docker Desktop for Windows.
-# Connects to Angel Legion: 10-agent swarm with 7 specialized wardens.
+# Installs the ANGELNODE agent (client) connecting to your AngelClaw Cloud
+# server. Auto-installs Docker Desktop and Git via winget if missing.
 #
-# Usage (PowerShell as Administrator):
+# ONE-LINE INSTALL (PowerShell as Administrator):
+#   Set-ExecutionPolicy Bypass -Scope Process -Force; iwr -Uri 'https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1' -OutFile "$env:TEMP\install_angelclaw.ps1"; & "$env:TEMP\install_angelclaw.ps1" -CloudUrl 'http://YOUR-VPS-IP:8500'
+#
+# LOCAL INSTALL (if repo already cloned):
 #   Set-ExecutionPolicy Bypass -Scope Process -Force
-#   .\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
+#   .\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
 #
 # Parameters:
 #   -CloudUrl    Cloud API URL       (default: http://your-cloud-server:8500)
@@ -15,9 +17,6 @@
 #   -InstallDir  Install directory   (default: C:\AngelClaw)
 #   -Branch      Git branch          (default: main)
 #   -Force       Force clean reinstall (removes existing install first)
-#
-# Example connecting to VPS at 168.231.110.18:
-#   .\install_angelclaw_windows.ps1 -CloudUrl http://168.231.110.18:8500
 # ============================================================================
 
 param(
@@ -45,13 +44,19 @@ function Write-Ok   { param([string]$msg) Write-Host "  [OK] $msg" -ForegroundCo
 function Write-Warn { param([string]$msg) Write-Host "  [!]  $msg" -ForegroundColor Yellow }
 function Write-Err  { param([string]$msg) Write-Host "  [X]  $msg" -ForegroundColor Red }
 
+function Refresh-Path {
+    $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+    $userPath    = [Environment]::GetEnvironmentVariable("Path", "User")
+    $env:Path    = "$machinePath;$userPath"
+}
+
 # ---------------------------------------------------------------------------
 # Banner
 # ---------------------------------------------------------------------------
 Write-Host ""
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host "   AngelClaw AGI Guardian -- Windows Installer"   -ForegroundColor Cyan
-Write-Host "   V2.1.0 -- Angel Legion"                        -ForegroundColor Cyan
+Write-Host "   V2.2.1 -- Angel Legion"                        -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -62,55 +67,161 @@ Write-Step "Pre-flight validation..."
 
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 if (-not $isAdmin) {
-    Write-Warn "Not running as Administrator. Some operations may fail."
-    Write-Host "    Tip: Right-click PowerShell -> Run as Administrator"
+    Write-Err "This installer must be run as Administrator."
+    Write-Host "    Right-click PowerShell -> Run as Administrator"
+    exit 1
 }
 
 if ($CloudUrl -eq "http://your-cloud-server:8500") {
-    Write-Warn "Using default CloudUrl placeholder."
-    Write-Host "    Pass -CloudUrl to specify your VPS address."
+    Write-Warn "No -CloudUrl specified. Using placeholder."
+    Write-Host "    Pass -CloudUrl to specify your server address."
 }
 
 Write-Ok "Pre-flight checks passed."
 
 # ---------------------------------------------------------------------------
-# Step 2: Check Docker Desktop
+# Step 2: Check/Install Git
+# ---------------------------------------------------------------------------
+Write-Step "Checking Git..."
+
+$gitCmd = Get-Command git -ErrorAction SilentlyContinue
+if (-not $gitCmd) {
+    Write-Warn "Git is not installed. Installing via winget..."
+    $wingetCmd = Get-Command winget -ErrorAction SilentlyContinue
+    if (-not $wingetCmd) {
+        Write-Err "winget is not available. Please install Git manually:"
+        Write-Host "  https://git-scm.com/download/win"
+        exit 1
+    }
+    winget install --id Git.Git --accept-source-agreements --accept-package-agreements --silent
+    if ($LASTEXITCODE -ne 0) {
+        Write-Err "Failed to install Git via winget. Install manually:"
+        Write-Host "  https://git-scm.com/download/win"
+        exit 1
+    }
+    Refresh-Path
+    $gitCmd = Get-Command git -ErrorAction SilentlyContinue
+    if (-not $gitCmd) {
+        Write-Warn "Git installed but not in PATH yet."
+        # Try common install paths
+        $gitPaths = @(
+            "$env:ProgramFiles\Git\cmd",
+            "${env:ProgramFiles(x86)}\Git\cmd",
+            "$env:LOCALAPPDATA\Programs\Git\cmd"
+        )
+        foreach ($p in $gitPaths) {
+            if (Test-Path "$p\git.exe") {
+                $env:Path = "$p;$env:Path"
+                Write-Ok "Found Git at $p"
+                break
+            }
+        }
+        $gitCmd = Get-Command git -ErrorAction SilentlyContinue
+        if (-not $gitCmd) {
+            Write-Err "Git installed but cannot be found. Please close and reopen PowerShell, then re-run this script."
+            exit 1
+        }
+    }
+    Write-Ok "Git installed successfully."
+} else {
+    Write-Ok "Git found."
+}
+
+# ---------------------------------------------------------------------------
+# Step 3: Check/Install Docker Desktop
 # ---------------------------------------------------------------------------
 Write-Step "Checking Docker Desktop..."
 
 $dockerCmd = Get-Command docker -ErrorAction SilentlyContinue
 if (-not $dockerCmd) {
-    Write-Err "Docker is not installed or not in PATH."
-    Write-Host ""
-    Write-Host "  Please install Docker Desktop for Windows:"
-    Write-Host "  https://docs.docker.com/desktop/install/windows-install/"
-    Write-Host ""
-    exit 1
+    Write-Warn "Docker Desktop is not installed. Installing via winget..."
+    $wingetCmd = Get-Command winget -ErrorAction SilentlyContinue
+    if (-not $wingetCmd) {
+        Write-Err "winget is not available. Please install Docker Desktop manually:"
+        Write-Host "  https://docs.docker.com/desktop/install/windows-install/"
+        exit 1
+    }
+    winget install --id Docker.DockerDesktop --accept-source-agreements --accept-package-agreements --silent
+    if ($LASTEXITCODE -ne 0) {
+        Write-Err "Failed to install Docker Desktop via winget. Install manually:"
+        Write-Host "  https://docs.docker.com/desktop/install/windows-install/"
+        exit 1
+    }
+    Refresh-Path
+    # Try common Docker paths
+    $dockerPaths = @(
+        "$env:ProgramFiles\Docker\Docker\resources\bin",
+        "$env:ProgramFiles\Docker\Docker"
+    )
+    foreach ($p in $dockerPaths) {
+        if (Test-Path "$p\docker.exe") {
+            $env:Path = "$p;$env:Path"
+            break
+        }
+    }
+    $dockerCmd = Get-Command docker -ErrorAction SilentlyContinue
+    if (-not $dockerCmd) {
+        Write-Ok "Docker Desktop installed."
+        Write-Host ""
+        Write-Host "  ================================================" -ForegroundColor Yellow
+        Write-Host "  Docker Desktop was just installed." -ForegroundColor Yellow
+        Write-Host "  Please RESTART your computer, then:" -ForegroundColor Yellow
+        Write-Host "    1. Open Docker Desktop and wait for it to start" -ForegroundColor Yellow
+        Write-Host "    2. Re-run this installer" -ForegroundColor Yellow
+        Write-Host "  ================================================" -ForegroundColor Yellow
+        Write-Host ""
+        exit 0
+    }
+    Write-Ok "Docker Desktop installed."
 }
 
 $dockerVer = docker --version 2>&1
 Write-Ok "Docker found: $dockerVer"
 
 # Check Docker is running
+$dockerRunning = $false
 try {
-    docker info *>$null
-    Write-Ok "Docker daemon is running."
-} catch {
-    Write-Err "Docker daemon is not running. Please start Docker Desktop."
-    exit 1
+    $null = docker info 2>&1
+    if ($LASTEXITCODE -eq 0) { $dockerRunning = $true }
+} catch {}
+
+if (-not $dockerRunning) {
+    Write-Warn "Docker Desktop is not running. Attempting to start..."
+    $dockerDesktop = "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe"
+    if (Test-Path $dockerDesktop) {
+        Start-Process $dockerDesktop
+        Write-Host "  Waiting for Docker to start (up to 60s)..." -ForegroundColor Gray
+        $waited = 0
+        while ($waited -lt 60) {
+            Start-Sleep -Seconds 5
+            $waited += 5
+            try {
+                $null = docker info 2>&1
+                if ($LASTEXITCODE -eq 0) { $dockerRunning = $true; break }
+            } catch {}
+            Write-Host "  Waiting... ($waited`s)" -ForegroundColor Gray
+        }
+    }
+    if (-not $dockerRunning) {
+        Write-Err "Docker Desktop is not running. Please start it manually and re-run this script."
+        exit 1
+    }
 }
+Write-Ok "Docker daemon is running."
 
 # ---------------------------------------------------------------------------
-# Step 3: Check docker compose
+# Step 4: Check docker compose
 # ---------------------------------------------------------------------------
 Write-Step "Checking docker compose..."
 
 $dcCmd = $null
 try {
-    docker compose version *>$null
-    $composeVer = docker compose version 2>&1
-    Write-Ok "docker compose found: $composeVer"
-    $dcCmd = "docker compose"
+    $null = docker compose version 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        $composeVer = docker compose version 2>&1
+        Write-Ok "docker compose found: $composeVer"
+        $dcCmd = "docker compose"
+    }
 } catch {}
 
 if (-not $dcCmd) {
@@ -129,19 +240,6 @@ if (-not $dcCmd) {
 }
 
 # ---------------------------------------------------------------------------
-# Step 4: Check git
-# ---------------------------------------------------------------------------
-Write-Step "Checking git..."
-
-$gitCmd = Get-Command git -ErrorAction SilentlyContinue
-if (-not $gitCmd) {
-    Write-Err "git is not installed."
-    Write-Host "  Install from: https://git-scm.com/download/win"
-    exit 1
-}
-Write-Ok "git found."
-
-# ---------------------------------------------------------------------------
 # Step 5: Clone or update repo
 # ---------------------------------------------------------------------------
 Write-Step "Setting up AngelClaw at $InstallDir..."
@@ -155,8 +253,8 @@ if (Test-Path "$InstallDir\.git") {
     Write-Ok "Existing installation found -- pulling latest..."
     Push-Location $InstallDir
     try {
-        git fetch origin
-        git checkout $Branch
+        git fetch origin 2>&1 | Out-Null
+        git checkout $Branch 2>&1 | Out-Null
         git pull origin $Branch
         Write-Ok "Repository updated."
     } catch {
@@ -210,7 +308,6 @@ Write-Step "Building and starting ANGELNODE container..."
 $opsDir = Join-Path $InstallDir "ops"
 Push-Location $opsDir
 try {
-    # Start only the angelnode service (not cloud/ollama -- those run on the VPS)
     if ($dcCmd -eq "docker compose") {
         docker compose up -d --build angelnode
     } else {
@@ -278,9 +375,9 @@ Write-Host "    docker ps                              # check container"
 Write-Host "    docker logs angelclaw-angelnode-1 -f   # follow logs"
 Write-Host "    curl http://127.0.0.1:8400/status      # agent status"
 Write-Host ""
-Write-Host "  Access the Cloud dashboard (on your VPS):"
+Write-Host "  Access the Cloud dashboard (on your server):"
 Write-Host "    Open browser: $CloudUrl/ui"
 Write-Host ""
-Write-Host "  AngelClaw V2.1.0 -- Angel Legion" -ForegroundColor Cyan
+Write-Host "  AngelClaw V2.2.1 -- Angel Legion" -ForegroundColor Cyan
 Write-Host "  Guardian angel, not gatekeeper." -ForegroundColor Cyan
 Write-Host ""
