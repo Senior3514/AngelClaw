@@ -144,7 +144,13 @@ async def daemon_loop(tenant_id: str = "dev-tenant") -> None:
             #    tool usage, memory leak signs, exposed services)
             security_findings = _run_security_checks(db, tenant_id)
 
-            # 7. Log cycle summary
+            # V2.2 — 7. Angel Legion orchestrator sweep (proactive detection)
+            legion_findings = await _run_legion_sweep(db, tenant_id)
+
+            # V2.2 — 8. Learning engine cycle (decay + threshold tuning)
+            _run_learning_cycle()
+
+            # 9. Log cycle summary
             elapsed = (datetime.now(timezone.utc) - cycle_start).total_seconds()
             cycle_summary = f"Cycle #{_cycles_completed} complete ({elapsed:.1f}s) — {scan_summary}"
             if shield_summary:
@@ -155,6 +161,8 @@ async def daemon_loop(tenant_id: str = "dev-tenant") -> None:
                 cycle_summary += f", {len(health_issues)} health issue(s)"
             if security_findings:
                 cycle_summary += f", {len(security_findings)} security finding(s)"
+            if legion_findings:
+                cycle_summary += f", legion: {legion_findings} indicator(s)"
 
             if reporting != ReportingLevel.QUIET or drift_findings or health_issues:
                 _log_activity(cycle_summary, "cycle")
@@ -496,6 +504,66 @@ def _check_agent_health(db) -> list[str]:
     except Exception:
         pass
     return issues
+
+
+# ---------------------------------------------------------------------------
+# V2.2 — Angel Legion orchestrator sweep
+# ---------------------------------------------------------------------------
+
+
+async def _run_legion_sweep(db, tenant_id: str) -> int:
+    """Run the Angel Legion orchestrator sweep on recent events.
+
+    This proactively feeds recent events through the full detection pipeline
+    (all wardens in parallel), creating incidents and triggering responses.
+    Returns the number of indicators found.
+    """
+    try:
+        from cloud.db.models import EventRow
+        from cloud.guardian.orchestrator import angel_orchestrator
+
+        now = datetime.now(timezone.utc)
+        cutoff = now - timedelta(minutes=10)
+        events = db.query(EventRow).filter(EventRow.timestamp >= cutoff).limit(200).all()
+
+        if not events:
+            return 0
+
+        indicators = await angel_orchestrator.process_events(events, db, tenant_id)
+
+        if indicators:
+            _log_activity(
+                f"Legion sweep: {len(indicators)} indicator(s) from {len(events)} events",
+                "legion",
+                {"indicator_count": len(indicators)},
+            )
+
+        return len(indicators)
+    except Exception as e:
+        logger.debug("[DAEMON] Legion sweep failed: %s", e)
+        return 0
+
+
+# ---------------------------------------------------------------------------
+# V2.2 — Learning engine maintenance cycle
+# ---------------------------------------------------------------------------
+
+
+def _run_learning_cycle() -> None:
+    """Run learning engine maintenance: decay old FP data, tune thresholds."""
+    try:
+        from cloud.guardian.learning import learning_engine
+
+        # Apply decay to false positive counts (prevent stale data)
+        learning_engine.apply_decay(decay_factor=0.95)
+
+        # Compute adaptive thresholds for all tracked patterns
+        precision_data = learning_engine.get_pattern_precision()
+        for pattern_name in precision_data:
+            learning_engine.compute_confidence_override(pattern_name)
+
+    except Exception:
+        logger.debug("[DAEMON] Learning cycle failed", exc_info=True)
 
 
 # ---------------------------------------------------------------------------

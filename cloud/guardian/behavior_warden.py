@@ -236,7 +236,11 @@ def _detect_category_novelty(events: list[dict]) -> list[ThreatIndicator]:
     for e in events:
         agent_id = e.get("agent_id", "")
         if agent_id:
-            cat = (e.get("type", "").split(".")[0] if "." in e.get("type", "") else e.get("type", ""))
+            cat = (
+                e.get("type", "").split(".")[0]
+                if "." in e.get("type", "")
+                else e.get("type", "")
+            )
             per_agent[agent_id][cat] += 1
 
     for agent_id, cats in per_agent.items():

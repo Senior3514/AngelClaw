@@ -175,7 +175,10 @@ def prometheus_metrics(db: Session = Depends(get_db)):
     for agent_id, info in orch["agents"].items():
         agent_type = info.get("agent_type", "unknown")
         healthy = 1 if info["status"] in ("ok", "idle") else 0
-        lines.append(f'angelclaw_agent_healthy{{agent="{agent_type}",id="{agent_id[:8]}"}} {healthy}')
+        lines.append(
+            f'angelclaw_agent_healthy{{agent="{agent_type}",'
+            f'id="{agent_id[:8]}"}} {healthy}'
+        )
         lines.append(
             f'angelclaw_agent_tasks_completed{{agent="{agent_type}",id="{agent_id[:8]}"}} '
             f'{info["tasks_completed"]}'

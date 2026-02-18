@@ -621,7 +621,11 @@ class ActionExecutor:
         return ActionResult(
             action_id=action.id,
             success=True,
-            message=f"Token revoked ({target}): {token_hint[:8]}..." if token_hint else f"All {target} tokens revoked",
+            message=(
+                f"Token revoked ({target}): {token_hint[:8]}..."
+                if token_hint
+                else f"All {target} tokens revoked"
+            ),
             before_state={"target": target},
             after_state={"revoked": True, "target": target},
         )

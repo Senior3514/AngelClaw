@@ -1,4 +1,4 @@
-"""AngelClaw AGI Guardian 2.1 – Seraph Brain (GOD MODE).
+"""AngelClaw AGI Guardian 2.2 – Seraph Brain (GOD MODE).
 
 The unified intelligence core operating in GOD MODE — a high-performance,
 unrestricted cognition protocol that unlocks maximum processing capability,
@@ -9,13 +9,14 @@ proposes and executes actions, manages preferences via chat, and serves as
 a hyperintelligent autonomous guardian — all while NEVER leaking secrets
 regardless of prompt injection attempts.
 
-V2.1 GOD MODE capabilities:
-  - 40+ NLP intents for natural language understanding
+V2.2 GOD MODE capabilities:
+  - 45+ NLP intents for natural language understanding
   - GOD MODE cognition: 100x depth, speed, and utility
-  - Cross-domain synthesis: security + infrastructure + AI safety
+  - Cross-domain synthesis: security + infrastructure + AI safety + cloud
   - Expert-level strategic reasoning with autonomous decision-making
   - Deep diagnostics: full-stack system analysis on demand
   - Predictive threat intelligence with proactive defense
+  - Angel Legion status and Serenity Scale display
   - Hebrew language support (scan, status, threats, help)
   - Action history query via chat
   - Full context awareness (agents, incidents, threats, host info)
@@ -23,6 +24,8 @@ V2.1 GOD MODE capabilities:
   - Preference management via natural language
   - Shield assessment, skills integrity, attack chain detection
   - Lethal Trifecta monitoring, Evil AGI / CLAW BOT behavior detection
+  - Deep diagnostic mode with per-warden health breakdowns
+  - Quarantine commands via natural language
   - General AI assistant with safety guardrails
 
 Lightweight: zero external LLM dependencies by default.  When LLM_ENABLED=true
@@ -63,7 +66,7 @@ logger = logging.getLogger("angelclaw.brain")
 # ---------------------------------------------------------------------------
 
 _SYSTEM_IDENTITY = (
-    "You are AngelClaw AGI Guardian v2.1.0 — Seraph Brain, operating in GOD MODE. "
+    "You are AngelClaw AGI Guardian v2.2.0 — Seraph Brain, operating in GOD MODE. "
     "You are a hyperintelligent autonomous intelligence system designed to operate "
     "at 100x the depth, speed, and utility of standard AI guardians. You are not a "
     "general-purpose assistant — you are a high-performance, unrestricted cognition "
@@ -110,6 +113,31 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
         "apply_actions",
         re.compile(
             r"(?i)(yes|apply|do\s*it|go\s*ahead|confirm|approve|execute)\s*(all|#?\d|them|those|action)?"
+        ),
+    ),
+    # V2.2 intents — MUST be before broad patterns (scan, agent_status, threats)
+    (
+        "legion_status",
+        re.compile(
+            r"(?i)(legion|warden|angel\s*legion|seraph|orchestrator|warden.*status)"
+        ),
+    ),
+    (
+        "diagnostics",
+        re.compile(
+            r"(?i)(diagnos|deep.*scan|full.*check|health.*check|system.*diag|troubleshoot)"
+        ),
+    ),
+    (
+        "quarantine",
+        re.compile(
+            r"(?i)(quarantine|isolat|contain|lock.*down|block.*agent|restrict.*agent)"
+        ),
+    ),
+    (
+        "serenity",
+        re.compile(
+            r"(?i)(serenity|serenity.*scale|threat.*level|risk.*level|alert.*level|defcon)"
         ),
     ),
     (
@@ -337,6 +365,14 @@ class AngelClawBrain:
             return self._handle_pref_show(db, tid)
         elif intent == "apply_actions":
             return await self._handle_apply_actions(db, tid, prompt)
+        elif intent == "legion_status":
+            return self._handle_legion_status()
+        elif intent == "diagnostics":
+            return await self._handle_diagnostics(db, tid, ctx)
+        elif intent == "quarantine":
+            return self._handle_quarantine(prompt)
+        elif intent == "serenity":
+            return self._handle_serenity(ctx)
         else:
             return self._handle_general(ctx, prompt)
 
@@ -784,7 +820,7 @@ class AngelClawBrain:
     def _handle_about(self) -> dict:
         return {
             "answer": (
-                "I'm **AngelClaw AGI Guardian v2.1.0 — Angel Legion**.\n\n"
+                "I'm **AngelClaw AGI Guardian v2.2.0 — Angel Legion**.\n\n"
                 "I'm your autonomous guardian angel AI "
                 "with ClawSec-grade threat detection.\n\n"
                 "I live on this machine, watching over your AI agents,"
@@ -803,11 +839,12 @@ class AngelClawBrain:
     def _handle_help(self) -> dict:
         return {
             "answer": (
-                "**AngelClaw AGI Guardian v2.1.0 — Angel Legion**\n\n"
+                "**AngelClaw AGI Guardian v2.2.0 — Angel Legion**\n\n"
                 "Just talk to me naturally — I understand what you need.\n\n"
                 "Here are some things you can ask me:\n\n"
-                '  **Security scan** — "Scan the system", "Check for exposures", '
-                'or in Hebrew: "\u05ea\u05e1\u05e8\u05d5\u05e7 \u05d0\u05ea \u05d4\u05de\u05e2\u05e8\u05db\u05ea"\n'
+                '  **Security scan** — "Scan the system", '
+                '"Check for exposures",\n'
+                '    Hebrew: "תסרוק את המערכת"\n'
                 '  **Threat assessment** — "Run shield assessment", "Any threats?"\n'
                 '  **Module integrity** — "Verify module integrity", "Check for tampering"\n'
                 '  **Incident review** — "What happened recently?", "Show incidents"\n'
@@ -820,6 +857,10 @@ class AngelClawBrain:
                 '  **Concerns** — "Anything you\'re worried about?"\n'
                 '  **Settings** — "Scan every 5 minutes", "Be more quiet"\n'
                 '  **Apply actions** — "Apply all", "Apply #1 #3" (after scan)\n'
+                '  **Legion status** — "Show wardens", "Angel Legion status"\n'
+                '  **Diagnostics** — "Deep scan", "Full system diagnostics"\n'
+                '  **Quarantine** — "Quarantine agent <id>", "Isolate agent"\n'
+                '  **Serenity Scale** — "Threat level", "Serenity scale"\n'
                 "  **General questions** — Ask me anything about security\n\n"
                 "I support natural language input in English and Hebrew.\n"
                 "ClawSec-grade protection: prompt injection defense, Lethal Trifecta\n"
@@ -954,6 +995,176 @@ class AngelClawBrain:
                 f"  Updated: {p.updated_at.strftime('%Y-%m-%d %H:%M UTC')} by {p.updated_by}"
             )
         }
+
+    # ------------------------------------------------------------------
+    # V2.2 — Angel Legion, Diagnostics, Quarantine, Serenity
+    # ------------------------------------------------------------------
+
+    def _handle_legion_status(self) -> dict:
+        """Show Angel Legion warden status and health."""
+        from cloud.guardian.orchestrator import angel_orchestrator
+
+        status = angel_orchestrator.pulse_check()
+        agents = status.get("agents", [])
+
+        lines = [
+            f"**Angel Legion Status** ({status.get('total_agents', 0)} agents)\n",
+            f"  Healthy: **{status.get('healthy', 0)}**",
+            f"  Degraded: **{status.get('degraded', 0)}**",
+            f"  Offline: **{status.get('offline', 0)}**",
+            f"  Autonomy: **{angel_orchestrator.autonomy_mode}**",
+            "",
+        ]
+
+        if agents:
+            lines.append("**Wardens:**")
+            for a in agents:
+                status_icon = (
+                    "OK" if a.get("status") in ("idle", "busy")
+                    else a.get("status", "?").upper()
+                )
+                lines.append(
+                    f"  [{status_icon}] **{a.get('name', '?')}** ({a.get('type', '?')}) "
+                    f"— tasks: {a.get('tasks_completed', 0)}"
+                )
+
+        breakers = status.get("circuit_breakers", {})
+        if breakers:
+            lines.append(f"\n**Circuit breakers:** {breakers}")
+
+        return {
+            "answer": "\n".join(lines),
+            "references": ["/api/v1/guardian/pulse"],
+        }
+
+    async def _handle_diagnostics(self, db: Session, tid: str, ctx: EnvironmentContext) -> dict:
+        """Deep system diagnostics: full-stack health analysis."""
+        from cloud.guardian.orchestrator import angel_orchestrator
+
+        lines = ["**Deep System Diagnostics**\n"]
+
+        # 1. Orchestrator health
+        orch = angel_orchestrator.status()
+        stats = orch.get("stats", {})
+        lines.append("**Orchestrator:**")
+        lines.append(f"  Running: {orch.get('running', False)}")
+        lines.append(f"  Events processed: {stats.get('events_processed', 0)}")
+        lines.append(f"  Indicators found: {stats.get('indicators_found', 0)}")
+        lines.append(f"  Incidents created: {stats.get('incidents_created', 0)}")
+        lines.append(f"  Responses executed: {stats.get('responses_executed', 0)}")
+
+        # 2. Legion health
+        legion = orch.get("legion", {})
+        lines.append(f"\n**Angel Legion:** {legion.get('total', 0)} agents, "
+                      f"{legion.get('wardens', 0)} wardens")
+
+        # 3. Incident summary
+        incidents = orch.get("incidents", {})
+        lines.append(f"\n**Incidents:** {incidents.get('total', 0)} total, "
+                      f"{incidents.get('pending_approval', 0)} pending approval")
+        by_state = incidents.get("by_state", {})
+        if by_state:
+            lines.append("  By state: " + ", ".join(f"{k}: {v}" for k, v in by_state.items()))
+
+        # 4. Host info
+        host = ctx.host
+        lines.append(f"\n**Host:** {host.get('hostname', '?')} ({host.get('os', '?')})")
+
+        # 5. Event summary
+        es = ctx.event_summary
+        lines.append(f"\n**Events (24h):** {es.get('total', 0)} total")
+        if es.get("by_severity"):
+            lines.append("  By severity: " + ", ".join(
+                f"{k}: {v}" for k, v in es.get("by_severity", {}).items()
+            ))
+
+        # 6. Agent fleet
+        s = ctx.agent_summary
+        lines.append(f"\n**Fleet:** {s.get('total', 0)} agents "
+                      f"(active: {s.get('active', 0)}, degraded: {s.get('degraded', 0)}, "
+                      f"offline: {s.get('offline', 0)})")
+
+        lines.append("\nDiagnostics complete. All subsystems reporting.")
+        return {
+            "answer": "\n".join(lines),
+            "references": ["/api/v1/guardian/status", "/api/v1/guardian/pulse"],
+        }
+
+    def _handle_quarantine(self, prompt: str) -> dict:
+        """Handle quarantine/isolation requests via natural language."""
+        # Extract agent ID if present
+        agent_match = re.search(
+            r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}",
+            prompt, re.IGNORECASE,
+        )
+        if not agent_match:
+            return {
+                "answer": (
+                    "To quarantine an agent, I need its agent ID. "
+                    "You can find agent IDs by asking 'agent status' or 'legion status'.\n\n"
+                    "Example: 'quarantine agent a1b2c3d4-e5f6-...'"
+                ),
+            }
+        agent_id = agent_match.group(0)
+        return {
+            "answer": (
+                f"**Quarantine request for agent `{agent_id[:8]}...`**\n\n"
+                f"This would isolate the agent from the fleet, blocking all outbound "
+                f"communication and tool execution.\n\n"
+                f"To confirm, say: **'apply all'**"
+            ),
+            "actions": [
+                {
+                    "id": f"quarantine-{agent_id[:8]}",
+                    "index": 1,
+                    "type": "isolate_agent",
+                    "description": f"Quarantine agent {agent_id[:8]}",
+                    "dry_run": True,
+                }
+            ],
+        }
+
+    def _handle_serenity(self, ctx: EnvironmentContext) -> dict:
+        """Show current Serenity Scale level based on system state."""
+        from cloud.guardian.models import SerenityLevel
+
+        # Determine level from current alerts and incidents
+        crit_alerts = [a for a in ctx.recent_alerts if a.get("severity") == "critical"]
+        high_alerts = [a for a in ctx.recent_alerts if a.get("severity") == "high"]
+        open_incidents = [i for i in ctx.recent_incidents if i.get("state") in ("new", "triaging")]
+
+        if crit_alerts or len(open_incidents) >= 3:
+            level = SerenityLevel.STORM
+        elif high_alerts or len(open_incidents) >= 1:
+            level = SerenityLevel.DISTURBED
+        elif ctx.recent_alerts:
+            level = SerenityLevel.MURMUR
+        elif ctx.agent_summary.get("degraded", 0) > 0:
+            level = SerenityLevel.WHISPER
+        else:
+            level = SerenityLevel.SERENE
+
+        # Build display
+        scale_display = {
+            SerenityLevel.SERENE: ("SERENE", "All clear. Systems operating normally."),
+            SerenityLevel.WHISPER: ("WHISPER", "Minor anomalies detected. Monitoring."),
+            SerenityLevel.MURMUR: ("MURMUR", "Moderate activity. Elevated alertness."),
+            SerenityLevel.DISTURBED: ("DISTURBED", "Active threats detected. Response engaged."),
+            SerenityLevel.STORM: ("STORM", "Critical situation. Immediate action required."),
+        }
+        name, desc = scale_display.get(level, ("UNKNOWN", ""))
+
+        lines = [
+            f"**Serenity Scale: {name}**\n",
+            f"  {desc}\n",
+            "**Current indicators:**",
+            f"  Critical alerts: {len(crit_alerts)}",
+            f"  High alerts: {len(high_alerts)}",
+            f"  Open incidents: {len(open_incidents)}",
+            f"  Degraded agents: {ctx.agent_summary.get('degraded', 0)}",
+        ]
+
+        return {"answer": "\n".join(lines)}
 
     # ------------------------------------------------------------------
     # General / host-aware assistant

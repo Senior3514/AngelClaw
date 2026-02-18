@@ -15,13 +15,12 @@ os.environ["ANGELCLAW_AUTH_ENABLED"] = "false"
 os.environ["ANGELCLAW_LOG_FORMAT"] = "text"
 os.environ["ANGELGRID_DATABASE_URL"] = "sqlite:///test_angelgrid.db"
 
-from cloud.db.models import Base
-from cloud.db.session import get_db
-
 # Import all models that define tables so they register with Base.metadata
 # before create_all is called. This prevents "no such table" errors.
 from cloud.angelclaw.actions import ActionLogRow  # noqa: F401
 from cloud.angelclaw.preferences import AngelClawPreferencesRow  # noqa: F401
+from cloud.db.models import Base
+from cloud.db.session import get_db
 
 # In-memory test database — StaticPool ensures all sessions share the same DB
 TEST_ENGINE = create_engine(

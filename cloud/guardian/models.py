@@ -23,6 +23,7 @@ class IncidentState(str, Enum):
     TRIAGING = "triaging"
     INVESTIGATING = "investigating"
     RESPONDING = "responding"
+    CONTAINED = "contained"      # V2.2 — threat contained, monitoring
     RESOLVED = "resolved"
     ESCALATED = "escalated"
 
@@ -40,6 +41,9 @@ class AgentType(str, Enum):
     BEHAVIOR = "behavior"
     TIMELINE = "timeline"
     BROWSER = "browser"
+    # V2.2 — new agent types
+    CLOUD = "cloud"
+    IDENTITY = "identity"
 
 
 class AgentStatus(str, Enum):
@@ -64,6 +68,10 @@ class Permission(str, Enum):
     READ_TOOLS = "read_tools"
     READ_BROWSER = "read_browser"
     READ_TIMELINE = "read_timeline"
+    # V2.2 permissions
+    READ_CLOUD = "read_cloud"
+    READ_IDENTITY = "read_identity"
+    CONTAIN_INCIDENT = "contain_incident"
 
 
 class SerenityLevel(str, Enum):
@@ -94,8 +102,12 @@ class MitreTactic(str, Enum):
     EXECUTION = "execution"
     PERSISTENCE = "persistence"
     PRIVILEGE_ESCALATION = "privilege_escalation"
+    DEFENSE_EVASION = "defense_evasion"           # V2.2
     CREDENTIAL_ACCESS = "credential_access"
+    DISCOVERY = "discovery"                        # V2.2
     LATERAL_MOVEMENT = "lateral_movement"
+    COLLECTION = "collection"                      # V2.2
+    COMMAND_AND_CONTROL = "command_and_control"     # V2.2
     EXFILTRATION = "exfiltration"
     IMPACT = "impact"
 

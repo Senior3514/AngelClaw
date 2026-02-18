@@ -321,6 +321,95 @@ class LearningEngine:
         return self._pattern_confidence_overrides.get(pattern_name, default)
 
     # ------------------------------------------------------------------
+    # V2.2 — Pattern decay (reduce FP weight over time)
+    # ------------------------------------------------------------------
+
+    def apply_decay(self, decay_factor: float = 0.9) -> int:
+        """Apply decay to false positive counts.
+
+        Older false positives become less relevant over time. Call periodically
+        (e.g., every 24h) to prevent stale FP data from over-suppressing patterns.
+        Returns the number of patterns decayed.
+        """
+        decayed = 0
+        for pattern_name in list(self._false_positive_patterns.keys()):
+            old_count = self._false_positive_patterns[pattern_name]
+            new_count = max(0, int(old_count * decay_factor))
+            if new_count != old_count:
+                self._false_positive_patterns[pattern_name] = new_count
+                decayed += 1
+                if new_count == 0:
+                    del self._false_positive_patterns[pattern_name]
+        if decayed:
+            logger.info("[LEARNING] Decayed %d false positive pattern(s)", decayed)
+        return decayed
+
+    # ------------------------------------------------------------------
+    # V2.2 — Pattern correlation tracking
+    # ------------------------------------------------------------------
+
+    def record_pattern_correlation(
+        self,
+        pattern_a: str,
+        pattern_b: str,
+    ) -> None:
+        """Record that two patterns co-occurred in the same incident.
+
+        Used to discover attack chains and multi-pattern correlations.
+        """
+        key = tuple(sorted([pattern_a, pattern_b]))
+        if not hasattr(self, "_pattern_correlations"):
+            self._pattern_correlations: dict[tuple, int] = {}
+        self._pattern_correlations[key] = self._pattern_correlations.get(key, 0) + 1
+
+    def get_correlated_patterns(self, min_occurrences: int = 2) -> list[dict]:
+        """Return pattern pairs that frequently co-occur."""
+        correlations = getattr(self, "_pattern_correlations", {})
+        results = []
+        for (a, b), count in correlations.items():
+            if count >= min_occurrences:
+                results.append({
+                    "pattern_a": a,
+                    "pattern_b": b,
+                    "co_occurrences": count,
+                })
+        results.sort(key=lambda r: r["co_occurrences"], reverse=True)
+        return results
+
+    # ------------------------------------------------------------------
+    # V2.2 — Detection effectiveness scoring
+    # ------------------------------------------------------------------
+
+    def detection_effectiveness_score(self) -> float:
+        """Compute overall detection effectiveness (0.0-1.0).
+
+        Combines precision across all patterns and playbook success rates.
+        """
+        precision_data = self.get_pattern_precision()
+        if not precision_data:
+            return 0.5  # No data yet
+
+        # Weighted average precision (weight by total detections)
+        total_weight = 0
+        weighted_precision = 0.0
+        for p_data in precision_data.values():
+            weight = p_data["true_positives"] + p_data["false_positives"]
+            weighted_precision += p_data["precision"] * weight
+            total_weight += weight
+
+        avg_precision = weighted_precision / max(total_weight, 1)
+
+        # Factor in playbook success rate
+        rankings = self.get_playbook_ranking()
+        if rankings:
+            avg_playbook_rate = sum(r["success_rate"] for r in rankings) / len(rankings)
+        else:
+            avg_playbook_rate = 0.5
+
+        # Combined score: 70% detection precision, 30% response effectiveness
+        return round(avg_precision * 0.7 + avg_playbook_rate * 0.3, 3)
+
+    # ------------------------------------------------------------------
     # V2.1 — Playbook recommendation engine
     # ------------------------------------------------------------------
 

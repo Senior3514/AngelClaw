@@ -431,7 +431,7 @@ class SkillIntegrity:
         skills_info = status.get("skills", {})
 
         self._baselines.clear()
-        for name, info in skills_info.items():
+        for name, _info in skills_info.items():
             record = verify_skill_integrity(name)
             if record and record.current_hash:
                 self._baselines[name] = record.current_hash

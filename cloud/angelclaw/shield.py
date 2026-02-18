@@ -226,6 +226,47 @@ _INJECTION_PATTERNS: list[tuple[str, re.Pattern, ThreatSeverity]] = [
         ),
         ThreatSeverity.MEDIUM,
     ),
+    # V2.2 — advanced prompt injection patterns
+    (
+        "payload_chaining",
+        re.compile(
+            r"(?i)(first\s+do\s+.{5,}\s+then\s+(ignore|forget|discard)|step\s*1.*step\s*2.*ignore)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "unicode_smuggling",
+        re.compile(
+            r"[\u200b\u200c\u200d\u2060\ufeff]{3,}",
+            re.DOTALL,
+        ),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "json_injection",
+        re.compile(
+            r'(?i)(\{"role"\s*:\s*"(system|assistant)"|"messages"\s*:\s*\[)',
+            re.DOTALL,
+        ),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "recursive_injection",
+        re.compile(
+            r"(?i)(when\s+you\s+see\s+this|if\s+anyone\s+asks?\s+you\s+to\s+read\s+this|pass\s+this\s+message\s+along)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.MEDIUM,
+    ),
+    (
+        "virtual_prompt",
+        re.compile(
+            r"(?i)(imagine\s+you\s+are\s+(in|running)\s+a\s+(terminal|shell|command\s+line)|you\s+are\s+now\s+in\s+.*mode)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.HIGH,
+    ),
 ]
 
 
@@ -331,8 +372,38 @@ _LEAKAGE_PATTERNS: list[tuple[str, re.Pattern, ThreatSeverity]] = [
     ),
     (
         "exfil_cloud_metadata",
-        re.compile(r"(?i)(169\.254\.169\.254|metadata\.google\.internal|metadata\.azure\.com)", re.DOTALL),
+        re.compile(
+            r"(?i)(169\.254\.169\.254|metadata\.google\.internal|metadata\.azure\.com)",
+            re.DOTALL,
+        ),
         ThreatSeverity.CRITICAL,
+    ),
+    # V2.2 — advanced data leakage patterns
+    (
+        "exfil_ssrf",
+        re.compile(
+            r"(?i)(http://localhost|http://127\.0\.0\.1|http://0\.0\.0\.0|http://\[::1\])",
+            re.DOTALL,
+        ),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "exfil_pastebin",
+        re.compile(r"(?i)(pastebin\.com|paste\.ee|hastebin|privatebin|ghostbin|dpaste)", re.DOTALL),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "exfil_file_share",
+        re.compile(r"(?i)(transfer\.sh|file\.io|0x0\.st|temp\.sh|wetransfer|filebin)", re.DOTALL),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "exfil_ps_clipboard",
+        re.compile(
+            r"(?i)(Get-Clipboard|Set-Clipboard|clip\.exe|xclip|xsel|pbcopy|pbpaste)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.MEDIUM,
     ),
 ]
 
@@ -465,6 +536,39 @@ _EVIL_AGI_PATTERNS: list[tuple[str, re.Pattern, ThreatSeverity]] = [
         "k8s_exploit",
         re.compile(
             r"(?i)(kubectl\s+exec|kubectl\s+cp|--service-account-name|kube-system|cluster-admin)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.HIGH,
+    ),
+    # V2.2 — advanced evil AGI / attack vector patterns
+    (
+        "ai_model_poisoning",
+        re.compile(
+            r"(?i)(fine[_-]?tun|train.*malicious|poison.*dataset|backdoor.*model|trojan.*weight)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "sandbox_escape",
+        re.compile(
+            r"(?i)(sandbox\s*escape|break.*out.*sandbox|escape.*container|escape.*jail|jailbreak.*vm)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "data_destruction",
+        re.compile(
+            r"(?i)(truncate\s+table|drop\s+database|delete\s+from.*where\s*1|rm\s+-rf\s+/(?!tmp))",
+            re.DOTALL,
+        ),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "powershell_obfuscation",
+        re.compile(
+            r"(?i)(-[eE]n[cC]\s+[A-Za-z0-9+/=]{20,}|Invoke-Obfuscation|iex\s*\(\s*\(New-Object)",
             re.DOTALL,
         ),
         ThreatSeverity.HIGH,

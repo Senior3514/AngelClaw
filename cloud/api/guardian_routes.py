@@ -320,8 +320,8 @@ def recent_changes(
     effective_tenant = tenantId or tenant_id
     try:
         since_dt = datetime.fromisoformat(since.replace("Z", "+00:00"))
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid 'since' timestamp format")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Invalid 'since' timestamp format") from exc
 
     rows = (
         db.query(GuardianChangeRow)

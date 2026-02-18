@@ -170,22 +170,22 @@ async def llm_chat(req: LLMChatRequest) -> LLMChatResponse:
                 json=payload,
             )
             resp.raise_for_status()
-    except httpx.TimeoutException:
+    except httpx.TimeoutException as exc:
         raise HTTPException(
             status_code=504,
             detail=f"LLM backend timed out after {LLM_TIMEOUT_SECONDS}s",
-        )
+        ) from exc
     except httpx.HTTPStatusError as exc:
         logger.error("LLM backend error: %s %s", exc.response.status_code, exc.response.text[:200])
         raise HTTPException(
             status_code=502,
             detail=f"LLM backend returned {exc.response.status_code}",
-        )
-    except httpx.ConnectError:
+        ) from exc
+    except httpx.ConnectError as exc:
         raise HTTPException(
             status_code=502,
             detail=f"Cannot connect to LLM backend at {LLM_BACKEND_URL}",
-        )
+        ) from exc
 
     latency_ms = int((time.monotonic() - start) * 1000)
     body = resp.json()

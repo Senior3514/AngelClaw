@@ -12,7 +12,6 @@ import pytest
 from cloud.angelclaw.actions import ActionLogRow  # noqa: F401
 from cloud.angelclaw.preferences import AngelClawPreferencesRow  # noqa: F401
 
-
 # ---------------------------------------------------------------------------
 # Brain intent detection
 # ---------------------------------------------------------------------------
@@ -22,11 +21,17 @@ class TestBrainIntents:
 
     def test_hebrew_scan_intent(self):
         from cloud.angelclaw.brain import detect_intent
-        assert detect_intent("\u05ea\u05e1\u05e8\u05d5\u05e7 \u05d0\u05ea \u05d4\u05de\u05e2\u05e8\u05db\u05ea") == "hebrew"
+        result = detect_intent(
+            "\u05ea\u05e1\u05e8\u05d5\u05e7 \u05d0\u05ea \u05d4\u05de\u05e2\u05e8\u05db\u05ea"
+        )
+        assert result == "hebrew"
 
     def test_hebrew_threats_intent(self):
         from cloud.angelclaw.brain import detect_intent
-        assert detect_intent("\u05d0\u05d9\u05d5\u05de\u05d9\u05dd \u05d1\u05de\u05e2\u05e8\u05db\u05ea") == "hebrew"
+        result = detect_intent(
+            "\u05d0\u05d9\u05d5\u05de\u05d9\u05dd \u05d1\u05de\u05e2\u05e8\u05db\u05ea"
+        )
+        assert result == "hebrew"
 
     def test_hebrew_status_intent(self):
         from cloud.angelclaw.brain import detect_intent
@@ -63,7 +68,7 @@ class TestBrainIntents:
     def test_about_mentions_v200(self):
         from cloud.angelclaw.brain import brain
         result = brain._handle_about()
-        assert "2.1.0" in result["answer"]
+        assert "2.2.0" in result["answer"]
         assert "Angel Legion" in result["answer"]
 
     def test_help_mentions_hebrew(self):
@@ -86,7 +91,10 @@ class TestHebrewMapping:
 
     def test_scan_mapping(self):
         from cloud.angelclaw.brain import _detect_hebrew_intent
-        assert _detect_hebrew_intent("\u05ea\u05e1\u05e8\u05d5\u05e7 \u05d0\u05ea \u05d4\u05de\u05e2\u05e8\u05db\u05ea") == "scan"
+        result = _detect_hebrew_intent(
+            "\u05ea\u05e1\u05e8\u05d5\u05e7 \u05d0\u05ea \u05d4\u05de\u05e2\u05e8\u05db\u05ea"
+        )
+        assert result == "scan"
 
     def test_threats_mapping(self):
         from cloud.angelclaw.brain import _detect_hebrew_intent
@@ -179,24 +187,27 @@ class TestActionMapping:
     """Test the _map_suggestion_to_action_type mapping includes V1.2 types."""
 
     def test_isolate_agent_maps(self):
-        from cloud.angelclaw.brain import _map_suggestion_to_action_type
         from cloud.angelclaw.actions import ActionType
+        from cloud.angelclaw.brain import _map_suggestion_to_action_type
         assert _map_suggestion_to_action_type("isolate_agent") == ActionType.ISOLATE_AGENT
 
     def test_block_agent_maps(self):
-        from cloud.angelclaw.brain import _map_suggestion_to_action_type
         from cloud.angelclaw.actions import ActionType
+        from cloud.angelclaw.brain import _map_suggestion_to_action_type
         assert _map_suggestion_to_action_type("block_agent") == ActionType.BLOCK_AGENT
 
     def test_revoke_token_maps(self):
-        from cloud.angelclaw.brain import _map_suggestion_to_action_type
         from cloud.angelclaw.actions import ActionType
+        from cloud.angelclaw.brain import _map_suggestion_to_action_type
         assert _map_suggestion_to_action_type("revoke_token") == ActionType.REVOKE_TOKEN
 
     def test_adjust_network_maps(self):
-        from cloud.angelclaw.brain import _map_suggestion_to_action_type
         from cloud.angelclaw.actions import ActionType
-        assert _map_suggestion_to_action_type("adjust_network_allowlist") == ActionType.ADJUST_NETWORK_ALLOWLIST
+        from cloud.angelclaw.brain import _map_suggestion_to_action_type
+        result = _map_suggestion_to_action_type(
+            "adjust_network_allowlist"
+        )
+        assert result == ActionType.ADJUST_NETWORK_ALLOWLIST
 
     def test_unknown_returns_none(self):
         from cloud.angelclaw.brain import _map_suggestion_to_action_type
@@ -282,7 +293,7 @@ class TestSecretLeakPrevention:
 
 
 # ---------------------------------------------------------------------------
-# Brain chat integration (V1.2) — tests brain.chat() directly to avoid
+# Brain chat integration (V1.2) --- tests brain.chat() directly to avoid
 # rate-limit interference from the security middleware in full suite runs.
 # ---------------------------------------------------------------------------
 
@@ -301,7 +312,7 @@ class TestBrainChat:
     async def test_chat_about_v200(self, db):
         from cloud.angelclaw.brain import brain
         result = await brain.chat(db, "test-tenant", "who are you?")
-        assert "2.1.0" in result["answer"]
+        assert "2.2.0" in result["answer"]
 
     @pytest.mark.asyncio
     async def test_chat_secret_probe_blocked(self, db):
@@ -325,7 +336,10 @@ class TestBrainChat:
     @pytest.mark.asyncio
     async def test_chat_hebrew_resolves_to_scan(self, db):
         from cloud.angelclaw.brain import brain
-        result = await brain.chat(db, "test-tenant", "\u05ea\u05e1\u05e8\u05d5\u05e7 \u05d0\u05ea \u05d4\u05de\u05e2\u05e8\u05db\u05ea")
+        result = await brain.chat(
+            db, "test-tenant",
+            "\u05ea\u05e1\u05e8\u05d5\u05e7 \u05d0\u05ea \u05d4\u05de\u05e2\u05e8\u05db\u05ea",
+        )
         assert "answer" in result
         # Hebrew scan should resolve to the scan handler
 
@@ -335,9 +349,9 @@ class TestBrainChat:
 # ---------------------------------------------------------------------------
 
 class TestContextVersion:
-    """Test that context reports v2.1.0."""
+    """Test that context reports v2.2.0."""
 
     def test_host_info_version(self, db):
         from cloud.angelclaw.context import gather_context
         ctx = gather_context(db, "test-tenant", lookback_hours=1)
-        assert ctx.host.get("angelclaw_version") == "2.1.0"
+        assert ctx.host.get("angelclaw_version") == "2.2.0"

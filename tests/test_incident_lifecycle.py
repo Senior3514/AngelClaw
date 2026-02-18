@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 import pytest
+from pydantic import ValidationError
 
 from cloud.guardian.models import (
     AgentResult,
@@ -87,7 +88,7 @@ class TestThreatIndicator:
 
     def test_confidence_bounds(self):
         """Confidence must be between 0 and 1."""
-        with pytest.raises(Exception):  # ValidationError
+        with pytest.raises(ValidationError):
             ThreatIndicator(
                 indicator_type="test",
                 severity="low",
