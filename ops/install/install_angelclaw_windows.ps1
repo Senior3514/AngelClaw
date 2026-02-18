@@ -1,5 +1,5 @@
 # ============================================================================
-# AngelClaw AGI Guardian -- Windows ANGELNODE Installer (V2.0.0)
+# AngelClaw AGI Guardian -- Windows ANGELNODE Installer (V2.1.0)
 #
 # Installs the ANGELNODE agent only, connecting to a remote AngelClaw Cloud.
 # Requires Docker Desktop for Windows.
@@ -51,7 +51,7 @@ function Write-Err  { param([string]$msg) Write-Host "  [X]  $msg" -ForegroundCo
 Write-Host ""
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host "   AngelClaw AGI Guardian -- Windows Installer"   -ForegroundColor Cyan
-Write-Host "   V2.0.0 -- Angel Legion"                        -ForegroundColor Cyan
+Write-Host "   V2.1.0 -- Angel Legion"                        -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -281,6 +281,6 @@ Write-Host ""
 Write-Host "  Access the Cloud dashboard (on your VPS):"
 Write-Host "    Open browser: $CloudUrl/ui"
 Write-Host ""
-Write-Host "  AngelClaw V2.0.0 -- Angel Legion" -ForegroundColor Cyan
+Write-Host "  AngelClaw V2.1.0 -- Angel Legion" -ForegroundColor Cyan
 Write-Host "  Guardian angel, not gatekeeper." -ForegroundColor Cyan
 Write-Host ""

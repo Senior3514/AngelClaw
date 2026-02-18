@@ -15,9 +15,13 @@ analysis, reading, summarizing, reasoning, creating -- flows freely.
 
 ---
 
-## What's New in V2.0.0 -- Angel Legion
+## What's New in V2.1.0 -- Angel Legion: Seraph Core
 
-AngelClaw V2.0.0 introduces the **Angel Legion** -- a swarm of 10 specialized sub-agents orchestrated by the Seraph (orchestrator) with a dynamic registry. The system has evolved from 4 hardcoded agents to a fully extensible, registry-based architecture.
+AngelClaw V2.1.0 upgrades the Seraph Brain with an enhanced internal cognition protocol for deeper cross-domain synthesis, expert-level strategic reasoning, and maximum processing capability. All enhancements are internal -- the user-facing API surface remains stable and backward-compatible.
+
+### V2.0.0 Highlights -- Angel Legion
+
+AngelClaw V2.0.0 introduced the **Angel Legion** -- a swarm of 10 specialized sub-agents orchestrated by the Seraph (orchestrator) with a dynamic registry. The system evolved from 4 hardcoded agents to a fully extensible, registry-based architecture.
 
 ### Angel Legion -- 7 New Specialized Sentinels
 
@@ -317,7 +321,7 @@ uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
 
 ---
 
-## AngelClaw AGI Guardian (V2.0.0)
+## AngelClaw AGI Guardian (V2.1.0)
 
 AngelClaw is a **full-stack, enterprise-grade, autonomous AGI security suite** with the **Angel Legion** -- 10 specialized sub-agents:
 

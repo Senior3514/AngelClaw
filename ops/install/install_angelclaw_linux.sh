@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AngelClaw AGI Guardian -- Linux Installer (V2.0.0)
+# AngelClaw AGI Guardian -- Linux Installer (V2.1.0)
 #
 # Installs the full AngelClaw stack (ANGELNODE + Cloud + Ollama) on a Linux
 # server using Docker Compose + systemd.
@@ -64,7 +64,7 @@ trap cleanup EXIT
 echo ""
 echo -e "${B}${C}================================================${N}"
 echo -e "${B}${C}  AngelClaw AGI Guardian -- Linux Installer${N}"
-echo -e "${B}${C}  V2.0.0 -- Angel Legion${N}"
+echo -e "${B}${C}  V2.1.0 -- Angel Legion${N}"
 echo -e "${B}${C}================================================${N}"
 echo ""
 
@@ -322,5 +322,5 @@ if [ "$LLM" = "true" ]; then
   echo ""
 fi
 
-echo -e "  ${C}AngelClaw V2.0.0 -- Angel Legion -- guardian angel, not gatekeeper.${N}"
+echo -e "  ${C}AngelClaw V2.1.0 -- Angel Legion -- guardian angel, not gatekeeper.${N}"
 echo ""

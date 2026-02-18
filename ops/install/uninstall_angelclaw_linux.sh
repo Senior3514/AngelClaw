@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AngelClaw AGI Guardian -- Linux Uninstaller (V2.0.0)
+# AngelClaw AGI Guardian -- Linux Uninstaller (V2.1.0)
 #
 # Stops all AngelClaw containers, removes systemd service, Docker images,
 # volumes, and optionally deletes the install directory.

@@ -1,4 +1,4 @@
-# AngelClaw V2.0.0 Lexicon
+# AngelClaw V2.1.0 Lexicon
 
 > Canonical terminology reference for AngelClaw AGI Guardian.
 > All user-facing output, documentation, and UI should use these terms.

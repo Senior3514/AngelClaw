@@ -1,8 +1,8 @@
-# AngelClaw AGI Guardian -- Installation Guide (V2.0.0)
+# AngelClaw AGI Guardian -- Installation Guide (V2.1.0)
 
 ## Overview
 
-AngelClaw V2.0.0 deploys as three containers running the **Angel Legion** -- a 10-agent
+AngelClaw V2.1.0 deploys as three containers running the **Angel Legion** -- a 10-agent
 autonomous security swarm:
 
 | Component | Port | Description |
@@ -333,7 +333,7 @@ curl -X POST http://127.0.0.1:8500/api/v1/auth/change-password \
 
 **Cause:** PowerShell 5.x reads files as ANSI by default. Non-ASCII characters (em dashes, etc.) in UTF-8 files corrupt the parser.
 
-**Fix:** V2.0.0 scripts are now pure ASCII. Pull the latest version:
+**Fix:** V2.1.0 scripts are now pure ASCII. Pull the latest version:
 
 ```powershell
 cd C:\AngelClaw; git pull origin main

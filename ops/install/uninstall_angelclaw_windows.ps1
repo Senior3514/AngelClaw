@@ -1,5 +1,5 @@
 # ============================================================================
-# AngelClaw AGI Guardian -- Windows Uninstaller (V2.0.0)
+# AngelClaw AGI Guardian -- Windows Uninstaller (V2.1.0)
 #
 # Stops ANGELNODE container, removes Docker images, volumes,
 # and optionally deletes the install directory.
