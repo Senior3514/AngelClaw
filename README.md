@@ -134,154 +134,133 @@ AngelClaw has evolved from a simple policy engine into a **full-stack, enterpris
 
 ---
 
-### Linux -- One-Command Install
+## Linux (Full Stack)
+
+### Install -- One Command
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
 ```
 
-**What it does:** Installs Docker (if missing), clones the repo, builds and starts the full stack (ANGELNODE + Cloud + Ollama), registers a systemd service for auto-start on boot.
+Installs Docker (if missing), clones the repo, builds all 3 containers, registers systemd service.
 
-<details>
-<summary>Manual steps (if you prefer not to pipe to bash)</summary>
+### Uninstall -- One Command
 
 ```bash
-# 1. Install Docker
-curl -fsSL https://get.docker.com | sh
-systemctl enable docker && systemctl start docker
+curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_linux.sh | bash
+```
 
-# 2. Clone AngelClaw
-git clone https://github.com/Senior3514/AngelClaw.git /root/AngelClaw
+Stops containers, removes systemd service, Docker images, volumes, and the install directory.
 
-# 3. Start the stack
-cd /root/AngelClaw/ops
-docker compose up -d --build
+### Clean (keep files, reset containers)
 
-# 4. Verify
+```bash
+cd /root/AngelClaw/ops && docker compose down --volumes --remove-orphans
+docker system prune -f
+```
+
+### Reinstall -- One Command
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_linux.sh | bash && curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
+```
+
+### Verify
+
+```bash
 curl http://127.0.0.1:8400/health   # ANGELNODE
 curl http://127.0.0.1:8500/health   # Cloud API
-```
-
-</details>
-
-<details>
-<summary>Optional environment variables</summary>
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `ANGELCLAW_DIR` | `/root/AngelClaw` | Install directory |
-| `ANGELCLAW_TENANT_ID` | `default` | Tenant identifier |
-| `ANGELCLAW_CLOUD_URL` | `http://cloud:8500` | Cloud URL for agents |
-| `LLM_ENABLED` | `false` | Enable LLM proxy |
-
-Example with custom options:
-```bash
-ANGELCLAW_TENANT_ID=prod LLM_ENABLED=true curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
-```
-
-</details>
-
-**After install:**
-
-```bash
-systemctl status angelclaw          # check stack status
-journalctl -u angelclaw -f          # follow logs
-curl http://127.0.0.1:8500/ui       # open dashboard
+curl http://127.0.0.1:8500/ui       # Dashboard
+systemctl status angelclaw          # Service status
 ```
 
 ---
 
-### macOS -- One-Command Install
+## macOS (Full Stack)
+
+### Install -- One Command
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_macos.sh | bash
 ```
 
-**What it does:** Installs Homebrew (if missing), installs Docker Desktop (if missing), clones the repo, builds and starts the full stack.
+Installs Homebrew + Docker Desktop (if missing), clones the repo, builds the full stack.
 
-<details>
-<summary>Manual steps</summary>
+### Uninstall -- One Command
 
 ```bash
-# 1. Install Docker Desktop (via Homebrew)
-brew install --cask docker
-# Open Docker Desktop and wait for it to start
-
-# 2. Clone AngelClaw
-git clone https://github.com/Senior3514/AngelClaw.git ~/AngelClaw
-
-# 3. Start the stack
-cd ~/AngelClaw/ops
-docker compose up -d --build
-
-# 4. Verify
-curl http://127.0.0.1:8400/health   # ANGELNODE
-curl http://127.0.0.1:8500/health   # Cloud API
+curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_macos.sh | bash
 ```
 
-</details>
+Stops containers, removes Docker images, volumes, and the install directory.
 
-**After install:**
+### Clean (keep files, reset containers)
 
 ```bash
-docker ps                              # check containers
-open http://127.0.0.1:8500/ui          # open dashboard in browser
-~/AngelClaw/ops/cli/angelclawctl status  # CLI status check
+cd ~/AngelClaw/ops && docker compose down --volumes --remove-orphans
+docker system prune -f
+```
+
+### Reinstall -- One Command
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_macos.sh | bash && curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_macos.sh | bash
+```
+
+### Verify
+
+```bash
+curl http://127.0.0.1:8400/health   # ANGELNODE
+curl http://127.0.0.1:8500/health   # Cloud API
+open http://127.0.0.1:8500/ui       # Dashboard
 ```
 
 ---
 
-### Windows -- One-Command Install
+## Windows (ANGELNODE Agent Only)
 
-**Prerequisite:** [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/) must be installed and running.
+> Windows runs the lightweight ANGELNODE agent only. The Cloud backend runs on your Linux/macOS server. Replace `YOUR-VPS-IP` with your server's IP.
+
+### Install -- One Command
+
+PowerShell (as Administrator):
 
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force; git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw; C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
 ```
 
-> **Note:** Windows installs **ANGELNODE only** (the lightweight agent). The Cloud backend runs on your Linux/macOS server. Replace `YOUR-VPS-IP` with your server's IP address.
+### Uninstall -- One Command
 
-<details>
-<summary>Manual steps</summary>
+PowerShell (as Administrator):
 
 ```powershell
-# 1. Install Docker Desktop from https://docs.docker.com/desktop/install/windows-install/
-
-# 2. Open PowerShell as Administrator
-Set-ExecutionPolicy Bypass -Scope Process -Force
-
-# 3. Clone AngelClaw
-git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw
-
-# 4. Run the installer (connects to your remote Cloud)
-C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500" -TenantId "default"
-
-# 5. Verify
-curl http://127.0.0.1:8400/status
+Set-ExecutionPolicy Bypass -Scope Process -Force; C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1
 ```
 
-</details>
-
-<details>
-<summary>Parameters</summary>
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `-CloudUrl` | `http://your-cloud-server:8500` | Your VPS Cloud API URL |
-| `-TenantId` | `default` | Tenant identifier |
-| `-InstallDir` | `C:\AngelClaw` | Install directory |
-
-</details>
-
-**Example** -- connecting to a VPS at `168.231.110.18`:
+### Clean (keep files, reset containers)
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw; C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl http://168.231.110.18:8500
+cd C:\AngelClaw\ops; docker compose down --volumes --remove-orphans
+docker system prune -f
+```
+
+### Reinstall -- One Command
+
+PowerShell (as Administrator):
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1; git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw; C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
+```
+
+### Verify
+
+```powershell
+curl http://127.0.0.1:8400/status
 ```
 
 ---
 
-### Development Setup (All Platforms)
+## Development Setup (All Platforms)
 
 ```bash
 # Option 1: Docker Compose (recommended)
@@ -299,7 +278,18 @@ uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
 
 ---
 
-### Quick Reference -- Post-Install
+## Default Credentials
+
+| Field | Value |
+|-------|-------|
+| Username | `admin` |
+| Password | `angelclaw` |
+
+**Change the password immediately after first login.**
+
+---
+
+### Quick Reference
 
 | What | URL / Command |
 |------|---------------|

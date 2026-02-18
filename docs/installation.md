@@ -1,8 +1,8 @@
-# AngelClaw AGI Guardian — Installation Guide (V2.0.0)
+# AngelClaw AGI Guardian -- Installation Guide (V2.0.0)
 
 ## Overview
 
-AngelClaw V2.0.0 deploys as three containers running the **Angel Legion** — a 10-agent
+AngelClaw V2.0.0 deploys as three containers running the **Angel Legion** -- a 10-agent
 autonomous security swarm:
 
 | Component | Port | Description |
@@ -11,41 +11,72 @@ autonomous security swarm:
 | **Cloud API** | 8500 | Central management, Angel Legion orchestrator, dashboard, AI chat |
 | **Ollama** | internal | Optional local LLM (no host port) |
 
-The Cloud API runs the **Seraph orchestrator** managing 10 sub-agents:
+All components bind to `127.0.0.1` by default -- secure out of the box.
 
-| Agent | Code Name | Role |
-|-------|-----------|------|
-| SentinelAgent | Vigil | Core pattern matching and anomaly detection |
-| ResponseAgent | — | Automated incident response |
-| ForensicAgent | — | Deep-dive forensic analysis |
-| AuditAgent | — | Compliance and audit trail |
-| NetworkSentinel | Net Warden | Suspicious ports, DNS tunneling, port scans |
-| BrowserSentinel | Glass Eye | URL threats, page injection, extension abuse |
-| ToolchainSentinel | Tool Smith | Tool bursts, version drift, output injection |
-| TimelineSentinel | Chronicle | Kill chains, coordinated activity, time clustering |
-| SecretsSentinel | Vault Keeper | Secret access bursts, brute force, exfiltration |
-| BehaviorSentinel | Drift Watcher | Peer deviation, severity escalation, novelty |
+### Prerequisites
 
-All components bind to `127.0.0.1` by default — secure out of the box.
+| Requirement | Version | Notes |
+|-------------|---------|-------|
+| Docker | 20.10+ | Docker Desktop (macOS/Windows) or Docker Engine (Linux) |
+| Docker Compose | v2+ | Included with Docker Desktop; `docker compose` plugin on Linux |
+| Git | 2.x+ | For cloning the repository |
+| Python | 3.11+ | Only needed for local development (not Docker) |
 
 ---
 
-## Linux Full Stack (Recommended)
+## Linux (Full Stack)
 
-### Quick Install
-
-On a fresh Ubuntu/Debian server (as root):
+### Install -- One Command
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
 ```
 
-### Manual Install
+Installs Docker (if missing), clones the repo, builds all 3 containers (ANGELNODE + Cloud + Ollama), registers systemd service for auto-start on boot.
+
+**Manual install:**
 
 ```bash
 git clone https://github.com/Senior3514/AngelClaw.git /root/AngelClaw
 cd /root/AngelClaw/ops
 docker compose up -d --build
+```
+
+### Uninstall -- One Command
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_linux.sh | bash
+```
+
+Stops containers, removes systemd service, Docker images, volumes, and the install directory.
+
+**Keep files but remove everything else:**
+
+```bash
+ANGELCLAW_KEEP_DATA=true curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_linux.sh | bash
+```
+
+### Clean (keep files, reset containers)
+
+```bash
+cd /root/AngelClaw/ops && docker compose down --volumes --remove-orphans
+docker system prune -f
+```
+
+### Reinstall -- One Command
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_linux.sh | bash && curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
+```
+
+### Verify
+
+```bash
+curl http://127.0.0.1:8400/health   # ANGELNODE
+curl http://127.0.0.1:8500/health   # Cloud API
+curl http://127.0.0.1:8500/ui       # Dashboard
+systemctl status angelclaw          # Service status
+journalctl -u angelclaw -f          # Follow logs
 ```
 
 ### Environment Variables
@@ -61,42 +92,105 @@ docker compose up -d --build
 | `LLM_ENABLED` | `false` | Enable LLM proxy |
 | `LLM_MODEL` | `llama3` | Ollama model name |
 
-### After Install
+---
+
+## macOS (Full Stack)
+
+### Install -- One Command
 
 ```bash
-# Check status
-systemctl status angelclaw
+curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_macos.sh | bash
+```
 
-# Follow logs
-journalctl -u angelclaw -f
+Installs Homebrew + Docker Desktop (if missing), clones the repo, builds the full stack.
 
-# Open dashboard
-curl http://127.0.0.1:8500/ui
+**Manual install:**
 
-# Chat with AngelClaw
-curl -X POST http://127.0.0.1:8500/api/v1/angelclaw/chat \
-  -H 'Content-Type: application/json' \
-  -d '{"tenantId":"default","prompt":"Scan the system"}'
+```bash
+brew install --cask docker          # Install Docker Desktop
+git clone https://github.com/Senior3514/AngelClaw.git ~/AngelClaw
+cd ~/AngelClaw/ops
+docker compose up -d --build
+```
 
-# CLI status check
-./ops/cli/angelclawctl status
+### Uninstall -- One Command
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_macos.sh | bash
+```
+
+Stops containers, removes Docker images, volumes, and the install directory.
+
+**Keep files but remove everything else:**
+
+```bash
+ANGELCLAW_KEEP_DATA=true curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_macos.sh | bash
+```
+
+### Clean (keep files, reset containers)
+
+```bash
+cd ~/AngelClaw/ops && docker compose down --volumes --remove-orphans
+docker system prune -f
+```
+
+### Reinstall -- One Command
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_macos.sh | bash && curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_macos.sh | bash
+```
+
+### Verify
+
+```bash
+curl http://127.0.0.1:8400/health   # ANGELNODE
+curl http://127.0.0.1:8500/health   # Cloud API
+open http://127.0.0.1:8500/ui       # Dashboard
 ```
 
 ---
 
-## Windows Agent
+## Windows (ANGELNODE Agent Only)
 
-The Windows installer deploys **ANGELNODE only** — it connects to your
-AngelClaw Cloud running on a Linux VPS.
+Windows installs **ANGELNODE only** (the lightweight agent). The Cloud backend runs on your Linux/macOS server. Replace `YOUR-VPS-IP` with your server's IP.
 
-### Quick Install
+**Prerequisite:** [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/) must be installed and running.
+
+### Install -- One Command
 
 PowerShell (as Administrator):
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force
-git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw
-C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
+Set-ExecutionPolicy Bypass -Scope Process -Force; git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw; C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
+```
+
+### Uninstall -- One Command
+
+PowerShell (as Administrator):
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1
+```
+
+**Keep files but remove everything else:**
+
+```powershell
+C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1 -KeepData
+```
+
+### Clean (keep files, reset containers)
+
+```powershell
+cd C:\AngelClaw\ops; docker compose down --volumes --remove-orphans
+docker system prune -f
+```
+
+### Reinstall -- One Command
+
+PowerShell (as Administrator):
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1; git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw; C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
 ```
 
 ### Parameters
@@ -106,12 +200,6 @@ C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VP
 | `-CloudUrl` | `http://your-cloud-server:8500` | Your VPS Cloud API URL |
 | `-TenantId` | `default` | Tenant identifier |
 | `-InstallDir` | `C:\AngelClaw` | Install directory |
-
-### Example (VPS at 168.231.110.18)
-
-```powershell
-C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl http://168.231.110.18:8500
-```
 
 ### Verify
 
@@ -127,7 +215,7 @@ AngelClaw Cloud serves a full web dashboard at `/ui`.
 
 ### Option 1: SSH Tunnel (Recommended)
 
-Most secure — no auth bypass needed:
+Most secure -- no auth bypass needed:
 
 ```bash
 ssh -L 8500:127.0.0.1:8500 root@YOUR-VPS-IP
@@ -159,16 +247,6 @@ server {
 
 Ensure `ANGELCLAW_AUTH_ENABLED=true` (default) when exposing to the internet.
 
-### Option 3: Direct Access (Development only)
-
-Start with public binding (NOT recommended for production):
-
-```bash
-ANGELCLAW_BIND_HOST=0.0.0.0 uvicorn cloud.api.server:app --host 0.0.0.0 --port 8500
-```
-
-Then access `http://YOUR-VPS-IP:8500/ui`.
-
 ---
 
 ## Development Setup
@@ -192,8 +270,6 @@ uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
 
 ## Default Credentials
 
-When auth is enabled (default), the system creates a default admin account:
-
 | Field | Value |
 |-------|-------|
 | Username | `admin` |
@@ -208,6 +284,22 @@ curl -X POST http://127.0.0.1:8500/api/v1/auth/change-password \
   -H 'Content-Type: application/json' \
   -d '{"current_password":"angelclaw","new_password":"YOUR_STRONG_PASSWORD"}'
 ```
+
+---
+
+## Quick Reference
+
+| What | Command |
+|------|---------|
+| Install (Linux) | `curl -sSL .../install_angelclaw_linux.sh \| bash` |
+| Install (macOS) | `curl -sSL .../install_angelclaw_macos.sh \| bash` |
+| Uninstall (Linux) | `curl -sSL .../uninstall_angelclaw_linux.sh \| bash` |
+| Uninstall (macOS) | `curl -sSL .../uninstall_angelclaw_macos.sh \| bash` |
+| Dashboard | `http://127.0.0.1:8500/ui` |
+| ANGELNODE health | `curl http://127.0.0.1:8400/health` |
+| Cloud API health | `curl http://127.0.0.1:8500/health` |
+| CLI status | `./ops/cli/angelclawctl status` |
+| Remote access | `ssh -L 8500:127.0.0.1:8500 root@YOUR-VPS-IP` |
 
 ---
 
@@ -235,13 +327,13 @@ curl -X POST http://127.0.0.1:8500/api/v1/auth/change-password \
      +-------------+   +-----------+  +-----------+
 
      Angel Legion (10 agents inside Cloud):
-     ┌──────────┬──────────┬──────────┬──────────┐
-     │  Vigil   │Net Warden│Glass Eye │Tool Smith│
-     │(Sentinel)│(Network) │(Browser) │(Toolchain│
-     ├──────────┼──────────┼──────────┼──────────┤
-     │Chronicle │Vault Keep│Drift Watch│ Response │
-     │(Timeline)│(Secrets) │(Behavior)│          │
-     ├──────────┼──────────┼──────────┼──────────┤
-     │ Forensic │  Audit   │          │          │
-     └──────────┴──────────┴──────────┴──────────┘
+     +----------+----------+----------+----------+
+     |  Vigil   |Net Warden|Glass Eye |Tool Smith|
+     |(Sentinel)|(Network) |(Browser) |(Toolchain|
+     +----------+----------+----------+----------+
+     |Chronicle |Vault Keep|Drift Watch| Response |
+     |(Timeline)|(Secrets) |(Behavior)|          |
+     +----------+----------+----------+----------+
+     | Forensic |  Audit   |          |          |
+     +----------+----------+----------+----------+
 ```
