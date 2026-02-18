@@ -42,6 +42,12 @@ cd /root/AngelClaw/ops
 docker compose up -d --build
 ```
 
+**Force clean reinstall (removes existing install first):**
+
+```bash
+ANGELCLAW_FORCE=true curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
+```
+
 ### Uninstall -- One Command
 
 ```bash
@@ -89,6 +95,7 @@ journalctl -u angelclaw -f          # Follow logs
 | `ANGELCLAW_BIND_HOST` | `127.0.0.1` | API bind address |
 | `ANGELCLAW_BIND_PORT` | `8500` | API port |
 | `ANGELCLAW_AUTH_ENABLED` | `true` | Enable JWT authentication |
+| `ANGELCLAW_FORCE` | `false` | Force clean reinstall |
 | `LLM_ENABLED` | `false` | Enable LLM proxy |
 | `LLM_MODEL` | `llama3` | Ollama model name |
 
@@ -111,6 +118,12 @@ brew install --cask docker          # Install Docker Desktop
 git clone https://github.com/Senior3514/AngelClaw.git ~/AngelClaw
 cd ~/AngelClaw/ops
 docker compose up -d --build
+```
+
+**Force clean reinstall:**
+
+```bash
+ANGELCLAW_FORCE=true curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_macos.sh | bash
 ```
 
 ### Uninstall -- One Command
@@ -156,20 +169,37 @@ Windows installs **ANGELNODE only** (the lightweight agent). The Cloud backend r
 
 **Prerequisite:** [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/) must be installed and running.
 
-### Install -- One Command
+### Install
 
 PowerShell (as Administrator):
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw; C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
+Set-ExecutionPolicy Bypass -Scope Process -Force
+git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw
+C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
 ```
 
-### Uninstall -- One Command
+**Already installed? The installer auto-detects and updates:**
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
+```
+
+**Force clean reinstall:**
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500" -Force
+```
+
+### Uninstall
 
 PowerShell (as Administrator):
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1
+Set-ExecutionPolicy Bypass -Scope Process -Force
+C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1
 ```
 
 **Keep files but remove everything else:**
@@ -185,12 +215,15 @@ cd C:\AngelClaw\ops; docker compose down --volumes --remove-orphans
 docker system prune -f
 ```
 
-### Reinstall -- One Command
+### Reinstall
 
 PowerShell (as Administrator):
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1; git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw; C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
+Set-ExecutionPolicy Bypass -Scope Process -Force
+C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1
+git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw
+C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
 ```
 
 ### Parameters
@@ -200,11 +233,16 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; C:\AngelClaw\ops\install\unins
 | `-CloudUrl` | `http://your-cloud-server:8500` | Your VPS Cloud API URL |
 | `-TenantId` | `default` | Tenant identifier |
 | `-InstallDir` | `C:\AngelClaw` | Install directory |
+| `-Branch` | `main` | Git branch to checkout |
+| `-Force` | `$false` | Force clean reinstall |
 
 ### Verify
 
 ```powershell
+curl http://127.0.0.1:8400/health
 curl http://127.0.0.1:8400/status
+docker ps
+docker logs angelclaw-angelnode-1
 ```
 
 ---
@@ -287,14 +325,87 @@ curl -X POST http://127.0.0.1:8500/api/v1/auth/change-password \
 
 ---
 
+## Troubleshooting
+
+### Windows: PowerShell parse errors with special characters
+
+**Symptom:** Errors like `Unexpected token` or garbled characters (`a]"`) when running `.ps1` scripts.
+
+**Cause:** PowerShell 5.x reads files as ANSI by default. Non-ASCII characters (em dashes, etc.) in UTF-8 files corrupt the parser.
+
+**Fix:** V2.0.0 scripts are now pure ASCII. Pull the latest version:
+
+```powershell
+cd C:\AngelClaw; git pull origin main
+```
+
+### Windows: "destination path already exists and is not an empty directory"
+
+**Symptom:** `git clone` fails because `C:\AngelClaw` already exists.
+
+**Fix:** The installer handles this automatically. Just run:
+
+```powershell
+C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
+```
+
+Or force a clean reinstall:
+
+```powershell
+C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500" -Force
+```
+
+### Health check fails after install
+
+**Symptom:** Health check returns failure during installation.
+
+**Fix:** Containers may need more time. Wait 30 seconds and check manually:
+
+```bash
+curl http://127.0.0.1:8400/health   # ANGELNODE
+curl http://127.0.0.1:8500/health   # Cloud API
+docker ps                           # Check container status
+docker logs angelclaw-angelnode-1   # Check for errors
+```
+
+### Docker daemon not running
+
+**Symptom:** "Docker daemon is not running" error.
+
+**Fix:**
+- **Linux:** `systemctl start docker`
+- **macOS:** Open Docker Desktop from Applications
+- **Windows:** Start Docker Desktop from Start menu, wait for it to fully load
+
+### Port conflicts
+
+**Symptom:** Container fails to start, port already in use.
+
+**Fix:** Check what is using the port and stop it:
+
+```bash
+# Linux/macOS
+lsof -i :8400
+lsof -i :8500
+
+# Windows (PowerShell)
+netstat -ano | findstr :8400
+netstat -ano | findstr :8500
+```
+
+---
+
 ## Quick Reference
 
 | What | Command |
 |------|---------|
 | Install (Linux) | `curl -sSL .../install_angelclaw_linux.sh \| bash` |
 | Install (macOS) | `curl -sSL .../install_angelclaw_macos.sh \| bash` |
+| Install (Windows) | `.\install_angelclaw_windows.ps1 -CloudUrl "..."` |
 | Uninstall (Linux) | `curl -sSL .../uninstall_angelclaw_linux.sh \| bash` |
 | Uninstall (macOS) | `curl -sSL .../uninstall_angelclaw_macos.sh \| bash` |
+| Uninstall (Windows) | `.\uninstall_angelclaw_windows.ps1` |
+| Force reinstall | Add `ANGELCLAW_FORCE=true` (Linux/macOS) or `-Force` (Windows) |
 | Dashboard | `http://127.0.0.1:8500/ui` |
 | ANGELNODE health | `curl http://127.0.0.1:8400/health` |
 | Cloud API health | `curl http://127.0.0.1:8500/health` |

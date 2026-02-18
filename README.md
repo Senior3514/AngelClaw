@@ -221,20 +221,30 @@ open http://127.0.0.1:8500/ui       # Dashboard
 
 > Windows runs the lightweight ANGELNODE agent only. The Cloud backend runs on your Linux/macOS server. Replace `YOUR-VPS-IP` with your server's IP.
 
-### Install -- One Command
+### Install
 
 PowerShell (as Administrator):
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw; C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
+Set-ExecutionPolicy Bypass -Scope Process -Force
+git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw
+C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
 ```
 
-### Uninstall -- One Command
+**Already installed? The installer auto-detects and updates:**
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
+```
+
+### Uninstall
 
 PowerShell (as Administrator):
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1
+Set-ExecutionPolicy Bypass -Scope Process -Force
+C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1
 ```
 
 ### Clean (keep files, reset containers)
@@ -244,18 +254,23 @@ cd C:\AngelClaw\ops; docker compose down --volumes --remove-orphans
 docker system prune -f
 ```
 
-### Reinstall -- One Command
+### Force Reinstall
 
 PowerShell (as Administrator):
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1; git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw; C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
+Set-ExecutionPolicy Bypass -Scope Process -Force
+C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1
+git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw
+C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500" -Force
 ```
 
 ### Verify
 
 ```powershell
+curl http://127.0.0.1:8400/health
 curl http://127.0.0.1:8400/status
+docker ps
 ```
 
 ---

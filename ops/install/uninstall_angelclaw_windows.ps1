@@ -1,5 +1,5 @@
 # ============================================================================
-# AngelClaw AGI Guardian — Windows Uninstaller (V2.0.0)
+# AngelClaw AGI Guardian -- Windows Uninstaller (V2.0.0)
 #
 # Stops ANGELNODE container, removes Docker images, volumes,
 # and optionally deletes the install directory.
@@ -18,21 +18,29 @@ param(
 )
 
 $ErrorActionPreference = "Continue"
+$TotalSteps = 6
+$script:CurrentStep = 0
 
-function Log($msg)  { Write-Host "[AngelClaw] $msg" -ForegroundColor Cyan }
-function Ok($msg)   { Write-Host "[OK] $msg" -ForegroundColor Green }
-function Warn($msg) { Write-Host "[!] $msg" -ForegroundColor Yellow }
-function Err($msg)  { Write-Host "[X] $msg" -ForegroundColor Red }
+function Write-Step {
+    param([string]$msg)
+    $script:CurrentStep++
+    Write-Host "[$script:CurrentStep/$TotalSteps] $msg" -ForegroundColor Cyan
+}
+function Write-Ok   { param([string]$msg) Write-Host "  [OK] $msg" -ForegroundColor Green }
+function Write-Warn { param([string]$msg) Write-Host "  [!]  $msg" -ForegroundColor Yellow }
+function Write-Err  { param([string]$msg) Write-Host "  [X]  $msg" -ForegroundColor Red }
 
 Write-Host ""
-Write-Host "+================================================+" -ForegroundColor Red
-Write-Host "|   AngelClaw AGI Guardian - Windows Uninstaller  |" -ForegroundColor Red
-Write-Host "+================================================+" -ForegroundColor Red
+Write-Host "================================================" -ForegroundColor Red
+Write-Host "   AngelClaw AGI Guardian -- Windows Uninstaller" -ForegroundColor Red
+Write-Host "================================================" -ForegroundColor Red
 Write-Host ""
 
 # ---------------------------------------------------------------------------
 # Step 1: Check Docker
 # ---------------------------------------------------------------------------
+Write-Step "Checking Docker..."
+
 $dockerOk = $false
 try {
     docker info 2>$null | Out-Null
@@ -42,95 +50,109 @@ try {
 }
 
 if (-not $dockerOk) {
-    Warn "Docker Desktop is not running. Start it first for full cleanup."
-    Warn "Continuing with file removal only..."
+    Write-Warn "Docker Desktop is not running. Start it first for full cleanup."
+    Write-Warn "Continuing with file removal only..."
+} else {
+    Write-Ok "Docker is running."
 }
 
 # ---------------------------------------------------------------------------
 # Step 2: Stop and remove containers
 # ---------------------------------------------------------------------------
-if ($dockerOk -and (Test-Path "$InstallDir\ops")) {
-    Log "Stopping AngelClaw containers..."
-    Push-Location "$InstallDir\ops"
+Write-Step "Stopping containers..."
 
+if ($dockerOk -and (Test-Path "$InstallDir\ops")) {
+    Push-Location "$InstallDir\ops"
     try {
         docker compose down --remove-orphans --volumes 2>$null
         if ($LASTEXITCODE -ne 0) {
             docker-compose down --remove-orphans --volumes 2>$null
         }
-        Ok "Containers stopped and removed."
+        Write-Ok "Containers stopped and removed."
     } catch {
-        Warn "Could not stop containers: $_"
+        Write-Warn "Could not stop containers: $_"
+    } finally {
+        Pop-Location
     }
-
-    Pop-Location
 } else {
-    Warn "Install directory not found or Docker not running - skipping container teardown."
+    Write-Warn "Install directory not found or Docker not running -- skipping container teardown."
 }
 
 # ---------------------------------------------------------------------------
 # Step 3: Remove Docker images
 # ---------------------------------------------------------------------------
-if ($dockerOk) {
-    Log "Removing AngelClaw Docker images..."
+Write-Step "Removing Docker images..."
 
+if ($dockerOk) {
     $images = docker images --filter "reference=*angelclaw*" --filter "reference=*angelnode*" --filter "reference=*angelgrid*" -q 2>$null
     if ($images) {
         $images | ForEach-Object { docker rmi -f $_ 2>$null }
-        Ok "Docker images removed."
+        Write-Ok "Docker images removed."
     } else {
-        Warn "No AngelClaw images found."
+        Write-Warn "No AngelClaw images found."
     }
 
     $opsImages = docker images --filter "reference=ops-*" -q 2>$null
     if ($opsImages) {
         $opsImages | ForEach-Object { docker rmi -f $_ 2>$null }
-        Ok "Compose-built images removed."
+        Write-Ok "Compose-built images removed."
     }
+} else {
+    Write-Warn "Docker not running -- skipping image removal."
+}
 
-    # ---------------------------------------------------------------------------
-    # Step 4: Remove Docker volumes
-    # ---------------------------------------------------------------------------
-    Log "Removing AngelClaw Docker volumes..."
+# ---------------------------------------------------------------------------
+# Step 4: Remove Docker volumes
+# ---------------------------------------------------------------------------
+Write-Step "Removing Docker volumes..."
 
+if ($dockerOk) {
     $volumes = docker volume ls -q --filter "name=angelclaw" --filter "name=angelgrid" --filter "name=ops_" 2>$null
     if ($volumes) {
         $volumes | ForEach-Object { docker volume rm -f $_ 2>$null }
-        Ok "Docker volumes removed."
+        Write-Ok "Docker volumes removed."
     } else {
-        Warn "No AngelClaw volumes found."
+        Write-Warn "No AngelClaw volumes found."
     }
+} else {
+    Write-Warn "Docker not running -- skipping volume removal."
+}
 
-    # ---------------------------------------------------------------------------
-    # Step 5: Prune dangling resources
-    # ---------------------------------------------------------------------------
-    Log "Pruning dangling Docker resources..."
+# ---------------------------------------------------------------------------
+# Step 5: Prune dangling resources
+# ---------------------------------------------------------------------------
+Write-Step "Cleaning up Docker resources..."
+
+if ($dockerOk) {
     docker system prune -f 2>$null | Out-Null
-    Ok "Docker cleanup complete."
+    Write-Ok "Docker cleanup complete."
+} else {
+    Write-Warn "Docker not running -- skipping cleanup."
 }
 
 # ---------------------------------------------------------------------------
 # Step 6: Remove install directory
 # ---------------------------------------------------------------------------
+Write-Step "Removing install directory..."
+
 if ($KeepData) {
-    Warn "KeepData flag set - keeping install directory at $InstallDir"
+    Write-Warn "KeepData flag set -- keeping install directory at $InstallDir"
 } else {
     if (Test-Path $InstallDir) {
-        Log "Removing install directory: $InstallDir"
         Remove-Item -Recurse -Force $InstallDir
-        Ok "Install directory removed."
+        Write-Ok "Install directory removed: $InstallDir"
     } else {
-        Warn "Install directory not found at $InstallDir - nothing to remove."
+        Write-Warn "Install directory not found at $InstallDir -- nothing to remove."
     }
 }
 
 # ---------------------------------------------------------------------------
-# Done
+# Summary
 # ---------------------------------------------------------------------------
 Write-Host ""
-Write-Host "+================================================+" -ForegroundColor Green
-Write-Host "|   AngelClaw has been uninstalled.               |" -ForegroundColor Green
-Write-Host "+================================================+" -ForegroundColor Green
+Write-Host "================================================" -ForegroundColor Green
+Write-Host "   AngelClaw has been uninstalled."               -ForegroundColor Green
+Write-Host "================================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "  What was removed:"
 Write-Host "    - Docker containers, images, and volumes"
@@ -139,7 +161,9 @@ if (-not $KeepData) {
 }
 Write-Host ""
 Write-Host "  Docker Desktop was NOT removed."
-Write-Host "  To reinstall, run:"
+Write-Host ""
+Write-Host "  To reinstall:"
+Write-Host "    Set-ExecutionPolicy Bypass -Scope Process -Force"
 Write-Host "    git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw"
 Write-Host "    C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl `"http://YOUR-VPS-IP:8500`""
 Write-Host ""

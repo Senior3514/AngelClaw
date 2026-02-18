@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AngelClaw AGI Guardian — Linux Uninstaller (V2.0.0)
+# AngelClaw AGI Guardian -- Linux Uninstaller (V2.0.0)
 #
 # Stops all AngelClaw containers, removes systemd service, Docker images,
 # volumes, and optionally deletes the install directory.
@@ -22,18 +22,21 @@ set -euo pipefail
 INSTALL_DIR="${ANGELCLAW_DIR:-/root/AngelClaw}"
 KEEP_DATA="${ANGELCLAW_KEEP_DATA:-false}"
 
+TOTAL_STEPS=6
+STEP=0
+
 # Colors
 G='\033[92m' Y='\033[93m' R='\033[91m' C='\033[96m' B='\033[1m' N='\033[0m'
 
-log()  { echo -e "${C}[AngelClaw]${N} $1"; }
-ok()   { echo -e "${G}[OK]${N} $1"; }
-warn() { echo -e "${Y}[!]${N} $1"; }
-err()  { echo -e "${R}[X]${N} $1"; }
+step() { STEP=$((STEP+1)); echo -e "${C}[$STEP/$TOTAL_STEPS]${N} $1"; }
+ok()   { echo -e "  ${G}[OK]${N} $1"; }
+warn() { echo -e "  ${Y}[!]${N} $1"; }
+err()  { echo -e "  ${R}[X]${N} $1"; }
 
 echo ""
-echo -e "${B}${R}+================================================+${N}"
-echo -e "${B}${R}|   AngelClaw AGI Guardian — Linux Uninstaller    |${N}"
-echo -e "${B}${R}+================================================+${N}"
+echo -e "${B}${R}================================================${N}"
+echo -e "${B}${R}  AngelClaw AGI Guardian -- Linux Uninstaller${N}"
+echo -e "${B}${R}================================================${N}"
 echo ""
 
 # Must be root
@@ -45,47 +48,57 @@ fi
 # ---------------------------------------------------------------------------
 # Step 1: Stop and remove systemd service
 # ---------------------------------------------------------------------------
-log "Removing systemd service..."
+step "Removing systemd service..."
 
 if [ -f /etc/systemd/system/angelclaw.service ]; then
   systemctl stop angelclaw.service 2>/dev/null || true
   systemctl disable angelclaw.service 2>/dev/null || true
   rm -f /etc/systemd/system/angelclaw.service
   systemctl daemon-reload
-  ok "systemd service removed."
+  ok "systemd service removed (angelclaw.service)."
 else
-  warn "No systemd service found — skipping."
+  warn "No systemd service found -- skipping."
+fi
+
+# Also clean up legacy angelgrid service if present
+if [ -f /etc/systemd/system/angelgrid.service ]; then
+  systemctl stop angelgrid.service 2>/dev/null || true
+  systemctl disable angelgrid.service 2>/dev/null || true
+  rm -f /etc/systemd/system/angelgrid.service
+  rm -f /etc/systemd/system/angelgrid-watchdog.service
+  rm -f /etc/systemd/system/angelgrid-watchdog.timer
+  systemctl daemon-reload
+  ok "Legacy angelgrid systemd services removed."
 fi
 
 # ---------------------------------------------------------------------------
 # Step 2: Stop and remove containers
 # ---------------------------------------------------------------------------
-log "Stopping AngelClaw containers..."
+step "Stopping containers..."
 
 if [ -d "$INSTALL_DIR/ops" ]; then
   cd "$INSTALL_DIR/ops"
+  DC_CMD=""
   if docker compose version &>/dev/null 2>&1; then
     DC_CMD="docker compose"
   elif command -v docker-compose &>/dev/null; then
     DC_CMD="docker-compose"
-  else
-    DC_CMD=""
   fi
 
   if [ -n "$DC_CMD" ]; then
     $DC_CMD down --remove-orphans --volumes 2>/dev/null || true
     ok "Containers stopped and removed."
   else
-    warn "docker-compose not found — attempting manual container removal."
+    warn "docker compose not found -- attempting manual container removal."
   fi
 else
-  warn "Install directory not found at $INSTALL_DIR — skipping container teardown."
+  warn "Install directory not found at $INSTALL_DIR -- skipping container teardown."
 fi
 
 # ---------------------------------------------------------------------------
 # Step 3: Remove Docker images
 # ---------------------------------------------------------------------------
-log "Removing AngelClaw Docker images..."
+step "Removing Docker images..."
 
 IMAGES=$(docker images --filter "reference=*angelclaw*" --filter "reference=*angelnode*" --filter "reference=*angelgrid*" -q 2>/dev/null || true)
 if [ -n "$IMAGES" ]; then
@@ -105,7 +118,7 @@ fi
 # ---------------------------------------------------------------------------
 # Step 4: Remove Docker volumes
 # ---------------------------------------------------------------------------
-log "Removing AngelClaw Docker volumes..."
+step "Removing Docker volumes..."
 
 VOLUMES=$(docker volume ls -q --filter "name=angelclaw" --filter "name=angelgrid" --filter "name=ops_" 2>/dev/null || true)
 if [ -n "$VOLUMES" ]; then
@@ -118,32 +131,34 @@ fi
 # ---------------------------------------------------------------------------
 # Step 5: Remove install directory
 # ---------------------------------------------------------------------------
+step "Removing install directory..."
+
 if [ "$KEEP_DATA" = "true" ]; then
-  warn "ANGELCLAW_KEEP_DATA=true — keeping install directory at $INSTALL_DIR"
+  warn "ANGELCLAW_KEEP_DATA=true -- keeping install directory at $INSTALL_DIR"
 else
   if [ -d "$INSTALL_DIR" ]; then
-    log "Removing install directory: $INSTALL_DIR"
     rm -rf "$INSTALL_DIR"
-    ok "Install directory removed."
+    ok "Install directory removed: $INSTALL_DIR"
   else
-    warn "Install directory not found at $INSTALL_DIR — nothing to remove."
+    warn "Install directory not found at $INSTALL_DIR -- nothing to remove."
   fi
 fi
 
 # ---------------------------------------------------------------------------
 # Step 6: Prune dangling resources
 # ---------------------------------------------------------------------------
-log "Pruning dangling Docker resources..."
+step "Cleaning up Docker resources..."
+
 docker system prune -f --filter "label=com.docker.compose.project=ops" 2>/dev/null || true
-ok "Cleanup complete."
+ok "Docker cleanup complete."
 
 # ---------------------------------------------------------------------------
-# Done
+# Summary
 # ---------------------------------------------------------------------------
 echo ""
-echo -e "${B}${G}+================================================+${N}"
-echo -e "${B}${G}|   AngelClaw has been uninstalled.                |${N}"
-echo -e "${B}${G}+================================================+${N}"
+echo -e "${B}${G}================================================${N}"
+echo -e "${B}${G}  AngelClaw has been uninstalled.${N}"
+echo -e "${B}${G}================================================${N}"
 echo ""
 echo "  What was removed:"
 echo "    - systemd service (angelclaw.service)"
@@ -153,6 +168,7 @@ if [ "$KEEP_DATA" != "true" ]; then
 fi
 echo ""
 echo "  Docker itself was NOT removed."
-echo "  To reinstall, run:"
+echo ""
+echo "  To reinstall:"
 echo "    curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash"
 echo ""

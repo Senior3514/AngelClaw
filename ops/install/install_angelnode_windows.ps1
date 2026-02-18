@@ -1,215 +1,29 @@
 # ============================================================================
-# AngelClaw AGI Guardian — Windows ANGELNODE Installer (V2.0.0) [Legacy]
+# AngelClaw AGI Guardian -- Windows ANGELNODE Installer (V2.0.0) [LEGACY]
 #
-# NOTE: This is the legacy installer. Prefer install_angelclaw_windows.ps1 instead.
-#
-# Installs the ANGELNODE agent only, connecting to a remote AngelClaw Cloud.
-# Requires Docker Desktop for Windows.
-#
-# Usage (PowerShell as Administrator):
-#   Set-ExecutionPolicy Bypass -Scope Process -Force
-#   .\install_angelnode_windows.ps1
-#
-# Optional parameters:
-#   -CloudUrl    Cloud API URL       (default: http://your-cloud-server:8500)
-#   -TenantId    Tenant identifier   (default: default)
-#   -InstallDir  Install directory   (default: C:\AngelGrid)
-#   -Branch      Git branch          (default: main)
-#
-# Example connecting to VPS:
-#   .\install_angelnode_windows.ps1 -CloudUrl http://168.231.110.18:8500
+# DEPRECATED: This script redirects to install_angelclaw_windows.ps1
+# Use install_angelclaw_windows.ps1 directly for new installations.
 # ============================================================================
 
 param(
-    [string]$CloudUrl  = "http://your-cloud-server:8500",
-    [string]$TenantId  = "default",
-    [string]$InstallDir = "C:\AngelGrid",
-    [string]$Branch    = "main"
+    [string]$CloudUrl   = "http://your-cloud-server:8500",
+    [string]$TenantId   = "default",
+    [string]$InstallDir = "C:\AngelClaw",
+    [string]$Branch     = "main"
 )
 
-$ErrorActionPreference = "Stop"
-$Repo = "https://github.com/Senior3514/AngelGrid.git"
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-function Write-Step  { param($msg) Write-Host "[AngelClaw] $msg" -ForegroundColor Cyan }
-function Write-Ok    { param($msg) Write-Host "[OK] $msg" -ForegroundColor Green }
-function Write-Warn  { param($msg) Write-Host "[!] $msg"  -ForegroundColor Yellow }
-function Write-Err   { param($msg) Write-Host "[X] $msg"  -ForegroundColor Red }
-
-# ---------------------------------------------------------------------------
-# Banner
-# ---------------------------------------------------------------------------
 Write-Host ""
-Write-Host "======================================================" -ForegroundColor Cyan
-Write-Host "   AngelClaw — Windows ANGELNODE Installer"             -ForegroundColor Cyan
-Write-Host "   Guardian Angel, Not Gatekeeper"                      -ForegroundColor Cyan
-Write-Host "======================================================" -ForegroundColor Cyan
+Write-Host "[AngelClaw] NOTE: install_angelnode_windows.ps1 is deprecated." -ForegroundColor Yellow
+Write-Host "[AngelClaw] Redirecting to install_angelclaw_windows.ps1..." -ForegroundColor Yellow
 Write-Host ""
 
-# ---------------------------------------------------------------------------
-# Step 1: Check Docker Desktop
-# ---------------------------------------------------------------------------
-Write-Step "Checking Docker Desktop..."
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$newScript = Join-Path $scriptDir "install_angelclaw_windows.ps1"
 
-$dockerCmd = Get-Command docker -ErrorAction SilentlyContinue
-if (-not $dockerCmd) {
-    Write-Err "Docker is not installed or not in PATH."
-    Write-Host ""
-    Write-Host "  Please install Docker Desktop for Windows:"
-    Write-Host "  https://docs.docker.com/desktop/install/windows-install/"
-    Write-Host ""
-    exit 1
-}
-
-$dockerVer = docker --version 2>&1
-Write-Ok "Docker found: $dockerVer"
-
-# Check Docker is running
-try {
-    docker info *>$null
-    Write-Ok "Docker daemon is running."
-} catch {
-    Write-Err "Docker daemon is not running. Please start Docker Desktop."
-    exit 1
-}
-
-# ---------------------------------------------------------------------------
-# Step 2: Check docker-compose
-# ---------------------------------------------------------------------------
-Write-Step "Checking docker-compose..."
-
-$hasCompose = $false
-try {
-    $composeVer = docker compose version 2>&1
-    Write-Ok "docker compose found: $composeVer"
-    $dcCmd = "docker compose"
-    $hasCompose = $true
-} catch {}
-
-if (-not $hasCompose) {
-    $dockerComposeCmd = Get-Command docker-compose -ErrorAction SilentlyContinue
-    if ($dockerComposeCmd) {
-        $composeVer = docker-compose --version 2>&1
-        Write-Ok "docker-compose found: $composeVer"
-        $dcCmd = "docker-compose"
-        $hasCompose = $true
-    }
-}
-
-if (-not $hasCompose) {
-    Write-Err "docker-compose is not available."
-    Write-Host "  Docker Desktop should include 'docker compose'. Please update Docker Desktop."
-    exit 1
-}
-
-# ---------------------------------------------------------------------------
-# Step 3: Check git
-# ---------------------------------------------------------------------------
-Write-Step "Checking git..."
-
-$gitCmd = Get-Command git -ErrorAction SilentlyContinue
-if (-not $gitCmd) {
-    Write-Err "git is not installed."
-    Write-Host "  Install from: https://git-scm.com/download/win"
-    exit 1
-}
-Write-Ok "git found."
-
-# ---------------------------------------------------------------------------
-# Step 4: Clone or update repo
-# ---------------------------------------------------------------------------
-Write-Step "Setting up AngelGrid at $InstallDir..."
-
-if (Test-Path "$InstallDir\.git") {
-    Write-Step "Existing installation found — pulling latest..."
-    Push-Location $InstallDir
-    git fetch origin
-    git checkout $Branch
-    git pull origin $Branch
-    Pop-Location
-    Write-Ok "Repository updated."
+if (Test-Path $newScript) {
+    & $newScript -CloudUrl $CloudUrl -TenantId $TenantId -InstallDir $InstallDir -Branch $Branch
 } else {
-    Write-Step "Cloning repository..."
-    git clone --branch $Branch $Repo $InstallDir
-    Write-Ok "Repository cloned."
+    Write-Host "[X] Could not find install_angelclaw_windows.ps1 at $newScript" -ForegroundColor Red
+    Write-Host "  Download from: https://github.com/Senior3514/AngelClaw"
+    exit 1
 }
-
-# ---------------------------------------------------------------------------
-# Step 5: Write ANGELNODE config
-# ---------------------------------------------------------------------------
-Write-Step "Writing ANGELNODE configuration..."
-
-$configDir = "$InstallDir\ops\config"
-if (-not (Test-Path $configDir)) {
-    New-Item -ItemType Directory -Path $configDir -Force | Out-Null
-}
-
-$configFile = "$configDir\angelgrid.env"
-$timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-$configContent = @"
-# AngelClaw environment — generated by installer on $timestamp
-# ANGELCLAW_CLOUD_URL is the preferred env var name; ANGELGRID_CLOUD_URL also works.
-ANGELCLAW_CLOUD_URL=$CloudUrl
-ANGELGRID_TENANT_ID=$TenantId
-ANGELGRID_CLOUD_URL=$CloudUrl
-ANGELGRID_SYNC_INTERVAL=60
-LLM_ENABLED=false
-LLM_MODEL=llama3
-"@
-
-Set-Content -Path $configFile -Value $configContent -Encoding UTF8
-Write-Ok "Config written to $configFile"
-
-# ---------------------------------------------------------------------------
-# Step 6: Build and start ANGELNODE container
-# ---------------------------------------------------------------------------
-Write-Step "Building and starting ANGELNODE..."
-
-Push-Location "$InstallDir\ops"
-
-# Start only the angelnode service (not cloud/ollama — those run on the VPS)
-if ($dcCmd -eq "docker compose") {
-    docker compose up -d --build angelnode
-} else {
-    docker-compose up -d --build angelnode
-}
-
-Pop-Location
-Write-Ok "ANGELNODE container started."
-
-# ---------------------------------------------------------------------------
-# Step 7: Health check
-# ---------------------------------------------------------------------------
-Write-Step "Waiting for ANGELNODE to become healthy..."
-Start-Sleep -Seconds 8
-
-try {
-    $health = Invoke-RestMethod -Uri "http://127.0.0.1:8400/health" -TimeoutSec 5
-    Write-Ok "ANGELNODE is healthy (port 8400)"
-} catch {
-    Write-Warn "ANGELNODE health check failed — it may still be starting."
-}
-
-# ---------------------------------------------------------------------------
-# Done
-# ---------------------------------------------------------------------------
-Write-Host ""
-Write-Host "======================================================" -ForegroundColor Green
-Write-Host "   AngelClaw ANGELNODE installed successfully!"          -ForegroundColor Green
-Write-Host "======================================================" -ForegroundColor Green
-Write-Host ""
-Write-Host "  Install dir  : $InstallDir"
-Write-Host "  Config       : $configFile"
-Write-Host "  Tenant ID    : $TenantId"
-Write-Host "  Cloud URL    : $CloudUrl"
-Write-Host "  ANGELNODE    : http://127.0.0.1:8400"
-Write-Host ""
-Write-Host "  Useful commands:"
-Write-Host "    docker ps                                  # check container"
-Write-Host "    docker logs angelgrid-angelnode-1 -f       # follow logs"
-Write-Host "    curl http://127.0.0.1:8400/status          # agent status"
-Write-Host ""
-Write-Host "  AngelClaw — Guardian angel, not gatekeeper." -ForegroundColor Cyan
-Write-Host ""

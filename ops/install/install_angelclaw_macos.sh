@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AngelClaw AGI Guardian — macOS Installer (V2.0.0)
+# AngelClaw AGI Guardian -- macOS Installer (V2.0.0)
 #
 # Installs the full AngelClaw stack (ANGELNODE + Cloud + Ollama) on macOS
 # using Docker Desktop + Docker Compose.
@@ -20,6 +20,7 @@
 #   ANGELCLAW_TENANT_ID   Tenant identifier    (default: default)
 #   ANGELCLAW_CLOUD_URL   Cloud URL for agents (default: http://cloud:8500)
 #   LLM_ENABLED           Enable LLM proxy     (default: false)
+#   ANGELCLAW_FORCE       Force clean reinstall (default: false)
 # ============================================================================
 
 set -euo pipefail
@@ -33,29 +34,44 @@ INSTALL_DIR="${ANGELCLAW_DIR:-$HOME/AngelClaw}"
 TENANT_ID="${ANGELCLAW_TENANT_ID:-default}"
 CLOUD_URL="${ANGELCLAW_CLOUD_URL:-http://cloud:8500}"
 LLM="${LLM_ENABLED:-false}"
+FORCE="${ANGELCLAW_FORCE:-false}"
+
+TOTAL_STEPS=8
+STEP=0
 
 # Colors
 G='\033[92m' Y='\033[93m' R='\033[91m' C='\033[96m' B='\033[1m' N='\033[0m'
 
-log()  { echo -e "${C}[AngelClaw]${N} $1"; }
-ok()   { echo -e "${G}[OK]${N} $1"; }
-warn() { echo -e "${Y}[!]${N} $1"; }
-err()  { echo -e "${R}[X]${N} $1"; }
+step() { STEP=$((STEP+1)); echo -e "${C}[$STEP/$TOTAL_STEPS]${N} $1"; }
+ok()   { echo -e "  ${G}[OK]${N} $1"; }
+warn() { echo -e "  ${Y}[!]${N} $1"; }
+err()  { echo -e "  ${R}[X]${N} $1"; }
+
+# Cleanup trap
+cleanup() {
+    local exit_code=$?
+    if [ $exit_code -ne 0 ]; then
+        echo ""
+        err "Installation failed (exit code $exit_code). Check the output above."
+        echo "  For help: https://github.com/Senior3514/AngelClaw/issues"
+    fi
+}
+trap cleanup EXIT
 
 # ---------------------------------------------------------------------------
 # Banner
 # ---------------------------------------------------------------------------
 echo ""
-echo -e "${B}${C}+================================================+${N}"
-echo -e "${B}${C}|   AngelClaw AGI Guardian — macOS Installer      |${N}"
-echo -e "${B}${C}|   V2.0.0 — Angel Legion                        |${N}"
-echo -e "${B}${C}+================================================+${N}"
+echo -e "${B}${C}================================================${N}"
+echo -e "${B}${C}  AngelClaw AGI Guardian -- macOS Installer${N}"
+echo -e "${B}${C}  V2.0.0 -- Angel Legion${N}"
+echo -e "${B}${C}================================================${N}"
 echo ""
 
 # ---------------------------------------------------------------------------
 # Step 1: Check Homebrew (install if missing)
 # ---------------------------------------------------------------------------
-log "Checking Homebrew..."
+step "Checking Homebrew..."
 
 if command -v brew &>/dev/null; then
   ok "Homebrew found."
@@ -65,7 +81,7 @@ else
   echo "  Homebrew is the recommended package manager for macOS."
   read -rp "  Install Homebrew now? [Y/n] " INSTALL_BREW
   if [[ ! "$INSTALL_BREW" =~ ^[Nn]$ ]]; then
-    log "Installing Homebrew..."
+    echo -e "  ${C}Installing Homebrew...${N}"
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     # Add Homebrew to PATH for Apple Silicon Macs
     if [ -f /opt/homebrew/bin/brew ]; then
@@ -85,7 +101,7 @@ fi
 # ---------------------------------------------------------------------------
 # Step 2: Check Docker Desktop
 # ---------------------------------------------------------------------------
-log "Checking Docker..."
+step "Checking Docker..."
 
 if command -v docker &>/dev/null; then
   DOCKER_VER=$(docker --version 2>/dev/null || echo "unknown")
@@ -95,10 +111,10 @@ else
   echo ""
   read -rp "  Install Docker Desktop via Homebrew? [Y/n] " INSTALL_DOCKER
   if [[ ! "$INSTALL_DOCKER" =~ ^[Nn]$ ]]; then
-    log "Installing Docker Desktop..."
+    echo -e "  ${C}Installing Docker Desktop...${N}"
     brew install --cask docker
     echo ""
-    echo -e "${Y}  Docker Desktop has been installed but needs to be started.${N}"
+    echo -e "  ${Y}Docker Desktop has been installed but needs to be started.${N}"
     echo "  Please open Docker Desktop from your Applications folder,"
     echo "  wait for it to finish starting, then re-run this script."
     echo ""
@@ -124,8 +140,9 @@ ok "Docker daemon is running."
 # ---------------------------------------------------------------------------
 # Step 3: Check docker compose
 # ---------------------------------------------------------------------------
-log "Checking docker compose..."
+step "Checking docker compose..."
 
+DC_CMD=""
 if docker compose version &>/dev/null 2>&1; then
   DC_VER=$(docker compose version 2>/dev/null || echo "unknown")
   ok "docker compose found: $DC_VER"
@@ -135,38 +152,54 @@ elif command -v docker-compose &>/dev/null; then
   ok "docker-compose found: $DC_VER"
   DC_CMD="docker-compose"
 else
-  err "docker-compose is not available."
-  echo "  Docker Desktop should include 'docker compose'. Please update Docker Desktop."
+  err "docker compose is not available."
+  echo "  Docker Desktop should include docker compose. Please update Docker Desktop."
   exit 1
 fi
 
 # ---------------------------------------------------------------------------
-# Step 4: Check git
+# Step 4: Check git + network
 # ---------------------------------------------------------------------------
-log "Checking git..."
+step "Checking prerequisites..."
 
 if ! command -v git &>/dev/null; then
-  log "Installing git via Homebrew..."
+  echo -e "  ${C}Installing git via Homebrew...${N}"
   brew install git
   ok "git installed."
 else
   ok "git found."
 fi
 
+# Quick network check
+if curl -sf --max-time 5 https://github.com >/dev/null 2>&1; then
+  ok "Network connectivity verified."
+else
+  warn "Cannot reach github.com -- check your internet connection."
+fi
+
 # ---------------------------------------------------------------------------
 # Step 5: Clone or update repo
 # ---------------------------------------------------------------------------
-log "Setting up AngelClaw at $INSTALL_DIR..."
+step "Setting up AngelClaw at $INSTALL_DIR..."
+
+if [ "$FORCE" = "true" ] && [ -d "$INSTALL_DIR" ]; then
+  warn "ANGELCLAW_FORCE=true -- removing existing installation..."
+  rm -rf "$INSTALL_DIR"
+fi
 
 if [ -d "$INSTALL_DIR/.git" ]; then
-  log "Existing installation found — pulling latest..."
+  ok "Existing installation found -- pulling latest..."
   cd "$INSTALL_DIR"
   git fetch origin
   git checkout "$BRANCH"
   git pull origin "$BRANCH"
   ok "Repository updated."
 else
-  log "Cloning repository..."
+  if [ -d "$INSTALL_DIR" ]; then
+    warn "Directory exists but is not a git repo -- removing and re-cloning..."
+    rm -rf "$INSTALL_DIR"
+  fi
+  echo -e "  ${C}Cloning repository...${N}"
   git clone --branch "$BRANCH" "$REPO" "$INSTALL_DIR"
   ok "Repository cloned."
 fi
@@ -176,13 +209,13 @@ cd "$INSTALL_DIR"
 # ---------------------------------------------------------------------------
 # Step 6: Write config
 # ---------------------------------------------------------------------------
-log "Writing configuration..."
+step "Writing configuration..."
 
 CONFIG_FILE="$INSTALL_DIR/ops/config/angelclaw.env"
 mkdir -p "$INSTALL_DIR/ops/config"
 
 cat > "$CONFIG_FILE" <<ENVEOF
-# AngelClaw AGI Guardian environment — generated by installer on $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+# AngelClaw AGI Guardian -- generated by installer on $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 ANGELCLAW_CLOUD_URL=${CLOUD_URL}
 ANGELCLAW_TENANT_ID=${TENANT_ID}
 ANGELCLAW_BIND_HOST=127.0.0.1
@@ -198,7 +231,7 @@ ok "Config written to $CONFIG_FILE"
 # ---------------------------------------------------------------------------
 # Step 7: Build and start containers
 # ---------------------------------------------------------------------------
-log "Building and starting AngelClaw stack..."
+step "Building and starting AngelClaw stack..."
 
 cd "$INSTALL_DIR/ops"
 $DC_CMD up -d --build
@@ -206,33 +239,43 @@ $DC_CMD up -d --build
 ok "Containers started."
 
 # ---------------------------------------------------------------------------
-# Step 8: Health check
+# Step 8: Health check with retries
 # ---------------------------------------------------------------------------
-log "Waiting for services to become healthy..."
+step "Verifying services..."
+
+echo -e "  ${C}Waiting for startup...${N}"
 sleep 10
 
 HEALTHY=true
-if curl -sf --max-time 5 http://127.0.0.1:8400/health >/dev/null 2>&1; then
-  ok "ANGELNODE is healthy (port 8400)"
-else
-  warn "ANGELNODE health check failed — it may still be starting."
-  HEALTHY=false
-fi
+for attempt in 1 2 3; do
+  if curl -sf --max-time 5 http://127.0.0.1:8400/health >/dev/null 2>&1; then
+    ok "ANGELNODE is healthy (port 8400)"
+    break
+  else
+    if [ "$attempt" -lt 3 ]; then
+      echo -e "  ${Y}Retry $attempt/3...${N}"
+      sleep 5
+    else
+      warn "ANGELNODE health check failed -- it may still be starting."
+      HEALTHY=false
+    fi
+  fi
+done
 
 if curl -sf --max-time 5 http://127.0.0.1:8500/health >/dev/null 2>&1; then
   ok "Cloud API is healthy (port 8500)"
 else
-  warn "Cloud API health check failed — it may still be starting."
+  warn "Cloud API health check failed -- it may still be starting."
   HEALTHY=false
 fi
 
 # ---------------------------------------------------------------------------
-# Done
+# Summary
 # ---------------------------------------------------------------------------
 echo ""
-echo -e "${B}${G}+================================================+${N}"
-echo -e "${B}${G}|   AngelClaw AGI Guardian installed on macOS!    |${N}"
-echo -e "${B}${G}+================================================+${N}"
+echo -e "${B}${G}================================================${N}"
+echo -e "${B}${G}  AngelClaw AGI Guardian -- Installed on macOS!${N}"
+echo -e "${B}${G}================================================${N}"
 echo ""
 echo "  Install dir  : $INSTALL_DIR"
 echo "  Config       : $CONFIG_FILE"
@@ -261,5 +304,5 @@ if [ "$LLM" = "true" ]; then
   echo ""
 fi
 
-echo -e "  ${C}AngelClaw V2.0.0 — Angel Legion — guardian angel, not gatekeeper.${N}"
+echo -e "  ${C}AngelClaw V2.0.0 -- Angel Legion -- guardian angel, not gatekeeper.${N}"
 echo ""
