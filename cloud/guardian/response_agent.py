@@ -544,7 +544,10 @@ class ResponseAgent(SubAgent):
             action="isolate_network",
             target=target,
             success=True,
-            message=f"Agent {target} network-isolated (DNS={'allowed' if allow_dns else 'blocked'})",
+            message=(
+                f"Agent {target} network-isolated"
+                f" (DNS={'allowed' if allow_dns else 'blocked'})"
+            ),
             after_state={"network_isolated": True, "allow_dns": allow_dns},
         )
 

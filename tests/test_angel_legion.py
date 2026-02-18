@@ -6,17 +6,14 @@ TimelineWarden, SecretsWarden, BehaviorWarden, AgentRegistry.
 
 import asyncio
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch
 
 import pytest
 
 from cloud.guardian.models import (
-    AgentResult,
     AgentStatus,
     AgentTask,
     AgentType,
     Permission,
-    ThreatIndicator,
 )
 
 # ── helpers ──────────────────────────────────────────────────────────
@@ -231,7 +228,12 @@ class TestNetworkWarden:
     def test_stats_in_result(self):
         s = self._make()
         events = [
-            {"type": "network.connection", "agent_id": "a1", "id": "e1", "details": {"dst_port": 80}},
+            {
+                "type": "network.connection",
+                "agent_id": "a1",
+                "id": "e1",
+                "details": {"dst_port": 80},
+            },
             {"type": "other.type", "agent_id": "a2", "id": "e2", "details": {}},
         ]
         result = _run(s.handle_task(_task(events)))
@@ -955,11 +957,19 @@ class TestTimelineWarden:
 
     def test_coordinated_activity(self):
         s = self._make()
-        base = _ts(0)
         events = [
-            {"type": "recon.scan", "agent_id": "agentA", "id": "e1", "timestamp": _ts(0), "details": {}},
-            {"type": "recon.scan", "agent_id": "agentB", "id": "e2", "timestamp": _ts(10), "details": {}},
-            {"type": "recon.scan", "agent_id": "agentC", "id": "e3", "timestamp": _ts(20), "details": {}},
+            {
+                "type": "recon.scan", "agent_id": "agentA",
+                "id": "e1", "timestamp": _ts(0), "details": {},
+            },
+            {
+                "type": "recon.scan", "agent_id": "agentB",
+                "id": "e2", "timestamp": _ts(10), "details": {},
+            },
+            {
+                "type": "recon.scan", "agent_id": "agentC",
+                "id": "e3", "timestamp": _ts(20), "details": {},
+            },
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
@@ -970,9 +980,18 @@ class TestTimelineWarden:
     def test_no_coordination_single_agent(self):
         s = self._make()
         events = [
-            {"type": "recon.scan", "agent_id": "agentA", "id": "e1", "timestamp": _ts(0), "details": {}},
-            {"type": "recon.scan", "agent_id": "agentA", "id": "e2", "timestamp": _ts(10), "details": {}},
-            {"type": "recon.scan", "agent_id": "agentA", "id": "e3", "timestamp": _ts(20), "details": {}},
+            {
+                "type": "recon.scan", "agent_id": "agentA",
+                "id": "e1", "timestamp": _ts(0), "details": {},
+            },
+            {
+                "type": "recon.scan", "agent_id": "agentA",
+                "id": "e2", "timestamp": _ts(10), "details": {},
+            },
+            {
+                "type": "recon.scan", "agent_id": "agentA",
+                "id": "e3", "timestamp": _ts(20), "details": {},
+            },
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
@@ -983,7 +1002,13 @@ class TestTimelineWarden:
     def test_rapid_succession(self):
         s = self._make()
         events = [
-            {"type": "file.write", "agent_id": f"agent{chr(65+i)}", "id": f"e{i}", "timestamp": _ts(i * 0.5), "details": {}}
+            {
+                "type": "file.write",
+                "agent_id": f"agent{chr(65+i)}",
+                "id": f"e{i}",
+                "timestamp": _ts(i * 0.5),
+                "details": {},
+            }
             for i in range(5)
         ]
         result = _run(s.handle_task(_task(events)))
@@ -995,7 +1020,13 @@ class TestTimelineWarden:
     def test_no_rapid_when_spread_out(self):
         s = self._make()
         events = [
-            {"type": "file.write", "agent_id": f"agent{chr(65+i)}", "id": f"e{i}", "timestamp": _ts(i * 60), "details": {}}
+            {
+                "type": "file.write",
+                "agent_id": f"agent{chr(65+i)}",
+                "id": f"e{i}",
+                "timestamp": _ts(i * 60),
+                "details": {},
+            }
             for i in range(5)
         ]
         result = _run(s.handle_task(_task(events)))
@@ -1008,9 +1039,18 @@ class TestTimelineWarden:
         """Test reconnaissance -> initial_access -> execution kill chain."""
         s = self._make()
         events = [
-            {"type": "recon.port_scan", "agent_id": "agent-kc", "id": "e1", "timestamp": _ts(0), "details": {}},
-            {"type": "auth.login_attempt", "agent_id": "agent-kc", "id": "e2", "timestamp": _ts(10), "details": {}},
-            {"type": "shell.exec", "agent_id": "agent-kc", "id": "e3", "timestamp": _ts(20), "details": {}},
+            {
+                "type": "recon.port_scan", "agent_id": "agent-kc",
+                "id": "e1", "timestamp": _ts(0), "details": {},
+            },
+            {
+                "type": "auth.login_attempt", "agent_id": "agent-kc",
+                "id": "e2", "timestamp": _ts(10), "details": {},
+            },
+            {
+                "type": "shell.exec", "agent_id": "agent-kc",
+                "id": "e3", "timestamp": _ts(20), "details": {},
+            },
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
@@ -1022,9 +1062,18 @@ class TestTimelineWarden:
         """Test execution -> persistence -> exfiltration kill chain."""
         s = self._make()
         events = [
-            {"type": "shell.exec_cmd", "agent_id": "agent-cl", "id": "e1", "timestamp": _ts(0), "details": {}},
-            {"type": "file.write_backdoor", "agent_id": "agent-cl", "id": "e2", "timestamp": _ts(10), "details": {}},
-            {"type": "network.upload_data", "agent_id": "agent-cl", "id": "e3", "timestamp": _ts(20), "details": {}},
+            {
+                "type": "shell.exec_cmd", "agent_id": "agent-cl",
+                "id": "e1", "timestamp": _ts(0), "details": {},
+            },
+            {
+                "type": "file.write_backdoor", "agent_id": "agent-cl",
+                "id": "e2", "timestamp": _ts(10), "details": {},
+            },
+            {
+                "type": "network.upload_data", "agent_id": "agent-cl",
+                "id": "e3", "timestamp": _ts(20), "details": {},
+            },
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
@@ -1046,8 +1095,14 @@ class TestTimelineWarden:
                 "details": {},
             })
         # Add sparse events to extend the span
-        events.append({"type": "file.read", "agent_id": "agentX", "id": "tc-late1", "timestamp": _ts(90), "details": {}})
-        events.append({"type": "file.read", "agent_id": "agentY", "id": "tc-late2", "timestamp": _ts(100), "details": {}})
+        events.append({
+            "type": "file.read", "agent_id": "agentX",
+            "id": "tc-late1", "timestamp": _ts(90), "details": {},
+        })
+        events.append({
+            "type": "file.read", "agent_id": "agentY",
+            "id": "tc-late2", "timestamp": _ts(100), "details": {},
+        })
 
         result = _run(s.handle_task(_task(events)))
         assert any(
@@ -1058,7 +1113,13 @@ class TestTimelineWarden:
     def test_no_clustering_even_distribution(self):
         s = self._make()
         events = [
-            {"type": "file.write", "agent_id": f"agent-ev{i}", "id": f"ev-{i}", "timestamp": _ts(i * 10), "details": {}}
+            {
+                "type": "file.write",
+                "agent_id": f"agent-ev{i}",
+                "id": f"ev-{i}",
+                "timestamp": _ts(i * 10),
+                "details": {},
+            }
             for i in range(10)
         ]
         result = _run(s.handle_task(_task(events)))
@@ -1269,7 +1330,10 @@ class TestBehaviorWarden:
     def test_profiles_in_result(self):
         s = self._make()
         events = [
-            {"type": "file.read", "agent_id": "prof-agent-1", "id": "e1", "severity": "info", "details": {}},
+            {
+                "type": "file.read", "agent_id": "prof-agent-1",
+                "id": "e1", "severity": "info", "details": {},
+            },
         ]
         result = _run(s.handle_task(_task(events)))
         assert "profiles" in result.result_data
@@ -1278,7 +1342,10 @@ class TestBehaviorWarden:
     def test_single_agent_no_peer_deviation(self):
         s = self._make()
         events = [
-            {"type": "file.read", "agent_id": "solo-agent-1", "id": f"e-{i}", "severity": "info", "details": {}}
+            {
+                "type": "file.read", "agent_id": "solo-agent-1",
+                "id": f"e-{i}", "severity": "info", "details": {},
+            }
             for i in range(10)
         ]
         result = _run(s.handle_task(_task(events)))
@@ -1469,6 +1536,8 @@ class TestWardenTypesConstant:
             AgentType.BEHAVIOR,
             AgentType.TIMELINE,
             AgentType.BROWSER,
+            AgentType.CLOUD,
+            AgentType.IDENTITY,
         }
         assert WARDEN_TYPES == expected
 

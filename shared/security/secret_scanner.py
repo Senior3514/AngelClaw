@@ -91,8 +91,20 @@ _SECRET_VALUE_PATTERNS: list[tuple[str, re.Pattern]] = [
     # V2.1 — expanded secret coverage (15 new patterns)
     # ---------------------------------------------------------------
     # Azure
-    ("azure_storage_key", re.compile(r"DefaultEndpointsProtocol=https;AccountName=[^;]+;AccountKey=[0-9a-zA-Z/+=]{60,}")),
-    ("azure_ad_secret", re.compile(r"(?i)(azure|ad|aad).{0,20}(secret|key)\s*[:=]\s*['\"]?[0-9a-zA-Z\-_.~]{30,}['\"]?")),
+    (
+        "azure_storage_key",
+        re.compile(
+            r"DefaultEndpointsProtocol=https;AccountName="
+            r"[^;]+;AccountKey=[0-9a-zA-Z/+=]{60,}"
+        ),
+    ),
+    (
+        "azure_ad_secret",
+        re.compile(
+            r"(?i)(azure|ad|aad).{0,20}(secret|key)\s*[:=]"
+            r"\s*['\"]?[0-9a-zA-Z\-_.~]{30,}['\"]?"
+        ),
+    ),
     # Google Cloud
     ("gcp_service_account", re.compile(r'"type"\s*:\s*"service_account"')),
     ("gcp_api_key", re.compile(r"AIza[0-9A-Za-z\-_]{35}")),
@@ -104,19 +116,74 @@ _SECRET_VALUE_PATTERNS: list[tuple[str, re.Pattern]] = [
     # PyPI
     ("pypi_token", re.compile(r"pypi-AgEIcHlwaS5vcmc[0-9a-zA-Z\-_]{50,}")),
     # Terraform
-    ("terraform_token", re.compile(r"(?i)(atlas|terraform).{0,10}token\s*[:=]\s*['\"]?[0-9a-zA-Z.]{30,}['\"]?")),
+    (
+        "terraform_token",
+        re.compile(
+            r"(?i)(atlas|terraform).{0,10}token\s*[:=]"
+            r"\s*['\"]?[0-9a-zA-Z.]{30,}['\"]?"
+        ),
+    ),
     # HashiCorp Vault
     ("vault_token", re.compile(r"(?:hvs|hvb|s)\.[0-9a-zA-Z]{24,}")),
     # Heroku
-    ("heroku_key", re.compile(r"(?i)heroku.{0,20}(api[_-]?key|token)\s*[:=]\s*['\"]?[0-9a-f\-]{36,}['\"]?")),
+    (
+        "heroku_key",
+        re.compile(
+            r"(?i)heroku.{0,20}(api[_-]?key|token)\s*[:=]"
+            r"\s*['\"]?[0-9a-f\-]{36,}['\"]?"
+        ),
+    ),
     # Twilio
     ("twilio_key", re.compile(r"SK[0-9a-fA-F]{32}")),
     # SendGrid
     ("sendgrid_key", re.compile(r"SG\.[0-9a-zA-Z\-_]{22,}\.[0-9a-zA-Z\-_]{43,}")),
     # Datadog
-    ("datadog_key", re.compile(r"(?i)(datadog|dd).{0,10}(api[_-]?key|app[_-]?key)\s*[:=]\s*['\"]?[0-9a-f]{32,}['\"]?")),
+    (
+        "datadog_key",
+        re.compile(
+            r"(?i)(datadog|dd).{0,10}(api[_-]?key|app[_-]?key)"
+            r"\s*[:=]\s*['\"]?[0-9a-f]{32,}['\"]?"
+        ),
+    ),
     # Discord
-    ("discord_token", re.compile(r"(?i)(discord|bot).{0,10}token\s*[:=]\s*['\"]?[MN][0-9a-zA-Z\-_.]{50,}['\"]?")),
+    (
+        "discord_token",
+        re.compile(
+            r"(?i)(discord|bot).{0,10}token\s*[:=]"
+            r"\s*['\"]?[MN][0-9a-zA-Z\-_.]{50,}['\"]?"
+        ),
+    ),
+    # ---------------------------------------------------------------
+    # V2.2 — expanded secret coverage (12 new patterns)
+    # ---------------------------------------------------------------
+    # Cloudflare
+    (
+        "cloudflare_api_token",
+        re.compile(
+            r"(?i)cloudflare.{0,20}(token|key)\s*[:=]"
+            r"\s*['\"]?[0-9a-zA-Z_\-]{40,}['\"]?"
+        ),
+    ),
+    ("cloudflare_api_key", re.compile(r"(?i)cf[_-]?api[_-]?key\s*[:=]\s*['\"]?[0-9a-f]{37}['\"]?")),
+    # DigitalOcean
+    ("digitalocean_token", re.compile(r"dop_v1_[0-9a-f]{64}")),
+    ("digitalocean_pat", re.compile(r"doo_v1_[0-9a-f]{64}")),
+    # Mailgun
+    ("mailgun_key", re.compile(r"key-[0-9a-zA-Z]{32}")),
+    # Supabase
+    ("supabase_key", re.compile(r"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[0-9a-zA-Z_\-]{50,}")),
+    # Vercel
+    ("vercel_token", re.compile(r"(?i)vercel.{0,10}token\s*[:=]\s*['\"]?[0-9a-zA-Z]{24,}['\"]?")),
+    # Doppler
+    ("doppler_token", re.compile(r"dp\.st\.[a-zA-Z0-9_\-]{40,}")),
+    # Linear
+    ("linear_api_key", re.compile(r"lin_api_[0-9a-zA-Z]{40,}")),
+    # Pulumi
+    ("pulumi_token", re.compile(r"pul-[0-9a-f]{40}")),
+    # Grafana
+    ("grafana_api_key", re.compile(r"eyJrIjoi[0-9a-zA-Z\-_]{30,}")),
+    # Shopify
+    ("shopify_token", re.compile(r"shpat_[0-9a-fA-F]{32}")),
 ]
 
 # ---------------------------------------------------------------------------
@@ -170,6 +237,15 @@ _SENSITIVE_PATH_PATTERNS: list[re.Pattern] = [
     re.compile(r"\.git-credentials$"),
     re.compile(r"id_ed25519"),
     re.compile(r"\.gnupg/"),
+    # V2.2 — expanded sensitive path coverage
+    re.compile(r"\.doppler\.yaml$"),
+    re.compile(r"\.age$"),
+    re.compile(r"\.sops\.yaml$"),
+    re.compile(r"vault\.hcl$"),
+    re.compile(r"\.vercel.*token"),
+    re.compile(r"\.railway\.json$"),
+    re.compile(r"credentials\.db$"),
+    re.compile(r"keychain\.db$"),
 ]
 
 # Redaction placeholder

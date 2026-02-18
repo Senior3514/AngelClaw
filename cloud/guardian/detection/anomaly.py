@@ -28,6 +28,11 @@ class AgentBaseline:
         self.severity_dist: Counter[str] = Counter()
         self.type_dist: Counter[str] = Counter()
         self.updated_at: datetime = datetime.now(timezone.utc)
+        # V2.2 — expanded baseline tracking
+        self.hour_dist: Counter[int] = Counter()       # events per hour-of-day
+        self.peer_agents: set[str] = set()              # known peer agents
+        self.avg_session_duration: float = 0.0          # avg session length in seconds
+        self.source_ips: set[str] = set()               # known source IPs
 
     @property
     def event_rate_per_hour(self) -> float:
@@ -68,6 +73,15 @@ class AnomalyDetector:
                     bl.type_dist[e.type] += 1
                 if e.severity:
                     bl.severity_dist[e.severity] += 1
+                # V2.2 — expanded baseline data
+                if e.timestamp:
+                    bl.hour_dist[e.timestamp.hour] += 1
+                src_ip = (e.details or {}).get("source_ip", "")
+                if src_ip:
+                    bl.source_ips.add(src_ip)
+                target = (e.details or {}).get("target_agent", "")
+                if target:
+                    bl.peer_agents.add(target)
 
             self._baselines[agent_id] = bl
 
@@ -189,9 +203,50 @@ class AnomalyDetector:
             diversity_score = 0.3 if tool_names else 0.0
         sub_scores.append(diversity_score)
 
-        # Weighted average (V2.1 — 6 sub-scores)
-        weights = [0.25, 0.20, 0.20, 0.15, 0.10, 0.10]
-        final_score = sum(s * w for s, w in zip(sub_scores, weights))
+        # 7. Time-of-day anomaly (V2.2) — events at unusual hours
+        if baseline.hour_dist:
+            current_hours: Counter[int] = Counter()
+            for e in events:
+                if e.timestamp:
+                    current_hours[e.timestamp.hour] += 1
+            unusual_hour_count = sum(
+                count for hour, count in current_hours.items()
+                if baseline.hour_dist.get(hour, 0) == 0
+            )
+            time_score = min(1.0, unusual_hour_count / max(len(events), 1) * 2.0)
+        else:
+            time_score = 0.0
+        sub_scores.append(time_score)
+
+        # 8. New source IP anomaly (V2.2) — events from unknown IPs
+        if baseline.source_ips:
+            current_ips = set()
+            for e in events:
+                src = (e.details or {}).get("source_ip", "")
+                if src:
+                    current_ips.add(src)
+            new_ips = current_ips - baseline.source_ips
+            ip_score = min(1.0, len(new_ips) / max(len(current_ips), 1))
+        else:
+            ip_score = 0.0
+        sub_scores.append(ip_score)
+
+        # 9. New peer agent anomaly (V2.2) — communicating with unknown agents
+        if baseline.peer_agents:
+            current_peers = set()
+            for e in events:
+                target = (e.details or {}).get("target_agent", "")
+                if target:
+                    current_peers.add(target)
+            new_peers = current_peers - baseline.peer_agents
+            peer_score = min(1.0, len(new_peers) / max(len(current_peers), 1))
+        else:
+            peer_score = 0.0
+        sub_scores.append(peer_score)
+
+        # Weighted average (V2.2 — 9 sub-scores)
+        weights = [0.20, 0.15, 0.15, 0.10, 0.08, 0.08, 0.10, 0.07, 0.07]
+        final_score = sum(s * w for s, w in zip(sub_scores, weights, strict=False))
 
         # Per-category deviation detail
         cat_detail = {}

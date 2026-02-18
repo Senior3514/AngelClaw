@@ -239,7 +239,7 @@ def _detects_secret_access(tool_name: str, arguments: dict[str, Any]) -> bool:
             return True
 
     # Check argument values
-    for key, val in arguments.items():
+    for _key, val in arguments.items():
         if isinstance(val, str):
             # Check for secret values (API keys, tokens, etc.)
             if contains_secret(val):

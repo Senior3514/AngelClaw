@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime
 
 from cloud.guardian.base_agent import SubAgent
 from cloud.guardian.models import (
@@ -215,7 +215,7 @@ def _detect_rapid_succession(events: list[dict]) -> list[ThreatIndicator]:
 
 def _detect_sequence_patterns(events: list[dict]) -> list[ThreatIndicator]:
     """Detect suspicious event sequences matching known kill chain patterns."""
-    from cloud.guardian.detection.correlator import _infer_tactic, _TACTIC_HINTS  # noqa: F401
+    from cloud.guardian.detection.correlator import _TACTIC_HINTS, _infer_tactic  # noqa: F401
 
     # Build per-agent tactic sequences
     per_agent: dict[str, list[str]] = defaultdict(list)
@@ -313,7 +313,6 @@ def _detect_time_clustering(events: list[dict]) -> list[ThreatIndicator]:
 
 def _detect_multi_phase_attack(events: list[dict]) -> list[ThreatIndicator]:
     """V2.1 — Detect multi-phase attacks with temporal gaps (low-and-slow)."""
-    from datetime import datetime
 
     per_agent: dict[str, list[tuple[datetime, dict]]] = defaultdict(list)
     for e in events:

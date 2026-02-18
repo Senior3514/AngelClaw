@@ -3,10 +3,22 @@
 Called synchronously from ingest_events() after batch insert.
 Detects dangerous patterns and creates GuardianAlertRow entries.
 
-Patterns detected:
+Patterns detected (V1):
   - Repeated secret exfiltration (>=2 secret-access events in a batch)
   - High-severity burst (>=5 high/critical from one agent in a batch)
   - Agent flapping (agent re-registering frequently)
+
+V2.1 patterns:
+  - Privilege escalation cascade
+  - Lateral movement detection
+  - Data staging (compress/encode before exfil)
+  - Credential spray
+
+V2.2 patterns:
+  - C2 callback detection (reverse shells, beacons, phone-home)
+  - Ransomware indicators (encryption commands, ransom notes)
+  - Defense evasion (log clearing, timestomping, security disabling)
+  - Cloud API abuse (rapid cloud management API calls)
 """
 
 from __future__ import annotations
@@ -133,7 +145,10 @@ def check_for_alerts(
             id=str(uuid.uuid4()),
             tenant_id=tenant_id,
             alert_type="privilege_escalation_cascade",
-            title=f"Privilege escalation cascade: {len(priv_events)} events across {len(priv_agents)} agent(s)",
+            title=(
+                f"Privilege escalation cascade: {len(priv_events)} events"
+                f" across {len(priv_agents)} agent(s)"
+            ),
             severity="critical",
             details={
                 "event_count": len(priv_events),
@@ -160,7 +175,10 @@ def check_for_alerts(
             id=str(uuid.uuid4()),
             tenant_id=tenant_id,
             alert_type="lateral_movement",
-            title=f"Lateral movement: {len(lateral_events)} events across {len(lateral_agents)} agents",
+            title=(
+                f"Lateral movement: {len(lateral_events)} events"
+                f" across {len(lateral_agents)} agents"
+            ),
             severity="critical",
             details={
                 "event_count": len(lateral_events),
@@ -224,6 +242,127 @@ def check_for_alerts(
         )
         alerts.append(alert)
         logger.warning("Guardian Alert [credential_spray]: %s", alert.title)
+
+    # V2.2 — Pattern 8: C2 callback detection
+    c2_keywords = {
+        "reverse shell", "bind shell", "meterpreter", "cobalt strike",
+        "beacon", "callback", "phone home", "c2", "empire", "sliver",
+    }
+    c2_events = [
+        e for e in events
+        if any(k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
+               for k in c2_keywords)
+    ]
+    if c2_events:
+        c2_agents = list({e.agent_id for e in c2_events})
+        alert = GuardianAlertRow(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            alert_type="c2_callback",
+            title=f"C2 callback detected: {len(c2_events)} events from {len(c2_agents)} agent(s)",
+            severity="critical",
+            details={
+                "event_count": len(c2_events),
+                "agents": c2_agents[:10],
+            },
+            related_event_ids=[e.id for e in c2_events],
+            related_agent_ids=c2_agents,
+        )
+        alerts.append(alert)
+        logger.warning("Guardian Alert [c2_callback]: %s", alert.title)
+
+    # V2.2 — Pattern 9: Ransomware indicators
+    ransom_keywords = {
+        "encrypt", "ransom", ".locked", ".encrypted", "openssl enc",
+        "gpg --symmetric", "bitcoin", "monero", "pay", "decrypt",
+    }
+    ransom_events = [
+        e for e in events
+        if any(k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
+               for k in ransom_keywords)
+        and e.severity in ("high", "critical")
+    ]
+    if len(ransom_events) >= 2:
+        ransom_agents = list({e.agent_id for e in ransom_events})
+        alert = GuardianAlertRow(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            alert_type="ransomware_indicator",
+            title=f"Ransomware indicators: {len(ransom_events)} encryption/ransom events",
+            severity="critical",
+            details={
+                "event_count": len(ransom_events),
+                "agents": ransom_agents[:10],
+            },
+            related_event_ids=[e.id for e in ransom_events],
+            related_agent_ids=ransom_agents,
+        )
+        alerts.append(alert)
+        logger.warning("Guardian Alert [ransomware_indicator]: %s", alert.title)
+
+    # V2.2 — Pattern 10: Defense evasion
+    evasion_keywords = {
+        "history -c", "unset histfile", "shred", "wevtutil cl",
+        "rm -f /var/log", "touch -t", "timestomp", "auditctl -D",
+        "setenforce 0", "apparmor_parser -R", "clear_log",
+    }
+    evasion_events = [
+        e for e in events
+        if any(k in ((e.details or {}).get("command", "") or "").lower()
+               for k in evasion_keywords)
+    ]
+    if evasion_events:
+        evasion_agents = list({e.agent_id for e in evasion_events})
+        alert = GuardianAlertRow(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            alert_type="defense_evasion",
+            title=(
+                f"Defense evasion: {len(evasion_events)} log-clearing or "
+                f"security-disabling events"
+            ),
+            severity="critical",
+            details={
+                "event_count": len(evasion_events),
+                "agents": evasion_agents[:10],
+            },
+            related_event_ids=[e.id for e in evasion_events],
+            related_agent_ids=evasion_agents,
+        )
+        alerts.append(alert)
+        logger.warning("Guardian Alert [defense_evasion]: %s", alert.title)
+
+    # V2.2 — Pattern 11: Cloud API abuse
+    cloud_keywords = {
+        "aws ", "az ", "gcloud ", "kubectl ", "terraform ",
+        "s3api", "iam ", "cloudformation",
+    }
+    cloud_events = [
+        e for e in events
+        if any(k in ((e.details or {}).get("command", "") or "").lower()
+               for k in cloud_keywords)
+    ]
+    per_agent_cloud: dict[str, int] = {}
+    for e in cloud_events:
+        per_agent_cloud[e.agent_id] = per_agent_cloud.get(e.agent_id, 0) + 1
+    for agent_id, count in per_agent_cloud.items():
+        if count >= 10:
+            agent_evts = [e for e in cloud_events if e.agent_id == agent_id]
+            alert = GuardianAlertRow(
+                id=str(uuid.uuid4()),
+                tenant_id=tenant_id,
+                alert_type="cloud_api_abuse",
+                title=f"Cloud API abuse: {count} cloud commands from agent {agent_id[:8]}",
+                severity="high",
+                details={
+                    "agent_id": agent_id,
+                    "event_count": count,
+                },
+                related_event_ids=[e.id for e in agent_evts],
+                related_agent_ids=[agent_id],
+            )
+            alerts.append(alert)
+            logger.warning("Guardian Alert [cloud_api_abuse]: %s", alert.title)
 
     if alerts:
         db.add_all(alerts)

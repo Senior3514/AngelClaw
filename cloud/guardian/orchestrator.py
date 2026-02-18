@@ -40,9 +40,9 @@ from cloud.guardian.network_warden import NetworkWarden
 from cloud.guardian.registry import AgentRegistry
 from cloud.guardian.response_agent import ResponseAgent
 from cloud.guardian.secrets_warden import SecretsWarden
-from cloud.guardian.warden_agent import WardenAgent
 from cloud.guardian.timeline_warden import TimelineWarden
 from cloud.guardian.toolchain_warden import ToolchainWarden
+from cloud.guardian.warden_agent import WardenAgent
 
 logger = logging.getLogger("angelgrid.cloud.guardian.orchestrator")
 
@@ -97,6 +97,11 @@ class AngelOrchestrator:
 
         # Circuit breaker state: agent_id -> consecutive failures
         self._warden_failures: dict[str, int] = {}
+
+        # V2.2 — Per-warden performance metrics
+        self._warden_latency: dict[str, list[float]] = {}   # agent_id -> recent latencies (ms)
+        self._warden_indicator_counts: dict[str, int] = {}  # agent_id -> total indicators found
+        self._total_detection_ms: float = 0.0
 
     # ------------------------------------------------------------------
     # Backward-compatible properties
@@ -265,12 +270,16 @@ class AngelOrchestrator:
             )
             coroutines.append(warden.execute(task))
 
-        # Fan-out: run all wardens in parallel
+        # Fan-out: run all wardens in parallel (with timing)
+        import time as _time
+        _t0 = _time.monotonic()
         results = await asyncio.gather(*coroutines, return_exceptions=True)
+        _elapsed_ms = (_time.monotonic() - _t0) * 1000
+        self._total_detection_ms += _elapsed_ms
 
         # Aggregate indicators from all wardens
         all_indicators: list[ThreatIndicator] = []
-        for warden, result in zip(active_wardens, results):
+        for warden, result in zip(active_wardens, results, strict=False):
             if isinstance(result, Exception):
                 self._warden_failures[warden.agent_id] = (
                     self._warden_failures.get(warden.agent_id, 0) + 1
@@ -291,15 +300,29 @@ class AngelOrchestrator:
                 )
                 continue
 
-            # Success — reset circuit breaker
+            # Success — reset circuit breaker and track metrics
             self._warden_failures.pop(warden.agent_id, None)
+            latency = result.duration_ms if hasattr(result, 'duration_ms') else 0.0
+            if warden.agent_id not in self._warden_latency:
+                self._warden_latency[warden.agent_id] = []
+            self._warden_latency[warden.agent_id].append(latency)
+            # Keep only last 50 latency samples
+            if len(self._warden_latency[warden.agent_id]) > 50:
+                self._warden_latency[warden.agent_id] = self._warden_latency[warden.agent_id][-50:]
 
             indicator_dicts = result.result_data.get("indicators", [])
+            warden_ind_count = 0
             for d in indicator_dicts:
                 try:
                     all_indicators.append(ThreatIndicator(**d))
+                    warden_ind_count += 1
                 except Exception:
                     logger.debug("Failed to parse indicator from %s", warden.agent_id)
+
+            # V2.2 — Track per-warden indicator counts
+            self._warden_indicator_counts[warden.agent_id] = (
+                self._warden_indicator_counts.get(warden.agent_id, 0) + warden_ind_count
+            )
 
         # Deduplicate by pattern_name + agent combo
         seen: set[tuple] = set()
@@ -707,6 +730,41 @@ class AngelOrchestrator:
         }
 
     # ------------------------------------------------------------------
+    # V2.2 — Containment workflow
+    # ------------------------------------------------------------------
+
+    async def contain_incident(
+        self,
+        incident_id: str,
+        contained_by: str,
+        db: Session,
+        tenant_id: str = "dev-tenant",
+    ) -> dict:
+        """Mark an incident as contained — threat is controlled but not resolved."""
+        incident = self._incidents.get(incident_id)
+        if not incident:
+            return {"error": f"Incident {incident_id} not found"}
+
+        if incident.state in (IncidentState.RESOLVED, IncidentState.CONTAINED):
+            return {"error": f"Incident {incident_id} is already {incident.state.value}"}
+
+        incident.state = IncidentState.CONTAINED
+        incident.updated_at = datetime.now(timezone.utc)
+        incident.notes.append(f"Contained by {contained_by}")
+
+        logger.info(
+            "[SERAPH] Incident %s contained by %s",
+            incident.incident_id[:8],
+            contained_by,
+        )
+
+        return {
+            "incident_id": incident_id,
+            "contained_by": contained_by,
+            "state": incident.state.value,
+        }
+
+    # ------------------------------------------------------------------
     # Alert persistence
     # ------------------------------------------------------------------
 
@@ -753,6 +811,17 @@ class AngelOrchestrator:
 
     def status(self) -> dict:
         """Return orchestrator status for dashboards and APIs."""
+        # V2.2 — compute per-warden performance metrics
+        warden_perf = {}
+        for wid, latencies in self._warden_latency.items():
+            if latencies:
+                warden_perf[wid] = {
+                    "avg_latency_ms": round(sum(latencies) / len(latencies), 1),
+                    "max_latency_ms": round(max(latencies), 1),
+                    "samples": len(latencies),
+                    "indicators_found": self._warden_indicator_counts.get(wid, 0),
+                }
+
         return {
             "running": self._running,
             "autonomy_mode": self._autonomy_mode,
@@ -761,9 +830,11 @@ class AngelOrchestrator:
                 "indicators_found": self._indicators_found,
                 "incidents_created": self._incidents_created,
                 "responses_executed": self._responses_executed,
+                "total_detection_ms": round(self._total_detection_ms, 1),
             },
             "legion": self.registry.summary(),
             "agents": self.registry.info_all(),
+            "warden_performance": warden_perf,
             "incidents": {
                 "total": len(self._incidents),
                 "pending_approval": len(self._pending_approvals),

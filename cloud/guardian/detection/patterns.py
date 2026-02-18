@@ -46,6 +46,15 @@ class PatternDetector:
         indicators.extend(self._check_tool_abuse(events, window_seconds))
         indicators.extend(self._check_resource_exhaustion(events))
         indicators.extend(self._check_persistence_install(events))
+        # V2.2 — advanced pattern detections
+        indicators.extend(self._check_dns_tunneling(events))
+        indicators.extend(self._check_lolbin_abuse(events))
+        indicators.extend(self._check_fileless_malware(events))
+        indicators.extend(self._check_token_replay(events, window_seconds))
+        indicators.extend(self._check_cloud_api_abuse(events, window_seconds))
+        indicators.extend(self._check_reverse_proxy_abuse(events))
+        indicators.extend(self._check_defense_evasion(events))
+        indicators.extend(self._check_multi_agent_coordination(events, window_seconds))
 
         for ind in indicators:
             logger.info(
@@ -508,6 +517,292 @@ class PatternDetector:
                 mitre_tactic=MitreTactic.PERSISTENCE.value,
             )
         ]
+
+
+    # ---------------------------------------------------------------
+    # V2.2 — Advanced pattern detections
+    # ---------------------------------------------------------------
+
+    def _check_dns_tunneling(
+        self,
+        events: list[EventRow],
+    ) -> list[ThreatIndicator]:
+        """DNS tunneling: long subdomain queries or high-frequency DNS from one agent → critical."""
+        dns_keywords = {"nslookup", "dig ", "host ", "dns", "resolve"}
+        per_agent: dict[str, list[EventRow]] = defaultdict(list)
+        for e in events:
+            cmd = ((e.details or {}).get("command", "") or "").lower()
+            etype = (e.type or "").lower()
+            if any(k in cmd or k in etype for k in dns_keywords):
+                per_agent[e.agent_id].append(e)
+
+        indicators = []
+        for agent_id, evts in per_agent.items():
+            if len(evts) >= 10:
+                indicators.append(
+                    ThreatIndicator(
+                        indicator_type="pattern_match",
+                        pattern_name="dns_tunneling",
+                        severity="critical",
+                        confidence=0.80,
+                        description=(
+                            f"DNS tunneling suspected: {len(evts)} DNS-related "
+                            f"events from agent {agent_id[:8]}"
+                        ),
+                        related_event_ids=[e.id for e in evts[:15]],
+                        related_agent_ids=[agent_id],
+                        suggested_playbook="quarantine_agent",
+                        mitre_tactic=MitreTactic.EXFILTRATION.value,
+                    )
+                )
+        return indicators
+
+    def _check_lolbin_abuse(
+        self,
+        events: list[EventRow],
+    ) -> list[ThreatIndicator]:
+        """Living-off-the-land binary abuse: legitimate tools used maliciously → high."""
+        lolbin_keywords = {
+            "certutil", "mshta", "regsvr32", "rundll32", "wscript", "cscript",
+            "msiexec", "bitsadmin", "xdg-open", "python -c", "perl -e",
+            "ruby -e", "awk '{system", "curl.*|.*sh", "wget.*|.*bash",
+        }
+        flagged = []
+        for e in events:
+            cmd = ((e.details or {}).get("command", "") or "").lower()
+            if any(k in cmd for k in lolbin_keywords):
+                flagged.append(e)
+
+        if len(flagged) < 2:
+            return []
+        return [
+            ThreatIndicator(
+                indicator_type="pattern_match",
+                pattern_name="lolbin_abuse",
+                severity="high",
+                confidence=0.75,
+                description=(
+                    f"LOLBin abuse: {len(flagged)} commands using legitimate binaries "
+                    f"in suspicious contexts"
+                ),
+                related_event_ids=[e.id for e in flagged[:10]],
+                related_agent_ids=list({e.agent_id for e in flagged}),
+                suggested_playbook="escalate_to_human",
+                mitre_tactic=MitreTactic.DEFENSE_EVASION.value,
+            )
+        ]
+
+    def _check_fileless_malware(
+        self,
+        events: list[EventRow],
+    ) -> list[ThreatIndicator]:
+        """Fileless malware indicators: in-memory execution, reflective loading → critical."""
+        fileless_keywords = {
+            "memfd_create", "/dev/shm/", "process_hollowing", "reflective",
+            "powershell -enc", "powershell.exe -enc", "-encodedcommand",
+            "iex(", "invoke-expression", "[system.convert]",
+            "frombase64string", "/proc/self/mem", "ld_preload",
+        }
+        flagged = []
+        for e in events:
+            cmd = ((e.details or {}).get("command", "") or "").lower()
+            if any(k in cmd for k in fileless_keywords):
+                flagged.append(e)
+
+        if not flagged:
+            return []
+        return [
+            ThreatIndicator(
+                indicator_type="pattern_match",
+                pattern_name="fileless_malware",
+                severity="critical",
+                confidence=0.85,
+                description=(
+                    f"Fileless malware indicators: {len(flagged)} commands matching "
+                    f"in-memory execution patterns"
+                ),
+                related_event_ids=[e.id for e in flagged[:10]],
+                related_agent_ids=list({e.agent_id for e in flagged}),
+                suggested_playbook="quarantine_agent",
+                mitre_tactic=MitreTactic.EXECUTION.value,
+            )
+        ]
+
+    def _check_token_replay(
+        self,
+        events: list[EventRow],
+        window_seconds: int,
+    ) -> list[ThreatIndicator]:
+        """Token replay: same auth token used from multiple agents → critical."""
+        token_events: dict[str, set[str]] = defaultdict(set)  # token → agents
+        token_evts: dict[str, list[str]] = defaultdict(list)
+        for e in events:
+            details = e.details or {}
+            token = details.get("token_hash", "") or details.get("session_id", "")
+            if token and len(token) >= 8:
+                token_events[token].add(e.agent_id)
+                token_evts[token].append(e.id)
+
+        indicators = []
+        for token, agents in token_events.items():
+            if len(agents) >= 2:
+                indicators.append(
+                    ThreatIndicator(
+                        indicator_type="pattern_match",
+                        pattern_name="token_replay",
+                        severity="critical",
+                        confidence=0.90,
+                        description=(
+                            f"Token replay attack: same credential used across "
+                            f"{len(agents)} agents"
+                        ),
+                        related_event_ids=token_evts[token][:10],
+                        related_agent_ids=list(agents),
+                        suggested_playbook="quarantine_agent",
+                        mitre_tactic=MitreTactic.CREDENTIAL_ACCESS.value,
+                    )
+                )
+        return indicators
+
+    def _check_cloud_api_abuse(
+        self,
+        events: list[EventRow],
+        window_seconds: int,
+    ) -> list[ThreatIndicator]:
+        """Cloud API abuse: rapid cloud management API calls → high."""
+        cloud_keywords = {
+            "aws ", "az ", "gcloud", "kubectl", "terraform", "pulumi",
+            "s3api", "ec2", "iam", "cloudformation", "lambda",
+        }
+        per_agent: dict[str, list[EventRow]] = defaultdict(list)
+        for e in events:
+            cmd = ((e.details or {}).get("command", "") or "").lower()
+            if any(k in cmd for k in cloud_keywords):
+                per_agent[e.agent_id].append(e)
+
+        indicators = []
+        for agent_id, evts in per_agent.items():
+            if len(evts) >= 8:
+                indicators.append(
+                    ThreatIndicator(
+                        indicator_type="pattern_match",
+                        pattern_name="cloud_api_abuse",
+                        severity="high",
+                        confidence=0.75,
+                        description=(
+                            f"Cloud API abuse: {len(evts)} cloud management commands "
+                            f"from agent {agent_id[:8]}"
+                        ),
+                        related_event_ids=[e.id for e in evts[:10]],
+                        related_agent_ids=[agent_id],
+                        suggested_playbook="throttle_agent",
+                        mitre_tactic=MitreTactic.COLLECTION.value,
+                    )
+                )
+        return indicators
+
+    def _check_reverse_proxy_abuse(
+        self,
+        events: list[EventRow],
+    ) -> list[ThreatIndicator]:
+        """Reverse proxy/tunneling abuse: ngrok, bore, cloudflare tunnel → high."""
+        proxy_keywords = {
+            "ngrok", "bore", "cloudflared tunnel", "localtunnel",
+            "serveo", "pagekite", "teleconsole", "sshuttle",
+        }
+        flagged = []
+        for e in events:
+            cmd = ((e.details or {}).get("command", "") or "").lower()
+            if any(k in cmd for k in proxy_keywords):
+                flagged.append(e)
+
+        if not flagged:
+            return []
+        return [
+            ThreatIndicator(
+                indicator_type="pattern_match",
+                pattern_name="reverse_proxy_abuse",
+                severity="high",
+                confidence=0.80,
+                description=(
+                    f"Reverse proxy/tunneling: {len(flagged)} events establishing "
+                    f"external tunnels to internal services"
+                ),
+                related_event_ids=[e.id for e in flagged[:10]],
+                related_agent_ids=list({e.agent_id for e in flagged}),
+                suggested_playbook="escalate_to_human",
+                mitre_tactic=MitreTactic.COMMAND_AND_CONTROL.value,
+            )
+        ]
+
+    def _check_defense_evasion(
+        self,
+        events: list[EventRow],
+    ) -> list[ThreatIndicator]:
+        """Defense evasion: log clearing, history tampering, timestamp modification → critical."""
+        evasion_keywords = {
+            "history -c", "unset histfile", "shred", "clear_log",
+            "wevtutil cl", "rm -f /var/log", "touch -t", "timestomp",
+            "auditctl -D", "setenforce 0", "apparmor_parser -R",
+        }
+        flagged = []
+        for e in events:
+            cmd = ((e.details or {}).get("command", "") or "").lower()
+            if any(k in cmd for k in evasion_keywords):
+                flagged.append(e)
+
+        if not flagged:
+            return []
+        return [
+            ThreatIndicator(
+                indicator_type="pattern_match",
+                pattern_name="defense_evasion",
+                severity="critical",
+                confidence=0.90,
+                description=(
+                    f"Defense evasion: {len(flagged)} commands attempting to "
+                    f"clear logs, tamper with history, or disable security controls"
+                ),
+                related_event_ids=[e.id for e in flagged[:10]],
+                related_agent_ids=list({e.agent_id for e in flagged}),
+                suggested_playbook="quarantine_agent",
+                mitre_tactic=MitreTactic.DEFENSE_EVASION.value,
+            )
+        ]
+
+    def _check_multi_agent_coordination(
+        self,
+        events: list[EventRow],
+        window_seconds: int,
+    ) -> list[ThreatIndicator]:
+        """Multi-agent coordination: >=3 agents same action type simultaneously."""
+        type_agents: dict[str, set[str]] = defaultdict(set)
+        type_evts: dict[str, list[str]] = defaultdict(list)
+        for e in events:
+            if e.type and e.severity in ("high", "critical"):
+                type_agents[e.type].add(e.agent_id)
+                type_evts[e.type].append(e.id)
+
+        indicators = []
+        for etype, agents in type_agents.items():
+            if len(agents) >= 3:
+                indicators.append(
+                    ThreatIndicator(
+                        indicator_type="pattern_match",
+                        pattern_name="multi_agent_coordination",
+                        severity="high",
+                        confidence=0.75,
+                        description=(
+                            f"Coordinated attack: {len(agents)} agents performing "
+                            f"'{etype}' actions simultaneously"
+                        ),
+                        related_event_ids=type_evts[etype][:15],
+                        related_agent_ids=list(agents),
+                        suggested_playbook="escalate_to_human",
+                        mitre_tactic=MitreTactic.LATERAL_MOVEMENT.value,
+                    )
+                )
+        return indicators
 
 
 # Module-level singleton

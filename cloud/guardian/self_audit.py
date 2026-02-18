@@ -65,6 +65,22 @@ async def run_self_audit(db: Session) -> SelfAuditReport:
     checks += 1
     findings.extend(_check_noisy_agents(db))
 
+    # V2.2 — Check 7: Secret exposure in recent events
+    checks += 1
+    findings.extend(_check_secret_exposure(db))
+
+    # V2.2 — Check 8: Warden health (check Angel Legion agents)
+    checks += 1
+    findings.extend(_check_warden_health())
+
+    # V2.2 — Check 9: Database size and performance
+    checks += 1
+    findings.extend(_check_db_health(db))
+
+    # V2.2 — Check 10: Rate limiting configuration
+    checks += 1
+    findings.extend(_check_rate_limiting())
+
     clean = len(findings) == 0
     summary_parts = [f"{checks} checks run."]
     if findings:
@@ -280,5 +296,171 @@ def _check_noisy_agents(db: Session) -> list[AuditFinding]:
                     suggested_fix="Check for misconfiguration or apply throttling.",
                 )
             )
+
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# V2.2 — New self-audit checks
+# ---------------------------------------------------------------------------
+
+
+def _check_secret_exposure(db: Session) -> list[AuditFinding]:
+    """Check for potential secret exposure in recent events."""
+    findings = []
+    try:
+        from shared.security.secret_scanner import contains_secret
+
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=6)
+        events = db.query(EventRow).filter(EventRow.timestamp >= cutoff).limit(500).all()
+
+        exposed_count = 0
+        exposed_agents: set[str] = set()
+        for e in events:
+            details_str = str(e.details or {})
+            if contains_secret(details_str):
+                exposed_count += 1
+                exposed_agents.add(e.agent_id)
+
+        if exposed_count > 0:
+            findings.append(
+                AuditFinding(
+                    category="secret_exposure",
+                    severity="critical" if exposed_count >= 5 else "high",
+                    title=(
+                        f"Secret values in {exposed_count} event(s)"
+                        f" from {len(exposed_agents)} agent(s)"
+                    ),
+                    description=(
+                        f"Detected {exposed_count} events containing potential secret values. "
+                        "These may be logged or transmitted in cleartext."
+                    ),
+                    suggested_fix=(
+                        "Review event sources and ensure secrets are redacted before ingestion. "
+                        "Enable AngelClaw secret scrubbing at the ANGELNODE level."
+                    ),
+                )
+            )
+    except Exception:
+        pass
+    return findings
+
+
+def _check_warden_health() -> list[AuditFinding]:
+    """Check Angel Legion warden health via the orchestrator."""
+    findings = []
+    try:
+        from cloud.guardian.orchestrator import angel_orchestrator
+
+        pulse = angel_orchestrator.pulse_check()
+        degraded = pulse.get("degraded", 0)
+        offline = pulse.get("offline", 0)
+
+        if degraded > 0:
+            findings.append(
+                AuditFinding(
+                    category="warden_health",
+                    severity="high",
+                    title=f"{degraded} Angel Legion warden(s) degraded",
+                    description=(
+                        f"{degraded} warden(s) are in ERROR state due to repeated failures. "
+                        "Detection coverage may be reduced."
+                    ),
+                    suggested_fix="Check warden logs and consider restarting affected wardens.",
+                )
+            )
+
+        if offline > 0:
+            findings.append(
+                AuditFinding(
+                    category="warden_health",
+                    severity="warn",
+                    title=f"{offline} Angel Legion warden(s) offline",
+                    description=f"{offline} warden(s) are stopped.",
+                    suggested_fix="Restart the orchestrator to reinitialize wardens.",
+                )
+            )
+
+        # Check circuit breakers
+        breakers = pulse.get("circuit_breakers", {})
+        for agent_id, failures in breakers.items():
+            if failures >= 3:
+                findings.append(
+                    AuditFinding(
+                        category="warden_health",
+                        severity="high",
+                        title=f"Circuit breaker open for warden {agent_id[:12]}",
+                        description=(
+                            f"Warden {agent_id[:12]} has {failures} consecutive failures. "
+                            "It will be skipped during detection sweeps."
+                        ),
+                        suggested_fix="Investigate warden errors and reset circuit breaker.",
+                    )
+                )
+    except Exception:
+        pass
+    return findings
+
+
+def _check_db_health(db: Session) -> list[AuditFinding]:
+    """Check database health: event accumulation, alert backlog."""
+    findings = []
+    try:
+        total_events = db.query(EventRow).count()
+        if total_events > 100_000:
+            findings.append(
+                AuditFinding(
+                    category="db_health",
+                    severity="warn",
+                    title=f"Large event table: {total_events:,} rows",
+                    description=(
+                        "Event table is growing large. Consider archiving or "
+                        "pruning old events to maintain query performance."
+                    ),
+                    suggested_fix="Implement event archival for events older than 30 days.",
+                )
+            )
+
+        total_alerts = db.query(GuardianAlertRow).count()
+        if total_alerts > 10_000:
+            findings.append(
+                AuditFinding(
+                    category="db_health",
+                    severity="warn",
+                    title=f"Large alert table: {total_alerts:,} rows",
+                    description="Alert table is growing large.",
+                    suggested_fix="Archive resolved alerts older than 30 days.",
+                )
+            )
+    except Exception:
+        pass
+    return findings
+
+
+def _check_rate_limiting() -> list[AuditFinding]:
+    """Check if rate limiting is configured for the API."""
+    import os
+
+    findings = []
+
+    rate_limit = os.environ.get("ANGELCLAW_RATE_LIMIT", "")
+    bind_host = os.environ.get("ANGELCLAW_BIND_HOST", "127.0.0.1")
+
+    if bind_host != "127.0.0.1" and not rate_limit:
+        findings.append(
+            AuditFinding(
+                category="config_drift",
+                severity="high",
+                title="No rate limiting on public-facing API",
+                description=(
+                    "The API is bound to a non-localhost address without rate limiting. "
+                    "This exposes the API to denial-of-service attacks."
+                ),
+                suggested_fix=(
+                    "Set ANGELCLAW_RATE_LIMIT environment variable or use a "
+                    "reverse proxy (nginx/caddy) with rate limiting."
+                ),
+            )
+        )
 
     return findings

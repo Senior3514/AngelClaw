@@ -38,8 +38,6 @@ _TACTIC_HINTS: dict[str, str] = {
     "destroy": MitreTactic.IMPACT.value,
     "drop": MitreTactic.IMPACT.value,
     # V2.1 — expanded tactic mapping
-    "enumerate": MitreTactic.RECONNAISSANCE.value,
-    "discover": MitreTactic.RECONNAISSANCE.value,
     "exploit": MitreTactic.EXECUTION.value,
     "inject": MitreTactic.EXECUTION.value,
     "spawn": MitreTactic.EXECUTION.value,
@@ -59,6 +57,28 @@ _TACTIC_HINTS: dict[str, str] = {
     "exfil": MitreTactic.EXFILTRATION.value,
     "tunnel": MitreTactic.EXFILTRATION.value,
     "encode": MitreTactic.EXFILTRATION.value,
+    # V2.2 — expanded tactic mapping (defense evasion, collection, C2, discovery)
+    "clear_log": MitreTactic.DEFENSE_EVASION.value,
+    "obfuscat": MitreTactic.DEFENSE_EVASION.value,
+    "disable": MitreTactic.DEFENSE_EVASION.value,
+    "bypass": MitreTactic.DEFENSE_EVASION.value,
+    "masquerade": MitreTactic.DEFENSE_EVASION.value,
+    "timestomp": MitreTactic.DEFENSE_EVASION.value,
+    "collect": MitreTactic.COLLECTION.value,
+    "screenshot": MitreTactic.COLLECTION.value,
+    "keylog": MitreTactic.COLLECTION.value,
+    "clipboard": MitreTactic.COLLECTION.value,
+    "archive": MitreTactic.COLLECTION.value,
+    "beacon": MitreTactic.COMMAND_AND_CONTROL.value,
+    "c2": MitreTactic.COMMAND_AND_CONTROL.value,
+    "callback": MitreTactic.COMMAND_AND_CONTROL.value,
+    "heartbeat": MitreTactic.COMMAND_AND_CONTROL.value,
+    "proxy": MitreTactic.COMMAND_AND_CONTROL.value,
+    "enumerate": MitreTactic.DISCOVERY.value,
+    "discover": MitreTactic.DISCOVERY.value,
+    "port_scan": MitreTactic.DISCOVERY.value,
+    "inventory": MitreTactic.DISCOVERY.value,
+    "fingerprint": MitreTactic.DISCOVERY.value,
 }
 
 
@@ -107,6 +127,10 @@ class CorrelationEngine:
         # V2.1 — Cross-source-IP correlation
         source_chains = self._build_cross_source_chains(events)
         chains.extend(source_chains)
+
+        # V2.2 — Cross-tenant and supply chain correlation
+        supply_chains = self._build_supply_chain_correlation(events)
+        chains.extend(supply_chains)
 
         # Filter: only keep chains with >=2 distinct tactics
         significant = [c for c in chains if len(set(c.tactics)) >= 2]
@@ -195,7 +219,7 @@ class CorrelationEngine:
                 by_tool[tool].append(e)
 
         chains: list[CorrelationChain] = []
-        for tool, tool_events in by_tool.items():
+        for _tool, tool_events in by_tool.items():
             agents = {e.agent_id for e in tool_events}
             if len(agents) < 2:
                 continue
@@ -312,7 +336,7 @@ class CorrelationEngine:
                 by_source[src].append(e)
 
         chains: list[CorrelationChain] = []
-        for source, source_events in by_source.items():
+        for _source, source_events in by_source.items():
             agents = {e.agent_id for e in source_events}
             if len(agents) < 2 or len(source_events) < 3:
                 continue
@@ -331,6 +355,53 @@ class CorrelationEngine:
             chains.append(
                 self._make_chain(sorted_events, list(agents), tactics)
             )
+
+        return chains
+
+
+    # ------------------------------------------------------------------
+    # V2.2 — Supply chain attack correlation
+    # ------------------------------------------------------------------
+
+    def _build_supply_chain_correlation(
+        self,
+        events: list[EventRow],
+    ) -> list[CorrelationChain]:
+        """Detect supply chain attack patterns: package install → code execution → exfiltration."""
+        supply_chain_keywords = {
+            "pip install", "npm install", "gem install", "cargo install",
+            "go get", "composer require", "nuget install",
+        }
+        exec_keywords = {"exec", "shell", "spawn", "eval", "run"}
+
+        per_agent: dict[str, list[EventRow]] = defaultdict(list)
+        for e in events:
+            per_agent[e.agent_id].append(e)
+
+        chains: list[CorrelationChain] = []
+        for agent_id, agent_events in per_agent.items():
+            sorted_events = sorted(agent_events, key=lambda e: e.timestamp)
+            has_install = False
+            has_exec = False
+            install_evts: list[EventRow] = []
+            exec_evts: list[EventRow] = []
+
+            for e in sorted_events:
+                cmd = ((e.details or {}).get("command", "") or "").lower()
+                etype = (e.type or "").lower()
+                if any(k in cmd for k in supply_chain_keywords):
+                    has_install = True
+                    install_evts.append(e)
+                if any(k in etype for k in exec_keywords) and e.severity in ("high", "critical"):
+                    has_exec = True
+                    exec_evts.append(e)
+
+            if has_install and has_exec:
+                all_evts = install_evts + exec_evts
+                tactics = [MitreTactic.PERSISTENCE.value, MitreTactic.EXECUTION.value]
+                chains.append(
+                    self._make_chain(all_evts, [agent_id], tactics)
+                )
 
         return chains
 

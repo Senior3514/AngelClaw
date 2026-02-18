@@ -1033,12 +1033,14 @@ class TestRunSelfAudit:
             "ANGELCLAW_AUTH_ENABLED": "true",
             "ANGELCLAW_ADMIN_PASSWORD": "secure-password",
             "ANGELCLAW_BIND_HOST": "127.0.0.1",
-        }, clear=False):
+        }, clear=False), patch(
+            "cloud.guardian.self_audit._check_warden_health", return_value=[]
+        ):
             report = asyncio.get_event_loop().run_until_complete(run_self_audit(mock_db))
 
         assert report.clean is True
         assert "clean" in report.summary.lower() or "passed" in report.summary.lower()
-        assert report.checks_run == 6
+        assert report.checks_run == 10
 
     def test_audit_with_findings(self):
         """When checks return findings, summary reflects them."""
@@ -1056,6 +1058,6 @@ class TestRunSelfAudit:
             report = asyncio.get_event_loop().run_until_complete(run_self_audit(mock_db))
 
         assert report.clean is False
-        assert report.checks_run == 6
+        assert report.checks_run == 10
         assert len(report.findings) > 0
         assert "finding" in report.summary.lower()
