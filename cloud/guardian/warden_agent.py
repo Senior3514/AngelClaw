@@ -1,6 +1,6 @@
-"""AngelClaw – Sentinel Agent.
+"""AngelClaw – Warden Agent.
 
-Real-time anomaly detection and pattern matching.  The Sentinel is the
+Real-time anomaly detection and pattern matching.  The Warden is the
 eyes and ears of ANGEL — it observes events and emits ThreatIndicators
 for the Orchestrator.
 """
@@ -22,15 +22,15 @@ from cloud.guardian.models import (
     ThreatIndicator,
 )
 
-logger = logging.getLogger("angelgrid.cloud.guardian.sentinel")
+logger = logging.getLogger("angelgrid.cloud.guardian.warden")
 
 
-class SentinelAgent(SubAgent):
+class WardenAgent(SubAgent):
     """Watches events and detects threats via patterns, anomalies, and correlation."""
 
     def __init__(self) -> None:
         super().__init__(
-            agent_type=AgentType.SENTINEL,
+            agent_type=AgentType.WARDEN,
             permissions={Permission.READ_EVENTS, Permission.READ_AGENTS},
         )
 
@@ -83,7 +83,7 @@ class SentinelAgent(SubAgent):
                 unique.append(ind)
 
         logger.info(
-            "[SENTINEL] Analyzed %d events → %d indicators "
+            "[WARDEN] Analyzed %d events → %d indicators "
             "(patterns=%d, anomalies=%d, correlations=%d)",
             len(events),
             len(unique),

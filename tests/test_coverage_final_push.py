@@ -3,7 +3,7 @@
 Covers:
   - cloud/integrations/wazuh_ingest.py  (22% → ~100%)
   - cloud/llm_proxy/routes.py           (32% → ~100%)
-  - cloud/guardian/sentinel_agent.py     (72% → ~100%)
+  - cloud/guardian/warden_agent.py       (72% → ~100%)
   - cloud/services/structured_logger.py  (76% → ~100%)
   - cloud/guardian/self_audit.py         (79% → ~100%)
 """
@@ -580,7 +580,7 @@ class TestLLMChatEnabled:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 3. cloud/guardian/sentinel_agent.py
+# 3. cloud/guardian/warden_agent.py
 # ═══════════════════════════════════════════════════════════════════════════
 
 
@@ -588,7 +588,7 @@ class TestDeserializeEvents:
     """Cover _deserialize_events (lines 114-140)."""
 
     def test_deserialize_with_iso_timestamp(self):
-        from cloud.guardian.sentinel_agent import _deserialize_events
+        from cloud.guardian.warden_agent import _deserialize_events
 
         data = [
             {
@@ -608,7 +608,7 @@ class TestDeserializeEvents:
         assert isinstance(rows[0].timestamp, datetime)
 
     def test_deserialize_with_datetime_object(self):
-        from cloud.guardian.sentinel_agent import _deserialize_events
+        from cloud.guardian.warden_agent import _deserialize_events
 
         ts = datetime(2025, 1, 1, tzinfo=timezone.utc)
         rows = _deserialize_events([{"timestamp": ts}])
@@ -616,14 +616,14 @@ class TestDeserializeEvents:
         assert rows[0].timestamp == ts
 
     def test_deserialize_with_invalid_timestamp(self):
-        from cloud.guardian.sentinel_agent import _deserialize_events
+        from cloud.guardian.warden_agent import _deserialize_events
 
         rows = _deserialize_events([{"timestamp": "not-a-date"}])
         assert len(rows) == 1
         assert isinstance(rows[0].timestamp, datetime)
 
     def test_deserialize_with_no_timestamp(self):
-        from cloud.guardian.sentinel_agent import _deserialize_events
+        from cloud.guardian.warden_agent import _deserialize_events
 
         rows = _deserialize_events([{"id": "ev-2"}])
         assert len(rows) == 1
@@ -631,7 +631,7 @@ class TestDeserializeEvents:
 
     def test_deserialize_with_numeric_timestamp(self):
         """Non-string, non-datetime timestamp falls to default."""
-        from cloud.guardian.sentinel_agent import _deserialize_events
+        from cloud.guardian.warden_agent import _deserialize_events
 
         rows = _deserialize_events([{"timestamp": 12345}])
         assert len(rows) == 1
@@ -639,7 +639,7 @@ class TestDeserializeEvents:
 
     def test_deserialize_defaults(self):
         """Missing fields get defaults."""
-        from cloud.guardian.sentinel_agent import _deserialize_events
+        from cloud.guardian.warden_agent import _deserialize_events
 
         rows = _deserialize_events([{}])
         assert len(rows) == 1

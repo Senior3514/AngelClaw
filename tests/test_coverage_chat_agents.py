@@ -1,4 +1,4 @@
-"""Comprehensive coverage tests for guardian chat, AI assistant, sentinel agent, and predictive."""
+"""Comprehensive coverage tests for guardian chat, AI assistant, warden agent, and predictive."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ from cloud.db.models import (
     IncidentRow,
 )
 from cloud.guardian.models import AgentResult, AgentTask
-from cloud.guardian.sentinel_agent import SentinelAgent
+from cloud.guardian.warden_agent import WardenAgent
 from cloud.services.guardian_chat import (
     _dispatch_intent,
     _handle_about,
@@ -1076,7 +1076,7 @@ class TestGenerateRecommendations:
 
 
 # ===================================================================
-# 3. sentinel_agent.py — SentinelAgent
+# 3. warden_agent.py — WardenAgent
 # ===================================================================
 
 
@@ -1122,9 +1122,9 @@ def _mock_deserialize(events_data):
     return rows
 
 
-class TestSentinelAgent:
+class TestWardenAgent:
     def test_handle_task_empty_events(self):
-        agent = SentinelAgent()
+        agent = WardenAgent()
         task = AgentTask(
             task_type="detect",
             payload={"events": [], "window_seconds": 300},
@@ -1135,7 +1135,7 @@ class TestSentinelAgent:
         assert result.result_data["anomaly_scores"] == []
 
     def test_handle_task_with_events(self):
-        agent = SentinelAgent()
+        agent = WardenAgent()
         agent_id = _uid()
         events_data = [
             {
@@ -1164,7 +1164,7 @@ class TestSentinelAgent:
             payload={"events": events_data, "window_seconds": 300},
         )
         with patch(
-            "cloud.guardian.sentinel_agent._deserialize_events",
+            "cloud.guardian.warden_agent._deserialize_events",
             side_effect=_mock_deserialize,
         ):
             result = _run_async(agent.handle_task(task))
@@ -1176,7 +1176,7 @@ class TestSentinelAgent:
 
     def test_handle_task_triggers_patterns(self):
         """Supply enough events to trigger pattern detection."""
-        agent = SentinelAgent()
+        agent = WardenAgent()
         agent_id = _uid()
         events_data = []
         # Add 2 secret-access events to trigger repeated_secret_exfil pattern
@@ -1200,7 +1200,7 @@ class TestSentinelAgent:
             payload={"events": events_data, "window_seconds": 300},
         )
         with patch(
-            "cloud.guardian.sentinel_agent._deserialize_events",
+            "cloud.guardian.warden_agent._deserialize_events",
             side_effect=_mock_deserialize,
         ):
             result = _run_async(agent.handle_task(task))
@@ -1210,7 +1210,7 @@ class TestSentinelAgent:
 
 
 # ===================================================================
-# 3b. sentinel_agent.py — _deserialize_events
+# 3b. warden_agent.py — _deserialize_events
 # ===================================================================
 
 

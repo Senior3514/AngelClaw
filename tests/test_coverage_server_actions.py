@@ -1338,19 +1338,19 @@ class TestOrchestratorProcessEvents:
             db.close()
 
     def test_process_events_no_indicators(self):
-        """When sentinel finds no threats, returns []."""
+        """When warden finds no threats, returns []."""
         db = _fresh_db()
         try:
             orch = AngelOrchestrator()
-            # Mock sentinel to return no indicators
+            # Mock warden to return no indicators
             mock_result = AgentResult(
                 task_id="t1",
-                agent_id="sentinel-1",
-                agent_type="sentinel",
+                agent_id="warden-1",
+                agent_type="warden",
                 success=True,
                 result_data={"indicators": []},
             )
-            orch.sentinel.execute = AsyncMock(
+            orch.warden.execute = AsyncMock(
                 return_value=mock_result
             )
 
@@ -1373,7 +1373,7 @@ class TestOrchestratorProcessEvents:
             db.close()
 
     def test_process_events_with_indicators(self):
-        """When sentinel finds threats, incidents are created and persisted."""
+        """When warden finds threats, incidents are created and persisted."""
         db = _fresh_db()
         try:
             orch = AngelOrchestrator()
@@ -1387,15 +1387,15 @@ class TestOrchestratorProcessEvents:
                 "related_agent_ids": ["agent-1"],
                 "suggested_playbook": "quarantine_agent",
             }
-            mock_sentinel_result = AgentResult(
+            mock_warden_result = AgentResult(
                 task_id="t1",
-                agent_id="sentinel-1",
-                agent_type="sentinel",
+                agent_id="warden-1",
+                agent_type="warden",
                 success=True,
                 result_data={"indicators": [indicator_data]},
             )
-            orch.sentinel.execute = AsyncMock(
-                return_value=mock_sentinel_result
+            orch.warden.execute = AsyncMock(
+                return_value=mock_warden_result
             )
 
             # Mock response agent to succeed
@@ -1452,19 +1452,19 @@ class TestOrchestratorProcessEvents:
             db.rollback()
             db.close()
 
-    def test_process_events_sentinel_failure(self):
-        """When sentinel fails, returns empty indicators."""
+    def test_process_events_warden_failure(self):
+        """When warden fails, returns empty indicators."""
         db = _fresh_db()
         try:
             orch = AngelOrchestrator()
             mock_result = AgentResult(
                 task_id="t1",
-                agent_id="sentinel-1",
-                agent_type="sentinel",
+                agent_id="warden-1",
+                agent_type="warden",
                 success=False,
-                error="Sentinel crashed",
+                error="Warden crashed",
             )
-            orch.sentinel.execute = AsyncMock(
+            orch.warden.execute = AsyncMock(
                 return_value=mock_result
             )
 

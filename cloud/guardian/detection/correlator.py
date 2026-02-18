@@ -37,6 +37,28 @@ _TACTIC_HINTS: dict[str, str] = {
     "delete": MitreTactic.IMPACT.value,
     "destroy": MitreTactic.IMPACT.value,
     "drop": MitreTactic.IMPACT.value,
+    # V2.1 — expanded tactic mapping
+    "enumerate": MitreTactic.RECONNAISSANCE.value,
+    "discover": MitreTactic.RECONNAISSANCE.value,
+    "exploit": MitreTactic.EXECUTION.value,
+    "inject": MitreTactic.EXECUTION.value,
+    "spawn": MitreTactic.EXECUTION.value,
+    "crontab": MitreTactic.PERSISTENCE.value,
+    "registry": MitreTactic.PERSISTENCE.value,
+    "service": MitreTactic.PERSISTENCE.value,
+    "escalat": MitreTactic.PRIVILEGE_ESCALATION.value,
+    "setuid": MitreTactic.PRIVILEGE_ESCALATION.value,
+    "dump": MitreTactic.CREDENTIAL_ACCESS.value,
+    "crack": MitreTactic.CREDENTIAL_ACCESS.value,
+    "lateral": MitreTactic.LATERAL_MOVEMENT.value,
+    "pivot": MitreTactic.LATERAL_MOVEMENT.value,
+    "remote_exec": MitreTactic.LATERAL_MOVEMENT.value,
+    "encrypt": MitreTactic.IMPACT.value,
+    "wipe": MitreTactic.IMPACT.value,
+    "ransom": MitreTactic.IMPACT.value,
+    "exfil": MitreTactic.EXFILTRATION.value,
+    "tunnel": MitreTactic.EXFILTRATION.value,
+    "encode": MitreTactic.EXFILTRATION.value,
 }
 
 
@@ -81,6 +103,10 @@ class CorrelationEngine:
         # Also check cross-agent chains (same source/tool)
         cross_chains = self._build_cross_agent_chains(events)
         chains.extend(cross_chains)
+
+        # V2.1 — Cross-source-IP correlation
+        source_chains = self._build_cross_source_chains(events)
+        chains.extend(source_chains)
 
         # Filter: only keep chains with >=2 distinct tactics
         significant = [c for c in chains if len(set(c.tactics)) >= 2]
@@ -214,8 +240,11 @@ class CorrelationEngine:
             default="medium",
         )
 
-        # Confidence based on number of distinct tactics
-        confidence = min(1.0, 0.3 + len(set(tactics)) * 0.15)
+        # V2.1 — confidence boosted by temporal proximity & tactic diversity
+        tactic_diversity_bonus = len(set(tactics)) * 0.15
+        temporal_bonus = 0.1 if span < 60 else (0.05 if span < 180 else 0.0)
+        agent_bonus = 0.1 if len(agent_ids) >= 2 else 0.0
+        confidence = min(1.0, 0.3 + tactic_diversity_bonus + temporal_bonus + agent_bonus)
 
         tactic_str = " → ".join(tactics[:6])
         return CorrelationChain(
@@ -239,6 +268,14 @@ class CorrelationEngine:
         """Convert significant chains into ThreatIndicators."""
         indicators = []
         for chain in chains:
+            # V2.1 — playbook selection based on chain severity
+            if chain.severity == "critical":
+                playbook = "quarantine_agent"
+            elif len(chain.agent_ids) >= 3:
+                playbook = "quarantine_agent"
+            else:
+                playbook = "escalate_to_human"
+
             indicators.append(
                 ThreatIndicator(
                     indicator_type="correlation",
@@ -248,7 +285,7 @@ class CorrelationEngine:
                     description=chain.description,
                     related_event_ids=chain.event_ids[:20],
                     related_agent_ids=chain.agent_ids[:10],
-                    suggested_playbook="escalate_to_human",
+                    suggested_playbook=playbook,
                     mitre_tactic=chain.tactics[-1] if chain.tactics else None,
                     metadata={
                         "chain_id": chain.chain_id,
@@ -258,6 +295,44 @@ class CorrelationEngine:
                 )
             )
         return indicators
+
+    # ------------------------------------------------------------------
+    # V2.1 — Cross-IP / source correlation
+    # ------------------------------------------------------------------
+
+    def _build_cross_source_chains(
+        self,
+        events: list[EventRow],
+    ) -> list[CorrelationChain]:
+        """Detect activity from the same source IP across multiple agents."""
+        by_source: dict[str, list[EventRow]] = defaultdict(list)
+        for e in events:
+            src = (e.details or {}).get("source_ip", "") or (e.details or {}).get("ip", "")
+            if src:
+                by_source[src].append(e)
+
+        chains: list[CorrelationChain] = []
+        for source, source_events in by_source.items():
+            agents = {e.agent_id for e in source_events}
+            if len(agents) < 2 or len(source_events) < 3:
+                continue
+
+            sorted_events = sorted(source_events, key=lambda e: e.timestamp)
+            span = (sorted_events[-1].timestamp - sorted_events[0].timestamp).total_seconds()
+            if span > self.max_chain_gap * 2:
+                continue
+
+            tactics = []
+            for e in sorted_events:
+                t = _infer_tactic(e)
+                if t and (not tactics or tactics[-1] != t):
+                    tactics.append(t)
+
+            chains.append(
+                self._make_chain(sorted_events, list(agents), tactics)
+            )
+
+        return chains
 
 
 # Module-level singleton

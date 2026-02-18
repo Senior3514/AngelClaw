@@ -39,7 +39,7 @@ This release introduces the **Angel Legion** — a dynamic swarm of 10 specializ
 managed by the Seraph orchestrator via a registry-based architecture. Expands from 4 hardcoded
 agents to 10 dynamically registered agents with fine-grained permissions and specialized detection.
 
-### Angel Legion — 7 New Specialized Sentinels
+### Angel Legion — 7 New Specialized Wardens
 
 | Code Name | Type | Detections |
 |-----------|------|------------|
@@ -49,19 +49,19 @@ agents to 10 dynamically registered agents with fine-grained permissions and spe
 | **Chronicle** | Timeline | Coordinated activity, rapid succession, kill chains, time clustering |
 | **Vault Keeper** | Secrets | Access bursts, brute force, exfiltration, secret-in-payload |
 | **Drift Watcher** | Behavior | Peer volume/severity deviation, escalation, category novelty |
-| **Vigil** | Sentinel | Core pattern matching, anomaly detection, correlation (V1) |
+| **Vigil** | Warden | Core pattern matching, anomaly detection, correlation (V1) |
 
 ### Dynamic Agent Registry
 
 - `AgentRegistry` class manages N agents without hardcoding
-- Lookup by ID, by type, all sentinels, active agents
+- Lookup by ID, by type, all wardens, active agents
 - Graceful shutdown, status aggregation, Legion summary
-- `SENTINEL_TYPES` frozenset defines detection-role agents
+- `WARDEN_TYPES` frozenset defines detection-role agents
 
 ### Orchestrator V2
 
 - Refactored to use `AgentRegistry` instead of hardcoded agent references
-- Backward-compatible `.sentinel`, `.response`, `.forensic`, `.audit` properties
+- Backward-compatible `.warden`, `.response`, `.forensic`, `.audit` properties
 - All API routes iterate agents dynamically from registry
 - Prometheus metrics emit per-agent gauges with agent type labels
 
@@ -69,11 +69,11 @@ agents to 10 dynamically registered agents with fine-grained permissions and spe
 
 | Permission | Used By |
 |-----------|---------|
-| `READ_NETWORK` | NetworkSentinel |
-| `READ_SECRETS` | SecretsSentinel |
-| `READ_TOOLS` | ToolchainSentinel |
-| `READ_BROWSER` | BrowserSentinel |
-| `READ_TIMELINE` | TimelineSentinel |
+| `READ_NETWORK` | NetworkWarden |
+| `READ_SECRETS` | SecretsWarden |
+| `READ_TOOLS` | ToolchainWarden |
+| `READ_BROWSER` | BrowserWarden |
+| `READ_TIMELINE` | TimelineWarden |
 
 ### Serenity Scale (AngelClaw-themed Risk Levels)
 
@@ -95,7 +95,7 @@ agents to 10 dynamically registered agents with fine-grained permissions and spe
 ### Test Results
 
 - **1130 tests passing** (103 new Angel Legion tests)
-- All new sentinel modules at **94-100% coverage**
+- All new warden modules at **94-100% coverage**
 - Overall coverage: **84%**
 
 ### Documentation

@@ -1,4 +1,4 @@
-"""AngelClaw – Tool Smith (Toolchain Sentinel).
+"""AngelClaw – Tool Smith (Toolchain Warden).
 
 Monitors AI tool usage, supply chain integrity, and tool invocation
 patterns.  Detects unauthorized tools, version drift, excessive usage,
@@ -19,9 +19,9 @@ from cloud.guardian.models import (
     ThreatIndicator,
 )
 
-logger = logging.getLogger("angelgrid.cloud.guardian.toolchain_sentinel")
+logger = logging.getLogger("angelgrid.cloud.guardian.toolchain_warden")
 
-# Event types this sentinel cares about
+# Event types this warden cares about
 _TOOL_TYPES = frozenset(
     {
         "ai_tool.invoke",
@@ -39,7 +39,7 @@ _TOOL_BURST_THRESHOLD = 20   # tool invocations per agent per batch
 _VERSION_CHANGE_SEVERITY = "high"
 
 
-class ToolchainSentinel(SubAgent):
+class ToolchainWarden(SubAgent):
     """Tool Smith — watches for tool abuse and supply chain tampering."""
 
     def __init__(self) -> None:
@@ -86,6 +86,10 @@ class ToolchainSentinel(SubAgent):
 
         # 4. Detect tool output injection patterns
         indicators.extend(_detect_output_injection(tool_events))
+
+        # V2.1 — expanded toolchain detection
+        indicators.extend(_detect_dependency_confusion(tool_events))
+        indicators.extend(_detect_unauthorized_tools(tool_events))
 
         logger.info(
             "[TOOL SMITH] Analyzed %d tool events → %d indicators",
@@ -242,4 +246,86 @@ def _detect_output_injection(events: list[dict]) -> list[ThreatIndicator]:
                     )
                 )
                 break  # one indicator per event
+    return indicators
+
+
+def _detect_dependency_confusion(events: list[dict]) -> list[ThreatIndicator]:
+    """V2.1 — Detect dependency confusion / supply chain attacks."""
+    suspicious_patterns = [
+        "install --index-url",
+        "install --extra-index-url",
+        "npm install --registry",
+        "pip install -i ",
+        "gem install --source",
+    ]
+    indicators: list[ThreatIndicator] = []
+    for e in events:
+        details = e.get("details", {})
+        cmd = str(details.get("command", "") or details.get("args", "")).lower()
+        for pattern in suspicious_patterns:
+            if pattern in cmd:
+                agent_id = e.get("agent_id", "")
+                indicators.append(
+                    ThreatIndicator(
+                        indicator_type="toolchain_abuse",
+                        pattern_name="dependency_confusion",
+                        severity="critical",
+                        confidence=0.85,
+                        description=(
+                            f"Dependency confusion: custom package registry usage "
+                            f"on agent {agent_id[:8]}"
+                        ),
+                        related_event_ids=[e.get("id", "")],
+                        related_agent_ids=[agent_id] if agent_id else [],
+                        suggested_playbook="quarantine_agent",
+                        mitre_tactic="persistence",
+                    )
+                )
+                break
+    return indicators
+
+
+def _detect_unauthorized_tools(events: list[dict]) -> list[ThreatIndicator]:
+    """V2.1 — Detect usage of unauthorized/unknown tools."""
+    # Known safe tool families
+    _KNOWN_TOOL_PREFIXES = {
+        "file_", "read_", "write_", "list_", "search_", "query_",
+        "analyze_", "report_", "scan_", "monitor_", "check_",
+    }
+    per_agent_unknown: dict[str, list[str]] = defaultdict(list)
+    per_agent_events: dict[str, list[str]] = defaultdict(list)
+
+    for e in events:
+        if "invoke" not in e.get("type", ""):
+            continue
+        details = e.get("details", {})
+        tool_name = details.get("tool_name", "")
+        agent_id = e.get("agent_id", "")
+        if not tool_name or not agent_id:
+            continue
+        is_known = any(tool_name.lower().startswith(p) for p in _KNOWN_TOOL_PREFIXES)
+        if not is_known:
+            per_agent_unknown[agent_id].append(tool_name)
+            per_agent_events[agent_id].append(e.get("id", ""))
+
+    indicators: list[ThreatIndicator] = []
+    for agent_id, tools in per_agent_unknown.items():
+        if len(tools) >= 3:
+            unique_tools = sorted(set(tools))
+            indicators.append(
+                ThreatIndicator(
+                    indicator_type="toolchain_abuse",
+                    pattern_name="unauthorized_tools",
+                    severity="high",
+                    confidence=0.70,
+                    description=(
+                        f"Unauthorized tools on agent {agent_id[:8]}: "
+                        f"{', '.join(unique_tools[:5])}"
+                    ),
+                    related_event_ids=per_agent_events[agent_id][:20],
+                    related_agent_ids=[agent_id],
+                    suggested_playbook="escalate_to_human",
+                    mitre_tactic="execution",
+                )
+            )
     return indicators

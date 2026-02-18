@@ -39,7 +39,7 @@ async def legion_status():
     return {
         "summary": angel_orchestrator.registry.summary(),
         "agents": angel_orchestrator.registry.info_all(),
-        "circuit_breakers": dict(angel_orchestrator._sentinel_failures),
+        "circuit_breakers": dict(angel_orchestrator._warden_failures),
         "autonomy_mode": angel_orchestrator.autonomy_mode,
     }
 
@@ -59,13 +59,13 @@ async def list_agents():
 
 @router.post("/scan/halo-sweep")
 async def halo_sweep(db: Session = Depends(get_db)):
-    """Halo Sweep — full system scan, all sentinels fire."""
+    """Halo Sweep — full system scan, all wardens fire."""
     return await angel_orchestrator.halo_sweep(db)
 
 
 @router.post("/scan/wing/{domain}")
 async def wing_scan(domain: str, db: Session = Depends(get_db)):
-    """Wing Scan — targeted scan for a single sentinel domain."""
+    """Wing Scan — targeted scan for a single warden domain."""
     return await angel_orchestrator.wing_scan(db, domain)
 
 

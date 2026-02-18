@@ -3,7 +3,7 @@
 #
 # Installs the ANGELNODE agent only, connecting to a remote AngelClaw Cloud.
 # Requires Docker Desktop for Windows.
-# Connects to Angel Legion: 10-agent swarm with 7 specialized sentinels.
+# Connects to Angel Legion: 10-agent swarm with 7 specialized wardens.
 #
 # Usage (PowerShell as Administrator):
 #   Set-ExecutionPolicy Bypass -Scope Process -Force

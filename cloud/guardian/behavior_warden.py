@@ -1,4 +1,4 @@
-"""AngelClaw – Drift Watcher (Behavior Sentinel).
+"""AngelClaw – Drift Watcher (Behavior Warden).
 
 Builds and monitors per-agent behavioral baselines, detecting deviation,
 drift, and peer anomalies.  Composes the existing AnomalyDetector for
@@ -21,14 +21,14 @@ from cloud.guardian.models import (
     ThreatIndicator,
 )
 
-logger = logging.getLogger("angelgrid.cloud.guardian.behavior_sentinel")
+logger = logging.getLogger("angelgrid.cloud.guardian.behavior_warden")
 
 # Thresholds
 _ANOMALY_ALERT_THRESHOLD = 0.65  # score above which we alert
 _PEER_DEVIATION_THRESHOLD = 3.0  # times above peer average
 
 
-class BehaviorSentinel(SubAgent):
+class BehaviorWarden(SubAgent):
     """Drift Watcher — monitors behavioral baselines and peer deviation."""
 
     def __init__(self, detector: AnomalyDetector | None = None) -> None:
@@ -73,6 +73,13 @@ class BehaviorSentinel(SubAgent):
         # 4. Category anomaly — agent suddenly using event categories it never used
         novelty_indicators = _detect_category_novelty(events_data)
         indicators.extend(novelty_indicators)
+
+        # V2.1 — expanded behavior detection
+        # 5. Time-of-day anomaly
+        indicators.extend(_detect_time_of_day_anomaly(events_data))
+
+        # 6. Dormant agent activation
+        indicators.extend(_detect_dormant_agent_activation(events_data))
 
         logger.info(
             "[DRIFT WATCHER] Analyzed %d events from %d agents → %d indicators",
@@ -244,6 +251,81 @@ def _detect_category_novelty(events: list[dict]) -> list[ThreatIndicator]:
                         f"Agent {agent_id[:8]} active across {len(cats)} categories: "
                         f"{', '.join(cats.keys())}"
                     ),
+                    related_agent_ids=[agent_id],
+                    suggested_playbook="escalate_to_human",
+                )
+            )
+    return indicators
+
+
+def _detect_time_of_day_anomaly(events: list[dict]) -> list[ThreatIndicator]:
+    """V2.1 — Detect agents active at unusual hours (potential compromise)."""
+    from datetime import datetime
+
+    per_agent_hours: dict[str, list[int]] = defaultdict(list)
+    for e in events:
+        agent_id = e.get("agent_id", "")
+        if not agent_id:
+            continue
+        ts = e.get("timestamp")
+        if isinstance(ts, str):
+            try:
+                ts = datetime.fromisoformat(ts)
+            except (ValueError, TypeError):
+                continue
+        elif not isinstance(ts, datetime):
+            continue
+        per_agent_hours[agent_id].append(ts.hour)
+
+    indicators: list[ThreatIndicator] = []
+    # Off-hours: midnight to 5 AM
+    off_hours = set(range(0, 6))
+    for agent_id, hours in per_agent_hours.items():
+        off_count = sum(1 for h in hours if h in off_hours)
+        if off_count >= 3 and off_count / max(len(hours), 1) > 0.5:
+            indicators.append(
+                ThreatIndicator(
+                    indicator_type="behavioral_anomaly",
+                    pattern_name="off_hours_activity",
+                    severity="medium",
+                    confidence=0.65,
+                    description=(
+                        f"Off-hours activity: agent {agent_id[:8]} has "
+                        f"{off_count}/{len(hours)} events between midnight-5AM"
+                    ),
+                    related_agent_ids=[agent_id],
+                    suggested_playbook="escalate_to_human",
+                )
+            )
+    return indicators
+
+
+def _detect_dormant_agent_activation(events: list[dict]) -> list[ThreatIndicator]:
+    """V2.1 — Detect sudden activation of previously dormant agents."""
+    per_agent: dict[str, list[dict]] = defaultdict(list)
+    for e in events:
+        agent_id = e.get("agent_id", "")
+        if agent_id:
+            per_agent[agent_id].append(e)
+
+    indicators: list[ThreatIndicator] = []
+    for agent_id, agent_events in per_agent.items():
+        # Check if agent has high-severity events but was previously unknown
+        high_sev_count = sum(
+            1 for e in agent_events if e.get("severity") in ("high", "critical")
+        )
+        if high_sev_count >= 3 and len(agent_events) <= high_sev_count + 2:
+            indicators.append(
+                ThreatIndicator(
+                    indicator_type="behavioral_anomaly",
+                    pattern_name="dormant_agent_activation",
+                    severity="high",
+                    confidence=0.70,
+                    description=(
+                        f"Dormant agent activation: {agent_id[:8]} suddenly produced "
+                        f"{high_sev_count} high-severity events"
+                    ),
+                    related_event_ids=[e.get("id", "") for e in agent_events[:10]],
                     related_agent_ids=[agent_id],
                     suggested_playbook="escalate_to_human",
                 )

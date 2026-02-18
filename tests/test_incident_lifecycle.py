@@ -238,8 +238,8 @@ class TestTaskResultModels:
         """AgentResult captures task outcome."""
         result = AgentResult(
             task_id="t1",
-            agent_id="sentinel-abc",
-            agent_type="sentinel",
+            agent_id="warden-abc",
+            agent_type="warden",
             success=True,
             result_data={"indicators_found": 3},
             duration_ms=42.5,
@@ -279,7 +279,7 @@ class TestOrchestratorIncidents:
         orch = AngelOrchestrator()
         agents = orch.status()["agents"]
         agent_types = {info["agent_type"] for info in agents.values()}
-        for expected in ("sentinel", "response", "forensic", "audit",
+        for expected in ("warden", "response", "forensic", "audit",
                          "network", "secrets", "toolchain", "behavior",
                          "timeline", "browser"):
             assert expected in agent_types, f"Missing agent type: {expected}"

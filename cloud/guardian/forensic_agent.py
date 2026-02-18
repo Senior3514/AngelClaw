@@ -42,6 +42,23 @@ _KILL_CHAIN_MAP: dict[str, str] = {
     "upload": "exfiltration",
     "delete": "impact",
     "drop": "impact",
+    # V2.1 — expanded kill chain mapping
+    "enumerate": "reconnaissance",
+    "discover": "reconnaissance",
+    "exploit": "execution",
+    "inject": "execution",
+    "crontab": "persistence",
+    "registry": "persistence",
+    "escalat": "privilege_escalation",
+    "setuid": "privilege_escalation",
+    "dump": "credential_access",
+    "crack": "credential_access",
+    "lateral": "lateral_movement",
+    "pivot": "lateral_movement",
+    "encrypt": "impact",
+    "ransom": "impact",
+    "exfil": "exfiltration",
+    "tunnel": "exfiltration",
 }
 
 
@@ -219,10 +236,16 @@ class ForensicAgent(SubAgent):
                 sev = ev.data.get("severity", "low")
                 sev_counts[sev] = sev_counts.get(sev, 0) + 1
 
+        # V2.1 — IOC extraction and evidence scoring
+        iocs = self._extract_iocs(evidence)
+        evidence_score = self._score_evidence(evidence)
+
         impact = (
             f"{len(evidence)} evidence items collected. "
             f"Severity breakdown: {sev_counts}. "
-            f"Kill chain depth: {len(kill_chain)} stages."
+            f"Kill chain depth: {len(kill_chain)} stages. "
+            f"Evidence severity score: {evidence_score:.2f}. "
+            f"IOCs extracted: {sum(len(v) for v in iocs.values())}."
         )
 
         return ForensicReport(
@@ -279,6 +302,13 @@ class ForensicAgent(SubAgent):
             recs.append("Review and tighten permission policies for affected agents.")
         if "persistence" in kill_chain:
             recs.append("Scan for unauthorized file modifications and backdoors.")
+        # V2.1 — expanded recommendations
+        if "lateral_movement" in kill_chain:
+            recs.append("Isolate affected agents and scan peer nodes for compromise indicators.")
+        if "reconnaissance" in kill_chain:
+            recs.append("Review agent permissions — restrict information gathering capabilities.")
+        if "impact" in kill_chain:
+            recs.append("Initiate disaster recovery procedures and verify backup integrity.")
 
         secret_events = [
             e
@@ -295,6 +325,97 @@ class ForensicAgent(SubAgent):
             recs.append("Continue monitoring the affected agent for further anomalies.")
 
         return recs
+
+    # ------------------------------------------------------------------
+    # V2.1 — IOC extraction
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _extract_iocs(evidence: list[ForensicEvidence]) -> dict:
+        """Extract Indicators of Compromise from evidence.
+
+        Returns a dict of IOC categories → list of values.
+        """
+        import re
+
+        iocs: dict[str, set[str]] = {
+            "ip_addresses": set(),
+            "domains": set(),
+            "file_hashes": set(),
+            "file_paths": set(),
+            "commands": set(),
+            "user_agents": set(),
+        }
+
+        ip_re = re.compile(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b")
+        hash_re = re.compile(r"\b[0-9a-f]{32,64}\b")
+        domain_re = re.compile(r"\b[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}\b")
+
+        for ev in evidence:
+            if ev.evidence_type != "event":
+                continue
+            details = ev.data.get("details", {})
+            if isinstance(details, dict):
+                # Extract IPs
+                for key in ("source_ip", "dst_ip", "ip", "remote_addr"):
+                    val = details.get(key, "")
+                    if val and ip_re.match(str(val)):
+                        iocs["ip_addresses"].add(str(val))
+
+                # Extract domains
+                for key in ("domain", "dns_query", "hostname", "url"):
+                    val = str(details.get(key, ""))
+                    for match in domain_re.findall(val):
+                        iocs["domains"].add(match)
+
+                # Extract file paths
+                for key in ("path", "file_path", "target_path"):
+                    val = details.get(key, "")
+                    if val:
+                        iocs["file_paths"].add(str(val))
+
+                # Extract commands
+                cmd = details.get("command", "")
+                if cmd:
+                    iocs["commands"].add(str(cmd)[:200])
+
+                # Extract hashes
+                for key in ("hash", "sha256", "md5", "sha1"):
+                    val = details.get(key, "")
+                    if val and hash_re.match(str(val)):
+                        iocs["file_hashes"].add(str(val))
+
+        return {k: sorted(v)[:50] for k, v in iocs.items() if v}
+
+    # ------------------------------------------------------------------
+    # V2.1 — Evidence scoring
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _score_evidence(evidence: list[ForensicEvidence]) -> float:
+        """Score the overall severity of collected evidence (0.0 - 1.0)."""
+        if not evidence:
+            return 0.0
+
+        sev_weights = {"critical": 1.0, "high": 0.7, "medium": 0.4, "low": 0.1, "info": 0.0}
+        total_weight = 0.0
+        count = 0
+
+        for ev in evidence:
+            if ev.evidence_type == "event":
+                sev = ev.data.get("severity", "low")
+                total_weight += sev_weights.get(sev, 0.0)
+                count += 1
+
+        if count == 0:
+            return 0.0
+
+        # Base score from severity
+        avg_sev = total_weight / count
+        # Volume bonus (more evidence = more concerning)
+        volume_bonus = min(0.2, count * 0.01)
+
+        return round(min(1.0, avg_sev + volume_bonus), 3)
 
 
 def _safe_details(details: dict | None) -> dict:

@@ -24,7 +24,7 @@
 
 | Agent Name          | Code Name     | AgentType   | Role                                  |
 |---------------------|---------------|-------------|---------------------------------------|
-| **Vigil**           | Vigil         | sentinel    | Original pattern/anomaly/correlation  |
+| **Vigil**           | Vigil         | warden      | Original pattern/anomaly/correlation  |
 | **Net Warden**      | Net Warden    | network     | Network exposure and connection watch |
 | **Vault Keeper**    | Vault Keeper  | secrets     | Secret/credential monitoring          |
 | **Tool Smith**      | Tool Smith    | toolchain   | AI tool and supply chain integrity    |
@@ -56,8 +56,8 @@ Higher serenity = lower risk. Used in all user-facing output.
 
 | Name              | Scope                                                    |
 |-------------------|----------------------------------------------------------|
-| **Halo Sweep**    | Full system scan — all sentinels fire simultaneously     |
-| **Wing Scan**     | Targeted scan — single sentinel domain (network, etc.)   |
+| **Halo Sweep**    | Full system scan — all wardens fire simultaneously       |
+| **Wing Scan**     | Targeted scan — single warden domain (network, etc.)     |
 | **Pulse Check**   | Quick health/connectivity check of all agents            |
 | **Deep Dive**     | Forensic-grade investigation on a specific agent/event   |
 
@@ -67,7 +67,7 @@ Higher serenity = lower risk. Used in all user-facing output.
 
 | Name                  | Content                                              |
 |-----------------------|------------------------------------------------------|
-| **Dome Shield Report**| Full multi-sentinel threat assessment                |
+| **Dome Shield Report**| Full multi-warden threat assessment                  |
 | **Guardian Scroll**   | Periodic summary report (hourly/daily heartbeat)     |
 | **Incident Codex**    | Single incident full report with forensics           |
 | **Audit Parchment**   | Compliance and change audit report                   |

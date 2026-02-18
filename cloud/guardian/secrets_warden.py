@@ -1,4 +1,4 @@
-"""AngelClaw – Vault Keeper (Secrets Sentinel).
+"""AngelClaw – Vault Keeper (Secrets Warden).
 
 Monitors secret-access events, credential rotation status, and secret
 sprawl.  Reuses the shared secret_scanner for pattern detection.
@@ -19,9 +19,9 @@ from cloud.guardian.models import (
     ThreatIndicator,
 )
 
-logger = logging.getLogger("angelgrid.cloud.guardian.secrets_sentinel")
+logger = logging.getLogger("angelgrid.cloud.guardian.secrets_warden")
 
-# Event types this sentinel cares about
+# Event types this warden cares about
 _SECRET_TYPES = frozenset(
     {
         "secret.access",
@@ -40,7 +40,7 @@ _ACCESS_BURST_THRESHOLD = 5  # N secret accesses from one agent in one batch = s
 _FAILED_AUTH_THRESHOLD = 3   # N failed logins from one agent
 
 
-class SecretsSentinel(SubAgent):
+class SecretsWarden(SubAgent):
     """Vault Keeper — watches for secret exposure and credential abuse."""
 
     def __init__(self) -> None:
@@ -104,6 +104,16 @@ class SecretsSentinel(SubAgent):
                         mitre_tactic="exfiltration",
                     )
                 )
+
+        # V2.1 — expanded secret detection
+        # 5. Credential rotation gap
+        indicators.extend(_detect_credential_rotation_gap(secret_events))
+
+        # 6. Cross-agent secret sharing
+        indicators.extend(_detect_cross_agent_secret_sharing(events_data))
+
+        # 7. High-entropy payload detection
+        indicators.extend(_detect_high_entropy_payloads(events_data))
 
         logger.info(
             "[VAULT KEEPER] Analyzed %d secret events → %d indicators",
@@ -221,4 +231,115 @@ def _detect_auth_brute_force(events: list[dict]) -> list[ThreatIndicator]:
                 mitre_tactic="credential_access",
             )
         )
+    return indicators
+
+
+def _detect_credential_rotation_gap(events: list[dict]) -> list[ThreatIndicator]:
+    """V2.1 — Flag agents accessing secrets without recent credential rotation."""
+    per_agent_access: dict[str, int] = defaultdict(int)
+    per_agent_rotation: dict[str, int] = defaultdict(int)
+
+    for e in events:
+        agent_id = e.get("agent_id", "")
+        if not agent_id:
+            continue
+        etype = e.get("type", "")
+        if "access" in etype.lower():
+            per_agent_access[agent_id] += 1
+        if "rotation" in etype.lower():
+            per_agent_rotation[agent_id] += 1
+
+    indicators: list[ThreatIndicator] = []
+    for agent_id, access_count in per_agent_access.items():
+        if access_count >= 5 and per_agent_rotation.get(agent_id, 0) == 0:
+            indicators.append(
+                ThreatIndicator(
+                    indicator_type="secret_exposure",
+                    pattern_name="stale_credentials",
+                    severity="medium",
+                    confidence=0.65,
+                    description=(
+                        f"Agent {agent_id[:8]} accessed {access_count} secrets "
+                        f"with no credential rotation detected"
+                    ),
+                    related_agent_ids=[agent_id],
+                    suggested_playbook="rotate_credentials",
+                    mitre_tactic="credential_access",
+                )
+            )
+    return indicators
+
+
+def _detect_cross_agent_secret_sharing(events: list[dict]) -> list[ThreatIndicator]:
+    """V2.1 — Detect multiple agents accessing the same secret."""
+    secret_agents: dict[str, set[str]] = defaultdict(set)
+    secret_events: dict[str, list[str]] = defaultdict(list)
+
+    for e in events:
+        agent_id = e.get("agent_id", "")
+        details = e.get("details", {})
+        secret_path = details.get("secret_path", "") or details.get("secret_name", "")
+        if agent_id and secret_path:
+            secret_agents[secret_path].add(agent_id)
+            secret_events[secret_path].append(e.get("id", ""))
+
+    indicators: list[ThreatIndicator] = []
+    for secret_path, agents in secret_agents.items():
+        if len(agents) >= 2:
+            indicators.append(
+                ThreatIndicator(
+                    indicator_type="secret_exposure",
+                    pattern_name="cross_agent_secret_access",
+                    severity="high",
+                    confidence=0.75,
+                    description=(
+                        f"Secret '{secret_path[:30]}' accessed by {len(agents)} "
+                        f"different agents"
+                    ),
+                    related_event_ids=secret_events[secret_path][:20],
+                    related_agent_ids=sorted(agents)[:10],
+                    suggested_playbook="escalate_to_human",
+                    mitre_tactic="credential_access",
+                )
+            )
+    return indicators
+
+
+def _detect_high_entropy_payloads(events: list[dict]) -> list[ThreatIndicator]:
+    """V2.1 — Detect high-entropy payloads that may indicate encrypted exfiltration."""
+    import math
+
+    def _entropy(text: str) -> float:
+        if not text:
+            return 0.0
+        freq: dict[str, int] = {}
+        for c in text:
+            freq[c] = freq.get(c, 0) + 1
+        length = len(text)
+        return -sum((count / length) * math.log2(count / length) for count in freq.values())
+
+    indicators: list[ThreatIndicator] = []
+    for e in events:
+        details = e.get("details", {})
+        payload = details.get("payload", "") or details.get("body", "") or details.get("data", "")
+        if isinstance(payload, str) and len(payload) >= 50:
+            ent = _entropy(payload)
+            if ent >= 4.5:  # high entropy threshold
+                agent_id = e.get("agent_id", "")
+                indicators.append(
+                    ThreatIndicator(
+                        indicator_type="secret_exposure",
+                        pattern_name="high_entropy_payload",
+                        severity="high",
+                        confidence=0.70,
+                        description=(
+                            f"High-entropy payload (entropy={ent:.2f}) from agent "
+                            f"{agent_id[:8]} — potential encrypted exfiltration"
+                        ),
+                        related_event_ids=[e.get("id", "")],
+                        related_agent_ids=[agent_id] if agent_id else [],
+                        suggested_playbook="quarantine_agent",
+                        mitre_tactic="exfiltration",
+                    )
+                )
     return indicators

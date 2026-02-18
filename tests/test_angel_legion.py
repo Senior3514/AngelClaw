@@ -1,7 +1,7 @@
-"""Tests for the Angel Legion — V2 sentinels and registry.
+"""Tests for the Angel Legion — V2 wardens and registry.
 
-Covers: NetworkSentinel, BrowserSentinel, ToolchainSentinel,
-TimelineSentinel, SecretsSentinel, BehaviorSentinel, AgentRegistry.
+Covers: NetworkWarden, BrowserWarden, ToolchainWarden,
+TimelineWarden, SecretsWarden, BehaviorWarden, AgentRegistry.
 """
 
 import asyncio
@@ -36,15 +36,15 @@ def _ts(offset_seconds=0):
 
 
 # =====================================================================
-#  NetworkSentinel
+#  NetworkWarden
 # =====================================================================
 
-class TestNetworkSentinel:
+class TestNetworkWarden:
     """Net Warden tests."""
 
     def _make(self):
-        from cloud.guardian.network_sentinel import NetworkSentinel
-        return NetworkSentinel()
+        from cloud.guardian.network_warden import NetworkWarden
+        return NetworkWarden()
 
     def test_init(self):
         s = self._make()
@@ -274,15 +274,15 @@ class TestNetworkSentinel:
 
 
 # =====================================================================
-#  BrowserSentinel
+#  BrowserWarden
 # =====================================================================
 
-class TestBrowserSentinel:
+class TestBrowserWarden:
     """Glass Eye tests."""
 
     def _make(self):
-        from cloud.guardian.browser_sentinel import BrowserSentinel
-        return BrowserSentinel()
+        from cloud.guardian.browser_warden import BrowserWarden
+        return BrowserWarden()
 
     def test_init(self):
         s = self._make()
@@ -564,15 +564,15 @@ class TestBrowserSentinel:
 
 
 # =====================================================================
-#  ToolchainSentinel
+#  ToolchainWarden
 # =====================================================================
 
-class TestToolchainSentinel:
+class TestToolchainWarden:
     """Tool Smith tests."""
 
     def _make(self):
-        from cloud.guardian.toolchain_sentinel import ToolchainSentinel
-        return ToolchainSentinel()
+        from cloud.guardian.toolchain_warden import ToolchainWarden
+        return ToolchainWarden()
 
     def test_init(self):
         s = self._make()
@@ -783,15 +783,15 @@ class TestToolchainSentinel:
 
 
 # =====================================================================
-#  SecretsSentinel
+#  SecretsWarden
 # =====================================================================
 
-class TestSecretsSentinel:
+class TestSecretsWarden:
     """Vault Keeper tests."""
 
     def _make(self):
-        from cloud.guardian.secrets_sentinel import SecretsSentinel
-        return SecretsSentinel()
+        from cloud.guardian.secrets_warden import SecretsWarden
+        return SecretsWarden()
 
     def test_init(self):
         s = self._make()
@@ -933,15 +933,15 @@ class TestSecretsSentinel:
 
 
 # =====================================================================
-#  TimelineSentinel
+#  TimelineWarden
 # =====================================================================
 
-class TestTimelineSentinel:
+class TestTimelineWarden:
     """Chronicle tests."""
 
     def _make(self):
-        from cloud.guardian.timeline_sentinel import TimelineSentinel
-        return TimelineSentinel()
+        from cloud.guardian.timeline_warden import TimelineWarden
+        return TimelineWarden()
 
     def test_init(self):
         s = self._make()
@@ -1068,24 +1068,24 @@ class TestTimelineSentinel:
         )
 
     def test_parse_timestamp_datetime_object(self):
-        from cloud.guardian.timeline_sentinel import _parse_timestamp
+        from cloud.guardian.timeline_warden import _parse_timestamp
         dt = datetime(2026, 1, 1, tzinfo=timezone.utc)
         assert _parse_timestamp(dt) == dt
 
     def test_parse_timestamp_string(self):
-        from cloud.guardian.timeline_sentinel import _parse_timestamp
+        from cloud.guardian.timeline_warden import _parse_timestamp
         result = _parse_timestamp("2026-01-15T12:00:00+00:00")
         assert result is not None
         assert result.year == 2026
 
     def test_parse_timestamp_invalid(self):
-        from cloud.guardian.timeline_sentinel import _parse_timestamp
+        from cloud.guardian.timeline_warden import _parse_timestamp
         assert _parse_timestamp("not-a-date") is None
         assert _parse_timestamp(None) is None
         assert _parse_timestamp(12345) is None
 
     def test_is_subsequence(self):
-        from cloud.guardian.timeline_sentinel import _is_subsequence
+        from cloud.guardian.timeline_warden import _is_subsequence
         assert _is_subsequence(["a", "c"], ["a", "b", "c", "d"])
         assert not _is_subsequence(["c", "a"], ["a", "b", "c"])
         assert _is_subsequence([], ["a", "b"])
@@ -1100,15 +1100,15 @@ class TestTimelineSentinel:
 
 
 # =====================================================================
-#  BehaviorSentinel
+#  BehaviorWarden
 # =====================================================================
 
-class TestBehaviorSentinel:
+class TestBehaviorWarden:
     """Drift Watcher tests."""
 
     def _make(self):
-        from cloud.guardian.behavior_sentinel import BehaviorSentinel
-        return BehaviorSentinel()
+        from cloud.guardian.behavior_warden import BehaviorWarden
+        return BehaviorWarden()
 
     def test_init(self):
         s = self._make()
@@ -1299,21 +1299,21 @@ class TestAgentRegistry:
         from cloud.guardian.registry import AgentRegistry
         return AgentRegistry()
 
-    def _sentinel(self):
-        from cloud.guardian.sentinel_agent import SentinelAgent
-        return SentinelAgent()
+    def _warden(self):
+        from cloud.guardian.warden_agent import WardenAgent
+        return WardenAgent()
 
     def _network(self):
-        from cloud.guardian.network_sentinel import NetworkSentinel
-        return NetworkSentinel()
+        from cloud.guardian.network_warden import NetworkWarden
+        return NetworkWarden()
 
     def _browser(self):
-        from cloud.guardian.browser_sentinel import BrowserSentinel
-        return BrowserSentinel()
+        from cloud.guardian.browser_warden import BrowserWarden
+        return BrowserWarden()
 
     def test_register_and_get(self):
         reg = self._make()
-        s = self._sentinel()
+        s = self._warden()
         reg.register(s)
         assert reg.get(s.agent_id) is s
 
@@ -1323,9 +1323,9 @@ class TestAgentRegistry:
 
     def test_get_by_type(self):
         reg = self._make()
-        s = self._sentinel()
+        s = self._warden()
         reg.register(s)
-        found = reg.get_by_type(AgentType.SENTINEL)
+        found = reg.get_by_type(AgentType.WARDEN)
         assert len(found) == 1
         assert found[0] is s
 
@@ -1335,9 +1335,9 @@ class TestAgentRegistry:
 
     def test_get_first(self):
         reg = self._make()
-        s = self._sentinel()
+        s = self._warden()
         reg.register(s)
-        assert reg.get_first(AgentType.SENTINEL) is s
+        assert reg.get_first(AgentType.WARDEN) is s
 
     def test_get_first_none(self):
         reg = self._make()
@@ -1345,28 +1345,28 @@ class TestAgentRegistry:
 
     def test_all_agents(self):
         reg = self._make()
-        s1 = self._sentinel()
+        s1 = self._warden()
         s2 = self._network()
         reg.register(s1)
         reg.register(s2)
         assert len(reg.all_agents()) == 2
 
-    def test_all_sentinels(self):
+    def test_all_wardens(self):
         reg = self._make()
         from cloud.guardian.response_agent import ResponseAgent
-        s1 = self._sentinel()
+        s1 = self._warden()
         s2 = self._network()
         resp = ResponseAgent()
         reg.register(s1)
         reg.register(s2)
         reg.register(resp)
-        sentinels = reg.all_sentinels()
-        assert len(sentinels) == 2  # sentinel and network are sentinel types
-        assert resp not in sentinels
+        wardens = reg.all_wardens()
+        assert len(wardens) == 2  # warden and network are warden types
+        assert resp not in wardens
 
     def test_active_agents(self):
         reg = self._make()
-        s1 = self._sentinel()
+        s1 = self._warden()
         s2 = self._network()
         s2.status = AgentStatus.STOPPED
         reg.register(s1)
@@ -1377,7 +1377,7 @@ class TestAgentRegistry:
 
     def test_active_excludes_error(self):
         reg = self._make()
-        s = self._sentinel()
+        s = self._warden()
         s.status = AgentStatus.ERROR
         reg.register(s)
         assert len(reg.active_agents()) == 0
@@ -1385,7 +1385,7 @@ class TestAgentRegistry:
     def test_count(self):
         reg = self._make()
         assert reg.count == 0
-        reg.register(self._sentinel())
+        reg.register(self._warden())
         assert reg.count == 1
         reg.register(self._network())
         assert reg.count == 2
@@ -1393,7 +1393,7 @@ class TestAgentRegistry:
     @pytest.mark.asyncio
     async def test_shutdown_all(self):
         reg = self._make()
-        s1 = self._sentinel()
+        s1 = self._warden()
         s2 = self._network()
         reg.register(s1)
         reg.register(s2)
@@ -1403,22 +1403,22 @@ class TestAgentRegistry:
 
     def test_info_all(self):
         reg = self._make()
-        s = self._sentinel()
+        s = self._warden()
         reg.register(s)
         info = reg.info_all()
         assert s.agent_id in info
-        assert info[s.agent_id]["agent_type"] == "sentinel"
+        assert info[s.agent_id]["agent_type"] == "warden"
 
     def test_summary(self):
         reg = self._make()
-        reg.register(self._sentinel())
+        reg.register(self._warden())
         reg.register(self._network())
         reg.register(self._browser())
         summary = reg.summary()
         assert summary["total_agents"] == 3
-        assert summary["sentinels"] == 3  # all are sentinel types
+        assert summary["wardens"] == 3  # all are warden types
         assert "idle" in summary["by_status"]
-        assert "sentinel" in summary["by_type"]
+        assert "warden" in summary["by_type"]
         assert "network" in summary["by_type"]
         assert "browser" in summary["by_type"]
 
@@ -1428,11 +1428,11 @@ class TestAgentRegistry:
 # =====================================================================
 
 class TestBaseAgentExecute:
-    """Test the SubAgent.execute wrapper with new sentinels."""
+    """Test the SubAgent.execute wrapper with new wardens."""
 
     def test_execute_success(self):
-        from cloud.guardian.network_sentinel import NetworkSentinel
-        s = NetworkSentinel()
+        from cloud.guardian.network_warden import NetworkWarden
+        s = NetworkWarden()
         task = AgentTask(
             task_type="detect",
             payload={"events": []},
@@ -1444,8 +1444,8 @@ class TestBaseAgentExecute:
         assert s._tasks_completed == 1
 
     def test_execute_permission_error(self):
-        from cloud.guardian.network_sentinel import NetworkSentinel
-        s = NetworkSentinel()
+        from cloud.guardian.network_warden import NetworkWarden
+        s = NetworkWarden()
         s.permissions = set()  # remove all permissions
         task = AgentTask(task_type="detect", payload={"events": [{"type": "network.dns"}]})
         result = _run(s.execute(task))
@@ -1455,14 +1455,14 @@ class TestBaseAgentExecute:
 
 
 # =====================================================================
-#  SENTINEL_TYPES constant
+#  WARDEN_TYPES constant
 # =====================================================================
 
-class TestSentinelTypesConstant:
-    def test_all_sentinel_types_present(self):
-        from cloud.guardian.registry import SENTINEL_TYPES
+class TestWardenTypesConstant:
+    def test_all_warden_types_present(self):
+        from cloud.guardian.registry import WARDEN_TYPES
         expected = {
-            AgentType.SENTINEL,
+            AgentType.WARDEN,
             AgentType.NETWORK,
             AgentType.SECRETS,
             AgentType.TOOLCHAIN,
@@ -1470,10 +1470,10 @@ class TestSentinelTypesConstant:
             AgentType.TIMELINE,
             AgentType.BROWSER,
         }
-        assert SENTINEL_TYPES == expected
+        assert WARDEN_TYPES == expected
 
-    def test_response_not_sentinel(self):
-        from cloud.guardian.registry import SENTINEL_TYPES
-        assert AgentType.RESPONSE not in SENTINEL_TYPES
-        assert AgentType.FORENSIC not in SENTINEL_TYPES
-        assert AgentType.AUDIT not in SENTINEL_TYPES
+    def test_response_not_warden(self):
+        from cloud.guardian.registry import WARDEN_TYPES
+        assert AgentType.RESPONSE not in WARDEN_TYPES
+        assert AgentType.FORENSIC not in WARDEN_TYPES
+        assert AgentType.AUDIT not in WARDEN_TYPES

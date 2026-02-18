@@ -178,16 +178,16 @@ jobs:
           from angelnode.core.engine import PolicyEngine, BurstTracker
           from cloud.guardian.orchestrator import AngelOrchestrator
           from cloud.guardian.models import Incident, IncidentState, ThreatIndicator
-          from cloud.guardian.sentinel_agent import SentinelAgent
+          from cloud.guardian.warden_agent import WardenAgent
           from cloud.guardian.response_agent import ResponseAgent
           from cloud.guardian.forensic_agent import ForensicAgent
           from cloud.guardian.audit_agent import AuditAgent
-          from cloud.guardian.network_sentinel import NetworkSentinel
-          from cloud.guardian.browser_sentinel import BrowserSentinel
-          from cloud.guardian.toolchain_sentinel import ToolchainSentinel
-          from cloud.guardian.timeline_sentinel import TimelineSentinel
-          from cloud.guardian.secrets_sentinel import SecretsSentinel
-          from cloud.guardian.behavior_sentinel import BehaviorSentinel
+          from cloud.guardian.network_warden import NetworkWarden
+          from cloud.guardian.browser_warden import BrowserWarden
+          from cloud.guardian.toolchain_warden import ToolchainWarden
+          from cloud.guardian.timeline_warden import TimelineWarden
+          from cloud.guardian.secrets_warden import SecretsWarden
+          from cloud.guardian.behavior_warden import BehaviorWarden
           from cloud.guardian.registry import AgentRegistry
           from cloud.guardian.learning import LearningEngine
           from cloud.guardian.self_audit import SelfAuditReport

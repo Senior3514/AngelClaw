@@ -1,16 +1,16 @@
 """AngelClaw – Seraph AGI Orchestrator (V2.0).
 
 The central brain of the Angel Legion.  Receives events, dispatches
-them to ALL sentinels in parallel (fan-out), manages incident lifecycle,
+them to ALL wardens in parallel (fan-out), manages incident lifecycle,
 and coordinates autonomous behavior.
 
 V2 upgrades:
   - Dynamic AgentRegistry replaces hard-coded agent attributes
-  - Multi-sentinel fan-out via asyncio.gather
+  - Multi-warden fan-out via asyncio.gather
   - Autonomy modes: observe / suggest / auto_apply
   - Halo Sweep, Wing Scan, Pulse Check scan types
-  - Circuit breaker for failing sentinels
-  - Backward-compatible .sentinel/.response/.forensic/.audit properties
+  - Circuit breaker for failing wardens
+  - Backward-compatible .warden/.response/.forensic/.audit properties
 
 Runs as a singleton background service inside the Cloud process.
 """
@@ -26,8 +26,8 @@ from sqlalchemy.orm import Session
 
 from cloud.db.models import EventRow, GuardianAlertRow
 from cloud.guardian.audit_agent import AuditAgent
-from cloud.guardian.behavior_sentinel import BehaviorSentinel
-from cloud.guardian.browser_sentinel import BrowserSentinel
+from cloud.guardian.behavior_warden import BehaviorWarden
+from cloud.guardian.browser_warden import BrowserWarden
 from cloud.guardian.forensic_agent import ForensicAgent
 from cloud.guardian.models import (
     AgentTask,
@@ -36,17 +36,17 @@ from cloud.guardian.models import (
     IncidentState,
     ThreatIndicator,
 )
-from cloud.guardian.network_sentinel import NetworkSentinel
+from cloud.guardian.network_warden import NetworkWarden
 from cloud.guardian.registry import AgentRegistry
 from cloud.guardian.response_agent import ResponseAgent
-from cloud.guardian.secrets_sentinel import SecretsSentinel
-from cloud.guardian.sentinel_agent import SentinelAgent
-from cloud.guardian.timeline_sentinel import TimelineSentinel
-from cloud.guardian.toolchain_sentinel import ToolchainSentinel
+from cloud.guardian.secrets_warden import SecretsWarden
+from cloud.guardian.warden_agent import WardenAgent
+from cloud.guardian.timeline_warden import TimelineWarden
+from cloud.guardian.toolchain_warden import ToolchainWarden
 
 logger = logging.getLogger("angelgrid.cloud.guardian.orchestrator")
 
-# Circuit breaker: skip a sentinel after this many consecutive failures
+# Circuit breaker: skip a warden after this many consecutive failures
 _CIRCUIT_BREAKER_THRESHOLD = 3
 
 
@@ -58,20 +58,20 @@ class AngelOrchestrator:
         self.registry = AgentRegistry()
 
         # Create and register V1 core agents
-        self._sentinel = SentinelAgent()
+        self._warden = WardenAgent()
         self._response = ResponseAgent()
         self._forensic = ForensicAgent()
         self._audit = AuditAgent()
-        for agent in [self._sentinel, self._response, self._forensic, self._audit]:
+        for agent in [self._warden, self._response, self._forensic, self._audit]:
             self.registry.register(agent)
 
-        # Create and register V2 Angel Legion sentinels
-        self._network = NetworkSentinel()
-        self._secrets = SecretsSentinel()
-        self._toolchain = ToolchainSentinel()
-        self._behavior = BehaviorSentinel()
-        self._timeline = TimelineSentinel()
-        self._browser = BrowserSentinel()
+        # Create and register V2 Angel Legion wardens
+        self._network = NetworkWarden()
+        self._secrets = SecretsWarden()
+        self._toolchain = ToolchainWarden()
+        self._behavior = BehaviorWarden()
+        self._timeline = TimelineWarden()
+        self._browser = BrowserWarden()
         for agent in [
             self._network, self._secrets, self._toolchain,
             self._behavior, self._timeline, self._browser,
@@ -96,15 +96,15 @@ class AngelOrchestrator:
         self._autonomy_mode: str = "suggest"
 
         # Circuit breaker state: agent_id -> consecutive failures
-        self._sentinel_failures: dict[str, int] = {}
+        self._warden_failures: dict[str, int] = {}
 
     # ------------------------------------------------------------------
     # Backward-compatible properties
     # ------------------------------------------------------------------
 
     @property
-    def sentinel(self) -> SentinelAgent:
-        return self._sentinel
+    def warden(self) -> WardenAgent:
+        return self._warden
 
     @property
     def response(self) -> ResponseAgent:
@@ -145,9 +145,9 @@ class AngelOrchestrator:
         self._running = True
         self._audit_task = asyncio.create_task(self._audit_loop())
         logger.info(
-            "[SERAPH] Started — Angel Legion: %d agents (%d sentinels), mode=%s",
+            "[SERAPH] Started — Angel Legion: %d agents (%d wardens), mode=%s",
             self.registry.count,
-            len(self.registry.all_sentinels()),
+            len(self.registry.all_wardens()),
             self._autonomy_mode,
         )
 
@@ -183,14 +183,14 @@ class AngelOrchestrator:
     ) -> list[ThreatIndicator]:
         """Main entry point: analyze events through the full pipeline.
 
-        Pipeline: Events → All Sentinels (fan-out) → Indicators → Incidents → Response
+        Pipeline: Events → All Wardens (fan-out) → Indicators → Incidents → Response
         """
         if not events:
             return []
 
         self._events_processed += len(events)
 
-        # Step 1: Fan-out to ALL sentinels for detection
+        # Step 1: Fan-out to ALL wardens for detection
         indicators = await self._run_detection(events)
         self._indicators_found += len(indicators)
 
@@ -219,14 +219,14 @@ class AngelOrchestrator:
         return indicators
 
     # ------------------------------------------------------------------
-    # Detection — Multi-Sentinel Fan-Out
+    # Detection — Multi-Warden Fan-Out
     # ------------------------------------------------------------------
 
     async def _run_detection(
         self,
         events: list[EventRow],
     ) -> list[ThreatIndicator]:
-        """Fan out events to ALL sentinels, aggregate and deduplicate indicators."""
+        """Fan out events to ALL wardens, aggregate and deduplicate indicators."""
         serialized = [
             {
                 "id": e.id,
@@ -241,65 +241,65 @@ class AngelOrchestrator:
             for e in events
         ]
 
-        sentinels = self.registry.all_sentinels()
+        wardens = self.registry.all_wardens()
 
-        # Filter out circuit-broken sentinels
-        active_sentinels = [
-            s for s in sentinels
-            if self._sentinel_failures.get(s.agent_id, 0) < _CIRCUIT_BREAKER_THRESHOLD
+        # Filter out circuit-broken wardens
+        active_wardens = [
+            s for s in wardens
+            if self._warden_failures.get(s.agent_id, 0) < _CIRCUIT_BREAKER_THRESHOLD
         ]
 
-        if not active_sentinels:
-            logger.warning("[SERAPH] All sentinels circuit-broken! Resetting.")
-            self._sentinel_failures.clear()
-            active_sentinels = sentinels
+        if not active_wardens:
+            logger.warning("[SERAPH] All wardens circuit-broken! Resetting.")
+            self._warden_failures.clear()
+            active_wardens = wardens
 
-        # Create tasks for all active sentinels
+        # Create tasks for all active wardens
         coroutines = []
-        for sentinel in active_sentinels:
+        for warden in active_wardens:
             task = AgentTask(
                 correlation_id=str(uuid.uuid4()),
                 task_type="detect",
                 priority=1,
                 payload={"events": serialized, "window_seconds": 300},
             )
-            coroutines.append(sentinel.execute(task))
+            coroutines.append(warden.execute(task))
 
-        # Fan-out: run all sentinels in parallel
+        # Fan-out: run all wardens in parallel
         results = await asyncio.gather(*coroutines, return_exceptions=True)
 
-        # Aggregate indicators from all sentinels
+        # Aggregate indicators from all wardens
         all_indicators: list[ThreatIndicator] = []
-        for sentinel, result in zip(active_sentinels, results):
+        for warden, result in zip(active_wardens, results):
             if isinstance(result, Exception):
-                self._sentinel_failures[sentinel.agent_id] = (
-                    self._sentinel_failures.get(sentinel.agent_id, 0) + 1
+                self._warden_failures[warden.agent_id] = (
+                    self._warden_failures.get(warden.agent_id, 0) + 1
                 )
                 logger.error(
                     "[SERAPH] %s (%s) raised exception: %s",
-                    sentinel.agent_id, sentinel.agent_type.value, result,
+                    warden.agent_id, warden.agent_type.value, result,
                 )
                 continue
 
             if not result.success:
-                self._sentinel_failures[sentinel.agent_id] = (
-                    self._sentinel_failures.get(sentinel.agent_id, 0) + 1
+                self._warden_failures[warden.agent_id] = (
+                    self._warden_failures.get(warden.agent_id, 0) + 1
                 )
                 logger.error(
                     "[SERAPH] %s (%s) failed: %s",
-                    sentinel.agent_id, sentinel.agent_type.value, result.error,
+                    warden.agent_id, warden.agent_type.value, result.error,
                 )
                 continue
 
             # Success — reset circuit breaker
-            self._sentinel_failures.pop(sentinel.agent_id, None)
+            self._warden_failures.pop(warden.agent_id, None)
 
             indicator_dicts = result.result_data.get("indicators", [])
             for d in indicator_dicts:
                 try:
                     all_indicators.append(ThreatIndicator(**d))
                 except Exception:
-                    logger.debug("Failed to parse indicator from %s", sentinel.agent_id)
+                    logger.debug("Failed to parse indicator from %s", warden.agent_id)
 
         # Deduplicate by pattern_name + agent combo
         seen: set[tuple] = set()
@@ -312,8 +312,8 @@ class AngelOrchestrator:
 
         if unique:
             logger.info(
-                "[SERAPH] %d sentinels → %d raw indicators → %d unique (from %d events)",
-                len(active_sentinels),
+                "[SERAPH] %d wardens → %d raw indicators → %d unique (from %d events)",
+                len(active_wardens),
                 len(all_indicators),
                 len(unique),
                 len(events),
@@ -326,7 +326,7 @@ class AngelOrchestrator:
     # ------------------------------------------------------------------
 
     async def halo_sweep(self, db: Session, tenant_id: str = "dev-tenant") -> dict:
-        """Halo Sweep — full system scan. All sentinels fire."""
+        """Halo Sweep — full system scan. All wardens fire."""
         # Gather recent events from DB for scanning
         recent_events = (
             db.query(EventRow)
@@ -340,7 +340,7 @@ class AngelOrchestrator:
         return {
             "scan_type": "halo_sweep",
             "events_scanned": len(recent_events),
-            "sentinels_active": len(self.registry.all_sentinels()),
+            "wardens_active": len(self.registry.all_wardens()),
             "indicators_found": len(indicators),
             "indicators": [ind.model_dump(mode="json") for ind in indicators[:50]],
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -352,7 +352,7 @@ class AngelOrchestrator:
         domain: str,
         tenant_id: str = "dev-tenant",
     ) -> dict:
-        """Wing Scan — targeted scan for a single sentinel domain."""
+        """Wing Scan — targeted scan for a single warden domain."""
         domain_map: dict[str, AgentType] = {
             "network": AgentType.NETWORK,
             "secrets": AgentType.SECRETS,
@@ -360,16 +360,16 @@ class AngelOrchestrator:
             "behavior": AgentType.BEHAVIOR,
             "timeline": AgentType.TIMELINE,
             "browser": AgentType.BROWSER,
-            "sentinel": AgentType.SENTINEL,
+            "warden": AgentType.WARDEN,
         }
 
         agent_type = domain_map.get(domain.lower())
         if not agent_type:
             return {"error": f"Unknown domain: {domain}. Valid: {list(domain_map.keys())}"}
 
-        sentinel = self.registry.get_first(agent_type)
-        if not sentinel:
-            return {"error": f"No sentinel for domain: {domain}"}
+        warden = self.registry.get_first(agent_type)
+        if not warden:
+            return {"error": f"No warden for domain: {domain}"}
 
         recent_events = (
             db.query(EventRow)
@@ -399,7 +399,7 @@ class AngelOrchestrator:
             payload={"events": serialized, "window_seconds": 300},
         )
 
-        result = await sentinel.execute(task)
+        result = await warden.execute(task)
         indicators = []
         if result.success:
             for d in result.result_data.get("indicators", []):
@@ -411,7 +411,7 @@ class AngelOrchestrator:
         return {
             "scan_type": "wing_scan",
             "domain": domain,
-            "sentinel": sentinel.info(),
+            "warden": warden.info(),
             "events_scanned": len(recent_events),
             "indicators_found": len(indicators),
             "indicators": [ind.model_dump(mode="json") for ind in indicators[:30]],
@@ -432,7 +432,7 @@ class AngelOrchestrator:
             "degraded": len(degraded),
             "offline": len(offline),
             "agents": [a.info() for a in agents],
-            "circuit_breakers": dict(self._sentinel_failures),
+            "circuit_breakers": dict(self._warden_failures),
             "autonomy_mode": self._autonomy_mode,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }

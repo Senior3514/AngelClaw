@@ -119,6 +119,112 @@ def check_for_alerts(
                 len(types),
             )
 
+    # V2.1 — Pattern 4: Privilege escalation cascade
+    priv_keywords = {"sudo", "chmod", "setuid", "escalat", "root", "admin", "privilege"}
+    priv_events = [
+        e for e in events
+        if any(k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
+               for k in priv_keywords)
+        and e.severity in ("high", "critical")
+    ]
+    if len(priv_events) >= 3:
+        priv_agents = list({e.agent_id for e in priv_events})
+        alert = GuardianAlertRow(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            alert_type="privilege_escalation_cascade",
+            title=f"Privilege escalation cascade: {len(priv_events)} events across {len(priv_agents)} agent(s)",
+            severity="critical",
+            details={
+                "event_count": len(priv_events),
+                "agents": priv_agents[:10],
+            },
+            related_event_ids=[e.id for e in priv_events],
+            related_agent_ids=priv_agents,
+        )
+        alerts.append(alert)
+        logger.warning(
+            "Guardian Alert [privilege_escalation_cascade]: %s", alert.title
+        )
+
+    # V2.1 — Pattern 5: Lateral movement detection
+    lateral_keywords = {"ssh", "rdp", "psexec", "wmi", "lateral", "pivot", "remote_exec"}
+    lateral_events = [
+        e for e in events
+        if any(k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
+               for k in lateral_keywords)
+    ]
+    lateral_agents = {e.agent_id for e in lateral_events}
+    if len(lateral_agents) >= 2 and len(lateral_events) >= 3:
+        alert = GuardianAlertRow(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            alert_type="lateral_movement",
+            title=f"Lateral movement: {len(lateral_events)} events across {len(lateral_agents)} agents",
+            severity="critical",
+            details={
+                "event_count": len(lateral_events),
+                "agents": sorted(lateral_agents)[:10],
+            },
+            related_event_ids=[e.id for e in lateral_events],
+            related_agent_ids=sorted(lateral_agents),
+        )
+        alerts.append(alert)
+        logger.warning("Guardian Alert [lateral_movement]: %s", alert.title)
+
+    # V2.1 — Pattern 6: Data staging (compress/encode before exfil)
+    staging_keywords = {"base64", "gzip", "tar ", "zip ", "compress", "encode", "encrypt"}
+    staging_events = [
+        e for e in events
+        if any(k in ((e.details or {}).get("command", "") or "").lower()
+               for k in staging_keywords)
+    ]
+    if len(staging_events) >= 2:
+        staging_agents = list({e.agent_id for e in staging_events})
+        alert = GuardianAlertRow(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            alert_type="data_staging",
+            title=f"Data staging detected: {len(staging_events)} encoding/compression events",
+            severity="high",
+            details={
+                "event_count": len(staging_events),
+                "agents": staging_agents[:10],
+            },
+            related_event_ids=[e.id for e in staging_events],
+            related_agent_ids=staging_agents,
+        )
+        alerts.append(alert)
+        logger.warning("Guardian Alert [data_staging]: %s", alert.title)
+
+    # V2.1 — Pattern 7: Credential spray (multiple agents with failed auth)
+    auth_fail_agents: dict[str, int] = {}
+    auth_fail_events: dict[str, list[EventRow]] = {}
+    for e in events:
+        if e.type and "auth" in e.type.lower() and e.severity in ("high", "critical"):
+            auth_fail_agents[e.agent_id] = auth_fail_agents.get(e.agent_id, 0) + 1
+            auth_fail_events.setdefault(e.agent_id, []).append(e)
+    spray_agents = [aid for aid, cnt in auth_fail_agents.items() if cnt >= 2]
+    if len(spray_agents) >= 2:
+        all_spray_events = []
+        for aid in spray_agents:
+            all_spray_events.extend(auth_fail_events.get(aid, []))
+        alert = GuardianAlertRow(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            alert_type="credential_spray",
+            title=f"Credential spray: auth failures across {len(spray_agents)} agents",
+            severity="critical",
+            details={
+                "agents": spray_agents[:10],
+                "total_failures": sum(auth_fail_agents[a] for a in spray_agents),
+            },
+            related_event_ids=[e.id for e in all_spray_events],
+            related_agent_ids=spray_agents,
+        )
+        alerts.append(alert)
+        logger.warning("Guardian Alert [credential_spray]: %s", alert.title)
+
     if alerts:
         db.add_all(alerts)
         db.commit()

@@ -12,7 +12,7 @@ def orchestrator():
 
 def test_orchestrator_init(orchestrator):
     """Orchestrator initializes with all sub-agents."""
-    assert orchestrator.sentinel is not None
+    assert orchestrator.warden is not None
     assert orchestrator.response is not None
     assert orchestrator.forensic is not None
     assert orchestrator.audit is not None
@@ -30,7 +30,7 @@ def test_orchestrator_status(orchestrator):
 
     agents = status["agents"]
     agent_types = {info["agent_type"] for info in agents.values()}
-    for expected in ("sentinel", "response", "forensic", "audit",
+    for expected in ("warden", "response", "forensic", "audit",
                      "network", "secrets", "toolchain", "behavior",
                      "timeline", "browser"):
         assert expected in agent_types, f"Missing agent type: {expected}"

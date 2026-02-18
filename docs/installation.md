@@ -440,7 +440,7 @@ netstat -ano | findstr :8500
      Angel Legion (10 agents inside Cloud):
      +----------+----------+----------+----------+
      |  Vigil   |Net Warden|Glass Eye |Tool Smith|
-     |(Sentinel)|(Network) |(Browser) |(Toolchain|
+     |(Warden)  |(Network) |(Browser) |(Toolchain|
      +----------+----------+----------+----------+
      |Chronicle |Vault Keep|Drift Watch| Response |
      |(Timeline)|(Secrets) |(Behavior)|          |

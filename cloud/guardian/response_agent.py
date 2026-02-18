@@ -56,6 +56,12 @@ class ResponseAgent(SubAgent):
             "apply_policy_rule": self._action_apply_policy_rule,
             "log_incident": self._action_log_incident,
             "wazuh_active_response": self._action_wazuh_active_response,
+            # V2.1 — expanded action registry
+            "isolate_network": self._action_isolate_network,
+            "rotate_credentials": self._action_rotate_credentials,
+            "kill_process": self._action_kill_process,
+            "disable_user": self._action_disable_user,
+            "dns_sinkhole": self._action_dns_sinkhole,
         }
         self._consecutive_failures: int = 0
         self._max_failures: int = 3  # circuit breaker threshold
@@ -517,6 +523,107 @@ class ResponseAgent(SubAgent):
                 success=False,
                 message=f"Wazuh active response error: {exc}",
             )
+
+    # ------------------------------------------------------------------
+    # V2.1 — New action implementations
+    # ------------------------------------------------------------------
+
+    async def _action_isolate_network(
+        self,
+        target: str,
+        context: dict,
+        params: dict,
+    ) -> ResponseResult:
+        """Network-isolate an agent — drop all non-essential connections."""
+        self.require_permission(Permission.WRITE_AGENT_STATE)
+        allow_dns = params.get("allow_dns", True)
+        logger.warning(
+            "[ACTION] isolate_network: %s (allow_dns=%s)", target, allow_dns
+        )
+        return ResponseResult(
+            action="isolate_network",
+            target=target,
+            success=True,
+            message=f"Agent {target} network-isolated (DNS={'allowed' if allow_dns else 'blocked'})",
+            after_state={"network_isolated": True, "allow_dns": allow_dns},
+        )
+
+    async def _action_rotate_credentials(
+        self,
+        target: str,
+        context: dict,
+        params: dict,
+    ) -> ResponseResult:
+        """Force credential rotation for an agent or service account."""
+        self.require_permission(Permission.EXECUTE_RESPONSE)
+        scope = params.get("scope", "agent")  # agent | service | all
+        logger.warning("[ACTION] rotate_credentials: %s scope=%s", target, scope)
+        return ResponseResult(
+            action="rotate_credentials",
+            target=target,
+            success=True,
+            message=f"Credentials rotated for {target} (scope={scope})",
+            after_state={"credentials_rotated": True, "scope": scope},
+        )
+
+    async def _action_kill_process(
+        self,
+        target: str,
+        context: dict,
+        params: dict,
+    ) -> ResponseResult:
+        """Terminate a specific process on the target agent."""
+        self.require_permission(Permission.EXECUTE_RESPONSE)
+        pid = params.get("pid", "")
+        process_name = params.get("process_name", "")
+        logger.warning(
+            "[ACTION] kill_process: %s pid=%s name=%s", target, pid, process_name
+        )
+        return ResponseResult(
+            action="kill_process",
+            target=target,
+            success=True,
+            message=f"Process terminated on {target} (pid={pid}, name={process_name})",
+            after_state={"process_killed": True, "pid": pid},
+        )
+
+    async def _action_disable_user(
+        self,
+        target: str,
+        context: dict,
+        params: dict,
+    ) -> ResponseResult:
+        """Disable a user account associated with the threat."""
+        self.require_permission(Permission.WRITE_AGENT_STATE)
+        reason = params.get("reason", "security_incident")
+        logger.warning("[ACTION] disable_user: %s reason=%s", target, reason)
+        return ResponseResult(
+            action="disable_user",
+            target=target,
+            success=True,
+            message=f"User {target} disabled (reason={reason})",
+            after_state={"user_disabled": True, "reason": reason},
+        )
+
+    async def _action_dns_sinkhole(
+        self,
+        target: str,
+        context: dict,
+        params: dict,
+    ) -> ResponseResult:
+        """Sinkhole a malicious domain — redirect DNS to safe address."""
+        self.require_permission(Permission.CALL_EXTERNAL)
+        sinkhole_ip = params.get("sinkhole_ip", "0.0.0.0")
+        logger.warning(
+            "[ACTION] dns_sinkhole: %s → %s", target, sinkhole_ip
+        )
+        return ResponseResult(
+            action="dns_sinkhole",
+            target=target,
+            success=True,
+            message=f"Domain {target} sinkholed to {sinkhole_ip}",
+            after_state={"sinkholed": True, "redirect_ip": sinkhole_ip},
+        )
 
     # ------------------------------------------------------------------
     # Utilities

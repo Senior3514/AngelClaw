@@ -1,4 +1,4 @@
-"""AngelClaw – Chronicle (Timeline Sentinel).
+"""AngelClaw – Chronicle (Timeline Warden).
 
 Focuses on temporal correlation and event sequencing.  Detects multi-agent
 coordinated activity, kill chain progression, and time-window anomalies.
@@ -21,7 +21,7 @@ from cloud.guardian.models import (
     ThreatIndicator,
 )
 
-logger = logging.getLogger("angelgrid.cloud.guardian.timeline_sentinel")
+logger = logging.getLogger("angelgrid.cloud.guardian.timeline_warden")
 
 # Thresholds
 _RAPID_SUCCESSION_SECONDS = 2.0    # events closer than this from different agents
@@ -31,10 +31,14 @@ _SEQUENCE_SUSPICIOUS_PATTERNS = [
     ["reconnaissance", "initial_access", "execution"],
     ["credential_access", "lateral_movement"],
     ["execution", "persistence", "exfiltration"],
+    # V2.1 — expanded kill chain patterns
+    ["initial_access", "credential_access", "exfiltration"],
+    ["reconnaissance", "execution", "persistence", "exfiltration"],
+    ["credential_access", "privilege_escalation", "impact"],
 ]
 
 
-class TimelineSentinel(SubAgent):
+class TimelineWarden(SubAgent):
     """Chronicle — temporal correlation and event sequencing analysis."""
 
     def __init__(self) -> None:
@@ -74,6 +78,9 @@ class TimelineSentinel(SubAgent):
 
         # 4. Detect time clustering (burst of activity then silence)
         indicators.extend(_detect_time_clustering(events_data))
+
+        # V2.1 — Multi-phase attack detection
+        indicators.extend(_detect_multi_phase_attack(events_data))
 
         logger.info(
             "[CHRONICLE] Analyzed %d events → %d temporal indicators",
@@ -301,4 +308,50 @@ def _detect_time_clustering(events: list[dict]) -> list[ThreatIndicator]:
             )
         )
 
+    return indicators
+
+
+def _detect_multi_phase_attack(events: list[dict]) -> list[ThreatIndicator]:
+    """V2.1 — Detect multi-phase attacks with temporal gaps (low-and-slow)."""
+    from datetime import datetime
+
+    per_agent: dict[str, list[tuple[datetime, dict]]] = defaultdict(list)
+    for e in events:
+        agent_id = e.get("agent_id", "")
+        if not agent_id:
+            continue
+        ts = _parse_timestamp(e.get("timestamp"))
+        if ts and e.get("severity") in ("medium", "high", "critical"):
+            per_agent[agent_id].append((ts, e))
+
+    indicators: list[ThreatIndicator] = []
+    for agent_id, timed_events in per_agent.items():
+        if len(timed_events) < 3:
+            continue
+        timed_events.sort(key=lambda x: x[0])
+        # Check for events with large gaps (>5 min) but consistent pattern
+        gaps = []
+        for i in range(1, len(timed_events)):
+            gap = (timed_events[i][0] - timed_events[i-1][0]).total_seconds()
+            gaps.append(gap)
+        large_gaps = [g for g in gaps if g > 300]
+        if len(large_gaps) >= 2 and len(timed_events) >= 4:
+            total_span = (timed_events[-1][0] - timed_events[0][0]).total_seconds()
+            indicators.append(
+                ThreatIndicator(
+                    indicator_type="temporal_correlation",
+                    pattern_name="multi_phase_attack",
+                    severity="high",
+                    confidence=0.75,
+                    description=(
+                        f"Multi-phase attack: {len(timed_events)} events from "
+                        f"agent {agent_id[:8]} with {len(large_gaps)} temporal gaps "
+                        f"over {total_span/60:.0f} minutes"
+                    ),
+                    related_event_ids=[e.get("id", "") for _, e in timed_events[:20]],
+                    related_agent_ids=[agent_id],
+                    suggested_playbook="escalate_to_human",
+                    mitre_tactic="execution",
+                )
+            )
     return indicators

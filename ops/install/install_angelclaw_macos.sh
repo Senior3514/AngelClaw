@@ -4,7 +4,7 @@
 #
 # Installs the full AngelClaw stack (ANGELNODE + Cloud + Ollama) on macOS
 # using Docker Desktop + Docker Compose.
-# Includes the Angel Legion: 10-agent swarm with 7 specialized sentinels.
+# Includes the Angel Legion: 10-agent swarm with 7 specialized wardens.
 #
 # One-command install:
 #   curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_macos.sh | bash

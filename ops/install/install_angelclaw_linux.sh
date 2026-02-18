@@ -4,7 +4,7 @@
 #
 # Installs the full AngelClaw stack (ANGELNODE + Cloud + Ollama) on a Linux
 # server using Docker Compose + systemd.
-# Includes the Angel Legion: 10-agent swarm with 7 specialized sentinels.
+# Includes the Angel Legion: 10-agent swarm with 7 specialized wardens.
 #
 # Usage:
 #   curl -sSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash

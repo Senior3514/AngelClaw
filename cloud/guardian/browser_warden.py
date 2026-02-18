@@ -1,4 +1,4 @@
-"""AngelClaw – Glass Eye (Browser Sentinel).
+"""AngelClaw – Glass Eye (Browser Warden).
 
 Processes events from browser extensions.  Detects suspicious URLs,
 extension conflicts, page content injection, and browser-specific threats.
@@ -20,9 +20,9 @@ from cloud.guardian.models import (
     ThreatIndicator,
 )
 
-logger = logging.getLogger("angelgrid.cloud.guardian.browser_sentinel")
+logger = logging.getLogger("angelgrid.cloud.guardian.browser_warden")
 
-# Event types this sentinel cares about
+# Event types this warden cares about
 _BROWSER_TYPES = frozenset(
     {
         "browser.navigation",
@@ -55,7 +55,7 @@ _INJECTION_PATTERNS = [
 ]
 
 
-class BrowserSentinel(SubAgent):
+class BrowserWarden(SubAgent):
     """Glass Eye — browser extension event analysis and protection."""
 
     def __init__(self) -> None:

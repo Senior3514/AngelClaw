@@ -23,11 +23,11 @@ AngelClaw V2.1.0 upgrades the Seraph Brain with an enhanced internal cognition p
 
 AngelClaw V2.0.0 introduced the **Angel Legion** -- a swarm of 10 specialized sub-agents orchestrated by the Seraph (orchestrator) with a dynamic registry. The system evolved from 4 hardcoded agents to a fully extensible, registry-based architecture.
 
-### Angel Legion -- 7 New Specialized Sentinels
+### Angel Legion -- 7 New Specialized Wardens
 
 | Code Name | Agent Type | Role |
 |-----------|-----------|------|
-| **Vigil** | Sentinel | Core threat detection (patterns, anomalies, correlation) |
+| **Vigil** | Warden | Core threat detection (patterns, anomalies, correlation) |
 | **Net Warden** | Network | Network exposure, port scans, suspicious DNS, C2 detection |
 | **Glass Eye** | Browser | Suspicious URLs, page injection, extension threats, data abuse |
 | **Tool Smith** | Toolchain | Tool abuse, supply chain integrity, output injection detection |
@@ -42,9 +42,9 @@ AngelClaw V2.0.0 introduced the **Angel Legion** -- a swarm of 10 specialized su
 - **Dynamic Agent Registry** -- `AgentRegistry` manages N agents without hardcoding; agents register by type
 - **Serenity Scale** -- AngelClaw-themed risk levels (Serene/Whisper/Murmur/Disturbed/Storm)
 - **Registry-based orchestrator** -- all API routes and metrics iterate agents dynamically
-- **Per-sentinel permissions** -- fine-grained permission model (READ_NETWORK, READ_SECRETS, READ_TOOLS, READ_BROWSER, READ_TIMELINE)
+- **Per-warden permissions** -- fine-grained permission model (READ_NETWORK, READ_SECRETS, READ_TOOLS, READ_BROWSER, READ_TIMELINE)
 - **Base agent timeout enforcement** -- `SubAgent.execute()` wraps all tasks with timeout, error handling, and status tracking
-- **1130 tests passing** -- 84% code coverage, all new sentinels at 94-100% coverage
+- **1130 tests passing** -- 84% code coverage, all new wardens at 94-100% coverage
 
 ### V1.1.0 Summary (Previous Release)
 
@@ -325,8 +325,8 @@ uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
 
 AngelClaw is a **full-stack, enterprise-grade, autonomous AGI security suite** with the **Angel Legion** -- 10 specialized sub-agents:
 
-- **Angel Legion** -- 10 sub-agents: 7 sentinels (network, browser, toolchain, timeline, secrets, behavior, core) + response + forensic + audit
-- **Seraph Orchestrator** -- Dynamic agent registry, parallel sentinel dispatch, autonomy modes (Observe/Suggest/Auto-Apply)
+- **Angel Legion** -- 10 sub-agents: 7 wardens (network, browser, toolchain, timeline, secrets, behavior, core) + response + forensic + audit
+- **Seraph Orchestrator** -- Dynamic agent registry, parallel warden dispatch, autonomy modes (Observe/Suggest/Auto-Apply)
 - **Autonomous Brain** -- 32+ NLP intents, natural language security chat, context-aware responses
 - **Threat Shield** -- 13 prompt injection patterns, 6 data leakage detectors, 7 evil AGI patterns, Lethal Trifecta monitoring, 6-stage ATT&CK attack chain detection
 - **Always-On Daemon** -- Continuous scans, shield assessments, drift detection, agent health monitoring

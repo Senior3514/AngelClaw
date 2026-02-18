@@ -29,11 +29,11 @@ class IncidentState(str, Enum):
 
 class AgentType(str, Enum):
     # V1 core agents
-    SENTINEL = "sentinel"
+    WARDEN = "warden"
     RESPONSE = "response"
     FORENSIC = "forensic"
     AUDIT = "audit"
-    # V2 specialized sentinels (Angel Legion)
+    # V2 specialized wardens (Angel Legion)
     NETWORK = "network"
     SECRETS = "secrets"
     TOOLCHAIN = "toolchain"
@@ -106,7 +106,7 @@ class MitreTactic(str, Enum):
 
 
 class ThreatIndicator(BaseModel):
-    """Output of the Sentinel detection layer."""
+    """Output of the Warden detection layer."""
 
     indicator_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     indicator_type: str  # pattern_match, anomaly, correlation

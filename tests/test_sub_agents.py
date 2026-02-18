@@ -13,7 +13,7 @@ from cloud.guardian.models import (
     Permission,
 )
 from cloud.guardian.response_agent import ResponseAgent
-from cloud.guardian.sentinel_agent import SentinelAgent
+from cloud.guardian.warden_agent import WardenAgent
 
 # ---------------------------------------------------------------------------
 # Permission enforcement
@@ -21,15 +21,15 @@ from cloud.guardian.sentinel_agent import SentinelAgent
 
 
 class TestPermissions:
-    def test_sentinel_has_read_permissions(self):
-        """Sentinel agent has READ_EVENTS and READ_AGENTS."""
-        agent = SentinelAgent()
+    def test_warden_has_read_permissions(self):
+        """Warden agent has READ_EVENTS and READ_AGENTS."""
+        agent = WardenAgent()
         assert agent.check_permission(Permission.READ_EVENTS)
         assert agent.check_permission(Permission.READ_AGENTS)
 
-    def test_sentinel_lacks_write_permissions(self):
-        """Sentinel agent cannot execute responses."""
-        agent = SentinelAgent()
+    def test_warden_lacks_write_permissions(self):
+        """Warden agent cannot execute responses."""
+        agent = WardenAgent()
         assert not agent.check_permission(Permission.EXECUTE_RESPONSE)
         assert not agent.check_permission(Permission.WRITE_AGENT_STATE)
 
@@ -42,7 +42,7 @@ class TestPermissions:
 
     def test_require_permission_raises(self):
         """require_permission raises PermissionError when lacking permission."""
-        agent = SentinelAgent()
+        agent = WardenAgent()
         with pytest.raises(PermissionError):
             agent.require_permission(Permission.EXECUTE_RESPONSE)
 
@@ -60,27 +60,27 @@ class TestPermissions:
 class TestAgentLifecycle:
     def test_initial_status_idle(self):
         """Agents start in IDLE status."""
-        for AgentClass in [SentinelAgent, ResponseAgent, ForensicAgent, AuditAgent]:
+        for AgentClass in [WardenAgent, ResponseAgent, ForensicAgent, AuditAgent]:
             agent = AgentClass()
             assert agent.status == AgentStatus.IDLE
 
     @pytest.mark.asyncio
     async def test_shutdown_sets_stopped(self):
         """shutdown() transitions agent to STOPPED."""
-        agent = SentinelAgent()
+        agent = WardenAgent()
         await agent.shutdown()
         assert agent.status == AgentStatus.STOPPED
 
     @pytest.mark.asyncio
     async def test_health_check_idle(self):
         """Healthy agent reports True."""
-        agent = SentinelAgent()
+        agent = WardenAgent()
         assert await agent.health_check() is True
 
     @pytest.mark.asyncio
     async def test_health_check_error(self):
         """Agent in ERROR status reports False."""
-        agent = SentinelAgent()
+        agent = WardenAgent()
         agent.status = AgentStatus.ERROR
         assert await agent.health_check() is False
 
@@ -93,7 +93,7 @@ class TestAgentLifecycle:
 class TestAgentInfo:
     def test_info_structure(self):
         """info() returns expected fields."""
-        agent = SentinelAgent()
+        agent = WardenAgent()
         info = agent.info()
         assert "agent_id" in info
         assert "agent_type" in info
@@ -101,19 +101,19 @@ class TestAgentInfo:
         assert "permissions" in info
         assert "tasks_completed" in info
         assert "tasks_failed" in info
-        assert info["agent_type"] == "sentinel"
+        assert info["agent_type"] == "warden"
         assert info["status"] == "idle"
         assert info["tasks_completed"] == 0
 
     def test_all_agents_have_unique_ids(self):
         """Each agent instance gets a unique ID."""
-        agents = [SentinelAgent(), SentinelAgent(), ResponseAgent(), ForensicAgent()]
+        agents = [WardenAgent(), WardenAgent(), ResponseAgent(), ForensicAgent()]
         ids = [a.agent_id for a in agents]
         assert len(ids) == len(set(ids))
 
     def test_agent_types_correct(self):
         """Each agent class reports its correct type."""
-        assert SentinelAgent().agent_type == AgentType.SENTINEL
+        assert WardenAgent().agent_type == AgentType.WARDEN
         assert ResponseAgent().agent_type == AgentType.RESPONSE
         assert ForensicAgent().agent_type == AgentType.FORENSIC
         assert AuditAgent().agent_type == AgentType.AUDIT
@@ -126,23 +126,23 @@ class TestAgentInfo:
 
 class TestTaskExecution:
     @pytest.mark.asyncio
-    async def test_sentinel_detect_empty(self):
-        """Sentinel handles empty detection task."""
-        agent = SentinelAgent()
+    async def test_warden_detect_empty(self):
+        """Warden handles empty detection task."""
+        agent = WardenAgent()
         task = AgentTask(
             task_type="detect",
             payload={"events": []},
         )
         result = await agent.execute(task)
         assert result.success is True
-        assert result.agent_type == "sentinel"
+        assert result.agent_type == "warden"
         assert result.duration_ms >= 0
         assert agent.status == AgentStatus.IDLE  # Returns to idle
 
     @pytest.mark.asyncio
     async def test_task_increments_completed(self):
         """Successful task increments _tasks_completed counter."""
-        agent = SentinelAgent()
+        agent = WardenAgent()
         assert agent._tasks_completed == 0
         task = AgentTask(task_type="detect", payload={"events": []})
         await agent.execute(task)

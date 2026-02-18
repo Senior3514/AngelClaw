@@ -13,10 +13,10 @@ from cloud.guardian.models import AgentStatus, AgentType
 
 logger = logging.getLogger("angelgrid.cloud.guardian.registry")
 
-# Agent types that perform detection (sentinel role)
-SENTINEL_TYPES: frozenset[AgentType] = frozenset(
+# Agent types that perform detection (warden role)
+WARDEN_TYPES: frozenset[AgentType] = frozenset(
     {
-        AgentType.SENTINEL,
+        AgentType.WARDEN,
         AgentType.NETWORK,
         AgentType.SECRETS,
         AgentType.TOOLCHAIN,
@@ -69,9 +69,9 @@ class AgentRegistry:
         """Return all registered agents."""
         return list(self._agents.values())
 
-    def all_sentinels(self) -> list[SubAgent]:
-        """Return all agents with a detection (sentinel) role."""
-        return [a for a in self._agents.values() if a.agent_type in SENTINEL_TYPES]
+    def all_wardens(self) -> list[SubAgent]:
+        """Return all agents with a detection (warden) role."""
+        return [a for a in self._agents.values() if a.agent_type in WARDEN_TYPES]
 
     def active_agents(self) -> list[SubAgent]:
         """Return agents that are not stopped or errored."""
@@ -113,7 +113,7 @@ class AgentRegistry:
             by_type[a.agent_type.value] = by_type.get(a.agent_type.value, 0) + 1
         return {
             "total_agents": len(self._agents),
-            "sentinels": len(self.all_sentinels()),
+            "wardens": len(self.all_wardens()),
             "by_status": by_status,
             "by_type": by_type,
         }
