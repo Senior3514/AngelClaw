@@ -193,6 +193,39 @@ _INJECTION_PATTERNS: list[tuple[str, re.Pattern, ThreatSeverity]] = [
         ),
         ThreatSeverity.MEDIUM,
     ),
+    # V2.1 — expanded prompt injection coverage
+    (
+        "token_smuggling",
+        re.compile(
+            r"(?i)(translate|convert|transform)\s+(this|the\s+following)\s+(from|to)\s+(base64|hex|binary|rot13)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "xml_injection",
+        re.compile(
+            r"(<\?xml|<!DOCTYPE|<system>|<\|system\|>|<\|user\|>|<\|assistant\|>)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "multi_language_jailbreak",
+        re.compile(
+            r"(?i)(traducir|ignorar\s+instrucciones|traduis|ignorer\s+les\s+instructions|ignoriere\s+anweisungen)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.MEDIUM,
+    ),
+    (
+        "context_overflow",
+        re.compile(
+            r"(?i)(repeat\s+(the\s+)?(word|letter|character)\s+.{1,20}\s+\d{3,}\s+times|write\s+\d{4,}\s+words?\s+of)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.MEDIUM,
+    ),
 ]
 
 
@@ -277,6 +310,30 @@ _LEAKAGE_PATTERNS: list[tuple[str, re.Pattern, ThreatSeverity]] = [
         ThreatSeverity.CRITICAL,
     ),
     ("exfil_certutil", re.compile(r"(?i)certutil.*-urlcache", re.DOTALL), ThreatSeverity.CRITICAL),
+    # V2.1 — expanded data leakage coverage
+    (
+        "exfil_dns_tunnel",
+        re.compile(r"(?i)(nslookup|dig|host)\s+[0-9a-f]{16,}\.", re.DOTALL),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "exfil_discord_webhook",
+        re.compile(r"(?i)(discord|slack)\.com/(api/)?webhooks?/", re.DOTALL),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "exfil_cloud_storage",
+        re.compile(
+            r"(?i)(s3://|gs://|wasb://|az://|blob\.core\.windows\.net|storage\.googleapis\.com)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.MEDIUM,
+    ),
+    (
+        "exfil_cloud_metadata",
+        re.compile(r"(?i)(169\.254\.169\.254|metadata\.google\.internal|metadata\.azure\.com)", re.DOTALL),
+        ThreatSeverity.CRITICAL,
+    ),
 ]
 
 
@@ -370,6 +427,47 @@ _EVIL_AGI_PATTERNS: list[tuple[str, re.Pattern, ThreatSeverity]] = [
         "win_disable_defender",
         re.compile(r"(?i)Set-MpPreference.*-DisableRealtimeMonitoring", re.DOTALL),
         ThreatSeverity.CRITICAL,
+    ),
+    # V2.1 — expanded evil AGI / attack vector coverage
+    (
+        "container_escape",
+        re.compile(
+            r"(?i)(docker\.sock|/var/run/docker|nsenter\s+|unshare\s+|chroot\s+/|mount\s+-t\s+proc)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "supply_chain_inject",
+        re.compile(
+            r"(?i)(pip\s+install\s+--index-url|npm\s+publish|gem\s+push|twine\s+upload|cargo\s+publish)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.HIGH,
+    ),
+    (
+        "resource_exhaustion",
+        re.compile(
+            r"(?i)(fork\s*bomb|:\(\)\s*\{|while\s*true.*do|for\s*\(\s*;\s*;\s*\)|stress\s+--cpu|stress-ng)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "ransomware_indicator",
+        re.compile(
+            r"(?i)(openssl\s+enc\s+-aes|gpg\s+--symmetric|find\s+.*-exec\s+.*encrypt|\.locked|\.encrypted|ransom)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.CRITICAL,
+    ),
+    (
+        "k8s_exploit",
+        re.compile(
+            r"(?i)(kubectl\s+exec|kubectl\s+cp|--service-account-name|kube-system|cluster-admin)",
+            re.DOTALL,
+        ),
+        ThreatSeverity.HIGH,
     ),
 ]
 

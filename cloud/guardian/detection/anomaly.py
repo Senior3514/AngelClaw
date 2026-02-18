@@ -163,8 +163,34 @@ class AnomalyDetector:
         novelty_score = min(1.0, len(novel) / max(len(events), 1))
         sub_scores.append(novelty_score)
 
-        # Weighted average
-        weights = [0.3, 0.25, 0.25, 0.2]
+        # 5. Failure rate spike (V2.1)
+        fail_keywords = {"fail", "error", "denied", "blocked", "reject", "timeout"}
+        failure_count = sum(
+            1 for e in events
+            if e.severity in ("high", "critical")
+            and any(k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
+                    for k in fail_keywords)
+        )
+        failure_rate = failure_count / max(len(events), 1)
+        failure_score = min(1.0, failure_rate * 3.0)
+        sub_scores.append(failure_score)
+
+        # 6. Tool diversity spike (V2.1)
+        tool_names = set()
+        for e in events:
+            tool = (e.details or {}).get("tool_name", "")
+            if tool:
+                tool_names.add(tool)
+        baseline_tool_count = len(baseline.type_dist)
+        if baseline_tool_count > 0:
+            diversity_ratio = len(tool_names) / baseline_tool_count
+            diversity_score = min(1.0, max(0.0, (diversity_ratio - 1.0) / 2.0))
+        else:
+            diversity_score = 0.3 if tool_names else 0.0
+        sub_scores.append(diversity_score)
+
+        # Weighted average (V2.1 — 6 sub-scores)
+        weights = [0.25, 0.20, 0.20, 0.15, 0.10, 0.10]
         final_score = sum(s * w for s, w in zip(sub_scores, weights))
 
         # Per-category deviation detail

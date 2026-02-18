@@ -87,6 +87,36 @@ _SECRET_VALUE_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("openai_key", re.compile(r"sk-[0-9a-zA-Z\-_]{20,}")),
     # Anthropic
     ("anthropic_key", re.compile(r"sk-ant-[0-9a-zA-Z\-]{20,}")),
+    # ---------------------------------------------------------------
+    # V2.1 — expanded secret coverage (15 new patterns)
+    # ---------------------------------------------------------------
+    # Azure
+    ("azure_storage_key", re.compile(r"DefaultEndpointsProtocol=https;AccountName=[^;]+;AccountKey=[0-9a-zA-Z/+=]{60,}")),
+    ("azure_ad_secret", re.compile(r"(?i)(azure|ad|aad).{0,20}(secret|key)\s*[:=]\s*['\"]?[0-9a-zA-Z\-_.~]{30,}['\"]?")),
+    # Google Cloud
+    ("gcp_service_account", re.compile(r'"type"\s*:\s*"service_account"')),
+    ("gcp_api_key", re.compile(r"AIza[0-9A-Za-z\-_]{35}")),
+    # GitLab
+    ("gitlab_pat", re.compile(r"glpat-[0-9a-zA-Z\-_]{20,}")),
+    ("gitlab_runner", re.compile(r"GR1348941[0-9a-zA-Z\-_]{20,}")),
+    # npm
+    ("npm_token", re.compile(r"npm_[0-9a-zA-Z]{36}")),
+    # PyPI
+    ("pypi_token", re.compile(r"pypi-AgEIcHlwaS5vcmc[0-9a-zA-Z\-_]{50,}")),
+    # Terraform
+    ("terraform_token", re.compile(r"(?i)(atlas|terraform).{0,10}token\s*[:=]\s*['\"]?[0-9a-zA-Z.]{30,}['\"]?")),
+    # HashiCorp Vault
+    ("vault_token", re.compile(r"(?:hvs|hvb|s)\.[0-9a-zA-Z]{24,}")),
+    # Heroku
+    ("heroku_key", re.compile(r"(?i)heroku.{0,20}(api[_-]?key|token)\s*[:=]\s*['\"]?[0-9a-f\-]{36,}['\"]?")),
+    # Twilio
+    ("twilio_key", re.compile(r"SK[0-9a-fA-F]{32}")),
+    # SendGrid
+    ("sendgrid_key", re.compile(r"SG\.[0-9a-zA-Z\-_]{22,}\.[0-9a-zA-Z\-_]{43,}")),
+    # Datadog
+    ("datadog_key", re.compile(r"(?i)(datadog|dd).{0,10}(api[_-]?key|app[_-]?key)\s*[:=]\s*['\"]?[0-9a-f]{32,}['\"]?")),
+    # Discord
+    ("discord_token", re.compile(r"(?i)(discord|bot).{0,10}token\s*[:=]\s*['\"]?[MN][0-9a-zA-Z\-_.]{50,}['\"]?")),
 ]
 
 # ---------------------------------------------------------------------------
@@ -131,6 +161,15 @@ _SENSITIVE_PATH_PATTERNS: list[re.Pattern] = [
     re.compile(r"\.aws\\\\"),
     re.compile(r"\.kube\\\\config"),
     re.compile(r"\.docker\\\\config\.json"),
+    # V2.1 — expanded path coverage
+    re.compile(r"\.npmrc$"),
+    re.compile(r"\.pypirc$"),
+    re.compile(r"\.netrc$"),
+    re.compile(r"\.terraform\.d/credentials"),
+    re.compile(r"\.vault-token$"),
+    re.compile(r"\.git-credentials$"),
+    re.compile(r"id_ed25519"),
+    re.compile(r"\.gnupg/"),
 ]
 
 # Redaction placeholder

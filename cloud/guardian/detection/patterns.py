@@ -40,6 +40,12 @@ class PatternDetector:
         indicators.extend(self._check_privilege_chain(events, window_seconds))
         indicators.extend(self._check_lateral_movement(events, window_seconds))
         indicators.extend(self._check_policy_tampering(events))
+        # V2.1 — expanded pattern detections
+        indicators.extend(self._check_recon_chain(events, window_seconds))
+        indicators.extend(self._check_encoding_exfil(events))
+        indicators.extend(self._check_tool_abuse(events, window_seconds))
+        indicators.extend(self._check_resource_exhaustion(events))
+        indicators.extend(self._check_persistence_install(events))
 
         for ind in indicators:
             logger.info(
@@ -310,6 +316,194 @@ class PatternDetector:
                 ),
                 related_event_ids=[e.id for e in tampering],
                 related_agent_ids=list({e.agent_id for e in tampering}),
+                suggested_playbook="escalate_to_human",
+                mitre_tactic=MitreTactic.PERSISTENCE.value,
+            )
+        ]
+
+
+    # ---------------------------------------------------------------
+    # V2.1 — New pattern detections
+    # ---------------------------------------------------------------
+
+    def _check_recon_chain(
+        self,
+        events: list[EventRow],
+        window_seconds: int,
+    ) -> list[ThreatIndicator]:
+        """Reconnaissance chain: system info gathering from same agent → high."""
+        recon_keywords = {"whoami", "id", "uname", "hostname", "ifconfig", "ip addr",
+                          "systeminfo", "ipconfig", "net user", "cat /etc/passwd",
+                          "nmap", "nslookup", "dig", "ls /", "find /"}
+        per_agent: dict[str, list[EventRow]] = defaultdict(list)
+        for e in events:
+            cmd = ((e.details or {}).get("command", "") or "").lower()
+            if any(k in cmd for k in recon_keywords):
+                per_agent[e.agent_id].append(e)
+
+        indicators = []
+        for agent_id, evts in per_agent.items():
+            if len(evts) >= 3:
+                indicators.append(
+                    ThreatIndicator(
+                        indicator_type="pattern_match",
+                        pattern_name="recon_chain",
+                        severity="high",
+                        confidence=0.75,
+                        description=(
+                            f"Reconnaissance chain: {len(evts)} system info gathering "
+                            f"commands from agent {agent_id[:8]}"
+                        ),
+                        related_event_ids=[e.id for e in evts[:10]],
+                        related_agent_ids=[agent_id],
+                        suggested_playbook="throttle_agent",
+                        mitre_tactic=MitreTactic.RECONNAISSANCE.value,
+                    )
+                )
+        return indicators
+
+    def _check_encoding_exfil(
+        self,
+        events: list[EventRow],
+    ) -> list[ThreatIndicator]:
+        """Encoding before upload: base64/gzip + network event → critical."""
+        per_agent: dict[str, list[EventRow]] = defaultdict(list)
+        for e in events:
+            per_agent[e.agent_id].append(e)
+
+        indicators = []
+        encoding_keywords = {"base64", "gzip", "tar ", "zip ", "compress", "encode"}
+        for agent_id, evts in per_agent.items():
+            sorted_evts = sorted(evts, key=lambda e: e.timestamp)
+            has_encoding = False
+            has_upload = False
+            encoding_evts = []
+            upload_evts = []
+            for e in sorted_evts:
+                cmd = ((e.details or {}).get("command", "") or "").lower()
+                if any(k in cmd for k in encoding_keywords):
+                    has_encoding = True
+                    encoding_evts.append(e)
+                if e.type and "network" in (e.type or "").lower():
+                    has_upload = True
+                    upload_evts.append(e)
+            if has_encoding and has_upload:
+                all_evts = encoding_evts + upload_evts
+                indicators.append(
+                    ThreatIndicator(
+                        indicator_type="pattern_match",
+                        pattern_name="encoding_exfil",
+                        severity="critical",
+                        confidence=0.80,
+                        description=(
+                            f"Encoding exfiltration: data encoding followed by "
+                            f"network upload from agent {agent_id[:8]}"
+                        ),
+                        related_event_ids=[e.id for e in all_evts[:10]],
+                        related_agent_ids=[agent_id],
+                        suggested_playbook="quarantine_agent",
+                        mitre_tactic=MitreTactic.EXFILTRATION.value,
+                    )
+                )
+        return indicators
+
+    def _check_tool_abuse(
+        self,
+        events: list[EventRow],
+        window_seconds: int,
+    ) -> list[ThreatIndicator]:
+        """Legitimate tool misuse: rapid diverse tool calls from one agent → high."""
+        per_agent: dict[str, list[EventRow]] = defaultdict(list)
+        for e in events:
+            if e.type and "ai" in (e.type or "").lower():
+                per_agent[e.agent_id].append(e)
+
+        indicators = []
+        for agent_id, evts in per_agent.items():
+            tool_names = set()
+            for e in evts:
+                tool = (e.details or {}).get("tool_name", "")
+                if tool:
+                    tool_names.add(tool)
+            if len(tool_names) >= 8 and len(evts) >= 15:
+                indicators.append(
+                    ThreatIndicator(
+                        indicator_type="pattern_match",
+                        pattern_name="tool_abuse",
+                        severity="high",
+                        confidence=0.70,
+                        description=(
+                            f"Tool abuse: agent {agent_id[:8]} used {len(tool_names)} "
+                            f"distinct tools in {len(evts)} calls"
+                        ),
+                        related_event_ids=[e.id for e in evts[:10]],
+                        related_agent_ids=[agent_id],
+                        suggested_playbook="throttle_agent",
+                        mitre_tactic=MitreTactic.EXECUTION.value,
+                    )
+                )
+        return indicators
+
+    def _check_resource_exhaustion(
+        self,
+        events: list[EventRow],
+    ) -> list[ThreatIndicator]:
+        """Resource exhaustion: fork bomb, infinite loop, or stress commands → critical."""
+        resource_keywords = {"fork", "while true", ":()", "stress", "stress-ng",
+                             "dd if=/dev/zero", "dd if=/dev/urandom", "/dev/null"}
+        flagged = []
+        for e in events:
+            cmd = ((e.details or {}).get("command", "") or "").lower()
+            if any(k in cmd for k in resource_keywords):
+                flagged.append(e)
+
+        if not flagged:
+            return []
+        return [
+            ThreatIndicator(
+                indicator_type="pattern_match",
+                pattern_name="resource_exhaustion",
+                severity="critical",
+                confidence=0.90,
+                description=(
+                    f"Resource exhaustion: {len(flagged)} commands matching "
+                    f"DoS/resource abuse patterns"
+                ),
+                related_event_ids=[e.id for e in flagged[:10]],
+                related_agent_ids=list({e.agent_id for e in flagged}),
+                suggested_playbook="quarantine_agent",
+                mitre_tactic=MitreTactic.IMPACT.value,
+            )
+        ]
+
+    def _check_persistence_install(
+        self,
+        events: list[EventRow],
+    ) -> list[ThreatIndicator]:
+        """Persistence installation: crontab, systemd, registry modifications → high."""
+        persist_keywords = {"crontab", "systemctl enable", "/etc/init.d",
+                            "@reboot", "schtasks /create", "reg add",
+                            "launchctl load", "startup script"}
+        flagged = []
+        for e in events:
+            cmd = ((e.details or {}).get("command", "") or "").lower()
+            if any(k in cmd for k in persist_keywords):
+                flagged.append(e)
+
+        if not flagged:
+            return []
+        return [
+            ThreatIndicator(
+                indicator_type="pattern_match",
+                pattern_name="persistence_install",
+                severity="high",
+                confidence=0.80,
+                description=(
+                    f"Persistence installation: {len(flagged)} commands installing "
+                    f"persistence mechanisms"
+                ),
+                related_event_ids=[e.id for e in flagged[:10]],
+                related_agent_ids=list({e.agent_id for e in flagged}),
                 suggested_playbook="escalate_to_human",
                 mitre_tactic=MitreTactic.PERSISTENCE.value,
             )
