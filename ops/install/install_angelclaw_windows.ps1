@@ -141,36 +141,23 @@ if (-not $gitCmd) {
 # ---------------------------------------------------------------------------
 Write-Step "Checking Python..."
 
-# Disable Store aliases for python (Windows 10 redirects to Microsoft Store)
-$storeAliases = @(
-    "$env:LOCALAPPDATA\Microsoft\WindowsApps\python3.exe",
-    "$env:LOCALAPPDATA\Microsoft\WindowsApps\python.exe"
-)
-foreach ($alias in $storeAliases) {
-    if (Test-Path $alias) {
-        $target = (Get-Item $alias -ErrorAction SilentlyContinue).Target
-        if (-not $target -or $target -match "WindowsApps") {
-            # This is the Store stub, skip it
+# Temporarily allow errors (Windows 10 Store aliases write to stderr and crash strict mode)
+$savedEAP = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+
+$pyCmd = $null
+foreach ($name in @("python", "python3")) {
+    $cmd = Get-Command $name -ErrorAction SilentlyContinue
+    if ($cmd -and $cmd.Source -and $cmd.Source -notmatch "WindowsApps") {
+        $ver = cmd /c "$name --version" 2>&1
+        if ("$ver" -match "Python 3\.(1[1-9]|[2-9]\d)") {
+            $pyCmd = $name
+            break
         }
     }
 }
 
-# Check python first (standard on Windows), then python3
-$pyCmd = $null
-foreach ($name in @("python", "python3")) {
-    try {
-        $cmd = Get-Command $name -ErrorAction SilentlyContinue
-        if ($cmd -and $cmd.Source -notmatch "WindowsApps") {
-            $ver = (& $name --version 2>&1) -join ""
-            if ($ver -match "Python 3\.(1[1-9]|[2-9]\d)") {
-                $pyCmd = $name
-                break
-            }
-        }
-    } catch {
-        # Store alias or missing -- skip
-    }
-}
+$ErrorActionPreference = $savedEAP
 
 if (-not $pyCmd) {
     Write-Warn "Python 3.11+ not found. Installing via winget..."
@@ -194,15 +181,16 @@ if (-not $pyCmd) {
             $env:Path = "$p;$env:Path"
         }
     }
+    $savedEAP2 = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
     foreach ($name in @("python", "python3")) {
-        try {
-            $cmd = Get-Command $name -ErrorAction SilentlyContinue
-            if ($cmd -and $cmd.Source -notmatch "WindowsApps") {
-                $testVer = (& $name --version 2>&1) -join ""
-                if ($testVer -match "Python 3") { $pyCmd = $name; break }
-            }
-        } catch {}
+        $cmd = Get-Command $name -ErrorAction SilentlyContinue
+        if ($cmd -and $cmd.Source -and $cmd.Source -notmatch "WindowsApps") {
+            $testVer = cmd /c "$name --version" 2>&1
+            if ("$testVer" -match "Python 3") { $pyCmd = $name; break }
+        }
     }
+    $ErrorActionPreference = $savedEAP2
     if (-not $pyCmd) {
         Write-Err "Python installed but not in PATH. Close and reopen PowerShell, then re-run."
         exit 1
