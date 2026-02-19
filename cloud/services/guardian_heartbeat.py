@@ -38,7 +38,7 @@ def _run_heartbeat(tenant_id: str) -> GuardianReportRow:
     """Compute fleet health and store a report row."""
     db = SessionLocal()
     try:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         cutoff = now - timedelta(minutes=LOOKBACK_MINUTES)
 
         # Fleet health

@@ -490,12 +490,13 @@ def _check_agent_health(db) -> list[str]:
     try:
         from cloud.db.models import AgentNodeRow
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         stale_cutoff = now - timedelta(minutes=15)
         agents = db.query(AgentNodeRow).filter(AgentNodeRow.status == "active").all()
 
         for a in agents:
-            if a.last_seen_at and a.last_seen_at < stale_cutoff:
+            last_seen = a.last_seen_at.replace(tzinfo=None) if (a.last_seen_at and a.last_seen_at.tzinfo) else a.last_seen_at
+            if last_seen and last_seen < stale_cutoff:
                 msg = (
                     f"Agent {a.hostname} unresponsive"
                     f" (last seen {a.last_seen_at.strftime('%H:%M')})"
