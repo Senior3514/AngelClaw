@@ -141,15 +141,34 @@ if (-not $gitCmd) {
 # ---------------------------------------------------------------------------
 Write-Step "Checking Python..."
 
-$pyCmd = $null
-foreach ($name in @("python3", "python")) {
-    $cmd = Get-Command $name -ErrorAction SilentlyContinue
-    if ($cmd) {
-        $ver = & $name --version 2>&1
-        if ($ver -match "3\.(1[1-9]|[2-9]\d)") {
-            $pyCmd = $name
-            break
+# Disable Store aliases for python (Windows 10 redirects to Microsoft Store)
+$storeAliases = @(
+    "$env:LOCALAPPDATA\Microsoft\WindowsApps\python3.exe",
+    "$env:LOCALAPPDATA\Microsoft\WindowsApps\python.exe"
+)
+foreach ($alias in $storeAliases) {
+    if (Test-Path $alias) {
+        $target = (Get-Item $alias -ErrorAction SilentlyContinue).Target
+        if (-not $target -or $target -match "WindowsApps") {
+            # This is the Store stub, skip it
         }
+    }
+}
+
+# Check python first (standard on Windows), then python3
+$pyCmd = $null
+foreach ($name in @("python", "python3")) {
+    try {
+        $cmd = Get-Command $name -ErrorAction SilentlyContinue
+        if ($cmd -and $cmd.Source -notmatch "WindowsApps") {
+            $ver = (& $name --version 2>&1) -join ""
+            if ($ver -match "Python 3\.(1[1-9]|[2-9]\d)") {
+                $pyCmd = $name
+                break
+            }
+        }
+    } catch {
+        # Store alias or missing -- skip
     }
 }
 
@@ -175,9 +194,14 @@ if (-not $pyCmd) {
             $env:Path = "$p;$env:Path"
         }
     }
-    foreach ($name in @("python3", "python")) {
-        $cmd = Get-Command $name -ErrorAction SilentlyContinue
-        if ($cmd) { $pyCmd = $name; break }
+    foreach ($name in @("python", "python3")) {
+        try {
+            $cmd = Get-Command $name -ErrorAction SilentlyContinue
+            if ($cmd -and $cmd.Source -notmatch "WindowsApps") {
+                $testVer = (& $name --version 2>&1) -join ""
+                if ($testVer -match "Python 3") { $pyCmd = $name; break }
+            }
+        } catch {}
     }
     if (-not $pyCmd) {
         Write-Err "Python installed but not in PATH. Close and reopen PowerShell, then re-run."
