@@ -36,16 +36,16 @@ curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/insta
 
 Installs: Homebrew, Docker Desktop, Git, clones repo, builds & starts full stack.
 
-### Windows -- Client Agent (PowerShell as Admin)
+### Windows -- Client Agent (CMD as Admin)
 
-```powershell
-irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
+```cmd
+curl -fsSL -o %TEMP%\install.cmd https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.cmd && %TEMP%\install.cmd
 ```
 
 Or with server URL pre-set:
 
-```powershell
-$env:ANGELCLAW_CLOUD_URL="http://YOUR-SERVER-IP:8500"; irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
+```cmd
+set ANGELCLAW_CLOUD_URL=http://YOUR-SERVER-IP:8500 && curl -fsSL -o %TEMP%\install.cmd https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.cmd && %TEMP%\install.cmd
 ```
 
 Installs: Python + Git (via winget), ANGELNODE agent natively. **No Docker required.** Auto-starts on boot.
@@ -98,9 +98,11 @@ AngelClaw is a **multi-tenant** system. Each ANGELNODE connects with a **Tenant 
 ```bash
 # Linux / macOS
 ANGELCLAW_TENANT_ID="acme-corp" curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
+```
 
-# Windows (PowerShell as Admin)
-$env:ANGELCLAW_TENANT_ID="acme-corp"; irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
+```cmd
+:: Windows (CMD as Admin)
+set ANGELCLAW_TENANT_ID=acme-corp && curl -fsSL -o %TEMP%\install.cmd https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.cmd && %TEMP%\install.cmd
 ```
 
 ### Add tenants to a running system
@@ -121,7 +123,7 @@ Each tenant gets isolated: policies, events, alerts, analytics, feedback, and ha
 |----|---------|
 | **Linux** | `curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_linux.sh \| bash` |
 | **macOS** | `curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_macos.sh \| bash` |
-| **Windows** | PowerShell as Admin: `& "C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1"` |
+| **Windows** | CMD as Admin: `C:\AngelClaw\ops\install\uninstall_angelclaw_windows.cmd` |
 | **Docker** | `cd AngelClaw/ops && docker compose down -v` |
 
 Set `ANGELCLAW_KEEP_DATA=true` (Linux/macOS) or `-KeepData` (Windows) to preserve data.
