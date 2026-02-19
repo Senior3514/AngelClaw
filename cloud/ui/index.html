@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="AngelClaw AGI Guardian — Enterprise Security Console">
 <link rel="manifest" href="/mobile/manifest.json">
-<title>AngelClaw AGI Guardian 3.0 — Administrative Console</title>
+<title>AngelClaw AGI Guardian 7.0 — Administrative Console</title>
 <style>
   :root {
     --bg: #0c0e18;
@@ -336,7 +336,7 @@
     <h1>
       <span class="angel-icon">&#128737;</span>
       <span class="brand-text"><span class="brand-name">AngelClaw</span><span class="brand-sub">AGI Guardian</span></span>
-      <span class="version-pill">V3.0.0</span>
+      <span class="version-pill">V7.0.0</span>
     </h1>
   </div>
   <div class="header-right">
@@ -383,8 +383,41 @@
       <div class="nav-item" onclick="navigate('analytics')" data-page="analytics">
         <span class="nav-icon">&#128200;</span> Analytics
       </div>
+      <div class="nav-item" onclick="navigate('threat-intel')" data-page="threat-intel">
+        <span class="nav-icon">&#128270;</span> Threat Intel
+      </div>
       <div class="nav-item" onclick="navigate('learning')" data-page="learning">
         <span class="nav-icon">&#129504;</span> Self-Learning
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Operations</div>
+      <div class="nav-item" onclick="navigate('assets')" data-page="assets">
+        <span class="nav-icon">&#128451;</span> Assets
+      </div>
+      <div class="nav-item" onclick="navigate('soar')" data-page="soar">
+        <span class="nav-icon">&#9889;</span> SOAR
+      </div>
+      <div class="nav-item" onclick="navigate('zero-trust')" data-page="zero-trust">
+        <span class="nav-icon">&#128272;</span> Zero Trust
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">AGI Platform</div>
+      <div class="nav-item" onclick="navigate('transcendence')" data-page="transcendence">
+        <span class="nav-icon">&#129302;</span> AI Engine
+      </div>
+      <div class="nav-item" onclick="navigate('convergence')" data-page="convergence">
+        <span class="nav-icon">&#128338;</span> Real-Time
+      </div>
+      <div class="nav-item" onclick="navigate('omniguard')" data-page="omniguard">
+        <span class="nav-icon">&#9729;</span> Cloud Security
+      </div>
+      <div class="nav-item" onclick="navigate('prometheus')" data-page="prometheus">
+        <span class="nav-icon">&#127919;</span> Threat Hunting
+      </div>
+      <div class="nav-item" onclick="navigate('singularity')" data-page="singularity">
+        <span class="nav-icon">&#9889;</span> AGI Defense
       </div>
     </div>
     <div class="sidebar-section">
@@ -442,7 +475,7 @@
 </div>
 
 <script>
-/* ===== ANGELCLAW V3.0.0 ADMIN CONSOLE ===== */
+/* ===== ANGELCLAW V7.0.0 ADMIN CONSOLE ===== */
 const BASE = window.location.origin;
 const chatHistory = [];
 let authToken = localStorage.getItem('angelclaw_token') || '';
@@ -519,6 +552,15 @@ async function renderPage() {
     case 'anti-tamper': return renderAntiTamper(mc);
     case 'analytics': return renderAnalytics(mc);
     case 'learning': return renderLearning(mc);
+    case 'threat-intel': return renderThreatIntel(mc);
+    case 'assets': return renderAssets(mc);
+    case 'soar': return renderSOAR(mc);
+    case 'zero-trust': return renderZeroTrust(mc);
+    case 'transcendence': return renderTranscendence(mc);
+    case 'convergence': return renderConvergence(mc);
+    case 'omniguard': return renderOmniguard(mc);
+    case 'prometheus': return renderPrometheus(mc);
+    case 'singularity': return renderSingularity(mc);
     case 'policies': return renderPolicies(mc);
     case 'settings': return renderSettings(mc);
     default: mc.innerHTML='<div class="empty">Page not found</div>';
@@ -785,7 +827,7 @@ async function renderSettings(mc) {
   let html = `<div class="page-title">&#9881; Settings</div><div class="page-subtitle">Guardian configuration and preferences</div>`;
   html += '<div class="two-col">';
   // Preferences
-  html += '<div class="card"><div class="card-header"><span class="card-title">Guardian Preferences</span><span class="card-badge gold">V3.0.0</span></div><div style="display:flex;flex-direction:column;gap:8px">';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Guardian Preferences</span><span class="card-badge gold">V7.0.0</span></div><div style="display:flex;flex-direction:column;gap:8px">';
   const autonomy=prefs?prefs.autonomy_level:'suggest_only', scanFreq=prefs?prefs.scan_frequency_minutes:10, reporting=prefs?prefs.reporting_level:'normal';
   html += `<div class="pref-row"><label class="pref-label">Autonomy:</label><select class="pref-select" id="pref-autonomy" onchange="updatePref('autonomy_level',this.value)"><option value="observe_only" ${autonomy==='observe_only'?'selected':''}>Observe Only</option><option value="suggest_only" ${autonomy==='suggest_only'?'selected':''}>Suggest Only</option><option value="assist" ${autonomy==='assist'?'selected':''}>Assist</option><option value="autonomous_apply" ${autonomy==='autonomous_apply'?'selected':''}>Autonomous</option></select></div>`;
   html += `<div class="pref-row"><label class="pref-label">Scan (min):</label><select class="pref-select" id="pref-scan" onchange="updatePref('scan_frequency_minutes',parseInt(this.value))"><option value="1" ${scanFreq==1?'selected':''}>1</option><option value="5" ${scanFreq==5?'selected':''}>5</option><option value="10" ${scanFreq==10?'selected':''}>10</option><option value="30" ${scanFreq==30?'selected':''}>30</option><option value="60" ${scanFreq==60?'selected':''}>60</option></select></div>`;
@@ -796,6 +838,227 @@ async function renderSettings(mc) {
   if(daemon) {
     html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Cycles:</span><span>${daemon.cycles_completed}</span></div><div class="pref-row"><span class="pref-label">Last scan:</span><span>${esc(daemon.last_scan_summary||'none')}</span></div><div class="pref-row"><span class="pref-label">Activity log:</span><span>${daemon.activity_count} entries</span></div></div>`;
   }
+  html += '</div></div>';
+  mc.innerHTML = html;
+}
+
+/* === THREAT INTEL (V3.5) === */
+async function renderThreatIntel(mc) {
+  const [feeds,iocs,rep] = await Promise.all([
+    fetchJSON('/api/v1/intel/feeds?tenant_id=dev-tenant'),
+    fetchJSON('/api/v1/intel/iocs/matches?tenant_id=dev-tenant&limit=20'),
+    fetchJSON('/api/v1/intel/reputation/top?tenant_id=dev-tenant&limit=10'),
+  ]);
+  let html = `<div class="page-title">&#128270; Threat Intelligence</div><div class="page-subtitle">Feeds, IOC matching, and reputation scoring</div>`;
+  html += '<div class="stats"><div class="stat-card"><div class="stat-value" style="color:var(--accent)">'+(feeds?feeds.length:0)+'</div><div class="stat-label">Feeds</div></div><div class="stat-card"><div class="stat-value" style="color:var(--red)">'+(iocs?iocs.length:0)+'</div><div class="stat-label">IOC Matches</div></div><div class="stat-card"><div class="stat-value" style="color:var(--orange)">'+(rep?rep.length:0)+'</div><div class="stat-label">Reputation Entries</div></div></div>';
+  html += '<div class="two-col">';
+  // Feeds
+  html += '<div class="card"><div class="card-header"><span class="card-title">Active Feeds</span></div>';
+  if(feeds&&feeds.length) { html += '<table class="data-table"><thead><tr><th>Name</th><th>Type</th><th>IOCs</th><th>Status</th></tr></thead><tbody>'; feeds.forEach(f=>{ html += `<tr><td>${esc(f.name||f.feed_name)}</td><td>${esc(f.feed_type||f.type||'--')}</td><td>${f.ioc_count||0}</td><td><span class="status-badge status-active">${esc(f.status||'active')}</span></td></tr>`; }); html += '</tbody></table>'; } else html += '<div class="empty">No feeds configured</div>';
+  html += '</div>';
+  // IOC Matches
+  html += '<div class="card"><div class="card-header"><span class="card-title">Recent IOC Matches</span><span class="card-badge red">'+(iocs?iocs.length:0)+'</span></div><div style="max-height:260px;overflow-y:auto">';
+  if(iocs&&iocs.length) { iocs.forEach(m=>{ html += `<div class="alert-item" style="padding:5px 8px;margin-bottom:3px;background:var(--surface2);border-radius:6px;border-left:3px solid var(--red)"><div class="alert-body"><div class="alert-title"><span class="alert-sev sev-high">${esc(m.ioc_type||'IOC')}</span> ${esc(m.ioc_value||m.matched_value||'')}</div><div class="alert-meta">${esc(m.source||'feed')} &middot; ${ago(m.matched_at||m.created_at)}</div></div></div>`; }); } else html += '<div class="empty">No matches found</div>';
+  html += '</div></div></div>';
+  // Reputation
+  html += '<div class="card"><div class="card-header"><span class="card-title">Reputation Scores</span></div>';
+  if(rep&&rep.length) { html += '<table class="data-table"><thead><tr><th>Entity</th><th>Type</th><th>Score</th><th>Reports</th></tr></thead><tbody>'; rep.forEach(r=>{ const sc=r.score||0; const color=sc>=70?'var(--red)':sc>=40?'var(--orange)':'var(--green)'; html += `<tr><td style="font-family:var(--mono);font-size:10px">${esc((r.entity||r.value||'').substring(0,40))}</td><td>${esc(r.entity_type||r.type)}</td><td style="color:${color};font-weight:700">${sc}</td><td>${r.report_count||r.reports||0}</td></tr>`; }); html += '</tbody></table>'; } else html += '<div class="empty">No reputation data</div>';
+  html += '</div>';
+  mc.innerHTML = html;
+}
+
+/* === ASSETS (V4.0) === */
+async function renderAssets(mc) {
+  const [assets,vulns,topo] = await Promise.all([
+    fetchJSON('/api/v1/assets?tenant_id=dev-tenant&limit=30'),
+    fetchJSON('/api/v1/assets/vulnerabilities?tenant_id=dev-tenant&limit=20'),
+    fetchJSON('/api/v1/assets/topology/stats?tenant_id=dev-tenant'),
+  ]);
+  const assetList = assets||[];
+  let html = `<div class="page-title">&#128451; Asset Inventory & Topology</div><div class="page-subtitle">Discover, classify, and monitor all assets</div>`;
+  html += '<div class="stats"><div class="stat-card"><div class="stat-value" style="color:var(--accent)">'+assetList.length+'</div><div class="stat-label">Assets</div></div><div class="stat-card"><div class="stat-value" style="color:var(--red)">'+(vulns?vulns.length:0)+'</div><div class="stat-label">Vulnerabilities</div></div><div class="stat-card"><div class="stat-value" style="color:var(--purple)">'+(topo?topo.total_links||0:0)+'</div><div class="stat-label">Topology Links</div></div></div>';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Assets</span></div>';
+  if(assetList.length) { html += '<div class="table-wrap"><table class="data-table"><thead><tr><th>Name</th><th>Type</th><th>IP</th><th>OS</th><th>Risk</th><th>Status</th></tr></thead><tbody>'; assetList.forEach(a=>{ const rc=a.risk_score>=70?'var(--red)':a.risk_score>=40?'var(--orange)':'var(--green)'; html += `<tr><td><strong>${esc(a.name)}</strong></td><td>${esc(a.asset_type||'--')}</td><td style="font-family:var(--mono);font-size:10px">${esc(a.ip_address||'--')}</td><td>${esc(a.os||'--')}</td><td style="color:${rc};font-weight:700">${a.risk_score||0}</td><td><span class="status-badge status-active">${esc(a.status||'active')}</span></td></tr>`; }); html += '</tbody></table></div>'; } else html += '<div class="empty">No assets registered. Use the API to add assets.</div>';
+  html += '</div>';
+  mc.innerHTML = html;
+}
+
+/* === SOAR (V4.0) === */
+async function renderSOAR(mc) {
+  const [playbooks,sla] = await Promise.all([
+    fetchJSON('/api/v1/soar/playbooks?tenant_id=dev-tenant'),
+    fetchJSON('/api/v1/soar/sla?tenant_id=dev-tenant'),
+  ]);
+  let html = `<div class="page-title">&#9889; SOAR & Automation</div><div class="page-subtitle">Playbooks, orchestration, and SLA tracking</div>`;
+  html += '<div class="stats"><div class="stat-card"><div class="stat-value" style="color:var(--accent)">'+(playbooks?playbooks.length:0)+'</div><div class="stat-label">Playbooks</div></div><div class="stat-card"><div class="stat-value" style="color:var(--green)">'+(sla?sla.length:0)+'</div><div class="stat-label">SLA Policies</div></div></div>';
+  html += '<div class="two-col">';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Playbooks</span></div>';
+  if(playbooks&&playbooks.length) { html += '<table class="data-table"><thead><tr><th>Name</th><th>Trigger</th><th>Steps</th><th>Runs</th><th>Status</th></tr></thead><tbody>'; playbooks.forEach(p=>{ html += `<tr><td><strong>${esc(p.name)}</strong></td><td>${esc(p.trigger_condition||'manual')}</td><td>${p.steps?p.steps.length:0}</td><td>${p.execution_count||0}</td><td><span class="status-badge status-active">${esc(p.status||'active')}</span></td></tr>`; }); html += '</tbody></table>'; } else html += '<div class="empty">No playbooks defined</div>';
+  html += '</div>';
+  html += '<div class="card"><div class="card-header"><span class="card-title">SLA Policies</span></div>';
+  if(sla&&sla.length) { html += '<table class="data-table"><thead><tr><th>Name</th><th>Severity</th><th>Target</th><th>Breaches</th></tr></thead><tbody>'; sla.forEach(s=>{ html += `<tr><td>${esc(s.name||s.policy_name)}</td><td><span class="alert-sev ${sevClass(s.severity)}">${esc(s.severity)}</span></td><td>${s.target_minutes||s.response_time_minutes||'--'}m</td><td style="color:${s.breach_count>0?'var(--red)':'var(--green)'}">${s.breach_count||0}</td></tr>`; }); html += '</tbody></table>'; } else html += '<div class="empty">No SLA policies</div>';
+  html += '</div></div>';
+  mc.innerHTML = html;
+}
+
+/* === ZERO TRUST (V4.5) === */
+async function renderZeroTrust(mc) {
+  const [status,devices,sessions] = await Promise.all([
+    fetchJSON('/api/v1/convergence/status'),
+    fetchJSON('/api/v1/zerotrust/devices?tenant_id=dev-tenant'),
+    fetchJSON('/api/v1/zerotrust/sessions?tenant_id=dev-tenant&limit=20'),
+  ]);
+  const devList = devices||[];
+  const sessList = sessions||[];
+  let html = `<div class="page-title">&#128272; Zero Trust Architecture</div><div class="page-subtitle">Device trust, identity policies, microsegmentation, and session risk</div>`;
+  html += '<div class="stats"><div class="stat-card"><div class="stat-value" style="color:var(--accent)">'+devList.length+'</div><div class="stat-label">Devices</div></div><div class="stat-card"><div class="stat-value" style="color:var(--green)">'+sessList.length+'</div><div class="stat-label">Sessions</div></div></div>';
+  html += '<div class="two-col">';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Device Trust</span></div>';
+  if(devList.length) { html += '<table class="data-table"><thead><tr><th>Device</th><th>OS</th><th>Trust</th><th>Risk</th></tr></thead><tbody>'; devList.slice(0,15).forEach(d=>{ const tc=d.trust_score>=80?'var(--green)':d.trust_score>=60?'var(--yellow)':d.trust_score>=40?'var(--orange)':'var(--red)'; html += `<tr><td>${esc(d.device_name||d.device_id||'--')}</td><td>${esc(d.os_family||'--')}</td><td style="color:${tc};font-weight:700">${d.trust_score||0}/100</td><td>${esc(d.risk_level||'--')}</td></tr>`; }); html += '</tbody></table>'; } else html += '<div class="empty">No devices assessed</div>';
+  html += '</div>';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Active Sessions</span></div>';
+  if(sessList.length) { html += '<table class="data-table"><thead><tr><th>User</th><th>Risk</th><th>Action</th><th>Geo</th></tr></thead><tbody>'; sessList.slice(0,15).forEach(s=>{ const rc=s.risk_score>=70?'var(--red)':s.risk_score>=40?'var(--orange)':'var(--green)'; html += `<tr><td>${esc(s.user_id||'--')}</td><td style="color:${rc};font-weight:700">${s.risk_score||0}</td><td>${esc(s.recommended_action||'--')}</td><td>${esc(s.geo_location||'--')}</td></tr>`; }); html += '</tbody></table>'; } else html += '<div class="empty">No active sessions</div>';
+  html += '</div></div>';
+  mc.innerHTML = html;
+}
+
+/* === TRANSCENDENCE (V5.0) === */
+async function renderTranscendence(mc) {
+  const [models,compliance,forensics,evolving] = await Promise.all([
+    fetchJSON('/api/v1/transcendence/ai/models?tenant_id=dev-tenant'),
+    fetchJSON('/api/v1/transcendence/compliance/stats?tenant_id=dev-tenant'),
+    fetchJSON('/api/v1/transcendence/forensics/cases?tenant_id=dev-tenant'),
+    fetchJSON('/api/v1/transcendence/evolving/stats?tenant_id=dev-tenant'),
+  ]);
+  let html = `<div class="page-title">&#129302; AI Engine &mdash; Transcendence</div><div class="page-subtitle">AI orchestration, compliance-as-code, forensics, and self-evolving rules</div>`;
+  html += '<div class="stats"><div class="stat-card"><div class="stat-value" style="color:var(--accent)">'+(models?models.length:0)+'</div><div class="stat-label">AI Models</div></div><div class="stat-card"><div class="stat-value" style="color:var(--green)">'+(compliance?compliance.pass_rate||'--':'--')+'</div><div class="stat-label">Compliance Rate</div></div><div class="stat-card"><div class="stat-value" style="color:var(--purple)">'+(forensics?forensics.length:0)+'</div><div class="stat-label">Forensic Cases</div></div><div class="stat-card"><div class="stat-value" style="color:var(--orange)">'+(evolving?evolving.total_rules||0:0)+'</div><div class="stat-label">Evolving Rules</div></div></div>';
+  html += '<div class="two-col">';
+  html += '<div class="card"><div class="card-header"><span class="card-title">AI Model Registry</span></div>';
+  if(models&&models.length) { html += '<table class="data-table"><thead><tr><th>Model</th><th>Provider</th><th>Capabilities</th><th>Status</th></tr></thead><tbody>'; models.forEach(m=>{ html += `<tr><td><strong>${esc(m.name||m.model_name)}</strong></td><td>${esc(m.provider||'--')}</td><td>${(m.capabilities||[]).slice(0,3).map(c=>'<span style="font-size:9px;padding:1px 4px;border-radius:4px;background:var(--surface3);margin-right:2px">'+esc(c)+'</span>').join('')}</td><td><span class="status-badge ${m.enabled!==false?'status-active':'status-offline'}">${m.enabled!==false?'active':'disabled'}</span></td></tr>`; }); html += '</tbody></table>'; } else html += '<div class="empty">No AI models registered</div>';
+  html += '</div>';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Compliance Status</span></div>';
+  if(compliance) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Frameworks:</span><span>${compliance.total_frameworks||0}</span></div><div class="pref-row"><span class="pref-label">Rules:</span><span>${compliance.total_rules||0}</span></div><div class="pref-row"><span class="pref-label">Last audit:</span><span>${compliance.last_audit||'never'}</span></div></div>`; } else html += '<div class="empty">No compliance data</div>';
+  html += '</div></div>';
+  mc.innerHTML = html;
+}
+
+/* === CONVERGENCE (V5.5) === */
+async function renderConvergence(mc) {
+  const [status,halo] = await Promise.all([
+    fetchJSON('/api/v1/convergence/status'),
+    fetchJSON('/api/v1/convergence/halo/current'),
+  ]);
+  const rt = status?status.realtime:null;
+  const fleet = status?status.fleet:null;
+  const haloScore = halo?halo.score:null;
+  let html = `<div class="page-title">&#128338; Real-Time Defense Fabric</div><div class="page-subtitle">Live metrics, Halo Score, fleet orchestration</div>`;
+  html += '<div class="stats">';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--angel-gold)">'+(haloScore!==null?haloScore:'--')+'</div><div class="stat-label">Halo Score</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--accent)">'+(rt?rt.total_events||0:0)+'</div><div class="stat-label">Events</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--green)">'+(fleet?fleet.total_nodes||0:0)+'</div><div class="stat-label">Fleet Nodes</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--purple)">'+(fleet?fleet.active_nodes||0:0)+'</div><div class="stat-label">Active Nodes</div></div>';
+  html += '</div>';
+  // Halo Score Ring
+  if(haloScore!==null) { html += '<div class="card glow" style="background:var(--angel-halo)"><div class="card-header"><span class="card-title"><span class="icon">&#128737;</span> Halo Score</span><span class="card-badge gold">V5.5</span></div><div class="halo-score">'+renderHaloRing(haloScore,80)+'<div class="halo-meta"><div class="halo-label">Security Posture</div><div class="halo-desc">'+(haloScore>=80?'Excellent':'haloScore>=60?\'Good\':haloScore>=40?\'Needs Improvement\':\'Critical\'').replace(/'/g,'')+'</div></div></div></div>'; }
+  html += '<div class="two-col">';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Real-Time Metrics</span></div>';
+  if(rt) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Total events:</span><span>${rt.total_events||0}</span></div><div class="pref-row"><span class="pref-label">Subscribers:</span><span>${rt.subscribers||0}</span></div></div>`; } else html += '<div class="empty">No real-time data</div>';
+  html += '</div>';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Fleet Orchestrator</span></div>';
+  if(fleet) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Total nodes:</span><span>${fleet.total_nodes||0}</span></div><div class="pref-row"><span class="pref-label">Active:</span><span>${fleet.active_nodes||0}</span></div><div class="pref-row"><span class="pref-label">Commands:</span><span>${fleet.commands_dispatched||0}</span></div></div>`; } else html += '<div class="empty">No fleet data</div>';
+  html += '</div></div>';
+  mc.innerHTML = html;
+}
+
+/* === OMNIGUARD (V6.0) === */
+async function renderOmniguard(mc) {
+  const status = await fetchJSON('/api/v1/omniguard/status');
+  const cloud = status?status.cloud_connectors:null;
+  const cspm = status?status.cspm:null;
+  const saas = status?status.saas_shield:null;
+  const mesh = status?status.hybrid_mesh:null;
+  let html = `<div class="page-title">&#9729; Cloud Security &mdash; Omniguard</div><div class="page-subtitle">Multi-cloud defense, CSPM, SaaS shield, hybrid mesh</div>`;
+  html += '<div class="stats">';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--accent)">'+(cloud?cloud.total_connectors||0:0)+'</div><div class="stat-label">Cloud Connectors</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--red)">'+(cspm?cspm.total_findings||0:0)+'</div><div class="stat-label">CSPM Findings</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--purple)">'+(saas?saas.total_apps||0:0)+'</div><div class="stat-label">SaaS Apps</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--green)">'+(mesh?mesh.total_environments||0:0)+'</div><div class="stat-label">Mesh Envs</div></div>';
+  html += '</div>';
+  html += '<div class="two-col">';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Cloud Connectors</span></div>';
+  if(cloud&&cloud.total_connectors) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Connectors:</span><span>${cloud.total_connectors}</span></div><div class="pref-row"><span class="pref-label">Resources:</span><span>${cloud.total_resources||0}</span></div></div>`; } else html += '<div class="empty">No cloud connectors. Add via API.</div>';
+  html += '</div>';
+  html += '<div class="card"><div class="card-header"><span class="card-title">CSPM</span></div>';
+  if(cspm&&cspm.total_findings) { const crit=cspm.critical_findings||0; html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Findings:</span><span>${cspm.total_findings}</span></div><div class="pref-row"><span class="pref-label">Critical:</span><span style="color:var(--red)">${crit}</span></div><div class="pref-row"><span class="pref-label">Posture:</span><span>${cspm.posture_score||'--'}/100</span></div></div>`; } else html += '<div class="empty">No CSPM scans yet</div>';
+  html += '</div></div>';
+  html += '<div class="two-col">';
+  html += '<div class="card"><div class="card-header"><span class="card-title">SaaS Shield</span></div>';
+  if(saas&&saas.total_apps) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Apps:</span><span>${saas.total_apps}</span></div><div class="pref-row"><span class="pref-label">Shadow IT:</span><span style="color:var(--orange)">${saas.shadow_it_discovered||0}</span></div><div class="pref-row"><span class="pref-label">Sessions:</span><span>${saas.total_sessions||0}</span></div></div>`; } else html += '<div class="empty">No SaaS apps monitored</div>';
+  html += '</div>';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Hybrid Mesh</span></div>';
+  if(mesh&&mesh.total_environments) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Environments:</span><span>${mesh.total_environments}</span></div><div class="pref-row"><span class="pref-label">Federation:</span><span>${mesh.total_federation_links||0} links</span></div><div class="pref-row"><span class="pref-label">Syncs:</span><span>${mesh.total_policy_syncs||0}</span></div></div>`; } else html += '<div class="empty">No environments registered</div>';
+  html += '</div></div>';
+  mc.innerHTML = html;
+}
+
+/* === PROMETHEUS (V6.5) === */
+async function renderPrometheus(mc) {
+  const status = await fetchJSON('/api/v1/prometheus/status');
+  const hunt = status?status.threat_hunter:null;
+  const mitre = status?status.mitre_mapper:null;
+  const adv = status?status.adversary_sim:null;
+  const corr = status?status.intel_correlation:null;
+  let html = `<div class="page-title">&#127919; Threat Hunting &mdash; Prometheus</div><div class="page-subtitle">Autonomous hunting, MITRE ATT&CK, adversary simulation, intel correlation</div>`;
+  html += '<div class="stats">';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--accent)">'+(hunt?hunt.total_hunts||0:0)+'</div><div class="stat-label">Hunts</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--purple)">'+(mitre?mitre.total_techniques||0:0)+'</div><div class="stat-label">MITRE Techniques</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--red)">'+(adv?adv.total_scenarios||0:0)+'</div><div class="stat-label">Scenarios</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--orange)">'+(corr?corr.total_correlations||0:0)+'</div><div class="stat-label">Correlations</div></div>';
+  html += '</div>';
+  html += '<div class="two-col">';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Threat Hunter</span></div>';
+  if(hunt&&hunt.total_hunts) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Total hunts:</span><span>${hunt.total_hunts}</span></div><div class="pref-row"><span class="pref-label">Completed:</span><span style="color:var(--green)">${hunt.completed_hunts||0}</span></div><div class="pref-row"><span class="pref-label">Findings:</span><span>${hunt.total_findings||0}</span></div><div class="pref-row"><span class="pref-label">Playbooks:</span><span>${hunt.total_playbooks||0}</span></div></div>`; } else html += '<div class="empty">No hunts yet. Start one via API or chat.</div>';
+  html += '</div>';
+  html += '<div class="card"><div class="card-header"><span class="card-title">MITRE ATT&CK Coverage</span></div>';
+  if(mitre&&mitre.total_techniques) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Techniques:</span><span>${mitre.total_techniques}</span></div><div class="pref-row"><span class="pref-label">Mappings:</span><span>${mitre.total_mappings||0}</span></div><div class="pref-row"><span class="pref-label">Coverage:</span><span>${mitre.coverage_pct||'--'}%</span></div></div>`; } else html += '<div class="empty">No MITRE techniques tracked</div>';
+  html += '</div></div>';
+  html += '<div class="two-col">';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Adversary Simulation</span></div>';
+  if(adv&&adv.total_scenarios) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Scenarios:</span><span>${adv.total_scenarios}</span></div><div class="pref-row"><span class="pref-label">Simulations:</span><span>${adv.total_simulations||0}</span></div><div class="pref-row"><span class="pref-label">Detection rate:</span><span style="color:var(--green)">${adv.avg_detection_rate||'--'}%</span></div></div>`; } else html += '<div class="empty">No scenarios defined</div>';
+  html += '</div>';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Intel Correlation</span></div>';
+  if(corr&&corr.total_correlations) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Correlations:</span><span>${corr.total_correlations}</span></div><div class="pref-row"><span class="pref-label">Patterns:</span><span>${corr.total_patterns||0}</span></div><div class="pref-row"><span class="pref-label">Campaigns:</span><span>${corr.total_campaigns||0}</span></div></div>`; } else html += '<div class="empty">No correlations yet</div>';
+  html += '</div></div>';
+  mc.innerHTML = html;
+}
+
+/* === SINGULARITY (V7.0) === */
+async function renderSingularity(mc) {
+  const status = await fetchJSON('/api/v1/singularity/status');
+  const agi = status?status.agi_defense:null;
+  const resp = status?status.autonomous_response:null;
+  const fed = status?status.threat_federation:null;
+  const soc = status?status.soc_autopilot:null;
+  let html = `<div class="page-title">&#9889; AGI Defense &mdash; Singularity</div><div class="page-subtitle">Self-programming defense, autonomous response, threat federation, SOC autopilot</div>`;
+  html += '<div class="stats">';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--angel-gold)">'+(agi?agi.total_rules||0:0)+'</div><div class="stat-label">AGI Rules</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--red)">'+(resp?resp.total_responses||0:0)+'</div><div class="stat-label">Auto Responses</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--accent)">'+(fed?fed.total_indicators_shared||0:0)+'</div><div class="stat-label">Shared Intel</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--green)">'+(soc?soc.total_triaged||0:0)+'</div><div class="stat-label">SOC Triaged</div></div>';
+  html += '</div>';
+  html += '<div class="two-col">';
+  html += '<div class="card glow" style="background:var(--angel-halo)"><div class="card-header"><span class="card-title"><span class="icon">&#129302;</span> AGI Defense Engine</span><span class="card-badge gold">V7.0</span></div>';
+  if(agi) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Generated:</span><span>${agi.total_rules||0} rules</span></div><div class="pref-row"><span class="pref-label">Deployed:</span><span style="color:var(--green)">${agi.deployed_rules||0}</span></div><div class="pref-row"><span class="pref-label">Analyses:</span><span>${agi.total_analyses||0}</span></div><div class="pref-row"><span class="pref-label">Kill switches:</span><span style="color:var(--red)">${agi.killed_rules||0}</span></div></div>`; } else html += '<div class="empty">AGI Defense Engine initializing...</div>';
+  html += '</div>';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Autonomous Response</span></div>';
+  if(resp) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Responses:</span><span>${resp.total_responses||0}</span></div><div class="pref-row"><span class="pref-label">Contained:</span><span>${resp.containments||0}</span></div><div class="pref-row"><span class="pref-label">Recovered:</span><span style="color:var(--green)">${resp.recoveries||0}</span></div><div class="pref-row"><span class="pref-label">Overrides:</span><span>${resp.overrides||0}</span></div></div>`; } else html += '<div class="empty">No autonomous responses yet</div>';
+  html += '</div></div>';
+  html += '<div class="two-col">';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Threat Federation</span></div>';
+  if(fed) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Members:</span><span>${fed.total_members||0}</span></div><div class="pref-row"><span class="pref-label">Shared:</span><span>${fed.total_indicators_shared||0} indicators</span></div><div class="pref-row"><span class="pref-label">Consumed:</span><span>${fed.total_indicators_consumed||0}</span></div><div class="pref-row"><span class="pref-label">Collective:</span><span style="color:var(--angel-gold)">${fed.collective_score||'--'}/100</span></div></div>`; } else html += '<div class="empty">Not joined. Use /api/v1/singularity/federation/join</div>';
+  html += '</div>';
+  html += '<div class="card"><div class="card-header"><span class="card-title">SOC Autopilot</span></div>';
+  if(soc) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Triaged:</span><span>${soc.total_triaged||0} alerts</span></div><div class="pref-row"><span class="pref-label">Analysts:</span><span>${soc.total_analysts||0}</span></div><div class="pref-row"><span class="pref-label">Investigations:</span><span>${soc.active_investigations||0}</span></div><div class="pref-row"><span class="pref-label">Avg MTTR:</span><span>${soc.avg_mttr||'--'}</span></div></div>`; } else html += '<div class="empty">SOC Autopilot initializing...</div>';
   html += '</div></div>';
   mc.innerHTML = html;
 }

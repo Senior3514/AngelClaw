@@ -839,7 +839,7 @@ class TestAdminConsoleIntegration:
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "ok"
-        assert data["version"] == "3.0.0"
+        assert data["version"] == "7.0.0"
 
     @pytest.mark.skipif(not _HAS_MODELS, reason="DB models not available")
     def test_custom_role_creation_and_query(self, db):

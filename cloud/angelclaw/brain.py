@@ -1392,9 +1392,9 @@ class AngelClawBrain:
     def _handle_about(self) -> dict:
         return {
             "answer": (
-                "I'm **AngelClaw AGI Guardian v3.0.0 — Angel Dominion**.\n\n"
-                "I'm your autonomous guardian angel AI "
-                "with ClawSec-grade threat detection.\n\n"
+                "I'm **AngelClaw AGI Guardian v7.0.0 — Singularity**.\n\n"
+                "I'm your autonomous AGI guardian angel "
+                "with full-spectrum autonomous defense.\n\n"
                 "I live on this machine, watching over your AI agents,"
                 " servers, and infrastructure. "
                 "I protect quietly in the background"
@@ -1411,7 +1411,7 @@ class AngelClawBrain:
     def _handle_help(self) -> dict:
         return {
             "answer": (
-                "**AngelClaw AGI Guardian v3.0.0 — Angel Dominion**\n\n"
+                "**AngelClaw AGI Guardian v7.0.0 — Singularity**\n\n"
                 "Just talk to me naturally — I understand what you need.\n\n"
                 "Here are some things you can ask me:\n\n"
                 '  **Security scan** — "Scan the system", '
