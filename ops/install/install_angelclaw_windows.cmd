@@ -49,6 +49,13 @@ if defined ANGELCLAW_CLOUD_URL (
 )
 if "!CLOUD_URL!"=="" set "CLOUD_URL=http://127.0.0.1:8500"
 
+:: Strip trailing slash(es) to prevent double-slash URLs (e.g. //ui)
+:strip_slash
+if "!CLOUD_URL:~-1!"=="/" (
+    set "CLOUD_URL=!CLOUD_URL:~0,-1!"
+    goto strip_slash
+)
+
 if defined ANGELCLAW_TENANT_ID set "TENANT_ID=%ANGELCLAW_TENANT_ID%"
 
 echo.

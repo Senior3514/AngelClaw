@@ -7,8 +7,8 @@
 #   docker-compose up --build
 #
 # ANGELNODE is exposed on 127.0.0.1:8400 (host loopback only).
-# Cloud API is on 127.0.0.1:8500 (loopback only by default).
-# Set ANGELCLAW_BIND_HOST=0.0.0.0 for public exposure (requires auth).
+# Cloud API is on 0.0.0.0:8500 (accessible from remote clients).
+# Auth is enabled by default — see ops/config/angelclaw.env.
 # Ollama is internal-only (no host port) — enable via LLM_ENABLED=true.
 #
 # To enable LLM:
@@ -49,8 +49,9 @@ services:
       context: ..
       dockerfile: ops/docker/Dockerfile.cloud
     ports:
-      # SECURITY: bind to loopback by default. Set ANGELCLAW_BIND_HOST=0.0.0.0 for public exposure.
-      - "127.0.0.1:8500:8500"
+      # Bind to all interfaces so remote clients (Windows ANGELNODE) can connect.
+      # Auth is required — credentials are in ops/config/angelclaw.env.
+      - "0.0.0.0:8500:8500"
     expose:
       - "8500"
     volumes:
