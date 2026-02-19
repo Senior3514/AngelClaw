@@ -1,21 +1,18 @@
 # ============================================================================
-# AngelClaw AGI Guardian -- Windows Full-Stack Installer (V3.0.0)
+# AngelClaw AGI Guardian -- Windows Client Installer (V3.0.0)
 #
-# Installs the COMPLETE AngelClaw stack (ANGELNODE + Cloud + Ollama) on
-# Windows using Docker Desktop. Auto-installs Docker Desktop and Git via
-# winget if missing.
+# Installs ANGELNODE (lightweight agent) natively with Python.
+# NO Docker required. Connects to your AngelClaw Cloud server.
+# Auto-installs Python and Git via winget if missing.
 #
 # ONE-LINE INSTALL (PowerShell as Administrator):
 #   irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
 #
-# CUSTOM TENANT (set env vars before running):
-#   $env:ANGELCLAW_TENANT_ID="acme-corp"; irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
-#
-# LOCAL INSTALL (if repo already cloned):
-#   Set-ExecutionPolicy Bypass -Scope Process -Force
-#   .\ops\install\install_angelclaw_windows.ps1
+# WITH SERVER URL:
+#   $env:ANGELCLAW_CLOUD_URL="http://YOUR-SERVER:8500"; irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
 #
 # Environment variable overrides:
+#   ANGELCLAW_CLOUD_URL   Cloud server URL     (prompted if not set)
 #   ANGELCLAW_TENANT_ID   Tenant identifier    (default: default)
 #   ANGELCLAW_INSTALL_DIR Install directory     (default: C:\AngelClaw)
 #   ANGELCLAW_BRANCH      Git branch           (default: main)
@@ -25,16 +22,16 @@
 $ErrorActionPreference = "Stop"
 
 # ---------------------------------------------------------------------------
-# Configuration (override via environment variables)
+# Configuration
 # ---------------------------------------------------------------------------
-$TenantId   = if ($env:ANGELCLAW_TENANT_ID)   { $env:ANGELCLAW_TENANT_ID }   else { "default" }
 $InstallDir = if ($env:ANGELCLAW_INSTALL_DIR)  { $env:ANGELCLAW_INSTALL_DIR }  else { "C:\AngelClaw" }
-$Branch     = if ($env:ANGELCLAW_BRANCH)       { $env:ANGELCLAW_BRANCH }       else { "main" }
+$TenantId   = if ($env:ANGELCLAW_TENANT_ID)    { $env:ANGELCLAW_TENANT_ID }    else { "default" }
+$CloudUrl   = if ($env:ANGELCLAW_CLOUD_URL)    { $env:ANGELCLAW_CLOUD_URL }    else { "" }
+$Branch     = if ($env:ANGELCLAW_BRANCH)        { $env:ANGELCLAW_BRANCH }       else { "main" }
 $ForceClean = ($env:ANGELCLAW_FORCE -eq "true")
 
 $Repo = "https://github.com/Senior3514/AngelClaw.git"
-$Repo = "https://github.com/Senior3514/AngelClaw.git"
-$TotalSteps = 8
+$TotalSteps = 7
 $script:CurrentStep = 0
 
 # ---------------------------------------------------------------------------
@@ -43,6 +40,7 @@ $script:CurrentStep = 0
 function Write-Step {
     param([string]$msg)
     $script:CurrentStep++
+    Write-Host ""
     Write-Host "[$script:CurrentStep/$TotalSteps] $msg" -ForegroundColor Cyan
 }
 function Write-Ok   { param([string]$msg) Write-Host "  [OK] $msg" -ForegroundColor Green }
@@ -61,12 +59,13 @@ function Refresh-Path {
 Write-Host ""
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host "   AngelClaw AGI Guardian -- Windows Installer"   -ForegroundColor Cyan
-Write-Host "   V3.0.0 -- Dominion"                            -ForegroundColor Cyan
+Write-Host "   V3.0.0 -- Dominion (Native Python Agent)"      -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
+Write-Host "  No Docker required. Lightweight ANGELNODE agent." -ForegroundColor Gray
 
 # ---------------------------------------------------------------------------
-# Step 1: Pre-flight validation
+# Step 1: Pre-flight
 # ---------------------------------------------------------------------------
 Write-Step "Pre-flight validation..."
 
@@ -76,11 +75,26 @@ if (-not $isAdmin) {
     Write-Host "    Right-click PowerShell -> Run as Administrator"
     exit 1
 }
-
 Write-Ok "Running as Administrator."
+
+# Prompt for Cloud URL if not set
+if (-not $CloudUrl) {
+    Write-Host ""
+    Write-Host "  Enter your AngelClaw Cloud server URL." -ForegroundColor Yellow
+    Write-Host "  (This is the Linux server running the full stack)" -ForegroundColor Gray
+    Write-Host "  Example: http://203.0.113.50:8500" -ForegroundColor Gray
+    Write-Host ""
+    $CloudUrl = Read-Host "  Cloud URL"
+    if (-not $CloudUrl) {
+        $CloudUrl = "http://127.0.0.1:8500"
+        Write-Warn "No URL entered. Using localhost (http://127.0.0.1:8500)."
+    }
+}
+
+Write-Host ""
+Write-Host "  Cloud URL    : $CloudUrl"
 Write-Host "  Tenant ID    : $TenantId"
 Write-Host "  Install dir  : $InstallDir"
-Write-Host "  Branch       : $Branch"
 
 # ---------------------------------------------------------------------------
 # Step 2: Check / Install Git
@@ -97,15 +111,9 @@ if (-not $gitCmd) {
         exit 1
     }
     winget install --id Git.Git --accept-source-agreements --accept-package-agreements --silent
-    if ($LASTEXITCODE -ne 0) {
-        Write-Err "Failed to install Git via winget. Install manually:"
-        Write-Host "  https://git-scm.com/download/win"
-        exit 1
-    }
     Refresh-Path
     $gitCmd = Get-Command git -ErrorAction SilentlyContinue
     if (-not $gitCmd) {
-        # Try common install paths
         $gitPaths = @(
             "$env:ProgramFiles\Git\cmd",
             "${env:ProgramFiles(x86)}\Git\cmd",
@@ -119,134 +127,77 @@ if (-not $gitCmd) {
         }
         $gitCmd = Get-Command git -ErrorAction SilentlyContinue
         if (-not $gitCmd) {
-            Write-Err "Git installed but cannot be found. Please close and reopen PowerShell, then re-run this script."
+            Write-Err "Git installed but not in PATH. Close and reopen PowerShell, then re-run."
             exit 1
         }
     }
-    Write-Ok "Git installed successfully."
+    Write-Ok "Git installed."
 } else {
     Write-Ok "Git found."
 }
 
 # ---------------------------------------------------------------------------
-# Step 3: Check / Install Docker Desktop
+# Step 3: Check / Install Python
 # ---------------------------------------------------------------------------
-Write-Step "Checking Docker Desktop..."
+Write-Step "Checking Python..."
 
-$dockerCmd = Get-Command docker -ErrorAction SilentlyContinue
-if (-not $dockerCmd) {
-    Write-Warn "Docker Desktop is not installed. Installing via winget..."
-    $wingetCmd = Get-Command winget -ErrorAction SilentlyContinue
-    if (-not $wingetCmd) {
-        Write-Err "winget is not available. Please install Docker Desktop manually:"
-        Write-Host "  https://docs.docker.com/desktop/install/windows-install/"
-        exit 1
-    }
-    winget install --id Docker.DockerDesktop --accept-source-agreements --accept-package-agreements --silent
-    if ($LASTEXITCODE -ne 0) {
-        Write-Err "Failed to install Docker Desktop via winget. Install manually:"
-        Write-Host "  https://docs.docker.com/desktop/install/windows-install/"
-        exit 1
-    }
-    Refresh-Path
-    # Try common Docker paths
-    $dockerPaths = @(
-        "$env:ProgramFiles\Docker\Docker\resources\bin",
-        "$env:ProgramFiles\Docker\Docker"
-    )
-    foreach ($p in $dockerPaths) {
-        if (Test-Path "$p\docker.exe") {
-            $env:Path = "$p;$env:Path"
+$pyCmd = $null
+foreach ($name in @("python3", "python")) {
+    $cmd = Get-Command $name -ErrorAction SilentlyContinue
+    if ($cmd) {
+        $ver = & $name --version 2>&1
+        if ($ver -match "3\.(1[1-9]|[2-9]\d)") {
+            $pyCmd = $name
             break
         }
     }
-    $dockerCmd = Get-Command docker -ErrorAction SilentlyContinue
-    if (-not $dockerCmd) {
-        Write-Ok "Docker Desktop installed."
-        Write-Host ""
-        Write-Host "  ================================================" -ForegroundColor Yellow
-        Write-Host "  Docker Desktop was just installed." -ForegroundColor Yellow
-        Write-Host "  Please RESTART your computer, then:" -ForegroundColor Yellow
-        Write-Host "    1. Open Docker Desktop and wait for it to start" -ForegroundColor Yellow
-        Write-Host "    2. Re-run this installer" -ForegroundColor Yellow
-        Write-Host "  ================================================" -ForegroundColor Yellow
-        Write-Host ""
-        exit 0
-    }
-    Write-Ok "Docker Desktop installed."
 }
 
-$dockerVer = docker --version 2>&1
-Write-Ok "Docker found: $dockerVer"
-
-# Check Docker is running
-$dockerRunning = $false
-try {
-    $null = docker info 2>&1
-    if ($LASTEXITCODE -eq 0) { $dockerRunning = $true }
-} catch {}
-
-if (-not $dockerRunning) {
-    Write-Warn "Docker Desktop is not running. Attempting to start..."
-    $dockerDesktop = "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe"
-    if (Test-Path $dockerDesktop) {
-        Start-Process $dockerDesktop
-        Write-Host "  Waiting for Docker to start (up to 90s)..." -ForegroundColor Gray
-        $waited = 0
-        while ($waited -lt 90) {
-            Start-Sleep -Seconds 5
-            $waited += 5
-            try {
-                $null = docker info 2>&1
-                if ($LASTEXITCODE -eq 0) { $dockerRunning = $true; break }
-            } catch {}
-            Write-Host "  Waiting... ($waited`s)" -ForegroundColor Gray
-        }
-    }
-    if (-not $dockerRunning) {
-        Write-Err "Docker Desktop is not running. Please start it manually and re-run this script."
+if (-not $pyCmd) {
+    Write-Warn "Python 3.11+ not found. Installing via winget..."
+    $wingetCmd = Get-Command winget -ErrorAction SilentlyContinue
+    if (-not $wingetCmd) {
+        Write-Err "winget is not available. Install Python 3.12+ manually:"
+        Write-Host "  https://www.python.org/downloads/"
         exit 1
     }
-}
-Write-Ok "Docker daemon is running."
-
-# ---------------------------------------------------------------------------
-# Step 4: Check docker compose
-# ---------------------------------------------------------------------------
-Write-Step "Checking docker compose..."
-
-$dcCmd = $null
-try {
-    $null = docker compose version 2>&1
-    if ($LASTEXITCODE -eq 0) {
-        $composeVer = docker compose version 2>&1
-        Write-Ok "docker compose found: $composeVer"
-        $dcCmd = "compose"
+    winget install --id Python.Python.3.12 --accept-source-agreements --accept-package-agreements --silent
+    Refresh-Path
+    # Try common Python paths
+    $pyPaths = @(
+        "$env:LOCALAPPDATA\Programs\Python\Python312",
+        "$env:LOCALAPPDATA\Programs\Python\Python312\Scripts",
+        "$env:ProgramFiles\Python312",
+        "$env:ProgramFiles\Python312\Scripts"
+    )
+    foreach ($p in $pyPaths) {
+        if (Test-Path $p) {
+            $env:Path = "$p;$env:Path"
+        }
     }
-} catch {}
-
-if (-not $dcCmd) {
-    $dockerComposeCmd = Get-Command docker-compose -ErrorAction SilentlyContinue
-    if ($dockerComposeCmd) {
-        $composeVer = docker-compose --version 2>&1
-        Write-Ok "docker-compose found: $composeVer"
-        $dcCmd = "legacy"
+    foreach ($name in @("python3", "python")) {
+        $cmd = Get-Command $name -ErrorAction SilentlyContinue
+        if ($cmd) { $pyCmd = $name; break }
     }
-}
-
-if (-not $dcCmd) {
-    Write-Err "docker compose is not available."
-    Write-Host "  Docker Desktop should include docker compose. Please update Docker Desktop."
-    exit 1
+    if (-not $pyCmd) {
+        Write-Err "Python installed but not in PATH. Close and reopen PowerShell, then re-run."
+        exit 1
+    }
+    Write-Ok "Python installed."
+} else {
+    $pyVer = & $pyCmd --version 2>&1
+    Write-Ok "Python found: $pyVer"
 }
 
 # ---------------------------------------------------------------------------
-# Step 5: Clone or update repo
+# Step 4: Clone or update repo
 # ---------------------------------------------------------------------------
 Write-Step "Setting up AngelClaw at $InstallDir..."
 
 if ($ForceClean -and (Test-Path $InstallDir)) {
     Write-Warn "Force flag set -- removing existing installation..."
+    # Stop any running ANGELNODE first
+    Get-Process -Name "uvicorn" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     Remove-Item -Recurse -Force $InstallDir
 }
 
@@ -286,106 +237,141 @@ if (Test-Path "$InstallDir\.git") {
 }
 
 # ---------------------------------------------------------------------------
-# Step 6: Write environment config
+# Step 5: Create venv and install dependencies
 # ---------------------------------------------------------------------------
-Write-Step "Writing configuration..."
+Write-Step "Installing Python dependencies..."
 
-$configDir = Join-Path $InstallDir "ops\config"
-if (-not (Test-Path $configDir)) {
-    New-Item -ItemType Directory -Path $configDir -Force | Out-Null
-}
+$venvDir = Join-Path $InstallDir "venv"
+$venvPython = Join-Path $venvDir "Scripts\python.exe"
+$venvPip = Join-Path $venvDir "Scripts\pip.exe"
 
-$configFile = Join-Path $configDir "angelclaw.env"
-$timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-$configContent = @"
-# AngelClaw AGI Guardian -- generated by installer on $timestamp
-ANGELCLAW_TENANT_ID=$TenantId
-ANGELCLAW_CLOUD_URL=http://cloud:8500
-ANGELCLAW_BIND_HOST=127.0.0.1
-ANGELCLAW_BIND_PORT=8500
-ANGELCLAW_AUTH_ENABLED=true
-ANGELCLAW_SYNC_INTERVAL=60
-LLM_ENABLED=false
-LLM_MODEL=llama3
-"@
-
-Set-Content -Path $configFile -Value $configContent -Encoding UTF8
-Write-Ok "Config written to $configFile"
-
-# ---------------------------------------------------------------------------
-# Step 7: Build and start full stack
-# ---------------------------------------------------------------------------
-Write-Step "Building and starting AngelClaw stack..."
-
-$opsDir = Join-Path $InstallDir "ops"
-Push-Location $opsDir
-try {
-    if ($dcCmd -eq "compose") {
-        docker compose up -d --build
-    } else {
-        docker-compose up -d --build
-    }
+if (-not (Test-Path $venvPython)) {
+    Write-Host "  Creating virtual environment..." -ForegroundColor Gray
+    & $pyCmd -m venv $venvDir
     if ($LASTEXITCODE -ne 0) {
-        throw "docker compose returned exit code $LASTEXITCODE"
+        Write-Err "Failed to create virtual environment."
+        exit 1
     }
-    Write-Ok "AngelClaw stack started (ANGELNODE + Cloud + Ollama)."
+}
+Write-Ok "Virtual environment ready."
+
+Write-Host "  Installing packages (this may take a minute)..." -ForegroundColor Gray
+Push-Location $InstallDir
+try {
+    & $venvPip install --quiet -e . 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        & $venvPip install -e .
+        if ($LASTEXITCODE -ne 0) {
+            throw "pip install failed"
+        }
+    }
+    Write-Ok "Dependencies installed."
 } catch {
-    Write-Err "Failed to start containers: $_"
-    Write-Host "  Try running manually:"
-    Write-Host "    cd $opsDir"
-    Write-Host "    docker compose up -d --build"
+    Write-Err "Failed to install dependencies: $_"
+    exit 1
 } finally {
     Pop-Location
 }
 
 # ---------------------------------------------------------------------------
-# Step 8: Health check with retries
+# Step 6: Write config and start ANGELNODE
 # ---------------------------------------------------------------------------
-Write-Step "Verifying services..."
+Write-Step "Configuring and starting ANGELNODE..."
+
+# Create logs directory
+$logDir = Join-Path $InstallDir "logs"
+if (-not (Test-Path $logDir)) {
+    New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+}
+
+# Generate a unique agent ID for this machine
+$agentId = "win-" + ($env:COMPUTERNAME).ToLower()
+
+# Write a start script
+$startScript = Join-Path $InstallDir "start_angelnode.ps1"
+$startContent = @"
+# AngelClaw ANGELNODE -- Auto-generated start script
+`$env:ANGELGRID_CLOUD_URL = "$CloudUrl"
+`$env:ANGELGRID_TENANT_ID = "$TenantId"
+`$env:ANGELGRID_SYNC_INTERVAL = "60"
+`$env:ANGELNODE_AGENT_ID = "$agentId"
+`$env:ANGELNODE_POLICY_FILE = "$InstallDir\angelnode\config\default_policy.json"
+`$env:ANGELNODE_CATEGORY_DEFAULTS_FILE = "$InstallDir\angelnode\config\category_defaults.json"
+`$env:ANGELNODE_LOG_FILE = "$logDir\decisions.jsonl"
+
+Set-Location "$InstallDir"
+& "$venvDir\Scripts\uvicorn.exe" angelnode.core.server:app --host 127.0.0.1 --port 8400
+"@
+Set-Content -Path $startScript -Value $startContent -Encoding UTF8
+Write-Ok "Start script written to $startScript"
+
+# Set env vars and start ANGELNODE in background
+$env:ANGELGRID_CLOUD_URL = $CloudUrl
+$env:ANGELGRID_TENANT_ID = $TenantId
+$env:ANGELGRID_SYNC_INTERVAL = "60"
+$env:ANGELNODE_AGENT_ID = $agentId
+$env:ANGELNODE_POLICY_FILE = "$InstallDir\angelnode\config\default_policy.json"
+$env:ANGELNODE_CATEGORY_DEFAULTS_FILE = "$InstallDir\angelnode\config\category_defaults.json"
+$env:ANGELNODE_LOG_FILE = "$logDir\decisions.jsonl"
+
+# Stop any existing ANGELNODE
+$existingJobs = Get-Process -Name "uvicorn" -ErrorAction SilentlyContinue
+if ($existingJobs) {
+    Write-Warn "Stopping existing ANGELNODE process..."
+    $existingJobs | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2
+}
+
+# Start ANGELNODE in background
+$uvicornExe = Join-Path $venvDir "Scripts\uvicorn.exe"
+Start-Process -FilePath $uvicornExe `
+    -ArgumentList "angelnode.core.server:app --host 127.0.0.1 --port 8400" `
+    -WorkingDirectory $InstallDir `
+    -WindowStyle Hidden
+Write-Ok "ANGELNODE started (port 8400, agent: $agentId)"
+
+# Register Windows Scheduled Task for auto-start on boot
+$taskName = "AngelClaw-ANGELNODE"
+$existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+if ($existingTask) {
+    Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+}
+$action = New-ScheduledTaskAction `
+    -Execute "powershell.exe" `
+    -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$startScript`"" `
+    -WorkingDirectory $InstallDir
+$trigger = New-ScheduledTaskTrigger -AtStartup
+$principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -RunLevel Highest
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Force | Out-Null
+Write-Ok "Auto-start registered (runs on boot as $taskName)"
+
+# ---------------------------------------------------------------------------
+# Step 7: Health check
+# ---------------------------------------------------------------------------
+Write-Step "Verifying ANGELNODE health..."
 
 Write-Host "  Waiting for startup..." -ForegroundColor Gray
-Start-Sleep -Seconds 10
+Start-Sleep -Seconds 5
 
-# Check ANGELNODE
-$nodeHealthy = $false
-for ($attempt = 1; $attempt -le 3; $attempt++) {
+$healthy = $false
+for ($attempt = 1; $attempt -le 5; $attempt++) {
     try {
         $health = Invoke-RestMethod -Uri "http://127.0.0.1:8400/health" -TimeoutSec 5
-        $nodeHealthy = $true
+        $healthy = $true
         break
     } catch {
-        if ($attempt -lt 3) {
-            Write-Host "  ANGELNODE retry $attempt/3..." -ForegroundColor Gray
-            Start-Sleep -Seconds 5
+        if ($attempt -lt 5) {
+            Write-Host "  Retry $attempt/5..." -ForegroundColor Gray
+            Start-Sleep -Seconds 3
         }
     }
 }
 
-if ($nodeHealthy) {
-    Write-Ok "ANGELNODE is healthy (port 8400)"
+if ($healthy) {
+    Write-Ok "ANGELNODE is healthy!"
 } else {
-    Write-Warn "ANGELNODE health check failed -- container may still be starting."
-}
-
-# Check Cloud API
-$cloudHealthy = $false
-for ($attempt = 1; $attempt -le 3; $attempt++) {
-    try {
-        $health = Invoke-RestMethod -Uri "http://127.0.0.1:8500/health" -TimeoutSec 5
-        $cloudHealthy = $true
-        break
-    } catch {
-        if ($attempt -lt 3) {
-            Write-Host "  Cloud API retry $attempt/3..." -ForegroundColor Gray
-            Start-Sleep -Seconds 5
-        }
-    }
-}
-
-if ($cloudHealthy) {
-    Write-Ok "Cloud API is healthy (port 8500)"
-} else {
-    Write-Warn "Cloud API health check failed -- container may still be starting."
+    Write-Warn "Health check failed -- agent may still be starting."
+    Write-Host "    Check manually: curl http://127.0.0.1:8400/health"
 }
 
 # ---------------------------------------------------------------------------
@@ -393,29 +379,29 @@ if ($cloudHealthy) {
 # ---------------------------------------------------------------------------
 Write-Host ""
 Write-Host "================================================" -ForegroundColor Green
-Write-Host "   AngelClaw AGI Guardian -- Installed!"          -ForegroundColor Green
+Write-Host "   AngelClaw ANGELNODE -- Installed!"              -ForegroundColor Green
 Write-Host "================================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Install dir  : $InstallDir"
-Write-Host "  Config       : $configFile"
+Write-Host "  Agent ID     : $agentId"
 Write-Host "  Tenant ID    : $TenantId"
+Write-Host "  Cloud URL    : $CloudUrl"
+Write-Host "  ANGELNODE    : http://127.0.0.1:8400"
 Write-Host ""
-Write-Host "  Access:"
-Write-Host "    Dashboard  : http://127.0.0.1:8500/ui"
-Write-Host "    ANGELNODE  : http://127.0.0.1:8400"
-Write-Host "    Cloud API  : http://127.0.0.1:8500"
-Write-Host ""
-Write-Host "  Default login: admin / fzMiSbDRGylsWrsaljMv7UxzrwdXCdTe" -ForegroundColor Yellow
-Write-Host "  Change the password immediately after first login!" -ForegroundColor Yellow
+Write-Host "  Auto-start   : Enabled (Windows Scheduled Task)" -ForegroundColor Green
+Write-Host "  No Docker    : Running natively with Python" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Useful commands:"
-Write-Host "    docker ps                                # check containers"
-Write-Host "    docker logs angelclaw-angelnode-1 -f     # follow node logs"
-Write-Host "    docker logs angelclaw-cloud-1 -f         # follow cloud logs"
+Write-Host "    curl http://127.0.0.1:8400/health        # health check"
+Write-Host "    curl http://127.0.0.1:8400/status        # agent status"
+Write-Host "    Get-ScheduledTask -TaskName AngelClaw*    # check auto-start"
 Write-Host ""
-Write-Host "  Multi-tenancy:"
-Write-Host "    Each ANGELNODE uses a Tenant ID to isolate data."
-Write-Host "    Set `$env:ANGELCLAW_TENANT_ID before re-running to add tenants."
+Write-Host "  Start/Stop manually:"
+Write-Host "    & `"$startScript`"                         # start"
+Write-Host "    Stop-Process -Name uvicorn                # stop"
+Write-Host ""
+Write-Host "  Dashboard (on your server):"
+Write-Host "    $CloudUrl/ui"
 Write-Host ""
 Write-Host "  Uninstall:"
 Write-Host "    & `"$InstallDir\ops\install\uninstall_angelclaw_windows.ps1`""

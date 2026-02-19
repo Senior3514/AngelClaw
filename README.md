@@ -36,13 +36,19 @@ curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/insta
 
 Installs: Homebrew, Docker Desktop, Git, clones repo, builds & starts full stack.
 
-### Windows (PowerShell as Admin)
+### Windows -- Client Agent (PowerShell as Admin)
 
 ```powershell
 irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
 ```
 
-Installs: Git (via winget), Docker Desktop (via winget), clones repo, builds & starts full stack.
+Or with server URL pre-set:
+
+```powershell
+$env:ANGELCLAW_CLOUD_URL="http://YOUR-SERVER-IP:8500"; irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
+```
+
+Installs: Python + Git (via winget), ANGELNODE agent natively. **No Docker required.** Auto-starts on boot.
 
 ### Docker (all platforms)
 
