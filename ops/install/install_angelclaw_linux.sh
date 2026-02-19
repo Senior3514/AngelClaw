@@ -19,8 +19,6 @@
 #   ANGELCLAW_CLOUD_URL   Cloud URL for agents (default: http://cloud:8500)
 #   LLM_ENABLED           Enable LLM proxy     (default: false)
 #   ANGELCLAW_FORCE       Force clean reinstall (default: false)
-#   GH_USER               GitHub username       (prompted if not set)
-#   GH_TOKEN              GitHub PAT            (prompted if not set)
 # ============================================================================
 
 set -euo pipefail
@@ -28,6 +26,7 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
+REPO="${ANGELCLAW_REPO:-https://github.com/Senior3514/AngelClaw.git}"
 BRANCH="${ANGELCLAW_BRANCH:-main}"
 INSTALL_DIR="${ANGELCLAW_DIR:-/root/AngelClaw}"
 TENANT_ID="${ANGELCLAW_TENANT_ID:-default}"
@@ -76,17 +75,6 @@ fi
 echo "  Tenant ID    : $TENANT_ID"
 echo "  Install dir  : $INSTALL_DIR"
 echo "  Branch       : $BRANCH"
-echo ""
-
-# GitHub credentials (private repo) -- read from /dev/tty so curl|bash works
-if [ -z "${GH_USER:-}" ]; then
-  printf "  GitHub username: " ; read -r GH_USER < /dev/tty
-fi
-if [ -z "${GH_TOKEN:-}" ]; then
-  printf "  GitHub PAT (token): " ; read -r GH_TOKEN < /dev/tty
-fi
-REPO="https://${GH_USER}:${GH_TOKEN}@github.com/Senior3514/AngelClaw.git"
-ok "Credentials set for github.com/Senior3514/AngelClaw"
 echo ""
 
 # Detect package manager

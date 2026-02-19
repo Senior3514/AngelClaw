@@ -18,19 +18,12 @@ analysis, reading, summarizing, reasoning, creating -- flows freely.
 ## Installation
 
 All installers **auto-install every dependency** (Docker, Git, Homebrew) -- zero prerequisites.
-Prompts for GitHub username + PAT (Personal Access Token) on first run.
-Full stack. Done.
+One command. Full stack. Done.
 
 ### Linux
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
-```
-
-Or with credentials pre-set (no prompts):
-
-```bash
-GH_USER="youruser" GH_TOKEN="ghp_xxxx" curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
 ```
 
 Installs: Docker, docker compose, Git, clones repo, builds & starts ANGELNODE + Cloud + Ollama, creates systemd service.
@@ -47,12 +40,6 @@ Installs: Homebrew, Docker Desktop, Git, clones repo, builds & starts full stack
 
 ```powershell
 irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
-```
-
-Or with credentials pre-set (no prompts):
-
-```powershell
-$env:GH_USER="youruser"; $env:GH_TOKEN="ghp_xxxx"; irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
 ```
 
 Installs: Git (via winget), Docker Desktop (via winget), clones repo, builds & starts full stack.
@@ -104,10 +91,10 @@ AngelClaw is a **multi-tenant** system. Each ANGELNODE connects with a **Tenant 
 
 ```bash
 # Linux / macOS
-ANGELCLAW_TENANT_ID="acme-corp" GH_USER="youruser" GH_TOKEN="ghp_xxxx" curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
+ANGELCLAW_TENANT_ID="acme-corp" curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
 
 # Windows (PowerShell as Admin)
-$env:ANGELCLAW_TENANT_ID="acme-corp"; $env:GH_USER="youruser"; $env:GH_TOKEN="ghp_xxxx"; irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
+$env:ANGELCLAW_TENANT_ID="acme-corp"; irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
 ```
 
 ### Add tenants to a running system
