@@ -281,7 +281,7 @@ uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
 | Field | Value |
 |-------|-------|
 | Username | `admin` |
-| Password | `angelclaw` |
+| Password | `fzMiSbDRGylsWrsaljMv7UxzrwdXCdTe` |
 | Role | `admin` |
 
 **Change the default password immediately** after first login via the UI or:
@@ -290,7 +290,7 @@ uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
 curl -X POST http://127.0.0.1:8500/api/v1/auth/change-password \
   -H 'Authorization: Bearer YOUR_TOKEN' \
   -H 'Content-Type: application/json' \
-  -d '{"current_password":"angelclaw","new_password":"YOUR_STRONG_PASSWORD"}'
+  -d '{"current_password":"fzMiSbDRGylsWrsaljMv7UxzrwdXCdTe","new_password":"YOUR_STRONG_PASSWORD"}'
 ```
 
 ---

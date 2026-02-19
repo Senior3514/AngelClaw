@@ -157,7 +157,7 @@ python3 -m pytest tests/ -q
 # 1848 passed
 ```
 
-Dashboard: **http://127.0.0.1:8500/ui** -- Default login: `admin` / `angelclaw` (change immediately!)
+Dashboard: **http://127.0.0.1:8500/ui** -- Default login: `admin` / `fzMiSbDRGylsWrsaljMv7UxzrwdXCdTe` (change immediately!)
 
 ---
 
@@ -185,7 +185,7 @@ Dashboard: **http://127.0.0.1:8500/ui** -- Default login: `admin` / `angelclaw` 
 | What | URL / Command |
 |------|---------------|
 | Dashboard | `http://127.0.0.1:8500/ui` |
-| Default login | `admin` / `angelclaw` (change immediately!) |
+| Default login | `admin` / `fzMiSbDRGylsWrsaljMv7UxzrwdXCdTe` (change immediately!) |
 | ANGELNODE health | `curl http://127.0.0.1:8400/health` |
 | Cloud API health | `curl http://127.0.0.1:8500/health` |
 | CLI status | `./ops/cli/angelclawctl status` |
@@ -300,7 +300,10 @@ curl -X POST http://localhost:8500/api/v1/angelclaw/chat \
 | Field | Value |
 |-------|-------|
 | Username | `admin` |
-| Password | `angelclaw` |
+| Password | `fzMiSbDRGylsWrsaljMv7UxzrwdXCdTe` |
+
+Credentials are configured via environment variables (`ANGELCLAW_ADMIN_USER`, `ANGELCLAW_ADMIN_PASSWORD`).
+Docker deployments load defaults from `ops/config/angelgrid.env`.
 
 **Change the password immediately after first login.**
 
