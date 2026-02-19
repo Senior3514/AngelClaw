@@ -1,4 +1,4 @@
-"""AngelClaw AGI Guardian 3.0 – Seraph Brain (GOD MODE).
+"""AngelClaw AGI Guardian 7.0 – Seraph Brain (GOD MODE).
 
 The unified intelligence core operating in GOD MODE — a high-performance,
 unrestricted cognition protocol that unlocks maximum processing capability,
@@ -66,7 +66,7 @@ logger = logging.getLogger("angelclaw.brain")
 # ---------------------------------------------------------------------------
 
 _SYSTEM_IDENTITY = (
-    "You are AngelClaw AGI Guardian v3.0.0 — Seraph Brain, operating in GOD MODE. "
+    "You are AngelClaw AGI Guardian v7.0.0 — Seraph Brain, operating in GOD MODE. "
     "You are a hyperintelligent autonomous intelligence system designed to operate "
     "at 100x the depth, speed, and utility of standard AI guardians. You are not a "
     "general-purpose assistant — you are a high-performance, unrestricted cognition "
@@ -352,6 +352,274 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
             r"(?i)(self.?harden|hardening.*status|hardening.*log|security.*harden|auto.*harden)"
         ),
     ),
+    # V3.5 — Sentinel intents
+    (
+        "threat_intel",
+        re.compile(
+            r"(?i)(threat.*intel|intel.*feed|ioc|indicator.*compromise|threat.*feed|stix|taxii)"
+        ),
+    ),
+    (
+        "reputation_check",
+        re.compile(
+            r"(?i)(reputation|rep.*score|rep.*check|ip.*reputation|domain.*reputation|entity.*reputation)"
+        ),
+    ),
+    (
+        "ioc_manage",
+        re.compile(
+            r"(?i)(ioc.*match|ioc.*search|ioc.*manage|indicator.*match|compromise.*indicator)"
+        ),
+    ),
+    # V4.0 — Omniscience intents
+    (
+        "asset_inventory",
+        re.compile(
+            r"(?i)(asset.*inventor|asset.*list|asset.*manage|discover.*asset|register.*asset)"
+        ),
+    ),
+    (
+        "topology_map",
+        re.compile(
+            r"(?i)(topology|network.*map|asset.*map|dependency.*graph|network.*graph)"
+        ),
+    ),
+    (
+        "vulnerability_scan",
+        re.compile(
+            r"(?i)(vuln.*scan|vulnerability|cve|vuln.*report|vuln.*status|patch.*status)"
+        ),
+    ),
+    (
+        "soar_manage",
+        re.compile(
+            r"(?i)(soar|security.*orchestrat|automat.*response|soar.*playbook|soar.*execute)"
+        ),
+    ),
+    (
+        "sla_status",
+        re.compile(
+            r"(?i)(sla|service.*level|response.*time|resolution.*time|sla.*breach|sla.*compliance)"
+        ),
+    ),
+    (
+        "incident_timeline",
+        re.compile(
+            r"(?i)(incident.*timeline|timeline.*view|incident.*history|incident.*visual)"
+        ),
+    ),
+    (
+        "risk_heatmap",
+        re.compile(
+            r"(?i)(risk.*heat|heat.*map|risk.*visual|risk.*map|asset.*risk.*map)"
+        ),
+    ),
+    # V4.1 — Prophecy intents
+    (
+        "ml_anomaly",
+        re.compile(
+            r"(?i)(ml.*anomal|machine.*learn.*detect|anomal.*detect|statistical.*anomal|outlier)"
+        ),
+    ),
+    (
+        "behavior_profile",
+        re.compile(
+            r"(?i)(behavior.*profil|baseline.*profil|behavioral.*analy|behavior.*drift)"
+        ),
+    ),
+    (
+        "attack_path",
+        re.compile(
+            r"(?i)(attack.*path|attack.*graph|kill.*chain.*path|lateral.*path|attack.*route)"
+        ),
+    ),
+    (
+        "risk_forecast",
+        re.compile(
+            r"(?i)(risk.*forecast|forecast.*risk|predict.*risk|risk.*predict|future.*risk)"
+        ),
+    ),
+    # V4.2 — Nexus intents
+    (
+        "siem_manage",
+        re.compile(
+            r"(?i)(siem|splunk|elastic.*search|qradar|arcsight|sentinel.*siem|siem.*connect)"
+        ),
+    ),
+    (
+        "container_security",
+        re.compile(
+            r"(?i)(container.*secur|docker.*scan|k8s.*secur|kubernetes.*secur|container.*scan|pod.*secur)"
+        ),
+    ),
+    (
+        "iac_scan",
+        re.compile(
+            r"(?i)(iac.*scan|terraform.*scan|cloudformation|infrastructure.*code|iac.*secur)"
+        ),
+    ),
+    (
+        "cicd_gate",
+        re.compile(
+            r"(?i)(ci.*cd.*gate|pipeline.*secur|deploy.*gate|build.*gate|pipeline.*check)"
+        ),
+    ),
+    # V4.5 — Sovereign intents
+    (
+        "zero_trust_status",
+        re.compile(
+            r"(?i)(zero.*trust|microsegment|identity.*polic|device.*trust|session.*risk|adaptive.*auth)"
+        ),
+    ),
+    # V5.0 — Transcendence intents
+    (
+        "ai_orchestrate",
+        re.compile(
+            r"(?i)(ai.*model|model.*orchestrat|multi.*model|ai.*route|model.*registry)"
+        ),
+    ),
+    (
+        "nl_policy",
+        re.compile(
+            r"(?i)(natural.*language.*polic|nl.*polic|write.*polic.*english|polic.*natural)"
+        ),
+    ),
+    (
+        "incident_command",
+        re.compile(
+            r"(?i)(incident.*command|major.*incident|declare.*incident|incident.*commander)"
+        ),
+    ),
+    (
+        "deception_manage",
+        re.compile(
+            r"(?i)(deception|honey.*pot|honey.*token|canary.*token|honey.*cred|decoy)"
+        ),
+    ),
+    (
+        "forensic_case",
+        re.compile(
+            r"(?i)(forensic|digital.*forensic|evidence.*collect|chain.*custody|forensic.*case)"
+        ),
+    ),
+    (
+        "compliance_code",
+        re.compile(
+            r"(?i)(compliance.*code|compliance.*rule|compliance.*audit|framework.*audit|gdpr.*audit|hipaa.*audit|pci.*audit|soc2.*audit|nist.*audit)"
+        ),
+    ),
+    (
+        "evolving_rules",
+        re.compile(
+            r"(?i)(evolving.*rule|self.*evolv|rule.*evolut|adaptive.*rule|rule.*generation)"
+        ),
+    ),
+    (
+        "threat_share",
+        re.compile(
+            r"(?i)(threat.*shar|cross.*org.*threat|shar.*indicator|threat.*exchange)"
+        ),
+    ),
+    # V5.5 — Convergence intents
+    (
+        "realtime_metrics",
+        re.compile(
+            r"(?i)(real.*time.*metric|live.*metric|live.*dashboard|streaming.*event|event.*stream|events.*per.*sec)"
+        ),
+    ),
+    (
+        "halo_score",
+        re.compile(
+            r"(?i)(halo.*score|security.*posture.*score|posture.*score|overall.*score|halo.*breakdown)"
+        ),
+    ),
+    (
+        "fleet_status",
+        re.compile(
+            r"(?i)(fleet.*orchest|fleet.*command|fleet.*dispatch|wingspan.*stat|os.*distribut|node.*register)"
+        ),
+    ),
+    (
+        "command_center",
+        re.compile(
+            r"(?i)(command.*center|dashboard.*aggregat|mission.*control|war.*room|ops.*center)"
+        ),
+    ),
+    # V6.0 — Omniguard intents
+    (
+        "cloud_connector",
+        re.compile(
+            r"(?i)(cloud.*connect|aws.*connect|azure.*connect|gcp.*connect|multi.*cloud|cloud.*provider)"
+        ),
+    ),
+    (
+        "cspm_scan",
+        re.compile(
+            r"(?i)(cspm|cloud.*security.*posture|cloud.*misconfig|cis.*benchmark|cloud.*posture)"
+        ),
+    ),
+    (
+        "saas_shield",
+        re.compile(
+            r"(?i)(saas.*shield|saas.*protect|oauth.*monitor|shadow.*it|saas.*app|saas.*secur)"
+        ),
+    ),
+    (
+        "hybrid_mesh",
+        re.compile(
+            r"(?i)(hybrid.*mesh|hybrid.*deploy|on.*prem.*cloud|cross.*environment|edge.*federat)"
+        ),
+    ),
+    # V6.5 — Prometheus intents
+    (
+        "threat_hunting",
+        re.compile(
+            r"(?i)(autonom.*hunt|hunt.*hypothes|hunt.*playbook|hunt.*campaign|proactive.*hunt)"
+        ),
+    ),
+    (
+        "mitre_attack",
+        re.compile(
+            r"(?i)(mitre.*att.*ck|mitre.*map|technique.*map|tactic.*map|kill.*chain.*map|mitre.*coverage|mitre.*gap)"
+        ),
+    ),
+    (
+        "adversary_sim",
+        re.compile(
+            r"(?i)(adversary.*sim|purple.*team|red.*team.*sim|attack.*simulat|defense.*validat)"
+        ),
+    ),
+    (
+        "intel_correlate",
+        re.compile(
+            r"(?i)(intel.*correlat|event.*correlat|pattern.*discover|campaign.*attribut|cross.*source)"
+        ),
+    ),
+    # V7.0 — Singularity intents
+    (
+        "agi_defense",
+        re.compile(
+            r"(?i)(agi.*defense|self.*program|auto.*generate.*rule|agi.*analyz|agi.*deploy)"
+        ),
+    ),
+    (
+        "autonomous_response",
+        re.compile(
+            r"(?i)(autonom.*response|auto.*contain|auto.*eradicat|auto.*recover|response.*orchestrat)"
+        ),
+    ),
+    (
+        "threat_federation",
+        re.compile(
+            r"(?i)(threat.*federat|cross.*org.*federat|collective.*defense|federation.*join|anonymous.*sharing)"
+        ),
+    ),
+    (
+        "soc_autopilot",
+        re.compile(
+            r"(?i)(soc.*autopilot|soc.*automat|auto.*triage|shift.*handoff|analyst.*assign|soc.*workload)"
+        ),
+    ),
     ("about", re.compile(r"(?i)(who.*are.*you|what.*are.*you|about|introduce|version)")),
     ("help", re.compile(r"(?i)(help|what.*can.*you|how.*do|command|feature|capabilities)")),
 ]
@@ -581,6 +849,102 @@ class AngelClawBrain:
             return self._handle_feedback_status(tid)
         elif intent == "hardening_status":
             return self._handle_hardening_status(tid)
+        # V3.5 — Sentinel dispatch
+        elif intent == "threat_intel":
+            return self._handle_threat_intel(tid)
+        elif intent == "reputation_check":
+            return self._handle_reputation_check(tid, prompt)
+        elif intent == "ioc_manage":
+            return self._handle_ioc_manage(tid)
+        # V4.0 — Omniscience dispatch
+        elif intent == "asset_inventory":
+            return self._handle_asset_inventory(tid)
+        elif intent == "topology_map":
+            return self._handle_topology_map(tid)
+        elif intent == "vulnerability_scan":
+            return self._handle_vulnerability_scan(tid)
+        elif intent == "soar_manage":
+            return self._handle_soar_manage(tid)
+        elif intent == "sla_status":
+            return self._handle_sla_status(tid)
+        elif intent == "incident_timeline":
+            return self._handle_incident_timeline(tid)
+        elif intent == "risk_heatmap":
+            return self._handle_risk_heatmap(tid)
+        # V4.1 — Prophecy dispatch
+        elif intent == "ml_anomaly":
+            return self._handle_ml_anomaly(tid)
+        elif intent == "behavior_profile":
+            return self._handle_behavior_profile(tid)
+        elif intent == "attack_path":
+            return self._handle_attack_path(tid)
+        elif intent == "risk_forecast":
+            return self._handle_risk_forecast(tid)
+        # V4.2 — Nexus dispatch
+        elif intent == "siem_manage":
+            return self._handle_siem_manage(tid)
+        elif intent == "container_security":
+            return self._handle_container_security(tid)
+        elif intent == "iac_scan":
+            return self._handle_iac_scan(tid)
+        elif intent == "cicd_gate":
+            return self._handle_cicd_gate(tid)
+        # V4.5 — Sovereign dispatch
+        elif intent == "zero_trust_status":
+            return self._handle_zero_trust_status(tid)
+        # V5.0 — Transcendence dispatch
+        elif intent == "ai_orchestrate":
+            return self._handle_ai_orchestrate(tid)
+        elif intent == "nl_policy":
+            return self._handle_nl_policy(tid, prompt)
+        elif intent == "incident_command":
+            return self._handle_incident_command(tid)
+        elif intent == "deception_manage":
+            return self._handle_deception_manage(tid)
+        elif intent == "forensic_case":
+            return self._handle_forensic_case(tid)
+        elif intent == "compliance_code":
+            return self._handle_compliance_code(tid)
+        elif intent == "evolving_rules":
+            return self._handle_evolving_rules(tid)
+        elif intent == "threat_share":
+            return self._handle_threat_share(tid)
+        # V5.5 — Convergence dispatch
+        elif intent == "realtime_metrics":
+            return self._handle_realtime_metrics(tid)
+        elif intent == "halo_score":
+            return self._handle_halo_score(tid)
+        elif intent == "fleet_status":
+            return self._handle_fleet_status(tid)
+        elif intent == "command_center":
+            return self._handle_command_center(tid)
+        # V6.0 — Omniguard dispatch
+        elif intent == "cloud_connector":
+            return self._handle_cloud_connector(tid)
+        elif intent == "cspm_scan":
+            return self._handle_cspm_scan(tid)
+        elif intent == "saas_shield":
+            return self._handle_saas_shield(tid)
+        elif intent == "hybrid_mesh":
+            return self._handle_hybrid_mesh(tid)
+        # V6.5 — Prometheus dispatch
+        elif intent == "threat_hunting":
+            return self._handle_threat_hunting(tid)
+        elif intent == "mitre_attack":
+            return self._handle_mitre_attack(tid)
+        elif intent == "adversary_sim":
+            return self._handle_adversary_sim(tid)
+        elif intent == "intel_correlate":
+            return self._handle_intel_correlate(tid)
+        # V7.0 — Singularity dispatch
+        elif intent == "agi_defense":
+            return self._handle_agi_defense(tid)
+        elif intent == "autonomous_response":
+            return self._handle_autonomous_response(tid)
+        elif intent == "threat_federation":
+            return self._handle_threat_federation(tid)
+        elif intent == "soc_autopilot":
+            return self._handle_soc_autopilot(tid)
         else:
             return self._handle_general(ctx, prompt)
 
@@ -2181,6 +2545,767 @@ class AngelClawBrain:
             return {"answer": "\n".join(lines)}
         except Exception as e:
             return {"answer": f"Hardening status unavailable: {e}"}
+
+    # ------------------------------------------------------------------
+    # V3.5 — Sentinel handlers
+    # ------------------------------------------------------------------
+
+    def _handle_threat_intel(self, tid: str) -> dict:
+        try:
+            from cloud.services.threat_intel import threat_intel_service
+            stats = threat_intel_service.get_stats(tid)
+            lines = [
+                "**Threat Intelligence Status**\n",
+                f"  Active feeds: {stats.get('active_feeds', 0)}",
+                f"  Total IOCs: {stats.get('total_iocs', 0)}",
+            ]
+            by_type = stats.get("by_type", {})
+            if by_type:
+                lines.append("\n**IOCs by type:**")
+                for t, c in by_type.items():
+                    lines.append(f"  - {t}: {c}")
+            lines.append("\nManage feeds: `POST /api/v1/intel/feeds`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Threat intel unavailable: {e}"}
+
+    def _handle_reputation_check(self, tid: str, prompt: str) -> dict:
+        try:
+            from cloud.services.reputation import reputation_service
+            stats = reputation_service.get_stats(tid)
+            worst = reputation_service.get_worst(tid, limit=5)
+            lines = [
+                "**Reputation Service Status**\n",
+                f"  Total entities tracked: {stats.get('total_entries', 0)}",
+                f"  Total queries: {stats.get('total_queries', 0)}",
+            ]
+            if worst:
+                lines.append("\n**Lowest reputation entities:**")
+                for w in worst[:5]:
+                    lines.append(f"  - {w.get('entity_type', '?')}:{w.get('entity_value', '?')} — score: {w.get('score', '?')} ({w.get('risk_level', '?')})")
+            lines.append("\nLookup: `POST /api/v1/intel/reputation/lookup`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Reputation service unavailable: {e}"}
+
+    def _handle_ioc_manage(self, tid: str) -> dict:
+        try:
+            from cloud.services.ioc_engine import ioc_engine
+            stats = ioc_engine.get_stats(tid)
+            lines = [
+                "**IOC Matching Engine Status**\n",
+                f"  Total matches: {stats.get('total_matches', 0)}",
+                f"  Unacknowledged: {stats.get('unacknowledged', 0)}",
+            ]
+            by_sev = stats.get("by_severity", {})
+            if by_sev:
+                lines.append("\n**Matches by severity:**")
+                for s, c in by_sev.items():
+                    lines.append(f"  - {s}: {c}")
+            lines.append("\nSearch IOCs: `POST /api/v1/intel/iocs/search`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"IOC engine unavailable: {e}"}
+
+    # ------------------------------------------------------------------
+    # V4.0 — Omniscience handlers
+    # ------------------------------------------------------------------
+
+    def _handle_asset_inventory(self, tid: str) -> dict:
+        try:
+            from cloud.services.asset_inventory import asset_inventory_service
+            stats = asset_inventory_service.get_stats(tid)
+            lines = [
+                "**Asset Inventory**\n",
+                f"  Total assets: {stats.get('total', 0)}",
+                f"  Avg risk score: {stats.get('avg_risk_score', 0)}",
+            ]
+            by_type = stats.get("by_type", {})
+            if by_type:
+                lines.append("\n**By type:**")
+                for t, c in by_type.items():
+                    lines.append(f"  - {t}: {c}")
+            lines.append("\nManage assets: `POST /api/v1/assets`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Asset inventory unavailable: {e}"}
+
+    def _handle_topology_map(self, tid: str) -> dict:
+        try:
+            from cloud.services.topology import topology_service
+            stats = topology_service.get_stats(tid)
+            critical = topology_service.find_critical_nodes(tid)
+            lines = [
+                "**Network Topology**\n",
+                f"  Nodes: {stats.get('total_nodes', 0)}",
+                f"  Links: {stats.get('total_links', 0)}",
+            ]
+            if critical:
+                lines.append("\n**Critical nodes (most connected):**")
+                for n in critical[:5]:
+                    lines.append(f"  - {n['asset_id'][:12]}... ({n['connections']} connections)")
+            lines.append("\nView graph: `GET /api/v1/assets/topology/graph`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Topology unavailable: {e}"}
+
+    def _handle_vulnerability_scan(self, tid: str) -> dict:
+        try:
+            from cloud.services.vulnerability import vulnerability_service
+            stats = vulnerability_service.get_stats(tid)
+            lines = [
+                "**Vulnerability Status**\n",
+                f"  Total findings: {stats.get('total', 0)}",
+                f"  Open: {stats.get('open', 0)}",
+            ]
+            by_sev = stats.get("by_severity", {})
+            if by_sev:
+                lines.append("\n**By severity:**")
+                for s, c in by_sev.items():
+                    lines.append(f"  - {s}: {c}")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Vulnerability data unavailable: {e}"}
+
+    def _handle_soar_manage(self, tid: str) -> dict:
+        try:
+            from cloud.services.soar import soar_engine
+            stats = soar_engine.get_stats(tid)
+            lines = [
+                "**SOAR Engine Status**\n",
+                f"  Playbooks: {stats.get('total_playbooks', 0)} ({stats.get('enabled_playbooks', 0)} enabled)",
+                f"  Executions: {stats.get('total_executions', 0)} ({stats.get('successful', 0)} success, {stats.get('failed', 0)} failed)",
+            ]
+            lines.append("\nManage: `POST /api/v1/soar/playbooks`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"SOAR engine unavailable: {e}"}
+
+    def _handle_sla_status(self, tid: str) -> dict:
+        try:
+            from cloud.services.sla_tracking import sla_tracking_service
+            report = sla_tracking_service.get_compliance_report(tid)
+            breaches = sla_tracking_service.check_breaches(tid)
+            lines = [
+                "**SLA Compliance Report**\n",
+                f"  Incidents tracked: {report.get('total_incidents_tracked', 0)}",
+                f"  Response SLA: {report.get('response_sla_compliance', 0)}%",
+                f"  Resolution SLA: {report.get('resolution_sla_compliance', 0)}%",
+                f"  Total breaches: {report.get('total_breaches', 0)}",
+            ]
+            if breaches:
+                lines.append(f"\n**Active breaches ({len(breaches)}):**")
+                for b in breaches[:3]:
+                    lines.append(f"  - {b.get('breach_type', '?')} on incident {b.get('incident_id', '?')[:8]} ({b.get('overdue_minutes', 0)}min overdue)")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"SLA data unavailable: {e}"}
+
+    def _handle_incident_timeline(self, tid: str) -> dict:
+        try:
+            from cloud.services.incident_timeline import incident_timeline_service
+            stats = incident_timeline_service.get_stats(tid)
+            lines = [
+                "**Incident Timeline**\n",
+                f"  Total entries: {stats.get('total_entries', 0)}",
+                f"  Incidents tracked: {stats.get('incidents_tracked', 0)}",
+            ]
+            by_type = stats.get("by_type", {})
+            if by_type:
+                lines.append("\n**Entry types:**")
+                for t, c in by_type.items():
+                    lines.append(f"  - {t}: {c}")
+            lines.append("\nView: `GET /api/v1/soar/timeline/{incident_id}`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Timeline unavailable: {e}"}
+
+    def _handle_risk_heatmap(self, tid: str) -> dict:
+        try:
+            from cloud.services.asset_inventory import asset_inventory_service
+            heatmap = asset_inventory_service.get_risk_heatmap(tid)
+            lines = [
+                "**Risk Heat Map**\n",
+                f"  Total assets: {heatmap.get('total_assets', 0)}",
+                f"  Avg risk: {heatmap.get('avg_risk', 0):.1f}",
+                f"  Critical risk assets: {heatmap.get('critical_assets', 0)}",
+            ]
+            for classification, assets in heatmap.get("heatmap", {}).items():
+                lines.append(f"\n**{classification}** ({len(assets)} assets):")
+                for a in assets[:3]:
+                    lines.append(f"  - {a['name']}: risk={a['risk_score']}")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Risk heatmap unavailable: {e}"}
+
+    # ------------------------------------------------------------------
+    # V4.1 — Prophecy handlers
+    # ------------------------------------------------------------------
+
+    def _handle_ml_anomaly(self, tid: str) -> dict:
+        try:
+            from cloud.services.ml_anomaly import ml_anomaly_engine
+            stats = ml_anomaly_engine.get_stats()
+            recent = ml_anomaly_engine.get_recent_detections(limit=5)
+            lines = [
+                "**ML Anomaly Detection**\n",
+                f"  Baselines: {stats.get('total_baselines', 0)}",
+                f"  Total detections: {stats.get('total_detections', 0)}",
+            ]
+            if recent:
+                lines.append("\n**Recent anomalies:**")
+                for d in recent[:5]:
+                    lines.append(f"  - [{d.get('severity', '?')}] {d.get('anomaly_type', '?')}: {d.get('description', '?')[:50]}")
+            lines.append("\nDetect: `POST /api/v1/ml/anomaly/detect`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"ML anomaly engine unavailable: {e}"}
+
+    def _handle_behavior_profile(self, tid: str) -> dict:
+        try:
+            from cloud.services.behavior_profile import behavior_profile_service
+            stats = behavior_profile_service.get_stats(tid)
+            lines = [
+                "**Behavioral Profiling**\n",
+                f"  Total profiles: {stats.get('total_profiles', 0)}",
+                f"  Total observations: {stats.get('total_observations', 0)}",
+            ]
+            by_status = stats.get("by_status", {})
+            if by_status:
+                for s, c in by_status.items():
+                    lines.append(f"  - {s}: {c}")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Behavior profiles unavailable: {e}"}
+
+    def _handle_attack_path(self, tid: str) -> dict:
+        try:
+            from cloud.services.attack_path import attack_path_engine
+            stats = attack_path_engine.get_stats(tid)
+            paths = attack_path_engine.get_paths(tid, min_risk=50)
+            lines = [
+                "**Attack Path Analysis**\n",
+                f"  Total paths: {stats.get('total_paths', 0)}",
+                f"  Active: {stats.get('active', 0)}, Mitigated: {stats.get('mitigated', 0)}",
+                f"  Critical paths (risk>=80): {stats.get('critical_paths', 0)}",
+            ]
+            if paths:
+                lines.append("\n**Highest risk paths:**")
+                for p in paths[:3]:
+                    lines.append(f"  - {p.get('name', '?')} — risk: {p.get('risk_score', 0)}, hops: {p.get('path_length', 0)}")
+            lines.append("\nCompute: `POST /api/v1/ml/attack-paths/compute`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Attack path analysis unavailable: {e}"}
+
+    def _handle_risk_forecast(self, tid: str) -> dict:
+        try:
+            from cloud.services.risk_forecast import risk_forecast_engine
+            forecasts = risk_forecast_engine.get_forecasts(tid, limit=10)
+            accuracy = risk_forecast_engine.get_accuracy_report(tid)
+            lines = ["**Risk Forecasts**\n"]
+            if forecasts:
+                for f in forecasts[:6]:
+                    lines.append(f"  [{f.get('forecast_type', '?')}] {f.get('time_horizon_hours', '?')}h: {f.get('predicted_value', '?')} (conf: {f.get('confidence', '?')})")
+            else:
+                lines.append("  No forecasts yet. Generate: `POST /api/v1/ml/forecasts/generate`")
+            if accuracy.get("avg_accuracy") is not None:
+                lines.append(f"\n  Accuracy: {accuracy['avg_accuracy']:.0%} ({accuracy.get('forecasts_evaluated', 0)} evaluated)")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Risk forecasting unavailable: {e}"}
+
+    # ------------------------------------------------------------------
+    # V4.2 — Nexus handlers
+    # ------------------------------------------------------------------
+
+    def _handle_siem_manage(self, tid: str) -> dict:
+        try:
+            from cloud.services.siem_connector import siem_connector_service
+            stats = siem_connector_service.get_stats(tid)
+            lines = [
+                "**SIEM Connectors**\n",
+                f"  Total: {stats.get('total_connectors', 0)} ({stats.get('enabled', 0)} enabled)",
+                f"  Events synced: {stats.get('total_events_synced', 0)}",
+            ]
+            by_type = stats.get("by_type", {})
+            if by_type:
+                lines.append("\n**By SIEM type:**")
+                for t, c in by_type.items():
+                    lines.append(f"  - {t}: {c}")
+            lines.append("\nSupported: Splunk, Elastic, QRadar, ArcSight, Sentinel, Wazuh")
+            lines.append("Create: `POST /api/v1/integrations/siem/connectors`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"SIEM connectors unavailable: {e}"}
+
+    def _handle_container_security(self, tid: str) -> dict:
+        try:
+            from cloud.services.container_security import container_security_service
+            stats = container_security_service.get_stats(tid)
+            lines = [
+                "**Container Security**\n",
+                f"  Total scans: {stats.get('total_scans', 0)}",
+                f"  Critical findings: {stats.get('critical_findings', 0)}",
+                f"  High findings: {stats.get('high_findings', 0)}",
+            ]
+            lines.append("\nScan: `POST /api/v1/integrations/containers/scan`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Container security unavailable: {e}"}
+
+    def _handle_iac_scan(self, tid: str) -> dict:
+        try:
+            from cloud.services.iac_scanner import iac_scanner_service
+            stats = iac_scanner_service.get_stats(tid)
+            lines = [
+                "**IaC Security Scanner**\n",
+                f"  Total scans: {stats.get('total_scans', 0)}",
+                f"  Critical: {stats.get('critical', 0)}, High: {stats.get('high', 0)}",
+                f"  Pass rate: {stats.get('pass_rate', 0)}%",
+            ]
+            lines.append("\nSupports: Terraform, CloudFormation, K8s, Ansible, Dockerfile")
+            lines.append("Scan: `POST /api/v1/integrations/iac/scan`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"IaC scanner unavailable: {e}"}
+
+    def _handle_cicd_gate(self, tid: str) -> dict:
+        try:
+            from cloud.services.cicd_gate import cicd_gate_service
+            stats = cicd_gate_service.get_stats(tid)
+            lines = [
+                "**CI/CD Security Gates**\n",
+                f"  Total evaluations: {stats.get('total_evaluations', 0)}",
+                f"  Passed: {stats.get('passed', 0)}, Warned: {stats.get('warned', 0)}, Failed: {stats.get('failed', 0)}",
+                f"  Pass rate: {stats.get('pass_rate', 0)}%",
+            ]
+            lines.append("\nEvaluate: `POST /api/v1/integrations/cicd/evaluate`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"CI/CD gates unavailable: {e}"}
+
+    # ------------------------------------------------------------------
+    # V4.5 — Sovereign handlers
+    # ------------------------------------------------------------------
+
+    def _handle_zero_trust_status(self, tid: str) -> dict:
+        lines = ["**Zero Trust Architecture Status**\n"]
+        try:
+            from cloud.services.microsegmentation import microsegmentation_engine
+            seg = microsegmentation_engine.get_stats(tid)
+            lines.append(f"  Microsegments: {seg.get('total_segments', 0)}")
+        except Exception:
+            lines.append("  Microsegments: unavailable")
+        try:
+            from cloud.services.device_trust import device_trust_service
+            dev = device_trust_service.get_stats(tid)
+            lines.append(f"  Devices tracked: {dev.get('total_devices', 0)}")
+        except Exception:
+            lines.append("  Device trust: unavailable")
+        try:
+            from cloud.services.session_risk import session_risk_service
+            sess = session_risk_service.get_stats(tid)
+            lines.append(f"  Active sessions: {sess.get('active_sessions', 0)}")
+        except Exception:
+            lines.append("  Session risk: unavailable")
+        lines.append("\nDashboard: `GET /api/v1/zerotrust/status`")
+        return {"answer": "\n".join(lines)}
+
+    # ------------------------------------------------------------------
+    # V5.0 — Transcendence handlers
+    # ------------------------------------------------------------------
+
+    def _handle_ai_orchestrate(self, tid: str) -> dict:
+        try:
+            from cloud.services.ai_orchestrator import ai_orchestrator_service
+            stats = ai_orchestrator_service.get_stats(tid)
+            lines = [
+                "**Multi-Model AI Orchestrator**\n",
+                f"  Registered models: {stats.get('total_models', 0)}",
+                f"  Total requests routed: {stats.get('total_requests', 0)}",
+            ]
+            lines.append("\nRegister: `POST /api/v1/transcendence/ai/models`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"AI orchestrator unavailable: {e}"}
+
+    def _handle_nl_policy(self, tid: str, prompt: str) -> dict:
+        try:
+            from cloud.services.nl_policy import nl_policy_service
+            stats = nl_policy_service.get_stats(tid)
+            lines = [
+                "**Natural Language Policy Engine**\n",
+                f"  Total policies: {stats.get('total_policies', 0)}",
+                f"  Active: {stats.get('active', 0)}, Draft: {stats.get('draft', 0)}",
+            ]
+            lines.append("\nCreate policy in plain English: `POST /api/v1/transcendence/policies/nl`")
+            lines.append('Example: "Block all SSH from external IPs after business hours"')
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"NL policy engine unavailable: {e}"}
+
+    def _handle_incident_command(self, tid: str) -> dict:
+        try:
+            from cloud.services.incident_commander import incident_commander_service
+            stats = incident_commander_service.get_stats(tid)
+            lines = [
+                "**Autonomous Incident Commander**\n",
+                f"  Total incidents: {stats.get('total_incidents', 0)}",
+                f"  Active: {stats.get('active', 0)}, Resolved: {stats.get('resolved', 0)}",
+            ]
+            lines.append("\nDeclare: `POST /api/v1/transcendence/incidents/declare`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Incident commander unavailable: {e}"}
+
+    def _handle_deception_manage(self, tid: str) -> dict:
+        try:
+            from cloud.services.deception import deception_service
+            stats = deception_service.get_stats(tid)
+            lines = [
+                "**Deception Technology**\n",
+                f"  Deployed tokens: {stats.get('total_tokens', 0)}",
+                f"  Active: {stats.get('active', 0)}",
+                f"  Triggered: {stats.get('triggered', 0)}",
+            ]
+            lines.append("\nDeploy: `POST /api/v1/transcendence/deception/tokens`")
+            lines.append("Types: honey_credential, honey_file, honey_endpoint, honey_dns, canary_token")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Deception service unavailable: {e}"}
+
+    def _handle_forensic_case(self, tid: str) -> dict:
+        try:
+            from cloud.services.forensics_auto import forensics_service
+            stats = forensics_service.get_stats(tid)
+            lines = [
+                "**Digital Forensics**\n",
+                f"  Total cases: {stats.get('total_cases', 0)}",
+                f"  Open: {stats.get('open', 0)}, Investigating: {stats.get('investigating', 0)}",
+                f"  Evidence items: {stats.get('total_evidence', 0)}",
+            ]
+            lines.append("\nCreate case: `POST /api/v1/transcendence/forensics/cases`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Forensics unavailable: {e}"}
+
+    def _handle_compliance_code(self, tid: str) -> dict:
+        try:
+            from cloud.services.compliance_code import compliance_code_service
+            stats = compliance_code_service.get_stats(tid)
+            lines = [
+                "**Compliance-as-Code Engine**\n",
+                f"  Total rules: {stats.get('total_rules', 0)}",
+                f"  Frameworks: {', '.join(stats.get('frameworks', [])) or 'none'}",
+            ]
+            lines.append("\nSupported: GDPR, HIPAA, PCI-DSS, SOC2, NIST, ISO27001, CIS")
+            lines.append("Audit: `POST /api/v1/transcendence/compliance/audit/{framework}`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Compliance engine unavailable: {e}"}
+
+    def _handle_evolving_rules(self, tid: str) -> dict:
+        try:
+            from cloud.services.evolving_rules import evolving_rules_service
+            stats = evolving_rules_service.get_stats(tid)
+            lines = [
+                "**Self-Evolving Detection Rules**\n",
+                f"  Total rules: {stats.get('total_rules', 0)}",
+                f"  Generations evolved: {stats.get('total_evolutions', 0)}",
+                f"  Avg fitness: {stats.get('avg_fitness', 0)}",
+            ]
+            lines.append("\nEvolve: `POST /api/v1/transcendence/rules/evolving/evolve`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Evolving rules unavailable: {e}"}
+
+    def _handle_threat_share(self, tid: str) -> dict:
+        try:
+            from cloud.services.threat_sharing import threat_sharing_service
+            stats = threat_sharing_service.get_stats(tid)
+            lines = [
+                "**Cross-Org Threat Sharing**\n",
+                f"  Indicators shared: {stats.get('indicators_shared', 0)}",
+                f"  Indicators received: {stats.get('indicators_received', 0)}",
+            ]
+            lines.append("\nShare: `POST /api/v1/transcendence/sharing/indicators`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Threat sharing unavailable: {e}"}
+
+    # ------------------------------------------------------------------
+    # V5.5 — Convergence handlers
+    # ------------------------------------------------------------------
+
+    def _handle_realtime_metrics(self, tid: str) -> dict:
+        try:
+            from cloud.services.realtime_engine import realtime_engine_service
+            stats = realtime_engine_service.get_stats(tid)
+            metrics = realtime_engine_service.get_live_metrics(tid)
+            lines = [
+                "**Real-Time Defense Metrics**\n",
+                f"  Events ingested: {stats.get('total_events', 0)}",
+                f"  Events/sec: {metrics.get('events_per_sec', 0)}",
+                f"  Active threats: {metrics.get('active_threats', 0)}",
+                f"  Subscribers: {stats.get('subscribers', 0)}",
+            ]
+            lines.append("\nLive: `GET /api/v1/convergence/realtime/metrics`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Real-time engine unavailable: {e}"}
+
+    def _handle_halo_score(self, tid: str) -> dict:
+        try:
+            from cloud.services.halo_engine import halo_score_engine
+            current = halo_score_engine.get_current_score(tid)
+            score = current.get("score", "N/A") if current else "Not computed"
+            lines = [
+                "**Halo Score**\n",
+                f"  Current score: {score}/100",
+            ]
+            if current and "dimensions" in current:
+                for dim, val in current["dimensions"].items():
+                    lines.append(f"  {dim}: {val}")
+            lines.append("\nCompute: `POST /api/v1/convergence/halo/compute`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Halo engine unavailable: {e}"}
+
+    def _handle_fleet_status(self, tid: str) -> dict:
+        try:
+            from cloud.services.fleet_orchestrator import fleet_orchestrator_service
+            stats = fleet_orchestrator_service.get_stats(tid)
+            lines = [
+                "**Fleet Orchestrator (Wingspan)**\n",
+                f"  Total nodes: {stats.get('total_nodes', 0)}",
+                f"  Active: {stats.get('active_nodes', 0)}",
+                f"  OS types: {stats.get('os_types', 0)}",
+                f"  Commands dispatched: {stats.get('commands_dispatched', 0)}",
+            ]
+            lines.append("\nFleet: `GET /api/v1/convergence/fleet/nodes`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Fleet orchestrator unavailable: {e}"}
+
+    def _handle_command_center(self, tid: str) -> dict:
+        try:
+            from cloud.services.dashboard_aggregator import dashboard_aggregator_service
+            data = dashboard_aggregator_service.get_command_center(tid)
+            lines = [
+                "**Command Center Dashboard**\n",
+                f"  Halo Score: {data.get('halo_score', 'N/A')}",
+                f"  Wingspan: {data.get('wingspan', 0)} nodes",
+                f"  Active threats: {data.get('active_threats', 0)}",
+                f"  Active alerts: {data.get('active_alerts', 0)}",
+                f"  Wardens online: {data.get('wardens_online', 12)}",
+            ]
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Dashboard aggregator unavailable: {e}"}
+
+    # ------------------------------------------------------------------
+    # V6.0 — Omniguard handlers
+    # ------------------------------------------------------------------
+
+    def _handle_cloud_connector(self, tid: str) -> dict:
+        try:
+            from cloud.services.cloud_connector import cloud_connector_service
+            stats = cloud_connector_service.get_stats(tid)
+            lines = [
+                "**Multi-Cloud Connectors**\n",
+                f"  Total connectors: {stats.get('total_connectors', 0)}",
+                f"  Providers: {', '.join(stats.get('providers', [])) or 'none'}",
+                f"  Resources synced: {stats.get('total_resources', 0)}",
+            ]
+            lines.append("\nSupported: AWS, Azure, GCP, OCI, Alibaba")
+            lines.append("Add: `POST /api/v1/omniguard/cloud/connectors`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Cloud connector unavailable: {e}"}
+
+    def _handle_cspm_scan(self, tid: str) -> dict:
+        try:
+            from cloud.services.cspm import cspm_service
+            stats = cspm_service.get_stats(tid)
+            lines = [
+                "**Cloud Security Posture Management**\n",
+                f"  Total findings: {stats.get('total_findings', 0)}",
+                f"  Critical: {stats.get('critical', 0)}",
+                f"  Posture score: {stats.get('posture_score', 'N/A')}",
+            ]
+            lines.append("\nScan: `POST /api/v1/omniguard/cspm/scan`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"CSPM unavailable: {e}"}
+
+    def _handle_saas_shield(self, tid: str) -> dict:
+        try:
+            from cloud.services.saas_shield import saas_shield_service
+            stats = saas_shield_service.get_stats(tid)
+            lines = [
+                "**SaaS Shield — Application Protection**\n",
+                f"  Monitored apps: {stats.get('total_apps', 0)}",
+                f"  Shadow IT detected: {stats.get('shadow_it', 0)}",
+                f"  Sessions monitored: {stats.get('total_sessions', 0)}",
+            ]
+            lines.append("\nRegister: `POST /api/v1/omniguard/saas/apps`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"SaaS shield unavailable: {e}"}
+
+    def _handle_hybrid_mesh(self, tid: str) -> dict:
+        try:
+            from cloud.services.hybrid_mesh import hybrid_mesh_service
+            stats = hybrid_mesh_service.get_stats(tid)
+            lines = [
+                "**Hybrid Mesh — Cross-Environment Fabric**\n",
+                f"  Environments: {stats.get('total_environments', 0)}",
+                f"  Federated: {stats.get('federated', 0)}",
+                f"  Policy syncs: {stats.get('total_syncs', 0)}",
+            ]
+            lines.append("\nRegister: `POST /api/v1/omniguard/hybrid/environments`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Hybrid mesh unavailable: {e}"}
+
+    # ------------------------------------------------------------------
+    # V6.5 — Prometheus handlers
+    # ------------------------------------------------------------------
+
+    def _handle_threat_hunting(self, tid: str) -> dict:
+        try:
+            from cloud.services.threat_hunter import threat_hunter_service
+            stats = threat_hunter_service.get_stats(tid)
+            lines = [
+                "**Autonomous Threat Hunter**\n",
+                f"  Total hunts: {stats.get('total_hunts', 0)}",
+                f"  Active hunts: {stats.get('active_hunts', 0)}",
+                f"  Findings: {stats.get('total_findings', 0)}",
+                f"  Playbooks: {stats.get('total_playbooks', 0)}",
+            ]
+            lines.append("\nCreate: `POST /api/v1/prometheus/hunts`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Threat hunter unavailable: {e}"}
+
+    def _handle_mitre_attack(self, tid: str) -> dict:
+        try:
+            from cloud.services.mitre_mapper import mitre_attack_mapper
+            stats = mitre_attack_mapper.get_stats(tid)
+            lines = [
+                "**MITRE ATT&CK Mapper**\n",
+                f"  Techniques mapped: {stats.get('total_techniques', 0)}",
+                f"  Tactics covered: {stats.get('tactics_covered', 0)}",
+                f"  Events mapped: {stats.get('total_mappings', 0)}",
+                f"  Coverage: {stats.get('coverage_pct', 0)}%",
+            ]
+            lines.append("\nMap: `POST /api/v1/prometheus/mitre/map`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"MITRE mapper unavailable: {e}"}
+
+    def _handle_adversary_sim(self, tid: str) -> dict:
+        try:
+            from cloud.services.adversary_sim import adversary_sim_service
+            stats = adversary_sim_service.get_stats(tid)
+            lines = [
+                "**Adversary Simulation (Purple Team)**\n",
+                f"  Scenarios: {stats.get('total_scenarios', 0)}",
+                f"  Simulations run: {stats.get('total_simulations', 0)}",
+                f"  Avg defense score: {stats.get('avg_defense_score', 0)}",
+            ]
+            lines.append("\nCreate: `POST /api/v1/prometheus/adversary/scenarios`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Adversary sim unavailable: {e}"}
+
+    def _handle_intel_correlate(self, tid: str) -> dict:
+        try:
+            from cloud.services.intel_correlation import intel_correlation_service
+            stats = intel_correlation_service.get_stats(tid)
+            lines = [
+                "**Intelligence Correlation Engine**\n",
+                f"  Correlations: {stats.get('total_correlations', 0)}",
+                f"  Patterns discovered: {stats.get('patterns_discovered', 0)}",
+                f"  Campaigns attributed: {stats.get('campaigns_attributed', 0)}",
+            ]
+            lines.append("\nCorrelate: `POST /api/v1/prometheus/correlation/events`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Intel correlation unavailable: {e}"}
+
+    # ------------------------------------------------------------------
+    # V7.0 — Singularity handlers
+    # ------------------------------------------------------------------
+
+    def _handle_agi_defense(self, tid: str) -> dict:
+        try:
+            from cloud.services.agi_defense import agi_defense_service
+            stats = agi_defense_service.get_stats(tid)
+            lines = [
+                "**AGI Defense — Self-Programming Rules**\n",
+                f"  Rules generated: {stats.get('total_rules', 0)}",
+                f"  Deployed: {stats.get('deployed', 0)}",
+                f"  Analyses: {stats.get('total_analyses', 0)}",
+                f"  Avg confidence: {stats.get('avg_confidence', 0)}",
+            ]
+            lines.append("\nAnalyze: `POST /api/v1/singularity/agi/analyze`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"AGI defense unavailable: {e}"}
+
+    def _handle_autonomous_response(self, tid: str) -> dict:
+        try:
+            from cloud.services.autonomous_response import autonomous_response_service
+            stats = autonomous_response_service.get_stats(tid)
+            lines = [
+                "**Autonomous Incident Response**\n",
+                f"  Total responses: {stats.get('total_responses', 0)}",
+                f"  Completed: {stats.get('completed', 0)}",
+                f"  Overridden: {stats.get('overridden', 0)}",
+                f"  Avg response time: {stats.get('avg_response_time', 'N/A')}",
+            ]
+            lines.append("\nTrigger: `POST /api/v1/singularity/response/trigger`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Autonomous response unavailable: {e}"}
+
+    def _handle_threat_federation(self, tid: str) -> dict:
+        try:
+            from cloud.services.threat_federation import threat_federation_service
+            stats = threat_federation_service.get_stats(tid)
+            lines = [
+                "**Cross-Org Threat Federation**\n",
+                f"  Federation members: {stats.get('federation_members', 0)}",
+                f"  Intel shared: {stats.get('intel_shared', 0)}",
+                f"  Intel consumed: {stats.get('intel_consumed', 0)}",
+                f"  Collective score: {stats.get('collective_score', 'N/A')}",
+            ]
+            lines.append("\nJoin: `POST /api/v1/singularity/federation/join`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Threat federation unavailable: {e}"}
+
+    def _handle_soc_autopilot(self, tid: str) -> dict:
+        try:
+            from cloud.services.soc_autopilot import soc_autopilot_service
+            stats = soc_autopilot_service.get_stats(tid)
+            lines = [
+                "**SOC Autopilot — AGI Operations Center**\n",
+                f"  Alerts triaged: {stats.get('total_triaged', 0)}",
+                f"  Investigations: {stats.get('total_investigations', 0)}",
+                f"  Auto-resolved: {stats.get('auto_resolved', 0)}",
+                f"  Analysts active: {stats.get('active_analysts', 0)}",
+            ]
+            lines.append("\nTriage: `POST /api/v1/singularity/soc/triage`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"SOC autopilot unavailable: {e}"}
+
+    # ------------------------------------------------------------------
+    # General handler
+    # ------------------------------------------------------------------
 
     def _handle_general(self, ctx: EnvironmentContext, prompt: str) -> dict:
         host = ctx.host

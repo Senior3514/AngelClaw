@@ -66,7 +66,7 @@ async def lifespan(app: FastAPI):
 
     await start_daemon()
     logger.info(
-        "AngelClaw AGI Guardian 3.0.0 started"
+        "AngelClaw AGI Guardian 7.0.0 started"
         " — tables, heartbeat, orchestrator, Wazuh, shield, daemon"
     )
     yield
@@ -78,7 +78,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="AngelClaw AGI Guardian API",
-    version="3.0.0",
+    version="7.0.0",
     lifespan=lifespan,
 )
 
@@ -196,6 +196,60 @@ from cloud.api.admin_routes import router as admin_router  # noqa: E402
 
 app.include_router(admin_router)
 
+# V3.5 — Sentinel routes (Threat Intelligence)
+from cloud.api.intel_routes import router as intel_router  # noqa: E402
+
+app.include_router(intel_router)
+
+# V4.0 — Omniscience routes (Situational Awareness)
+from cloud.api.asset_routes import router as asset_router  # noqa: E402
+
+app.include_router(asset_router)
+
+from cloud.api.soar_routes import router as soar_router  # noqa: E402
+
+app.include_router(soar_router)
+
+# V4.1 — Prophecy routes (Predictive ML)
+from cloud.api.ml_routes import router as ml_router_v41  # noqa: E402
+
+app.include_router(ml_router_v41)
+
+# V4.2 — Nexus routes (Integration Hub)
+from cloud.api.siem_routes import router as siem_router  # noqa: E402
+
+app.include_router(siem_router)
+
+# V4.5 — Sovereign routes (Zero Trust)
+from cloud.api.zerotrust_routes import router as zerotrust_router  # noqa: E402
+
+app.include_router(zerotrust_router)
+
+# V5.0 — Transcendence routes (AGI Singularity)
+from cloud.api.transcendence_routes import router as transcendence_router  # noqa: E402
+
+app.include_router(transcendence_router)
+
+# V5.5 — Convergence routes (Real-Time Defense Fabric)
+from cloud.api.convergence_routes import router as convergence_router  # noqa: E402
+
+app.include_router(convergence_router)
+
+# V6.0 — Omniguard routes (Multi-Cloud Defense Fabric)
+from cloud.api.omniguard_routes import router as omniguard_router  # noqa: E402
+
+app.include_router(omniguard_router)
+
+# V6.5 — Prometheus routes (Autonomous Threat Hunting)
+from cloud.api.prometheus_routes import router as prometheus_router  # noqa: E402
+
+app.include_router(prometheus_router)
+
+# V7.0 — Singularity routes (Full AGI Autonomous Defense)
+from cloud.api.singularity_routes import router as singularity_router  # noqa: E402
+
+app.include_router(singularity_router)
+
 
 # ---------------------------------------------------------------------------
 # Auth middleware — protect /api/v1/* routes when auth is enabled
@@ -308,7 +362,7 @@ def health_check():
     orch = angel_orchestrator.status()
     return {
         "status": "ok",
-        "version": "3.0.0",
+        "version": "7.0.0",
         "orchestrator": orch["running"],
         "agents": {name: info["status"] for name, info in orch.get("agents", {}).items()},
     }

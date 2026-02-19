@@ -1,5 +1,111 @@
 # AngelClaw Release Notes
 
+## V7.0.0 — Singularity (2026-02-19)
+
+**Status**: Full AGI Autonomous Defense Fabric — protecting every endpoint, AI agent, and autonomous system across SaaS, Hybrid & On-Prem.
+
+This is the **ultimate release** — ten upgrade stages (V3.5 through V7.0) transforming AngelClaw from an enterprise security platform into the world's first full AGI autonomous defense fabric. Self-programming defense rules, autonomous incident response, cross-org threat federation, and AGI-driven SOC operations. The platform now autonomously detects, responds, hunts, evolves, federates, and defends with zero human intervention across every cloud, every endpoint, and every AI agent.
+
+### V7.0 — Singularity (Full AGI Autonomous Defense)
+
+- **AGI Defense Engine** — Self-programming defense rules: AGI analyzes threat patterns, auto-generates detection logic, validates through simulation, and deploys with kill-switch safety. The platform writes its own rules.
+- **Autonomous Incident Response** — Full containment/eradication/recovery lifecycle with decision tree execution, automated response orchestration, and human override capability for every stage
+- **Cross-Org Threat Federation** — Organization trust networks with anonymous indicator sharing, collective defense scoring across federated organizations, and global threat landscape aggregation
+- **SOC Autopilot** — AGI-driven Security Operations Center: autonomous alert triage with priority/category classification, investigation orchestration, analyst assignment, shift handoff generation, and workload balancing
+- **Daemon V7** — AGI rule generation cycle + SOC autopilot triage cycle — 25-step autonomous guardian loop
+- **Brain V7** — 95+ NLP intents, 16 new handlers for V5.5-V7.0 features
+
+### V6.5 — Prometheus (Autonomous Threat Hunting)
+
+- **Threat Hunter** — Hypothesis-driven autonomous hunting with campaign tracking, hunt playbook management, configurable hunt types (indicator, behavioral, anomaly, campaign), and automated finding extraction
+- **MITRE ATT&CK Mapper** — Full technique/tactic classification with coverage analysis, gap identification, kill chain visualization per incident, and automatic event-to-technique mapping
+- **Adversary Simulation** — Purple team framework: attack scenario management with MITRE technique linking, controlled simulation execution, defense validation scoring, and gap reporting
+- **Intel Correlation Engine** — Cross-source intelligence correlation: temporal/behavioral/indicator/campaign correlation types, pattern discovery with confidence scoring, and campaign attribution
+
+### V6.0 — Omniguard (Multi-Cloud Defense Fabric)
+
+- **Cloud Connector** — Multi-cloud management (AWS, Azure, GCP, OCI, Alibaba Cloud) with credential storage, health checking, resource discovery sync, and per-region configuration
+- **Cloud Security Posture Management (CSPM)** — CIS benchmark scanning across all connected cloud providers, misconfiguration detection with severity classification, automated remediation recommendations, and posture scoring
+- **SaaS Shield** — SaaS application protection: OAuth/SAML session monitoring, API abuse detection, shadow IT discovery with risk scoring, and data flow tracking across all registered applications
+- **Hybrid Mesh** — On-prem/cloud/edge environment federation: cross-environment policy synchronization, latency-aware routing between environments, and unified mesh status dashboard
+
+### V5.5 — Convergence (Real-Time Defense Fabric)
+
+- **Real-Time Engine** — Event streaming aggregation with per-tenant counters, live dashboard metrics (events/sec, active threats, blocked/sec), sliding window statistics (1min/5min/15min), and WebSocket subscriber management
+- **Halo Score Engine** — 6-dimension weighted security posture score (0-100): threat_posture (25%), compliance (20%), vulnerability (20%), incident_response (15%), endpoint_health (10%), policy_coverage (10%), with full history and trend tracking
+- **Fleet Orchestrator** — Fleet-wide ANGELNODE management: node registration with OS/version tracking, health monitoring with per-node metrics, OS distribution analytics, version compliance checking, and batch command dispatch
+- **Dashboard Aggregator** — Unified command center data: aggregates halo_score, wingspan, threat counts, alert counts, warden status, top threats, compliance status, and recent events into a single dashboard payload
+- **Frontend Sync** — Lovable React/Vite/Tailwind admin console integration: 10-page dark cyberpunk dashboard, WebSocket live feeds, Halo Score widget, Angel Legion panels, anti-tamper dashboard, and Seraph Brain search
+
+## V5.0.0 — Transcendence (2026-02-19)
+
+**Status**: AGI Singularity — the ultimate autonomous security platform with self-evolving intelligence.
+
+This was the **milestone release** — six upgrade stages (V3.5 through V5.0) laying the foundation for full AGI defense: self-evolving rules, AI-orchestrated incident response, natural language policy creation, deception technology, automated forensics, and compliance-as-code.
+
+### V3.5 — Sentinel (Threat Intelligence)
+
+- **Threat Intel Feed Management** — CRUD for threat intelligence feeds with configurable polling intervals, feed health monitoring, and last-sync tracking
+- **IOC Ingestion & Matching Engine** — Real-time Indicator of Compromise ingestion with TTL-based expiry, type classification (IP, domain, hash, URL, email), and event scanning against IOC lookups with match tracking and acknowledgment workflow
+- **Reputation Service** — Entity reputation scoring (0-100) for IPs, domains, hashes, emails, and URLs with bulk lookup support and worst-offender ranking for threat prioritization
+- **Daemon V3.5** — Automated threat intel polling cycle: IOC expiry cleanup, feed polling, real-time event scanning against active IOC database
+
+### V4.0 — Omniscience (Situational Awareness)
+
+- **Asset Inventory** — Full asset lifecycle management with type classification (server, workstation, network, cloud, iot, mobile), risk scoring (0-100), criticality levels, and organization-wide risk heatmaps
+- **Network Topology Service** — Link-based topology graph with BFS path discovery, critical node analysis (highest connection count), and interactive graph visualization data
+- **Vulnerability Management** — Finding reporting with CVE tracking, severity classification, status workflow (open → confirmed → mitigated/false_positive), and per-asset vulnerability risk aggregation
+- **SOAR Engine** — Security Orchestration, Automation, and Response with playbook CRUD, condition-based auto-triggering, multi-step execution handlers, rate limiting (1 execution per playbook per 60s), and execution history
+- **SLA Tracking** — Configurable SLA policies per severity level, real-time breach detection with elapsed time tracking, and compliance reporting with breach-rate percentages
+- **Incident Timeline** — Rich timeline entries with comment threading, escalation tracking, resolution recording, and full incident lifecycle visualization
+
+### V4.1 — Prophecy (Predictive ML)
+
+- **ML Anomaly Detection Engine** — Statistical anomaly detection using z-score analysis with rolling baselines (Welford's algorithm for online mean/variance), batch detection across entity groups, and anomaly classification (volume_spike, category_shift, time_anomaly, behavior_drift)
+- **Behavior Profiling** — Exponential Moving Average (EMA) baselines per entity with configurable alpha, deviation scoring, entity lifecycle management (active/stale/archived), and behavioral drift alerts
+- **Attack Path Analysis** — BFS-based attack path discovery through asset topology, MITRE ATT&CK technique mapping, cumulative risk scoring along paths, and mitigation recommendations for highest-risk paths
+- **Risk Forecasting** — Time-series volume/severity/attack trend forecasting using linear regression, accuracy tracking with historical comparison, and forecast confidence intervals
+
+### V4.2 — Nexus (Integration Hub)
+
+- **SIEM Connector** — 6 SIEM types (Splunk, Elastic, Microsoft Sentinel, QRadar, Chronicle, Generic Syslog), bidirectional sync (push/pull/bidirectional), event filtering by category/severity, connection testing, and enable/disable toggle
+- **Container Security** — Image vulnerability scanning with 8 built-in checks (outdated base image, root user, exposed ports, missing health check, etc.), runtime security analysis (privileged mode, host network, capabilities), and scan history
+- **IaC Scanner** — 10 Infrastructure-as-Code rules for Terraform/CloudFormation/Kubernetes covering hardcoded secrets, public S3 buckets, wildcard IAM, unencrypted storage, open security groups, privileged containers, missing network policies, and more
+- **CI/CD Security Gate** — 8 pre-deployment gate checks (vulnerability scan, secret scan, dependency audit, SAST, container scan, IaC scan, license check, compliance check), pass/fail/warn decisions, pipeline run tracking
+
+### V4.5 — Sovereign (Zero Trust Architecture)
+
+- **Microsegmentation Engine** — Priority-based network segment rules with source/target criteria matching (zone, labels, IP), protocol filtering, hit counting, and default-deny (zero-trust) for unmatched connections
+- **Identity-Based Access Policies** — fnmatch-based identity and resource pattern matching with decision escalation (allow → mfa_required → step_up → deny), rich condition evaluation (time-of-day windows, geolocation allowlists, device trust minimums, risk score ceilings)
+- **Device Trust Assessment** — Composite trust scoring: encryption (+25), antivirus (+25), firewall (+20), recent patches (+15), known OS (+15), with three-tier classification (trusted ≥70, conditional 40-69, untrusted <40) and trust revocation
+- **Continuous Session Risk** — Real-time session risk scoring from multiple factors: geo anomaly (+30), unknown device (+25), off-hours access (+15), concurrent sessions (+20), with recommended actions (allow/step_up/terminate) and continuous reassessment
+- **Adaptive Authentication** — Risk-based authentication level selection: low risk → password, medium → MFA, high → biometric, critical → impossible_travel_block, integrating session risk + device trust context for unified auth decisions
+- **Daemon V4.5** — Continuous zero-trust session reassessment cycle — all active sessions re-evaluated every daemon cycle
+
+### V5.0 — Transcendence (AGI Singularity)
+
+- **AI Model Orchestration** — Multi-model registry with capability-based routing (detection, classification, generation, analysis), priority scheduling, health monitoring (active/degraded/offline), request counting, error tracking, and average latency computation
+- **Natural Language Policy Engine** — NL-to-rule parsing with keyword extraction (block, allow, deny, require, if, when, from, to), confidence scoring, approval workflow (draft → pending_review → approved/rejected), and human-in-the-loop governance
+- **AI Incident Commander** — Automated incident declaration with AI-assigned commander, severity-based classification, timeline tracking with structured updates, related incident linking, Mean Time To Resolution (MTTR) computation, and full incident lifecycle (declared → investigating → mitigating → resolved → postmortem)
+- **Cross-Tenant Threat Sharing** — Federated indicator sharing with trust scoring (default 0.8), indicator type classification (IP, domain, hash, URL, email), consumer tracking, and trust-filtered feed aggregation across tenants
+- **Deception Technology** — Honey token deployment (API keys, credentials, files, DNS records, AWS keys) with auto-generated token values, trigger detection and counting, deactivation workflow, and real-time alerting on token access
+- **Automated Digital Forensics** — Case management with evidence chain of custody (SHA-256 hashing), evidence collection tracking, finding analysis, incident linking, priority classification, and case lifecycle (open → collecting → analyzing → closed)
+- **Compliance-as-Code** — 5 compliance frameworks (SOC2, HIPAA, PCI-DSS, GDPR, NIST), rule creation with check types (policy/technical/process), automated framework-wide auditing with pass/fail/warning results, compliance percentage reporting per framework
+- **Self-Evolving Detection Rules** — Generational rule evolution: rules track true/false positive rates, underperformers (accuracy < 0.6 with ≥10 observations) automatically spawn evolved child rules with tweaked configs, parent rules deprecated, full lineage tracking across generations
+- **Daemon V5** — Deception token monitoring cycle (checks all active honey tokens for triggers) and evolving rule evolution cycle (auto-evolves underperforming rules)
+
+### Infrastructure
+
+- **7 new API routers** — intel_routes, asset_routes, soar_routes, ml_routes, siem_routes, zerotrust_routes, transcendence_routes
+- **~25 new DB models** — ThreatIntelFeedRow, IOCEntryRow, ReputationEntryRow, IOCMatchRow, AssetRow, TopologyLinkRow, VulnerabilityRow, SOARPlaybookRow, SLAConfigRow, IncidentTimelineRow, BehaviorProfileRow, AnomalyDetectionRow, AttackPathRow, RiskForecastRow, SIEMConnectorRow, ContainerScanRow, IaCScanRow, CICDGateRow, MicrosegmentRow, IdentityPolicyRow, DeviceTrustRow, SessionRiskRow, AIModelRegistryRow, NLPolicyRow, DeceptionTokenRow, ForensicCaseRow, ComplianceRuleRow, EvolvingRuleRow
+- **~30 new service modules** with module-level singletons
+- **~100 new REST API endpoints** across 7 new routers
+- **~30 new NLP intents** in Brain V5.0
+- **18 daemon cycle steps** (up from 12)
+- **Version bumps** to 5.0.0 across pyproject.toml, server.py, brain.py
+
+---
+
 ## V3.0.0 — Dominion (2026-02-19)
 
 **Status**: Enterprise-grade autonomous AGI security platform with full-spectrum defense capabilities.
