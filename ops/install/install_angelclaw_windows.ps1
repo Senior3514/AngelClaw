@@ -20,6 +20,8 @@
 #   ANGELCLAW_INSTALL_DIR Install directory     (default: C:\AngelClaw)
 #   ANGELCLAW_BRANCH      Git branch           (default: main)
 #   ANGELCLAW_FORCE       Force clean reinstall (set to "true")
+#   GH_USER               GitHub username       (prompted if not set)
+#   GH_TOKEN              GitHub PAT            (prompted if not set)
 # ============================================================================
 
 $ErrorActionPreference = "Stop"
@@ -32,7 +34,6 @@ $InstallDir = if ($env:ANGELCLAW_INSTALL_DIR)  { $env:ANGELCLAW_INSTALL_DIR }  e
 $Branch     = if ($env:ANGELCLAW_BRANCH)       { $env:ANGELCLAW_BRANCH }       else { "main" }
 $ForceClean = ($env:ANGELCLAW_FORCE -eq "true")
 
-$Repo = "https://github.com/Senior3514/AngelClaw.git"
 $TotalSteps = 8
 $script:CurrentStep = 0
 
@@ -80,6 +81,13 @@ Write-Ok "Running as Administrator."
 Write-Host "  Tenant ID    : $TenantId"
 Write-Host "  Install dir  : $InstallDir"
 Write-Host "  Branch       : $Branch"
+Write-Host ""
+
+# GitHub credentials (private repo)
+$GhUser  = if ($env:GH_USER)  { $env:GH_USER }  else { Read-Host "  GitHub username" }
+$GhToken = if ($env:GH_TOKEN) { $env:GH_TOKEN } else { Read-Host "  GitHub PAT (token)" }
+$Repo = "https://${GhUser}:${GhToken}@github.com/Senior3514/AngelClaw.git"
+Write-Ok "Credentials set for github.com/Senior3514/AngelClaw"
 
 # ---------------------------------------------------------------------------
 # Step 2: Check / Install Git
