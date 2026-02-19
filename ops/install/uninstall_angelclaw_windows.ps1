@@ -1,5 +1,5 @@
 # ============================================================================
-# AngelClaw AGI Guardian -- Windows Uninstaller (V3.0.0)
+# AngelClaw AGI Guardian -- Windows Uninstaller (V7.0.0)
 #
 # Stops ANGELNODE, removes Scheduled Task, and deletes the install directory.
 #
@@ -32,7 +32,7 @@ function Write-Warn { param([string]$msg) Write-Host "  [!]  $msg" -ForegroundCo
 Write-Host ""
 Write-Host "================================================" -ForegroundColor Red
 Write-Host "   AngelClaw AGI Guardian -- Windows Uninstaller" -ForegroundColor Red
-Write-Host "   V3.0.0 -- Dominion"                            -ForegroundColor Red
+Write-Host "   V7.0.0 -- Singularity"                            -ForegroundColor Red
 Write-Host "================================================" -ForegroundColor Red
 
 # ---------------------------------------------------------------------------

@@ -266,6 +266,8 @@ _PUBLIC_PATHS = {
     "/ui",
     "/api/v1/auth/login",
     "/api/v1/auth/logout",
+    "/api/v1/agents/register",
+    "/api/v1/policies/current",
     "/docs",
     "/openapi.json",
     "/redoc",

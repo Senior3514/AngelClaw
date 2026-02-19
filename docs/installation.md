@@ -1,4 +1,4 @@
-# AngelClaw AGI Guardian -- Installation Guide (V3.0.0)
+# AngelClaw AGI Guardian -- Installation Guide (V7.0.0)
 
 ## Overview
 

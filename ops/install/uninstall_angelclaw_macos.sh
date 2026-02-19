@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AngelClaw AGI Guardian -- macOS Uninstaller (V3.0.0)
+# AngelClaw AGI Guardian -- macOS Uninstaller (V7.0.0)
 #
 # Stops all AngelClaw containers, removes Docker images, volumes,
 # and optionally deletes the install directory.
@@ -36,7 +36,7 @@ err()  { echo -e "  ${R}[X]${N} $1"; }
 echo ""
 echo -e "${B}${R}================================================${N}"
 echo -e "${B}${R}  AngelClaw AGI Guardian -- macOS Uninstaller${N}"
-echo -e "${B}${R}  V3.0.0 -- Dominion${N}"
+echo -e "${B}${R}  V7.0.0 -- Singularity${N}"
 echo -e "${B}${R}================================================${N}"
 echo ""
 
