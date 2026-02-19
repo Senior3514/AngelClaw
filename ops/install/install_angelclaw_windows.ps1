@@ -33,6 +33,7 @@ $Branch     = if ($env:ANGELCLAW_BRANCH)       { $env:ANGELCLAW_BRANCH }       e
 $ForceClean = ($env:ANGELCLAW_FORCE -eq "true")
 
 $Repo = "https://github.com/Senior3514/AngelClaw.git"
+$Repo = "https://github.com/Senior3514/AngelClaw.git"
 $TotalSteps = 8
 $script:CurrentStep = 0
 
@@ -269,10 +270,17 @@ if (Test-Path "$InstallDir\.git") {
         Remove-Item -Recurse -Force $InstallDir
     }
     Write-Host "  Cloning repository..." -ForegroundColor Gray
-    git clone --branch $Branch $Repo $InstallDir
+    git clone --branch $Branch $Repo $InstallDir 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) {
-        Write-Err "Failed to clone repository."
-        exit 1
+        Write-Warn "Public clone failed -- repo may be private."
+        $GhUser  = if ($env:GH_USER)  { $env:GH_USER }  else { Read-Host "  GitHub username" }
+        $GhToken = if ($env:GH_TOKEN) { $env:GH_TOKEN } else { Read-Host "  GitHub PAT (token)" }
+        $AuthRepo = "https://${GhUser}:${GhToken}@github.com/Senior3514/AngelClaw.git"
+        git clone --branch $Branch $AuthRepo $InstallDir
+        if ($LASTEXITCODE -ne 0) {
+            Write-Err "Failed to clone repository. Check credentials."
+            exit 1
+        }
     }
     Write-Ok "Repository cloned."
 }

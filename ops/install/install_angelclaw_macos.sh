@@ -217,7 +217,13 @@ else
     rm -rf "$INSTALL_DIR"
   fi
   echo -e "  ${C}Cloning repository...${N}"
-  git clone --branch "$BRANCH" "$REPO" "$INSTALL_DIR"
+  if ! git clone --branch "$BRANCH" "$REPO" "$INSTALL_DIR" 2>/dev/null; then
+    warn "Public clone failed -- repo may be private."
+    printf "  GitHub username: " ; read -r GH_USER < /dev/tty
+    printf "  GitHub PAT (token): " ; read -r GH_TOKEN < /dev/tty
+    AUTH_REPO="https://${GH_USER}:${GH_TOKEN}@github.com/Senior3514/AngelClaw.git"
+    git clone --branch "$BRANCH" "$AUTH_REPO" "$INSTALL_DIR"
+  fi
   ok "Repository cloned."
 fi
 
