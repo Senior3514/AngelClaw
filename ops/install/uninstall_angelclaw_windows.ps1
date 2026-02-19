@@ -1,5 +1,5 @@
 # ============================================================================
-# AngelClaw AGI Guardian -- Windows Uninstaller (V2.2.1)
+# AngelClaw AGI Guardian -- Windows Uninstaller (V3.0.0)
 #
 # Stops ANGELNODE container, removes Docker images, volumes,
 # and optionally deletes the install directory.
@@ -33,7 +33,7 @@ function Write-Err  { param([string]$msg) Write-Host "  [X]  $msg" -ForegroundCo
 Write-Host ""
 Write-Host "================================================" -ForegroundColor Red
 Write-Host "   AngelClaw AGI Guardian -- Windows Uninstaller" -ForegroundColor Red
-Write-Host "   V2.2.1"                                        -ForegroundColor Red
+Write-Host "   V3.0.0 -- Dominion"                              -ForegroundColor Red
 Write-Host "================================================" -ForegroundColor Red
 Write-Host ""
 
@@ -160,7 +160,6 @@ if (-not $KeepData) {
 Write-Host ""
 Write-Host "  Docker Desktop was NOT removed."
 Write-Host ""
-Write-Host "  To reinstall (one-liner):"
-Write-Host "    Set-ExecutionPolicy Bypass -Scope Process -Force"
-Write-Host "    iwr -Uri 'https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1' -OutFile `"`$env:TEMP\install_angelclaw.ps1`"; & `"`$env:TEMP\install_angelclaw.ps1`" -CloudUrl 'http://YOUR-VPS-IP:8500'"
+Write-Host "  To reinstall (PowerShell as Admin):"
+Write-Host "    irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex"
 Write-Host ""

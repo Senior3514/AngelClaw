@@ -1,9 +1,9 @@
 # AngelClaw — Installation & Uninstallation Guide
 
 ## Prerequisites
-- Python 3.11+ (or Docker)
-- Git
-- 512MB RAM minimum (1GB recommended)
+
+**None** -- all installers auto-install every dependency (Docker, Git, Homebrew).
+Just run the one-liner for your OS.
 
 ## Linux (Ubuntu/Debian, RHEL/Fedora, Arch)
 
@@ -59,7 +59,11 @@ python3 -m uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
 
 ### Uninstall
 ```bash
-rm -rf ~/angelclaw
+curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_macos.sh | bash
+```
+Or manually:
+```bash
+rm -rf ~/AngelClaw
 ```
 
 ## Windows
@@ -69,19 +73,22 @@ rm -rf ~/angelclaw
 irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
 ```
 
+### Custom Tenant Install
+```powershell
+$env:ANGELCLAW_TENANT_ID="acme-corp"; irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
+```
+
 ### Manual Install
 ```powershell
 git clone https://github.com/Senior3514/AngelClaw.git C:\AngelClaw
-cd C:\AngelClaw
-python -m venv venv
-.\venv\Scripts\activate
-pip install -e ".[cloud,dev]"
-python -m uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
+cd C:\AngelClaw\ops
+docker compose up -d --build
 ```
 
 ### Uninstall
 ```powershell
-Remove-Item -Recurse -Force C:\AngelClaw
+# PowerShell as Admin
+& "C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1"
 ```
 
 ## Docker (All Platforms)
@@ -89,8 +96,8 @@ Remove-Item -Recurse -Force C:\AngelClaw
 ### Install & Run
 ```bash
 git clone https://github.com/Senior3514/AngelClaw.git
-cd AngelClaw
-docker compose up -d
+cd AngelClaw/ops
+docker compose up -d --build
 ```
 
 ### Stop & Remove
@@ -139,5 +146,5 @@ curl http://localhost:8500/health
 Run tests:
 ```bash
 python3 -m pytest tests/ -q
-# Expected: 1758+ passed
+# Expected: 1848 passed
 ```

@@ -15,9 +15,128 @@ analysis, reading, summarizing, reasoning, creating -- flows freely.
 
 ---
 
-## What's New in V3.0.0 -- Dominion
+## Installation
 
-The **most ambitious release yet** -- a full four-phase upgrade (V2.3 -> V2.4 -> V2.5 -> V3.0) transforming AngelClaw into an enterprise-grade autonomous AGI security platform.
+All installers **auto-install every dependency** (Docker, Git, Homebrew) -- zero prerequisites.
+One command. Full stack. Done.
+
+### Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
+```
+
+Installs: Docker, docker compose, Git, clones repo, builds & starts ANGELNODE + Cloud + Ollama, creates systemd service.
+
+### macOS
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_macos.sh | bash
+```
+
+Installs: Homebrew, Docker Desktop, Git, clones repo, builds & starts full stack.
+
+### Windows (PowerShell as Admin)
+
+```powershell
+irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
+```
+
+Installs: Git (via winget), Docker Desktop (via winget), clones repo, builds & starts full stack.
+
+### Docker (all platforms)
+
+```bash
+git clone https://github.com/Senior3514/AngelClaw.git
+cd AngelClaw/ops
+docker compose up -d --build
+```
+
+### Manual Install (all platforms)
+
+```bash
+git clone https://github.com/Senior3514/AngelClaw.git
+cd AngelClaw
+python3 -m venv venv && source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -e ".[cloud,dev]"
+python3 -m uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
+```
+
+---
+
+## Multi-Tenancy
+
+AngelClaw is a **multi-tenant** system. Each ANGELNODE connects with a **Tenant ID** that isolates its data, policies, alerts, and analytics from other tenants.
+
+### How it works
+
+```
+                 ┌─────────────────────────┐
+                 │   AngelClaw Cloud        │
+                 │   (single instance)      │
+                 │                          │
+                 │   Tenant: acme-corp      │
+                 │   Tenant: startup-xyz    │
+                 │   Tenant: dev-team       │
+                 └──────────┬──────────────┘
+          ┌─────────────────┼─────────────────┐
+          ▼                 ▼                 ▼
+    ┌──────────┐     ┌──────────┐     ┌──────────┐
+    │ANGELNODE │     │ANGELNODE │     │ANGELNODE │
+    │acme-corp │     │startup   │     │dev-team  │
+    └──────────┘     └──────────┘     └──────────┘
+```
+
+### Set tenant during install
+
+```bash
+# Linux / macOS
+ANGELCLAW_TENANT_ID="acme-corp" curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
+
+# Windows (PowerShell as Admin)
+$env:ANGELCLAW_TENANT_ID="acme-corp"; irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
+```
+
+### Add tenants to a running system
+
+Edit `ops/config/angelclaw.env` and set `ANGELCLAW_TENANT_ID`, then restart:
+
+```bash
+cd AngelClaw/ops && docker compose restart
+```
+
+Each tenant gets isolated: policies, events, alerts, analytics, feedback, and hardening data.
+
+---
+
+## Uninstall
+
+| OS | Command |
+|----|---------|
+| **Linux** | `curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_linux.sh \| bash` |
+| **macOS** | `curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_macos.sh \| bash` |
+| **Windows** | PowerShell as Admin: `& "C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1"` |
+| **Docker** | `cd AngelClaw/ops && docker compose down -v` |
+
+Set `ANGELCLAW_KEEP_DATA=true` (Linux/macOS) or `-KeepData` (Windows) to preserve data.
+
+---
+
+## Verify
+
+```bash
+curl http://127.0.0.1:8500/health
+# {"status":"ok","version":"3.0.0",...}
+
+python3 -m pytest tests/ -q
+# 1848 passed
+```
+
+Dashboard: **http://127.0.0.1:8500/ui** -- Default login: `admin` / `fzMiSbDRGylsWrsaljMv7UxzrwdXCdTe` (change immediately!)
+
+---
+
+## What's New in V3.0.0 -- Dominion
 
 ### Admin Console & Organization Visibility
 - Full org-wide dashboard with **Halo Score**, **Wingspan**, fleet status, alert counts
@@ -49,7 +168,7 @@ The **most ambitious release yet** -- a full four-phase upgrade (V2.3 -> V2.4 ->
 - **Browser Extension** -- Chrome/Chromium v3.0.0 with badge alerts, mini chat, quick actions
 - **DuckDuckGo** -- desktop browser extension support + mobile web instructions
 
-### Enterprise Features (V2.4 Fortress + V2.5 Ascension)
+### Enterprise Features
 - Adaptive rate limiter with per-role tiers
 - WebSocket live feed for real-time events/alerts
 - Policy snapshots & rollback
@@ -77,87 +196,18 @@ The **most ambitious release yet** -- a full four-phase upgrade (V2.3 -> V2.4 ->
 
 ---
 
-## Installation
+## Quick Reference
 
-All installers **auto-install dependencies** (Docker, Git, Homebrew) -- no prerequisites needed.
-
-### Linux (one command)
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_linux.sh | bash
-```
-
-### macOS (one command)
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_macos.sh | bash
-```
-
-### Windows (one command, PowerShell as Admin)
-
-```powershell
-irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
-```
-
-### Docker (all platforms)
-
-```bash
-git clone https://github.com/Senior3514/AngelClaw.git && cd AngelClaw && docker compose up -d
-```
-
-### Manual Install (all platforms)
-
-```bash
-git clone https://github.com/Senior3514/AngelClaw.git
-cd AngelClaw
-python3 -m venv venv && source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -e ".[cloud,dev]"
-python3 -m uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
-```
-
----
-
-## Uninstall
-
-| OS | Command |
-|----|---------|
-| **Linux** | `curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_linux.sh \| bash` |
-| **macOS** | `curl -fsSL https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/uninstall_angelclaw_macos.sh \| bash` |
-| **Windows** | `C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1` (PowerShell as Admin) |
-| **Docker** | `docker compose down -v` (add `-v` to remove data) |
-
-Set `ANGELCLAW_KEEP_DATA=true` (Linux/macOS) or `-KeepData` (Windows) to preserve data.
-
-### Clean Remove (full wipe)
-
-```bash
-# Linux
-sudo systemctl stop angelclaw 2>/dev/null; sudo systemctl disable angelclaw 2>/dev/null
-sudo rm -f /etc/systemd/system/angelclaw.service; rm -rf /opt/angelclaw
-
-# macOS
-rm -rf ~/angelclaw
-
-# Windows (PowerShell as Admin)
-Remove-Item -Recurse -Force C:\AngelClaw
-
-# Docker (all platforms)
-docker compose down -v --rmi all
-```
-
----
-
-## Verify
-
-```bash
-curl http://127.0.0.1:8500/health
-# {"status":"ok","version":"3.0.0",...}
-
-python3 -m pytest tests/ -q
-# 1848 passed
-```
-
-Dashboard: **http://127.0.0.1:8500/ui** -- Default login: `admin` / `fzMiSbDRGylsWrsaljMv7UxzrwdXCdTe` (change immediately!)
+| What | URL / Command |
+|------|---------------|
+| Dashboard | `http://127.0.0.1:8500/ui` |
+| Default login | `admin` / `fzMiSbDRGylsWrsaljMv7UxzrwdXCdTe` (change immediately!) |
+| ANGELNODE health | `curl http://127.0.0.1:8400/health` |
+| Cloud API health | `curl http://127.0.0.1:8500/health` |
+| CLI status | `./ops/cli/angelclawctl status` |
+| Chat with AngelClaw | `curl -X POST http://127.0.0.1:8500/api/v1/angelclaw/chat -H 'Content-Type: application/json' -d '{"tenantId":"default","prompt":"Scan the system"}'` |
+| Remote access | `ssh -L 8500:127.0.0.1:8500 user@your-vps` |
+| Run tests | `python3 -m pytest tests/ -q` |
 
 ---
 
@@ -177,21 +227,6 @@ Dashboard: **http://127.0.0.1:8500/ui** -- Default login: `admin` / `fzMiSbDRGyl
 | **Chrome / Edge / Brave / Opera / Arc** | `chrome://extensions/` > Developer mode > Load unpacked > select `extensions/chrome/` |
 | **DuckDuckGo Desktop** | `duckduckgo://extensions/` > Developer mode > Load unpacked > select `extensions/chrome/` |
 | **Firefox** | Requires minor manifest adaptation (see `extensions/README.md`) |
-
----
-
-## Quick Reference
-
-| What | URL / Command |
-|------|---------------|
-| Dashboard | `http://127.0.0.1:8500/ui` |
-| Default login | `admin` / `fzMiSbDRGylsWrsaljMv7UxzrwdXCdTe` (change immediately!) |
-| ANGELNODE health | `curl http://127.0.0.1:8400/health` |
-| Cloud API health | `curl http://127.0.0.1:8500/health` |
-| CLI status | `./ops/cli/angelclawctl status` |
-| Chat with AngelClaw | `curl -X POST http://127.0.0.1:8500/api/v1/angelclaw/chat -H 'Content-Type: application/json' -d '{"tenantId":"default","prompt":"Scan the system"}'` |
-| Remote access | `ssh -L 8500:127.0.0.1:8500 user@your-vps` |
-| Run tests | `python3 -m pytest tests/ -q` |
 
 ---
 
@@ -260,7 +295,6 @@ curl -X POST http://localhost:8500/api/v1/angelclaw/chat \
 "Legion status"
 "Org overview"
 "Quarantine agent-001"
-"תסרוק את המערכת"  # Hebrew: Scan the system
 ```
 
 ---
@@ -288,6 +322,7 @@ curl -X POST http://localhost:8500/api/v1/angelclaw/chat \
 - **AI-First** -- Any model, any agent framework, any workflow. Use AI however you like.
 - **Zero-Trust** -- Default-deny policy with 540 rules. Explicit allowlists only.
 - **Fail-Closed** -- If the engine is unreachable, actions are blocked.
+- **Multi-Tenant** -- Each tenant gets isolated policies, events, alerts, and analytics.
 - **Self-Learning** -- Tracks operator feedback to improve suggestions over time.
 - **Self-Hardening** -- Autonomously detects and fixes security weaknesses.
 - **Anti-Tamper** -- Protects agents from unauthorized modification or shutdown.
@@ -303,7 +338,7 @@ curl -X POST http://localhost:8500/api/v1/angelclaw/chat \
 | Password | `fzMiSbDRGylsWrsaljMv7UxzrwdXCdTe` |
 
 Credentials are configured via environment variables (`ANGELCLAW_ADMIN_USER`, `ANGELCLAW_ADMIN_PASSWORD`).
-Docker deployments load defaults from `ops/config/angelgrid.env`.
+Docker deployments load defaults from `ops/config/angelclaw.env`.
 
 **Change the password immediately after first login.**
 

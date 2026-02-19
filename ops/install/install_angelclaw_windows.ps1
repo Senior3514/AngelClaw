@@ -1,33 +1,37 @@
 # ============================================================================
-# AngelClaw AGI Guardian -- Windows ANGELNODE Installer (V2.2.1)
+# AngelClaw AGI Guardian -- Windows Full-Stack Installer (V3.0.0)
 #
-# Installs the ANGELNODE agent (client) connecting to your AngelClaw Cloud
-# server. Auto-installs Docker Desktop and Git via winget if missing.
+# Installs the COMPLETE AngelClaw stack (ANGELNODE + Cloud + Ollama) on
+# Windows using Docker Desktop. Auto-installs Docker Desktop and Git via
+# winget if missing.
 #
 # ONE-LINE INSTALL (PowerShell as Administrator):
-#   Set-ExecutionPolicy Bypass -Scope Process -Force; iwr -Uri 'https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1' -OutFile "$env:TEMP\install_angelclaw.ps1"; & "$env:TEMP\install_angelclaw.ps1" -CloudUrl 'http://YOUR-VPS-IP:8500'
+#   irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
+#
+# CUSTOM TENANT (set env vars before running):
+#   $env:ANGELCLAW_TENANT_ID="acme-corp"; irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
 #
 # LOCAL INSTALL (if repo already cloned):
 #   Set-ExecutionPolicy Bypass -Scope Process -Force
-#   .\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
+#   .\ops\install\install_angelclaw_windows.ps1
 #
-# Parameters:
-#   -CloudUrl    Cloud API URL       (default: http://your-cloud-server:8500)
-#   -TenantId    Tenant identifier   (default: default)
-#   -InstallDir  Install directory   (default: C:\AngelClaw)
-#   -Branch      Git branch          (default: main)
-#   -Force       Force clean reinstall (removes existing install first)
+# Environment variable overrides:
+#   ANGELCLAW_TENANT_ID   Tenant identifier    (default: default)
+#   ANGELCLAW_INSTALL_DIR Install directory     (default: C:\AngelClaw)
+#   ANGELCLAW_BRANCH      Git branch           (default: main)
+#   ANGELCLAW_FORCE       Force clean reinstall (set to "true")
 # ============================================================================
 
-param(
-    [string]$CloudUrl   = "http://your-cloud-server:8500",
-    [string]$TenantId   = "default",
-    [string]$InstallDir = "C:\AngelClaw",
-    [string]$Branch     = "main",
-    [switch]$Force
-)
-
 $ErrorActionPreference = "Stop"
+
+# ---------------------------------------------------------------------------
+# Configuration (override via environment variables)
+# ---------------------------------------------------------------------------
+$TenantId   = if ($env:ANGELCLAW_TENANT_ID)   { $env:ANGELCLAW_TENANT_ID }   else { "default" }
+$InstallDir = if ($env:ANGELCLAW_INSTALL_DIR)  { $env:ANGELCLAW_INSTALL_DIR }  else { "C:\AngelClaw" }
+$Branch     = if ($env:ANGELCLAW_BRANCH)       { $env:ANGELCLAW_BRANCH }       else { "main" }
+$ForceClean = ($env:ANGELCLAW_FORCE -eq "true")
+
 $Repo = "https://github.com/Senior3514/AngelClaw.git"
 $TotalSteps = 8
 $script:CurrentStep = 0
@@ -56,7 +60,7 @@ function Refresh-Path {
 Write-Host ""
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host "   AngelClaw AGI Guardian -- Windows Installer"   -ForegroundColor Cyan
-Write-Host "   V2.2.1 -- Angel Legion"                        -ForegroundColor Cyan
+Write-Host "   V3.0.0 -- Dominion"                            -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -72,15 +76,13 @@ if (-not $isAdmin) {
     exit 1
 }
 
-if ($CloudUrl -eq "http://your-cloud-server:8500") {
-    Write-Warn "No -CloudUrl specified. Using placeholder."
-    Write-Host "    Pass -CloudUrl to specify your server address."
-}
-
-Write-Ok "Pre-flight checks passed."
+Write-Ok "Running as Administrator."
+Write-Host "  Tenant ID    : $TenantId"
+Write-Host "  Install dir  : $InstallDir"
+Write-Host "  Branch       : $Branch"
 
 # ---------------------------------------------------------------------------
-# Step 2: Check/Install Git
+# Step 2: Check / Install Git
 # ---------------------------------------------------------------------------
 Write-Step "Checking Git..."
 
@@ -102,7 +104,6 @@ if (-not $gitCmd) {
     Refresh-Path
     $gitCmd = Get-Command git -ErrorAction SilentlyContinue
     if (-not $gitCmd) {
-        Write-Warn "Git installed but not in PATH yet."
         # Try common install paths
         $gitPaths = @(
             "$env:ProgramFiles\Git\cmd",
@@ -112,7 +113,6 @@ if (-not $gitCmd) {
         foreach ($p in $gitPaths) {
             if (Test-Path "$p\git.exe") {
                 $env:Path = "$p;$env:Path"
-                Write-Ok "Found Git at $p"
                 break
             }
         }
@@ -128,7 +128,7 @@ if (-not $gitCmd) {
 }
 
 # ---------------------------------------------------------------------------
-# Step 3: Check/Install Docker Desktop
+# Step 3: Check / Install Docker Desktop
 # ---------------------------------------------------------------------------
 Write-Step "Checking Docker Desktop..."
 
@@ -190,9 +190,9 @@ if (-not $dockerRunning) {
     $dockerDesktop = "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe"
     if (Test-Path $dockerDesktop) {
         Start-Process $dockerDesktop
-        Write-Host "  Waiting for Docker to start (up to 60s)..." -ForegroundColor Gray
+        Write-Host "  Waiting for Docker to start (up to 90s)..." -ForegroundColor Gray
         $waited = 0
-        while ($waited -lt 60) {
+        while ($waited -lt 90) {
             Start-Sleep -Seconds 5
             $waited += 5
             try {
@@ -220,7 +220,7 @@ try {
     if ($LASTEXITCODE -eq 0) {
         $composeVer = docker compose version 2>&1
         Write-Ok "docker compose found: $composeVer"
-        $dcCmd = "docker compose"
+        $dcCmd = "compose"
     }
 } catch {}
 
@@ -229,7 +229,7 @@ if (-not $dcCmd) {
     if ($dockerComposeCmd) {
         $composeVer = docker-compose --version 2>&1
         Write-Ok "docker-compose found: $composeVer"
-        $dcCmd = "docker-compose"
+        $dcCmd = "legacy"
     }
 }
 
@@ -244,7 +244,7 @@ if (-not $dcCmd) {
 # ---------------------------------------------------------------------------
 Write-Step "Setting up AngelClaw at $InstallDir..."
 
-if ($Force -and (Test-Path $InstallDir)) {
+if ($ForceClean -and (Test-Path $InstallDir)) {
     Write-Warn "Force flag set -- removing existing installation..."
     Remove-Item -Recurse -Force $InstallDir
 }
@@ -278,9 +278,9 @@ if (Test-Path "$InstallDir\.git") {
 }
 
 # ---------------------------------------------------------------------------
-# Step 6: Write ANGELNODE config
+# Step 6: Write environment config
 # ---------------------------------------------------------------------------
-Write-Step "Writing ANGELNODE configuration..."
+Write-Step "Writing configuration..."
 
 $configDir = Join-Path $InstallDir "ops\config"
 if (-not (Test-Path $configDir)) {
@@ -291,37 +291,41 @@ $configFile = Join-Path $configDir "angelclaw.env"
 $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 $configContent = @"
 # AngelClaw AGI Guardian -- generated by installer on $timestamp
-ANGELCLAW_CLOUD_URL=$CloudUrl
 ANGELCLAW_TENANT_ID=$TenantId
+ANGELCLAW_CLOUD_URL=http://cloud:8500
+ANGELCLAW_BIND_HOST=127.0.0.1
+ANGELCLAW_BIND_PORT=8500
+ANGELCLAW_AUTH_ENABLED=true
 ANGELCLAW_SYNC_INTERVAL=60
 LLM_ENABLED=false
+LLM_MODEL=llama3
 "@
 
 Set-Content -Path $configFile -Value $configContent -Encoding UTF8
 Write-Ok "Config written to $configFile"
 
 # ---------------------------------------------------------------------------
-# Step 7: Build and start ANGELNODE container
+# Step 7: Build and start full stack
 # ---------------------------------------------------------------------------
-Write-Step "Building and starting ANGELNODE container..."
+Write-Step "Building and starting AngelClaw stack..."
 
 $opsDir = Join-Path $InstallDir "ops"
 Push-Location $opsDir
 try {
-    if ($dcCmd -eq "docker compose") {
-        docker compose up -d --build angelnode
+    if ($dcCmd -eq "compose") {
+        docker compose up -d --build
     } else {
-        docker-compose up -d --build angelnode
+        docker-compose up -d --build
     }
     if ($LASTEXITCODE -ne 0) {
         throw "docker compose returned exit code $LASTEXITCODE"
     }
-    Write-Ok "ANGELNODE container started."
+    Write-Ok "AngelClaw stack started (ANGELNODE + Cloud + Ollama)."
 } catch {
-    Write-Err "Failed to start container: $_"
+    Write-Err "Failed to start containers: $_"
     Write-Host "  Try running manually:"
     Write-Host "    cd $opsDir"
-    Write-Host "    docker compose up -d --build angelnode"
+    Write-Host "    docker compose up -d --build"
 } finally {
     Pop-Location
 }
@@ -329,31 +333,51 @@ try {
 # ---------------------------------------------------------------------------
 # Step 8: Health check with retries
 # ---------------------------------------------------------------------------
-Write-Step "Verifying ANGELNODE health..."
+Write-Step "Verifying services..."
 
 Write-Host "  Waiting for startup..." -ForegroundColor Gray
-Start-Sleep -Seconds 8
+Start-Sleep -Seconds 10
 
-$healthy = $false
+# Check ANGELNODE
+$nodeHealthy = $false
 for ($attempt = 1; $attempt -le 3; $attempt++) {
     try {
         $health = Invoke-RestMethod -Uri "http://127.0.0.1:8400/health" -TimeoutSec 5
-        $healthy = $true
+        $nodeHealthy = $true
         break
     } catch {
         if ($attempt -lt 3) {
-            Write-Host "  Retry $attempt/3..." -ForegroundColor Gray
+            Write-Host "  ANGELNODE retry $attempt/3..." -ForegroundColor Gray
             Start-Sleep -Seconds 5
         }
     }
 }
 
-if ($healthy) {
+if ($nodeHealthy) {
     Write-Ok "ANGELNODE is healthy (port 8400)"
 } else {
-    Write-Warn "Health check failed -- container may still be starting."
-    Write-Host "    Check: curl http://127.0.0.1:8400/health"
-    Write-Host "    Logs:  docker logs angelclaw-angelnode-1"
+    Write-Warn "ANGELNODE health check failed -- container may still be starting."
+}
+
+# Check Cloud API
+$cloudHealthy = $false
+for ($attempt = 1; $attempt -le 3; $attempt++) {
+    try {
+        $health = Invoke-RestMethod -Uri "http://127.0.0.1:8500/health" -TimeoutSec 5
+        $cloudHealthy = $true
+        break
+    } catch {
+        if ($attempt -lt 3) {
+            Write-Host "  Cloud API retry $attempt/3..." -ForegroundColor Gray
+            Start-Sleep -Seconds 5
+        }
+    }
+}
+
+if ($cloudHealthy) {
+    Write-Ok "Cloud API is healthy (port 8500)"
+} else {
+    Write-Warn "Cloud API health check failed -- container may still be starting."
 }
 
 # ---------------------------------------------------------------------------
@@ -361,23 +385,33 @@ if ($healthy) {
 # ---------------------------------------------------------------------------
 Write-Host ""
 Write-Host "================================================" -ForegroundColor Green
-Write-Host "   AngelClaw ANGELNODE -- Installed!"              -ForegroundColor Green
+Write-Host "   AngelClaw AGI Guardian -- Installed!"          -ForegroundColor Green
 Write-Host "================================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Install dir  : $InstallDir"
 Write-Host "  Config       : $configFile"
 Write-Host "  Tenant ID    : $TenantId"
-Write-Host "  Cloud URL    : $CloudUrl"
-Write-Host "  ANGELNODE    : http://127.0.0.1:8400"
+Write-Host ""
+Write-Host "  Access:"
+Write-Host "    Dashboard  : http://127.0.0.1:8500/ui"
+Write-Host "    ANGELNODE  : http://127.0.0.1:8400"
+Write-Host "    Cloud API  : http://127.0.0.1:8500"
+Write-Host ""
+Write-Host "  Default login: admin / fzMiSbDRGylsWrsaljMv7UxzrwdXCdTe" -ForegroundColor Yellow
+Write-Host "  Change the password immediately after first login!" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "  Useful commands:"
-Write-Host "    docker ps                              # check container"
-Write-Host "    docker logs angelclaw-angelnode-1 -f   # follow logs"
-Write-Host "    curl http://127.0.0.1:8400/status      # agent status"
+Write-Host "    docker ps                                # check containers"
+Write-Host "    docker logs angelclaw-angelnode-1 -f     # follow node logs"
+Write-Host "    docker logs angelclaw-cloud-1 -f         # follow cloud logs"
 Write-Host ""
-Write-Host "  Access the Cloud dashboard (on your server):"
-Write-Host "    Open browser: $CloudUrl/ui"
+Write-Host "  Multi-tenancy:"
+Write-Host "    Each ANGELNODE uses a Tenant ID to isolate data."
+Write-Host "    Set `$env:ANGELCLAW_TENANT_ID before re-running to add tenants."
 Write-Host ""
-Write-Host "  AngelClaw V2.2.1 -- Angel Legion" -ForegroundColor Cyan
+Write-Host "  Uninstall:"
+Write-Host "    & `"$InstallDir\ops\install\uninstall_angelclaw_windows.ps1`""
+Write-Host ""
+Write-Host "  AngelClaw V3.0.0 -- Dominion" -ForegroundColor Cyan
 Write-Host "  Guardian angel, not gatekeeper." -ForegroundColor Cyan
 Write-Host ""

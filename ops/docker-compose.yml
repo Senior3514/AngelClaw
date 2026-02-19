@@ -56,7 +56,7 @@ services:
     volumes:
       - cloud-data:/data
     env_file:
-      - config/angelgrid.env
+      - config/angelclaw.env
     environment:
       - ANGELGRID_DATABASE_URL=sqlite:////data/angelgrid.db
       # LLM Proxy configuration

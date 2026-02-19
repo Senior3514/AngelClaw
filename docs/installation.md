@@ -1,4 +1,4 @@
-# AngelClaw AGI Guardian -- Installation Guide (V2.2.1)
+# AngelClaw AGI Guardian -- Installation Guide (V3.0.0)
 
 ## Overview
 
@@ -145,32 +145,28 @@ open http://127.0.0.1:8500/ui       # Dashboard
 
 ---
 
-## Windows -- Agent (ANGELNODE Client)
-
-Windows installs **ANGELNODE only** (the lightweight agent). The Cloud backend runs on your server. Replace `YOUR-VPS-IP` with your server's IP address.
+## Windows -- Full Stack
 
 ### Install -- One Command
 
 PowerShell (as Administrator):
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; iwr -Uri 'https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1' -OutFile "$env:TEMP\install_angelclaw.ps1"; & "$env:TEMP\install_angelclaw.ps1" -CloudUrl 'http://YOUR-VPS-IP:8500'
+irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
 ```
 
-Auto-installs Docker Desktop + Git via winget (if missing), clones the repo, builds ANGELNODE container, connects to your server.
+Auto-installs Docker Desktop + Git via winget (if missing), clones the repo, builds full stack (ANGELNODE + Cloud + Ollama).
 
-**Already installed? The installer auto-detects and updates:**
+**Custom tenant:**
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force
-C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
+$env:ANGELCLAW_TENANT_ID="acme-corp"; irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
 ```
 
 **Force clean reinstall:**
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force
-C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500" -Force
+$env:ANGELCLAW_FORCE="true"; irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
 ```
 
 ### Uninstall
@@ -178,41 +174,30 @@ C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VP
 PowerShell (as Administrator):
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force
-C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1
+& "C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1"
 ```
 
 **Keep files but remove everything else:**
 
 ```powershell
-C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1 -KeepData
+& "C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1" -KeepData
 ```
 
-### Reinstall -- One Command
+### Environment Variables
 
-PowerShell (as Administrator):
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1; iwr -Uri 'https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1' -OutFile "$env:TEMP\install_angelclaw.ps1"; & "$env:TEMP\install_angelclaw.ps1" -CloudUrl 'http://YOUR-VPS-IP:8500'
-```
-
-### Parameters
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `-CloudUrl` | `http://your-cloud-server:8500` | Your server's Cloud API URL |
-| `-TenantId` | `default` | Tenant identifier |
-| `-InstallDir` | `C:\AngelClaw` | Install directory |
-| `-Branch` | `main` | Git branch to checkout |
-| `-Force` | `$false` | Force clean reinstall |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ANGELCLAW_TENANT_ID` | `default` | Tenant identifier |
+| `ANGELCLAW_INSTALL_DIR` | `C:\AngelClaw` | Install directory |
+| `ANGELCLAW_BRANCH` | `main` | Git branch to checkout |
+| `ANGELCLAW_FORCE` | `false` | Force clean reinstall (set to "true") |
 
 ### Verify
 
 ```powershell
-curl http://127.0.0.1:8400/health
-curl http://127.0.0.1:8400/status
+curl http://127.0.0.1:8400/health   # ANGELNODE
+curl http://127.0.0.1:8500/health   # Cloud API
 docker ps
-docker logs angelclaw-angelnode-1
 ```
 
 ---
@@ -297,32 +282,14 @@ curl -X POST http://127.0.0.1:8500/api/v1/auth/change-password \
 
 ## Troubleshooting
 
-### Windows: PowerShell parse errors with special characters
-
-**Symptom:** Errors like `Unexpected token` or garbled characters (`a]"`) when running `.ps1` scripts.
-
-**Cause:** PowerShell 5.x reads files as ANSI by default. Non-ASCII characters (em dashes, etc.) in UTF-8 files corrupt the parser.
-
-**Fix:** V2.1.0 scripts are now pure ASCII. Pull the latest version:
-
-```powershell
-cd C:\AngelClaw; git pull origin main
-```
-
 ### Windows: "destination path already exists and is not an empty directory"
 
 **Symptom:** `git clone` fails because `C:\AngelClaw` already exists.
 
-**Fix:** The installer handles this automatically. Just run:
+**Fix:** The installer handles this automatically (pulls latest). Or force a clean reinstall:
 
 ```powershell
-C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500"
-```
-
-Or force a clean reinstall:
-
-```powershell
-C:\AngelClaw\ops\install\install_angelclaw_windows.ps1 -CloudUrl "http://YOUR-VPS-IP:8500" -Force
+$env:ANGELCLAW_FORCE="true"; irm https://raw.githubusercontent.com/Senior3514/AngelClaw/main/ops/install/install_angelclaw_windows.ps1 | iex
 ```
 
 ### Health check fails after install
@@ -371,7 +338,7 @@ netstat -ano | findstr :8500
 |------|---------|
 | Server install (Linux) | `curl -sSL .../install_angelclaw_linux.sh \| bash` |
 | Server install (macOS) | `curl -sSL .../install_angelclaw_macos.sh \| bash` |
-| Agent install (Windows) | `iwr -Uri '.../install_angelclaw_windows.ps1' -OutFile "$env:TEMP\i.ps1"; & "$env:TEMP\i.ps1" -CloudUrl "..."` |
+| Full install (Windows) | `irm .../install_angelclaw_windows.ps1 \| iex` |
 | Uninstall (Linux) | `curl -sSL .../uninstall_angelclaw_linux.sh \| bash` |
 | Uninstall (macOS) | `curl -sSL .../uninstall_angelclaw_macos.sh \| bash` |
 | Uninstall (Windows) | `C:\AngelClaw\ops\install\uninstall_angelclaw_windows.ps1` |
