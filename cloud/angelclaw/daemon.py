@@ -150,7 +150,16 @@ async def daemon_loop(tenant_id: str = "dev-tenant") -> None:
             # V2.2 — 8. Learning engine cycle (decay + threshold tuning)
             _run_learning_cycle()
 
-            # 9. Log cycle summary
+            # V3.0 — 9. Anti-tamper heartbeat checks
+            tamper_findings = _run_anti_tamper_checks(db, tenant_id)
+
+            # V3.0 — 10. Self-hardening cycle
+            hardening_actions = _run_self_hardening_cycle(db, tenant_id, prefs)
+
+            # V3.0 — 11. Feedback-based adjustments
+            _run_feedback_adjustments(tenant_id)
+
+            # 12. Log cycle summary
             elapsed = (datetime.now(timezone.utc) - cycle_start).total_seconds()
             cycle_summary = f"Cycle #{_cycles_completed} complete ({elapsed:.1f}s) — {scan_summary}"
             if shield_summary:
@@ -163,6 +172,10 @@ async def daemon_loop(tenant_id: str = "dev-tenant") -> None:
                 cycle_summary += f", {len(security_findings)} security finding(s)"
             if legion_findings:
                 cycle_summary += f", legion: {legion_findings} indicator(s)"
+            if tamper_findings:
+                cycle_summary += f", {len(tamper_findings)} tamper finding(s)"
+            if hardening_actions:
+                cycle_summary += f", {len(hardening_actions)} hardening action(s)"
 
             if reporting != ReportingLevel.QUIET or drift_findings or health_issues:
                 _log_activity(cycle_summary, "cycle")
@@ -495,7 +508,11 @@ def _check_agent_health(db) -> list[str]:
         agents = db.query(AgentNodeRow).filter(AgentNodeRow.status == "active").all()
 
         for a in agents:
-            last_seen = a.last_seen_at.replace(tzinfo=None) if (a.last_seen_at and a.last_seen_at.tzinfo) else a.last_seen_at
+            last_seen = (
+                a.last_seen_at.replace(tzinfo=None)
+                if (a.last_seen_at and a.last_seen_at.tzinfo)
+                else a.last_seen_at
+            )
             if last_seen and last_seen < stale_cutoff:
                 msg = (
                     f"Agent {a.hostname} unresponsive"
@@ -565,6 +582,111 @@ def _run_learning_cycle() -> None:
 
     except Exception:
         logger.debug("[DAEMON] Learning cycle failed", exc_info=True)
+
+
+# ---------------------------------------------------------------------------
+# V3.0 — Anti-tamper heartbeat checks
+# ---------------------------------------------------------------------------
+
+
+def _run_anti_tamper_checks(db, tenant_id: str) -> list[str]:
+    """Check for anti-tamper violations (heartbeat misses, checksum drift)."""
+    findings = []
+    try:
+        from cloud.db.models import AgentNodeRow
+        from cloud.services.anti_tamper import anti_tamper_service
+
+        agents = db.query(AgentNodeRow).filter(AgentNodeRow.status == "active").all()
+
+        for agent in agents:
+            # Check heartbeat timeout
+            event = anti_tamper_service.check_heartbeat(tenant_id, agent.id)
+            if event:
+                msg = f"Anti-tamper: heartbeat miss for {agent.hostname}"
+                findings.append(msg)
+                _log_activity(msg, "anti_tamper", {"agent_id": agent.id})
+
+        if findings:
+            _log_activity(
+                f"Anti-tamper: {len(findings)} issue(s) detected",
+                "anti_tamper",
+            )
+    except Exception:
+        logger.debug("[DAEMON] Anti-tamper checks failed", exc_info=True)
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# V3.0 — Self-hardening cycle
+# ---------------------------------------------------------------------------
+
+
+def _run_self_hardening_cycle(db, tenant_id: str, prefs) -> list[dict]:
+    """Run the self-hardening engine to detect and fix security weaknesses."""
+    try:
+        from cloud.db.models import AgentNodeRow
+        from cloud.services.anti_tamper import anti_tamper_service
+        from cloud.services.self_hardening import self_hardening_engine
+
+        # Gather context for the hardening engine
+        agents = db.query(AgentNodeRow).filter(AgentNodeRow.status == "active").all()
+        unprotected = [
+            a.id for a in agents
+            if not anti_tamper_service.is_protected(tenant_id, a.id)
+        ]
+
+        context = {
+            "scan_freq": prefs.scan_frequency_minutes,
+            "logging_enabled": True,
+            "unprotected_high_risk_agents": unprotected[:10] if len(unprotected) > 5 else [],
+        }
+
+        autonomy = getattr(prefs, "autonomy_level", None)
+        mode = "suggest"
+        if autonomy:
+            mode_str = str(autonomy.value) if hasattr(autonomy, "value") else str(autonomy)
+            if mode_str in ("auto_apply", "assist"):
+                mode = "auto_apply"
+            elif mode_str == "observe":
+                mode = "observe"
+
+        actions = self_hardening_engine.run_hardening_cycle(
+            tenant_id=tenant_id,
+            autonomy_mode=mode,
+            context=context,
+        )
+
+        if actions:
+            _log_activity(
+                f"Self-hardening: {len(actions)} action(s) ({mode} mode)",
+                "hardening",
+                {"action_count": len(actions)},
+            )
+        return actions
+    except Exception:
+        logger.debug("[DAEMON] Self-hardening cycle failed", exc_info=True)
+        return []
+
+
+# ---------------------------------------------------------------------------
+# V3.0 — Feedback-based adjustments
+# ---------------------------------------------------------------------------
+
+
+def _run_feedback_adjustments(tenant_id: str) -> None:
+    """Check feedback loop for adjustment recommendations and log them."""
+    try:
+        from cloud.services.feedback_loop import feedback_service
+
+        recommendations = feedback_service.get_adjustment_recommendations(tenant_id)
+        if recommendations:
+            _log_activity(
+                f"Feedback loop: {len(recommendations)} adjustment recommendation(s)",
+                "feedback",
+                {"recommendations": [r.get("category", "?") for r in recommendations]},
+            )
+    except Exception:
+        logger.debug("[DAEMON] Feedback adjustments failed", exc_info=True)
 
 
 # ---------------------------------------------------------------------------

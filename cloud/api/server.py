@@ -66,7 +66,7 @@ async def lifespan(app: FastAPI):
 
     await start_daemon()
     logger.info(
-        "AngelClaw AGI Guardian 2.1.0 started"
+        "AngelClaw AGI Guardian 3.0.0 started"
         " — tables, heartbeat, orchestrator, Wazuh, shield, daemon"
     )
     yield
@@ -78,7 +78,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="AngelClaw AGI Guardian API",
-    version="2.1.0",
+    version="3.0.0",
     lifespan=lifespan,
 )
 
@@ -131,6 +131,70 @@ app.include_router(metrics_router)
 from cloud.angelclaw.routes import router as angelclaw_router  # noqa: E402
 
 app.include_router(angelclaw_router)
+
+# V2.4 — Fortress routes
+from cloud.api.policy_routes import router as policy_router  # noqa: E402
+
+app.include_router(policy_router)
+
+from cloud.api.quarantine_routes import router as quarantine_router  # noqa: E402
+
+app.include_router(quarantine_router)
+
+from cloud.api.notification_routes import router as notification_router  # noqa: E402
+
+app.include_router(notification_router)
+
+from cloud.websocket.routes import router as websocket_router  # noqa: E402
+
+app.include_router(websocket_router)
+
+# V2.5 — Ascension routes
+from cloud.plugins.routes import router as plugin_router  # noqa: E402
+
+app.include_router(plugin_router)
+
+from cloud.auth.api_key_routes import router as api_key_router  # noqa: E402
+
+app.include_router(api_key_router)
+
+from cloud.api.export_routes import router as export_router  # noqa: E402
+
+app.include_router(export_router)
+
+from cloud.api.backup_routes import router as backup_router  # noqa: E402
+
+app.include_router(backup_router)
+
+# V3.0 — Dominion routes
+from cloud.auth.role_routes import router as role_router  # noqa: E402
+
+app.include_router(role_router)
+
+from cloud.api.replay_routes import router as replay_router  # noqa: E402
+
+app.include_router(replay_router)
+
+from cloud.api.remediation_routes import router as remediation_router  # noqa: E402
+
+app.include_router(remediation_router)
+
+from cloud.api.hunting_routes import router as hunting_router  # noqa: E402
+
+app.include_router(hunting_router)
+
+from cloud.api.mesh_routes import router as mesh_router  # noqa: E402
+
+app.include_router(mesh_router)
+
+from cloud.api.metrics_v2_routes import router as metrics_v2_router  # noqa: E402
+
+app.include_router(metrics_v2_router)
+
+# V3.0 — Admin Console routes
+from cloud.api.admin_routes import router as admin_router  # noqa: E402
+
+app.include_router(admin_router)
 
 
 # ---------------------------------------------------------------------------
@@ -187,6 +251,28 @@ async def auth_middleware(request: Request, call_next):
         if AUTH_MODE == "bearer":
             user = verify_bearer(token)
 
+    # V2.5: Try API key authentication
+    if not user:
+        api_key = request.headers.get("x-api-key")
+        if api_key:
+            try:
+                from cloud.auth.api_keys import api_key_service
+                from cloud.db.session import SessionLocal
+                key_db = SessionLocal()
+                try:
+                    key_info = api_key_service.validate_key(key_db, api_key)
+                    if key_info:
+                        from cloud.auth.models import AuthUser, UserRole
+                        user = AuthUser(
+                            username=f"apikey:{key_info['name']}",
+                            role=UserRole.ADMIN,
+                            tenant_id=key_info.get("tenant_id", "dev-tenant"),
+                        )
+                finally:
+                    key_db.close()
+            except Exception:
+                pass
+
     if not user:
         return JSONResponse(status_code=401, content={"detail": "Invalid or expired token"})
 
@@ -222,7 +308,7 @@ def health_check():
     orch = angel_orchestrator.status()
     return {
         "status": "ok",
-        "version": "2.1.0",
+        "version": "3.0.0",
         "orchestrator": orch["running"],
         "agents": {name: info["status"] for name, info in orch.get("agents", {}).items()},
     }
@@ -241,6 +327,30 @@ def serve_dashboard():
         return HTMLResponse(content=index.read_text(encoding="utf-8"))
     return HTMLResponse(
         content="<h1>Dashboard not found</h1><p>Place index.html in cloud/ui/</p>", status_code=404
+    )
+
+
+# ---------------------------------------------------------------------------
+# PWA / Mobile static files
+# ---------------------------------------------------------------------------
+
+_MOBILE_DIR = Path(__file__).resolve().parent.parent.parent / "mobile"
+
+
+@app.get("/mobile/{filename}", tags=["Mobile"], include_in_schema=False)
+def serve_mobile_file(filename: str):
+    """Serve PWA manifest and service worker files."""
+    filepath = _MOBILE_DIR / filename
+    if not filepath.exists() or not filepath.is_file():
+        raise HTTPException(status_code=404, detail="File not found")
+    content = filepath.read_text(encoding="utf-8")
+    content_type = "application/json"
+    if filename.endswith(".js"):
+        content_type = "application/javascript"
+    elif filename.endswith(".html"):
+        content_type = "text/html"
+    return JSONResponse(content=json.loads(content)) if filename.endswith(".json") else HTMLResponse(
+        content=content, media_type=content_type
     )
 
 

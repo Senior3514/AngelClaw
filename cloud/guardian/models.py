@@ -44,6 +44,11 @@ class AgentType(str, Enum):
     # V2.2 — new agent types
     CLOUD = "cloud"
     IDENTITY = "identity"
+    # V2.4 — Fortress wardens
+    COMPLIANCE = "compliance"
+    API_SECURITY = "api_security"
+    # V2.5 — Plugin wardens
+    PLUGIN = "plugin"
 
 
 class AgentStatus(str, Enum):
@@ -72,6 +77,9 @@ class Permission(str, Enum):
     READ_CLOUD = "read_cloud"
     READ_IDENTITY = "read_identity"
     CONTAIN_INCIDENT = "contain_incident"
+    # V2.4 — Fortress permissions
+    READ_COMPLIANCE = "read_compliance"
+    READ_API_SECURITY = "read_api_security"
 
 
 class SerenityLevel(str, Enum):

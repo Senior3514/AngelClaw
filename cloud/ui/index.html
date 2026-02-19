@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AngelClaw AGI Guardian 1.2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0e18">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="AngelClaw AGI Guardian — Enterprise Security Console">
+<link rel="manifest" href="/mobile/manifest.json">
+<title>AngelClaw AGI Guardian 3.0 — Administrative Console</title>
 <style>
   :root {
     --bg: #0c0e18;
@@ -14,7 +19,6 @@
     --text: #e8eaf0;
     --text-dim: #8890b0;
     --text-muted: #5a6080;
-    /* Angelic palette */
     --angel-gold: #f0c850;
     --angel-glow: rgba(240,200,80,0.08);
     --angel-blue: #7ca8ff;
@@ -37,361 +41,273 @@
     --radius-sm: 8px;
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     --mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    --sidebar-w: 220px;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: var(--font);
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
-    min-height: 100vh;
-  }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; }
   a { color: var(--accent); text-decoration: none; }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-  /* Header — angelic branding */
+  /* Header */
   .header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 24px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    position: relative; overflow: hidden;
+    padding: 8px 20px; background: var(--surface);
+    border-bottom: 1px solid var(--border); position: relative; overflow: hidden; z-index: 100;
   }
-  .header::after {
-    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
-    background: var(--angel-wing); opacity: 0.6;
-  }
-  .header h1 { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-  .angel-icon {
-    width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    background: var(--angel-glow); border: 1px solid rgba(240,200,80,0.25);
-    font-size: 18px; flex-shrink: 0;
-  }
-  .brand-text { display: flex; flex-direction: column; }
-  .brand-name { line-height: 1.2; letter-spacing: -0.3px; }
-  .brand-sub { font-size: 10px; font-weight: 400; color: var(--angel-gold); letter-spacing: 1px; text-transform: uppercase; opacity: 0.8; }
-  .version-pill {
-    font-size: 10px; padding: 2px 8px; border-radius: 10px;
-    background: var(--angel-glow); color: var(--angel-gold); border: 1px solid rgba(240,200,80,0.2);
-    font-weight: 600; margin-left: 4px;
-  }
-  .header-right { display: flex; align-items: center; gap: 12px; }
-  .guardian-status {
-    display: flex; align-items: center; gap: 6px;
-    padding: 5px 14px; border-radius: 20px; font-size: 11px; font-weight: 600;
-    background: var(--green-dim); color: var(--green); border: 1px solid rgba(74,222,128,0.15);
-  }
-  .guardian-status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-  .user-badge {
-    display: flex; align-items: center; gap: 6px;
-    padding: 4px 10px; border-radius: var(--radius-sm); font-size: 11px;
-    background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border);
-  }
-  .role-tag { padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; text-transform: uppercase; }
-  .role-operator { background: var(--accent-dim); color: var(--accent); }
-  .role-admin { background: var(--angel-glow); color: var(--angel-gold); }
-  .role-viewer { background: var(--yellow-dim); color: var(--yellow); }
-  .logout-btn {
-    background: none; border: 1px solid var(--border); border-radius: 6px;
-    color: var(--text-dim); font-size: 11px; padding: 4px 10px; cursor: pointer;
-  }
-  .logout-btn:hover { border-color: var(--red); color: var(--red); }
+  .header::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--angel-wing); opacity:0.6; }
+  .header h1 { font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .angel-icon { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--angel-glow); border:1px solid rgba(240,200,80,0.25); font-size:16px; flex-shrink:0; }
+  .brand-text { display:flex; flex-direction:column; }
+  .brand-name { line-height:1.2; letter-spacing:-0.3px; }
+  .brand-sub { font-size:9px; font-weight:400; color:var(--angel-gold); letter-spacing:1px; text-transform:uppercase; opacity:0.8; }
+  .version-pill { font-size:9px; padding:2px 7px; border-radius:10px; background:var(--angel-glow); color:var(--angel-gold); border:1px solid rgba(240,200,80,0.2); font-weight:600; }
+  .header-right { display:flex; align-items:center; gap:10px; }
+  .guardian-status { display:flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px; font-size:10px; font-weight:600; background:var(--green-dim); color:var(--green); border:1px solid rgba(74,222,128,0.15); }
+  .guardian-status .dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .user-badge { display:flex; align-items:center; gap:5px; padding:3px 8px; border-radius:var(--radius-sm); font-size:10px; background:var(--surface2); color:var(--text-dim); border:1px solid var(--border); }
+  .role-tag { padding:1px 5px; border-radius:4px; font-size:8px; font-weight:700; text-transform:uppercase; }
+  .role-operator { background:var(--accent-dim); color:var(--accent); }
+  .role-admin { background:var(--angel-glow); color:var(--angel-gold); }
+  .role-viewer { background:var(--yellow-dim); color:var(--yellow); }
+  .logout-btn { background:none; border:1px solid var(--border); border-radius:6px; color:var(--text-dim); font-size:10px; padding:3px 8px; cursor:pointer; }
+  .logout-btn:hover { border-color:var(--red); color:var(--red); }
+  .mobile-menu-btn { display:none; background:none; border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:18px; padding:2px 8px; cursor:pointer; }
 
-  /* Layout */
-  .layout {
-    display: grid; grid-template-columns: 1fr 380px;
-    height: calc(100vh - 50px); overflow: hidden;
+  /* App layout */
+  .app-layout { display:flex; height:calc(100vh - 46px); overflow:hidden; }
+
+  /* Sidebar navigation */
+  .sidebar {
+    width:var(--sidebar-w); background:var(--surface); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto;
   }
+  .sidebar-section { padding:12px 0; }
+  .sidebar-section-title { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); padding:0 16px 6px; }
+  .nav-item {
+    display:flex; align-items:center; gap:10px; padding:8px 16px; font-size:12px; font-weight:500;
+    color:var(--text-dim); cursor:pointer; border-left:3px solid transparent; transition:all 0.15s;
+  }
+  .nav-item:hover { background:var(--surface2); color:var(--text); }
+  .nav-item.active { background:var(--accent-dim); color:var(--accent); border-left-color:var(--accent); font-weight:700; }
+  .nav-item .nav-icon { font-size:14px; width:20px; text-align:center; }
+  .nav-item .nav-badge { margin-left:auto; font-size:9px; padding:1px 6px; border-radius:8px; font-weight:700; background:var(--red-dim); color:var(--red); }
+  .nav-item .nav-badge.green { background:var(--green-dim); color:var(--green); }
 
-  /* Left panel */
-  .left-panel { overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+  /* Main content */
+  .main-content { flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:14px; }
 
-  /* Right panel — chat */
-  .right-panel { border-left: 1px solid var(--border); display: flex; flex-direction: column; background: var(--surface); }
+  /* Chat panel (collapsible) */
+  .chat-panel {
+    width:340px; border-left:1px solid var(--border); display:flex; flex-direction:column;
+    background:var(--surface); flex-shrink:0; transition:width 0.2s;
+  }
+  .chat-panel.collapsed { width:0; overflow:hidden; border:none; }
+  .chat-toggle {
+    position:fixed; bottom:20px; right:20px; width:48px; height:48px; border-radius:50%;
+    background:var(--angel-wing); border:none; font-size:22px; cursor:pointer; z-index:200;
+    display:none; box-shadow:0 4px 20px rgba(0,0,0,0.4);
+  }
 
   /* Cards */
-  .card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 16px; position: relative; overflow: hidden;
-  }
-  .card.glow::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-    background: var(--angel-wing); opacity: 0.4;
-  }
-  .card-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
-  }
-  .card-title { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-  .card-title .icon { font-size: 14px; opacity: 0.7; }
-  .card-badge {
-    font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600;
-    background: var(--accent-dim); color: var(--accent);
-  }
-  .card-badge.gold { background: var(--angel-glow); color: var(--angel-gold); }
-  .card-badge.green { background: var(--green-dim); color: var(--green); }
-  .card-badge.red { background: var(--red-dim); color: var(--red); }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; position:relative; overflow:hidden; }
+  .card.glow::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:var(--angel-wing); opacity:0.4; }
+  .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  .card-title { font-size:12px; font-weight:700; display:flex; align-items:center; gap:6px; }
+  .card-title .icon { font-size:13px; opacity:0.7; }
+  .card-badge { font-size:9px; padding:2px 7px; border-radius:10px; font-weight:600; background:var(--accent-dim); color:var(--accent); }
+  .card-badge.gold { background:var(--angel-glow); color:var(--angel-gold); }
+  .card-badge.green { background:var(--green-dim); color:var(--green); }
+  .card-badge.red { background:var(--red-dim); color:var(--red); }
+  .card-badge.yellow { background:var(--yellow-dim); color:var(--yellow); }
 
   /* Stats row */
-  .stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
-  .stat-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 14px; text-align: center;
-    position: relative; overflow: hidden;
-  }
-  .stat-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    opacity: 0.5;
-  }
-  .stat-card:nth-child(1)::before { background: var(--accent); }
-  .stat-card:nth-child(2)::before { background: var(--angel-gold); }
-  .stat-card:nth-child(3)::before { background: var(--green); }
-  .stat-card:nth-child(4)::before { background: var(--purple); }
-  .stat-card:nth-child(5)::before { background: var(--red); }
-  .stat-card:nth-child(6)::before { background: var(--orange); }
-  .stat-value { font-size: 24px; font-weight: 800; margin-bottom: 2px; }
-  .stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .stats { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; }
+  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px; text-align:center; position:relative; overflow:hidden; }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; opacity:0.5; }
+  .stat-card:nth-child(1)::before { background:var(--accent); }
+  .stat-card:nth-child(2)::before { background:var(--angel-gold); }
+  .stat-card:nth-child(3)::before { background:var(--green); }
+  .stat-card:nth-child(4)::before { background:var(--purple); }
+  .stat-card:nth-child(5)::before { background:var(--red); }
+  .stat-card:nth-child(6)::before { background:var(--orange); }
+  .stat-value { font-size:22px; font-weight:800; margin-bottom:1px; }
+  .stat-label { font-size:9px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; font-weight:600; }
 
-  /* Guardian Activity Panel */
-  .guardian-activity { background: var(--angel-halo); }
-  .guardian-activity .card-title .icon { color: var(--angel-gold); }
-  .activity-item {
-    display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px;
-    border-radius: var(--radius-sm); margin-bottom: 4px; background: var(--surface);
-    border-left: 3px solid var(--border);
-  }
-  .activity-item.cat-scan { border-left-color: var(--accent); }
-  .activity-item.cat-cycle { border-left-color: var(--green); }
-  .activity-item.cat-alert { border-left-color: var(--red); }
-  .activity-item.cat-shield { border-left-color: var(--purple); }
-  .activity-item.cat-drift { border-left-color: var(--yellow); }
-  .activity-item.cat-security_alert { border-left-color: var(--red); }
-  .activity-item.cat-lifecycle { border-left-color: var(--text-dim); }
-  .activity-item.cat-error { border-left-color: var(--red); }
-  .activity-item.cat-shield_alert { border-left-color: var(--red); }
-  .activity-body { flex: 1; min-width: 0; }
-  .activity-cat { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-  .activity-time { font-size: 10px; color: var(--text-muted); margin-left: 8px; }
-  .activity-text { font-size: 11px; margin-top: 2px; word-break: break-word; }
-  .next-scan-bar {
-    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
-    background: var(--surface2); border-radius: var(--radius-sm); font-size: 11px;
-    color: var(--text-dim); margin-bottom: 8px;
-  }
-  .next-scan-bar .label { font-weight: 600; color: var(--angel-gold); }
+  /* Activity */
+  .activity-item { display:flex; align-items:flex-start; gap:8px; padding:6px 8px; border-radius:var(--radius-sm); margin-bottom:3px; background:var(--surface); border-left:3px solid var(--border); }
+  .activity-item.cat-scan { border-left-color:var(--accent); }
+  .activity-item.cat-cycle { border-left-color:var(--green); }
+  .activity-item.cat-alert,.activity-item.cat-security_alert,.activity-item.cat-shield_alert,.activity-item.cat-error { border-left-color:var(--red); }
+  .activity-item.cat-shield { border-left-color:var(--purple); }
+  .activity-item.cat-drift { border-left-color:var(--yellow); }
+  .activity-item.cat-lifecycle { border-left-color:var(--text-dim); }
+  .activity-item.cat-legion { border-left-color:var(--accent); }
+  .activity-body { flex:1; min-width:0; }
+  .activity-cat { font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+  .activity-time { font-size:9px; color:var(--text-muted); margin-left:6px; }
+  .activity-text { font-size:10px; margin-top:1px; word-break:break-word; }
 
-  /* Alert feed */
-  .guardian-alert-feed { max-height: 180px; overflow-y: auto; }
-  .guardian-alert-item {
-    display: flex; align-items: flex-start; gap: 10px;
-    padding: 8px 10px; border-radius: var(--radius-sm); margin-bottom: 4px;
-    background: var(--surface2); border-left: 3px solid var(--red);
-  }
-  .guardian-alert-item.sev-high { border-left-color: var(--orange); }
-  .guardian-alert-item.sev-warn { border-left-color: var(--yellow); }
-  .guardian-alert-body { flex: 1; }
-  .guardian-alert-title { font-size: 12px; font-weight: 500; }
-  .guardian-alert-meta { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+  /* Tables */
+  .data-table { width:100%; border-collapse:collapse; font-size:11px; }
+  .data-table th { text-align:left; padding:5px 8px; font-size:9px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-dim); border-bottom:1px solid var(--border); font-weight:700; }
+  .data-table td { padding:6px 8px; border-bottom:1px solid var(--border); }
+  .data-table tr:hover { background:var(--surface2); cursor:pointer; }
+  .status-badge { display:inline-block; padding:1px 7px; border-radius:10px; font-size:9px; font-weight:700; }
+  .status-active { background:var(--green-dim); color:var(--green); }
+  .status-degraded { background:var(--yellow-dim); color:var(--yellow); }
+  .status-offline { background:var(--red-dim); color:var(--red); }
+  .status-enforce { background:var(--red-dim); color:var(--red); }
+  .status-monitor { background:var(--yellow-dim); color:var(--yellow); }
+  .status-off { background:var(--surface2); color:var(--text-muted); }
 
-  /* Agent table */
-  .agent-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .agent-table th {
-    text-align: left; padding: 6px 10px; font-size: 10px; text-transform: uppercase;
-    letter-spacing: 0.5px; color: var(--text-dim); border-bottom: 1px solid var(--border); font-weight: 700;
-  }
-  .agent-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
-  .agent-table tr:hover { background: var(--surface2); cursor: pointer; }
-  .status-badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
-  .status-active { background: var(--green-dim); color: var(--green); }
-  .status-degraded { background: var(--yellow-dim); color: var(--yellow); }
-  .status-offline { background: var(--red-dim); color: var(--red); }
-
-  /* Event feed */
-  .alert-feed { max-height: 200px; overflow-y: auto; }
-  .alert-item { display: flex; align-items: flex-start; gap: 10px; padding: 6px 8px; border-radius: 6px; margin-bottom: 4px; }
-  .alert-item:hover { background: var(--surface2); }
-  .alert-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
-  .alert-body { flex: 1; min-width: 0; }
-  .alert-title { font-size: 12px; font-weight: 500; }
-  .alert-meta { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
-  .alert-sev { font-size: 9px; padding: 0 6px; border-radius: 6px; font-weight: 700; }
-  .sev-critical { background: var(--red-dim); color: var(--red); }
-  .sev-high { background: var(--orange-dim); color: var(--orange); }
-  .sev-warn, .sev-medium { background: var(--yellow-dim); color: var(--yellow); }
-  .sev-info, .sev-low { background: var(--accent-dim); color: var(--accent); }
+  /* Alert items */
+  .alert-item { display:flex; align-items:flex-start; gap:8px; padding:5px 7px; border-radius:6px; margin-bottom:3px; }
+  .alert-item:hover { background:var(--surface2); }
+  .alert-icon { font-size:13px; flex-shrink:0; margin-top:1px; }
+  .alert-body { flex:1; min-width:0; }
+  .alert-title { font-size:11px; font-weight:500; }
+  .alert-meta { font-size:9px; color:var(--text-dim); margin-top:1px; }
+  .alert-sev { font-size:8px; padding:0 5px; border-radius:6px; font-weight:700; }
+  .sev-critical { background:var(--red-dim); color:var(--red); }
+  .sev-high { background:var(--orange-dim); color:var(--orange); }
+  .sev-warn,.sev-medium { background:var(--yellow-dim); color:var(--yellow); }
+  .sev-info,.sev-low { background:var(--accent-dim); color:var(--accent); }
 
   /* Threat chart */
-  .threat-chart { display: flex; flex-direction: column; gap: 6px; }
-  .threat-row { display: flex; align-items: center; gap: 10px; }
-  .threat-label { width: 80px; font-size: 11px; color: var(--text-dim); text-align: right; font-weight: 500; }
-  .threat-bar-bg { flex: 1; height: 20px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
-  .threat-bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 6px; font-size: 10px; font-weight: 700; min-width: 24px; }
-  .prediction-list { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
-  .prediction-item { display: flex; align-items: center; gap: 8px; padding: 4px 8px; font-size: 11px; border-radius: 6px; margin-bottom: 3px; background: var(--surface2); }
-  .prediction-conf { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 6px; min-width: 36px; text-align: center; }
-  .conf-high { background: var(--red-dim); color: var(--red); }
-  .conf-med { background: var(--yellow-dim); color: var(--yellow); }
-  .conf-low { background: var(--accent-dim); color: var(--accent); }
+  .threat-chart { display:flex; flex-direction:column; gap:5px; }
+  .threat-row { display:flex; align-items:center; gap:8px; }
+  .threat-label { width:70px; font-size:10px; color:var(--text-dim); text-align:right; font-weight:500; }
+  .threat-bar-bg { flex:1; height:18px; background:var(--surface2); border-radius:4px; overflow:hidden; }
+  .threat-bar-fill { height:100%; border-radius:4px; display:flex; align-items:center; padding-left:5px; font-size:9px; font-weight:700; min-width:22px; }
 
-  /* Report strip */
-  .report-strip {
-    display: flex; gap: 8px; align-items: center; font-size: 11px; color: var(--text-dim);
-    padding: 8px 14px; background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); overflow-x: auto;
-  }
-  .report-strip .rpt-item { white-space: nowrap; }
-  .report-strip .rpt-label { color: var(--text-muted); font-weight: 500; }
-  .report-strip .rpt-val { color: var(--text); font-weight: 700; }
-  .report-strip .rpt-sep { color: var(--border); }
+  /* Grid layouts */
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
 
-  /* Chat panel */
-  .chat-header {
-    padding: 14px 16px; border-bottom: 1px solid var(--border);
-    font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px;
-    background: var(--angel-halo);
+  /* Settings controls */
+  .pref-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .pref-label { min-width:90px; color:var(--text-dim); font-size:11px; font-weight:500; }
+  .pref-select, .pref-input {
+    flex:1; padding:5px 8px; border-radius:var(--radius-sm); border:1px solid var(--border);
+    background:var(--surface2); color:var(--text); font-size:10px; font-family:var(--font); outline:none;
   }
-  .chat-header .angel-chat-icon { color: var(--angel-gold); font-size: 18px; }
-  .chat-messages { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
-  .chat-msg {
-    padding: 12px 16px; border-radius: 14px; font-size: 13px; line-height: 1.6;
-    max-width: 95%; word-wrap: break-word;
-  }
-  .chat-msg.system {
-    background: var(--surface2); align-self: flex-start;
-    border: 1px solid var(--border); border-bottom-left-radius: 4px;
-  }
-  .chat-msg.user {
-    background: var(--accent-dim); color: var(--accent); align-self: flex-end;
-    border: 1px solid rgba(124,168,255,0.2); border-bottom-right-radius: 4px;
-  }
-  .chat-msg .actions { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
-  .action-card {
-    background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
-    padding: 10px 12px; font-size: 11px; cursor: pointer; transition: all 0.15s;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .action-card:hover { border-color: var(--accent); background: var(--accent-dim); }
-  .action-card .action-left { flex: 1; }
-  .action-card .action-title { font-weight: 700; color: var(--accent); }
-  .action-card .action-desc { color: var(--text-dim); margin-top: 2px; }
-  .action-card .apply-btn {
-    padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: 700;
-    background: var(--green-dim); color: var(--green); border: 1px solid rgba(74,222,128,0.2);
-    cursor: pointer; white-space: nowrap;
-  }
-  .action-card .apply-btn:hover { background: var(--green); color: #000; }
-  .chat-refs { margin-top: 6px; font-size: 10px; color: var(--text-muted); }
-  .chat-refs a { color: var(--accent); }
-  .chat-input-row { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
-  .chat-input {
-    flex: 1; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border);
-    background: var(--surface2); color: var(--text); font-size: 13px; font-family: var(--font);
-    outline: none; transition: border-color 0.15s;
-  }
-  .chat-input:focus { border-color: var(--angel-gold); }
-  .chat-input::placeholder { color: var(--text-muted); }
-  .chat-send {
-    padding: 10px 20px; border-radius: 10px; border: none;
-    background: var(--angel-wing); color: #000; font-weight: 700; cursor: pointer;
-    font-size: 13px; transition: opacity 0.15s;
-  }
-  .chat-send:hover { opacity: 0.85; }
-  .chat-send:disabled { opacity: 0.3; cursor: not-allowed; }
-  .chat-typing { font-size: 12px; color: var(--angel-gold); padding: 4px 16px; display: flex; align-items: center; gap: 6px; }
-  .typing-dots span { display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: var(--angel-gold); animation: typing 1.4s infinite; }
-  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes typing { 0%,60%,100% { opacity: 0.3; } 30% { opacity: 1; } }
+  .pref-select:focus, .pref-input:focus { border-color:var(--accent); }
+  .btn { padding:6px 14px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:11px; cursor:pointer; font-weight:600; }
+  .btn:hover { border-color:var(--accent); background:var(--accent-dim); }
+  .btn-primary { background:var(--accent-dim); color:var(--accent); border-color:rgba(124,168,255,0.3); }
+  .btn-danger { background:var(--red-dim); color:var(--red); border-color:rgba(248,113,113,0.3); }
+  .btn-success { background:var(--green-dim); color:var(--green); border-color:rgba(74,222,128,0.3); }
 
-  .loading { color: var(--text-dim); font-size: 12px; text-align: center; padding: 16px; }
-  .empty { color: var(--text-muted); font-size: 12px; text-align: center; padding: 20px; }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  /* Halo Score */
+  .halo-score { display:flex; align-items:center; gap:12px; }
+  .halo-ring { width:64px; height:64px; border-radius:50%; position:relative; display:flex; align-items:center; justify-content:center; }
+  .halo-ring .halo-val { font-size:18px; font-weight:800; z-index:1; }
+  .halo-ring svg { position:absolute; top:0; left:0; transform:rotate(-90deg); }
+  .halo-meta { flex:1; }
+  .halo-label { font-size:9px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-dim); font-weight:700; }
+  .halo-desc { font-size:11px; color:var(--text-dim); margin-top:2px; }
 
-  /* Settings */
-  .pref-row { display: flex; align-items: center; gap: 8px; }
-  .pref-label { min-width: 90px; color: var(--text-dim); font-size: 12px; font-weight: 500; }
-  .pref-select {
-    flex: 1; padding: 6px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border);
-    background: var(--surface2); color: var(--text); font-size: 11px; font-family: var(--font); outline: none;
-  }
-  .pref-select:focus { border-color: var(--accent); }
+  /* Shield grid */
+  .shield-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:6px; }
+  .shield-stat { text-align:center; }
+  .shield-stat .val { font-size:16px; font-weight:800; }
+  .shield-stat .lbl { font-size:9px; color:var(--text-dim); font-weight:600; }
 
-  /* Shield */
-  .shield-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
-  .shield-stat { text-align: center; }
-  .shield-stat .val { font-size: 18px; font-weight: 800; }
-  .shield-stat .lbl { font-size: 10px; color: var(--text-dim); font-weight: 600; }
+  /* Chat */
+  .chat-header { padding:12px 14px; border-bottom:1px solid var(--border); font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px; background:var(--angel-halo); }
+  .chat-header .angel-chat-icon { color:var(--angel-gold); font-size:16px; }
+  .chat-messages { flex:1; overflow-y:auto; padding:12px 14px; display:flex; flex-direction:column; gap:8px; }
+  .chat-msg { padding:10px 14px; border-radius:12px; font-size:12px; line-height:1.6; max-width:95%; word-wrap:break-word; }
+  .chat-msg.system { background:var(--surface2); align-self:flex-start; border:1px solid var(--border); border-bottom-left-radius:4px; }
+  .chat-msg.user { background:var(--accent-dim); color:var(--accent); align-self:flex-end; border:1px solid rgba(124,168,255,0.2); border-bottom-right-radius:4px; }
+  .chat-msg .actions { margin-top:8px; display:flex; flex-direction:column; gap:5px; }
+  .action-card { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 10px; font-size:10px; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; justify-content:space-between; }
+  .action-card:hover { border-color:var(--accent); background:var(--accent-dim); }
+  .action-card .action-title { font-weight:700; color:var(--accent); }
+  .action-card .action-desc { color:var(--text-dim); margin-top:1px; }
+  .action-card .apply-btn { padding:2px 8px; border-radius:6px; font-size:9px; font-weight:700; background:var(--green-dim); color:var(--green); border:1px solid rgba(74,222,128,0.2); cursor:pointer; }
+  .action-card .apply-btn:hover { background:var(--green); color:#000; }
+  .chat-input-row { padding:10px 14px; border-top:1px solid var(--border); display:flex; gap:6px; }
+  .chat-input { flex:1; padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font); outline:none; }
+  .chat-input:focus { border-color:var(--angel-gold); }
+  .chat-input::placeholder { color:var(--text-muted); }
+  .chat-send { padding:8px 16px; border-radius:10px; border:none; background:var(--angel-wing); color:#000; font-weight:700; cursor:pointer; font-size:12px; }
+  .chat-send:hover { opacity:0.85; }
+  .chat-send:disabled { opacity:0.3; cursor:not-allowed; }
+  .chat-typing { font-size:11px; color:var(--angel-gold); padding:4px 14px; display:flex; align-items:center; gap:5px; }
+  .typing-dots span { display:inline-block; width:4px; height:4px; border-radius:50%; background:var(--angel-gold); animation:typing 1.4s infinite; }
+  .typing-dots span:nth-child(2) { animation-delay:0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay:0.4s; }
+  @keyframes typing { 0%,60%,100%{opacity:0.3} 30%{opacity:1} }
 
   /* Modal */
-  .modal-overlay {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;
-    backdrop-filter: blur(4px);
-  }
-  .modal-overlay.visible { display: flex; }
-  .modal {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    width: 700px; max-width: 90vw; max-height: 80vh; display: flex; flex-direction: column;
-  }
-  .modal-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 16px 20px; border-bottom: 1px solid var(--border);
-  }
-  .modal-header h2 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-  .modal-close { background: none; border: none; color: var(--text-dim); font-size: 20px; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
-  .modal-close:hover { background: var(--surface2); color: var(--text); }
-  .modal-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+  .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  .modal-overlay.visible { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); width:700px; max-width:90vw; max-height:80vh; display:flex; flex-direction:column; }
+  .modal-header { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--border); }
+  .modal-header h2 { font-size:15px; font-weight:700; display:flex; align-items:center; gap:6px; }
+  .modal-close { background:none; border:none; color:var(--text-dim); font-size:18px; cursor:pointer; padding:3px 6px; border-radius:6px; }
+  .modal-close:hover { background:var(--surface2); color:var(--text); }
+  .modal-body { flex:1; overflow-y:auto; padding:14px 18px; }
 
   /* Timeline */
-  .timeline { display: flex; flex-direction: column; }
-  .tl-entry { display: flex; gap: 12px; padding: 8px 0; border-left: 2px solid var(--border); margin-left: 12px; padding-left: 16px; position: relative; }
-  .tl-entry::before { content: ''; position: absolute; left: -5px; top: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
-  .tl-entry.tl-event::before { background: var(--accent); }
-  .tl-entry.tl-policy::before { background: var(--yellow); }
-  .tl-entry.tl-session::before { background: var(--green); }
-  .tl-entry.tl-ai::before { background: var(--purple); }
-  .tl-entry.tl-critical::before { background: var(--red); }
-  .tl-entry.tl-high::before { background: var(--orange); }
-  .tl-time { font-size: 10px; color: var(--text-dim); min-width: 70px; font-family: var(--mono); }
-  .tl-content { flex: 1; }
-  .tl-summary { font-size: 12px; }
-  .tl-type-badge { font-size: 9px; padding: 0 5px; border-radius: 4px; font-weight: 700; display: inline-block; margin-right: 4px; }
-  .tl-type-event { background: var(--accent-dim); color: var(--accent); }
-  .tl-type-policy { background: var(--yellow-dim); color: var(--yellow); }
-  .tl-type-session { background: var(--green-dim); color: var(--green); }
-  .tl-type-ai { background: var(--purple-dim); color: var(--purple); }
+  .timeline { display:flex; flex-direction:column; }
+  .tl-entry { display:flex; gap:10px; padding:6px 0; border-left:2px solid var(--border); margin-left:10px; padding-left:14px; position:relative; }
+  .tl-entry::before { content:''; position:absolute; left:-4px; top:10px; width:6px; height:6px; border-radius:50%; background:var(--border); }
+  .tl-entry.tl-event::before { background:var(--accent); }
+  .tl-entry.tl-policy::before { background:var(--yellow); }
+  .tl-entry.tl-session::before { background:var(--green); }
+  .tl-entry.tl-ai::before { background:var(--purple); }
+  .tl-entry.tl-critical::before { background:var(--red); }
+  .tl-entry.tl-high::before { background:var(--orange); }
+  .tl-time { font-size:9px; color:var(--text-dim); min-width:60px; font-family:var(--mono); }
+  .tl-content { flex:1; }
+  .tl-summary { font-size:11px; }
+  .tl-type-badge { font-size:8px; padding:0 4px; border-radius:4px; font-weight:700; display:inline-block; margin-right:3px; }
+  .tl-type-event { background:var(--accent-dim); color:var(--accent); }
+  .tl-type-policy { background:var(--yellow-dim); color:var(--yellow); }
+  .tl-type-session { background:var(--green-dim); color:var(--green); }
+  .tl-type-ai { background:var(--purple-dim); color:var(--purple); }
 
   /* Login */
-  .login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
-  .login-box {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 36px; width: 380px; max-width: 90vw; position: relative; overflow: hidden;
-  }
-  .login-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--angel-wing); }
-  .login-box h2 { font-size: 20px; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
-  .login-box .login-sub { color: var(--text-dim); font-size: 12px; margin-bottom: 24px; }
-  .login-box input {
-    width: 100%; padding: 11px 14px; margin-bottom: 12px; border-radius: var(--radius-sm);
-    border: 1px solid var(--border); background: var(--surface2); color: var(--text);
-    font-size: 13px; font-family: var(--font); outline: none;
-  }
-  .login-box input:focus { border-color: var(--angel-gold); }
-  .login-box button {
-    width: 100%; padding: 11px; border-radius: var(--radius-sm); border: none;
-    background: var(--angel-wing); color: #000; font-weight: 700; cursor: pointer;
-    font-size: 14px; margin-top: 4px;
-  }
-  .login-box button:hover { opacity: 0.85; }
-  .login-error { color: var(--red); font-size: 12px; margin-bottom: 8px; display: none; }
+  .login-page { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg); }
+  .login-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:32px; width:360px; max-width:90vw; position:relative; overflow:hidden; }
+  .login-box::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--angel-wing); }
+  .login-box h2 { font-size:18px; margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+  .login-box .login-sub { color:var(--text-dim); font-size:11px; margin-bottom:20px; }
+  .login-box input { width:100%; padding:10px 12px; margin-bottom:10px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font); outline:none; }
+  .login-box input:focus { border-color:var(--angel-gold); }
+  .login-box button { width:100%; padding:10px; border-radius:var(--radius-sm); border:none; background:var(--angel-wing); color:#000; font-weight:700; cursor:pointer; font-size:13px; margin-top:4px; }
+  .login-box button:hover { opacity:0.85; }
+  .login-error { color:var(--red); font-size:11px; margin-bottom:6px; display:none; }
 
-  @media (max-width: 900px) {
-    .layout { grid-template-columns: 1fr; height: auto; }
-    .right-panel { border-left: none; border-top: 1px solid var(--border); min-height: 450px; }
-    .stats { grid-template-columns: repeat(3, 1fr); }
-    .two-col { grid-template-columns: 1fr; }
+  .loading { color:var(--text-dim); font-size:11px; text-align:center; padding:14px; }
+  .empty { color:var(--text-muted); font-size:11px; text-align:center; padding:16px; }
+  .page-title { font-size:16px; font-weight:800; margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+  .page-subtitle { font-size:11px; color:var(--text-dim); margin-bottom:12px; }
+
+  /* Responsive */
+  @media (max-width:1100px) {
+    .chat-panel { width:280px; }
+  }
+  @media (max-width:900px) {
+    .sidebar { position:fixed; left:-260px; top:46px; bottom:0; z-index:300; transition:left 0.2s; box-shadow:4px 0 20px rgba(0,0,0,0.5); }
+    .sidebar.open { left:0; }
+    .mobile-menu-btn { display:block; }
+    .chat-panel { display:none; }
+    .chat-panel.mobile-open { display:flex; position:fixed; top:46px; right:0; bottom:0; left:0; width:100%; z-index:250; }
+    .chat-toggle { display:block; }
+    .stats { grid-template-columns:repeat(3,1fr); }
+    .two-col,.three-col { grid-template-columns:1fr; }
+    .main-content { padding:12px; }
+  }
+  @media (max-width:480px) {
+    .stats { grid-template-columns:repeat(2,1fr); }
+    .header h1 { font-size:13px; }
+    .header-right .guardian-status { display:none; }
   }
 </style>
 </head>
@@ -401,7 +317,7 @@
 <div class="login-page" id="login-page" style="display:none">
   <div class="login-box">
     <h2><span class="angel-icon">&#128737;</span> AngelClaw AGI</h2>
-    <div class="login-sub">Fully Autonomous Guardian &mdash; Sign in to continue</div>
+    <div class="login-sub">Administrative Console &mdash; Sign in to continue</div>
     <div class="login-error" id="login-error"></div>
     <input type="text" id="login-user" placeholder="Username" autocomplete="username" />
     <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password" />
@@ -410,200 +326,105 @@
 </div>
 
 <!-- Main App -->
-<div id="main-app">
+<div id="main-app" style="display:none">
 <div class="header">
-  <h1>
-    <span class="angel-icon">&#128737;</span>
-    <span class="brand-text">
-      <span class="brand-name">AngelClaw</span>
-      <span class="brand-sub">AGI Guardian</span>
-    </span>
-    <span class="version-pill">V1.2</span>
-  </h1>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">&#9776;</button>
+    <h1>
+      <span class="angel-icon">&#128737;</span>
+      <span class="brand-text"><span class="brand-name">AngelClaw</span><span class="brand-sub">AGI Guardian</span></span>
+      <span class="version-pill">V3.0</span>
+    </h1>
+  </div>
   <div class="header-right">
+    <div class="guardian-status"><span class="dot"></span> Protected</div>
     <div class="user-badge" id="user-badge" style="display:none">
       <span id="user-name">&mdash;</span>
       <span class="role-tag" id="user-role">&mdash;</span>
     </div>
     <button class="logout-btn" id="logout-btn" style="display:none" onclick="doLogout()">Logout</button>
-    <div class="guardian-status"><span class="dot"></span> Protected</div>
   </div>
 </div>
 
-<div class="layout">
-  <!-- LEFT PANEL -->
-  <div class="left-panel">
-
-    <!-- Report Strip -->
-    <div class="report-strip" id="report-strip">
-      <span class="rpt-item"><span class="rpt-label">Last report:</span> <span class="rpt-val" id="rpt-time">--</span></span>
-      <span class="rpt-sep">|</span>
-      <span class="rpt-item"><span class="rpt-label">Events:</span> <span class="rpt-val" id="rpt-events">--</span></span>
-      <span class="rpt-sep">|</span>
-      <span class="rpt-item"><span class="rpt-label">Anomalies:</span> <span class="rpt-val" id="rpt-anomalies">--</span></span>
-      <span class="rpt-sep">|</span>
-      <span class="rpt-item"><span class="rpt-label">Policy changes:</span> <span class="rpt-val" id="rpt-policy">--</span></span>
-    </div>
-
-    <!-- Stats -->
-    <div class="stats" id="stats">
-      <div class="stat-card"><div class="stat-value" id="stat-agents">-</div><div class="stat-label">Agents</div></div>
-      <div class="stat-card"><div class="stat-value" id="stat-events">-</div><div class="stat-label">Events (24h)</div></div>
-      <div class="stat-card"><div class="stat-value" id="stat-blocked">-</div><div class="stat-label">Blocked</div></div>
-      <div class="stat-card"><div class="stat-value" id="stat-policies">-</div><div class="stat-label">Rules</div></div>
-      <div class="stat-card"><div class="stat-value" id="stat-alerts">-</div><div class="stat-label">Alerts</div></div>
-      <div class="stat-card"><div class="stat-value" id="stat-predictions">-</div><div class="stat-label">Predictions</div></div>
-    </div>
-
-    <!-- Guardian Activity Panel (prominent) -->
-    <div class="card glow guardian-activity">
-      <div class="card-header">
-        <span class="card-title"><span class="icon">&#128737;</span> Guardian Activity</span>
-        <span class="card-badge gold" id="activity-status">--</span>
+<div class="app-layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Overview</div>
+      <div class="nav-item active" onclick="navigate('dashboard')" data-page="dashboard">
+        <span class="nav-icon">&#127968;</span> Dashboard
       </div>
-      <div class="next-scan-bar" id="next-scan-bar">
-        <span class="label">Next scan:</span>
-        <span id="next-scan-time">calculating...</span>
+      <div class="nav-item" onclick="navigate('fleet')" data-page="fleet">
+        <span class="nav-icon">&#128421;</span> Fleet
+        <span class="nav-badge green" id="nav-fleet-count">0</span>
       </div>
-      <div id="activity-feed" style="max-height:200px;overflow-y:auto">
-        <div class="loading">Loading activity...</div>
+      <div class="nav-item" onclick="navigate('tenants')" data-page="tenants">
+        <span class="nav-icon">&#127970;</span> Tenants
       </div>
     </div>
-
-    <!-- Guardian Alerts -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title"><span class="icon">&#9888;</span> Guardian Alerts</span>
-        <span class="card-badge red" id="guardian-alert-count">0</span>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Security</div>
+      <div class="nav-item" onclick="navigate('alerts')" data-page="alerts">
+        <span class="nav-icon">&#9888;</span> Alerts
+        <span class="nav-badge" id="nav-alert-count">0</span>
       </div>
-      <div class="guardian-alert-feed" id="guardian-alert-feed">
-        <div class="loading">Loading guardian alerts...</div>
+      <div class="nav-item" onclick="navigate('legion')" data-page="legion">
+        <span class="nav-icon">&#9876;</span> Legion
       </div>
-    </div>
-
-    <!-- Orchestrator + Incidents -->
-    <div class="two-col">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title"><span class="icon">&#9881;</span> AGI Orchestrator</span>
-          <span class="card-badge" id="orch-status-pill">--</span>
-        </div>
-        <div id="orch-stats" style="font-size:12px"><div class="loading">Loading...</div></div>
-        <div id="orch-agents" style="margin-top:8px;font-size:11px"></div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title"><span class="icon">&#128680;</span> Incidents</span>
-          <span class="card-badge" id="incident-count">0</span>
-        </div>
-        <div id="incident-feed" style="max-height:200px;overflow-y:auto"><div class="loading">Loading...</div></div>
+      <div class="nav-item" onclick="navigate('anti-tamper')" data-page="anti-tamper">
+        <span class="nav-icon">&#128274;</span> Anti-Tamper
       </div>
     </div>
-
-    <!-- Fleet + Threats -->
-    <div class="two-col">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title"><span class="icon">&#128421;</span> Fleet Status</span>
-          <span class="card-badge" id="fleet-count">0</span>
-        </div>
-        <div id="fleet-table" style="max-height:260px;overflow-y:auto"><div class="loading">Loading...</div></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Intelligence</div>
+      <div class="nav-item" onclick="navigate('analytics')" data-page="analytics">
+        <span class="nav-icon">&#128200;</span> Analytics
       </div>
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title"><span class="icon">&#127919;</span> Threat Landscape (24h)</span>
-          <span class="card-badge">By category</span>
-        </div>
-        <div class="threat-chart" id="threat-chart"><div class="loading">Loading...</div></div>
-        <div class="prediction-list" id="prediction-list"></div>
+      <div class="nav-item" onclick="navigate('learning')" data-page="learning">
+        <span class="nav-icon">&#129504;</span> Self-Learning
       </div>
     </div>
-
-    <!-- Settings + Shield -->
-    <div class="two-col">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title"><span class="icon">&#9881;</span> Guardian Settings</span>
-          <span class="card-badge gold">V1.2</span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div class="pref-row">
-            <label class="pref-label">Autonomy:</label>
-            <select class="pref-select" id="pref-autonomy" onchange="updatePref('autonomy_level',this.value)">
-              <option value="observe_only">Observe Only</option>
-              <option value="suggest_only">Suggest Only</option>
-              <option value="assist">Assist</option>
-              <option value="autonomous_apply">Autonomous</option>
-            </select>
-          </div>
-          <div class="pref-row">
-            <label class="pref-label">Scan (min):</label>
-            <select class="pref-select" id="pref-scan" onchange="updatePref('scan_frequency_minutes',parseInt(this.value))">
-              <option value="1">1</option>
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="30">30</option>
-              <option value="60">60</option>
-            </select>
-          </div>
-          <div class="pref-row">
-            <label class="pref-label">Reporting:</label>
-            <select class="pref-select" id="pref-reporting" onchange="updatePref('reporting_level',this.value)">
-              <option value="quiet">Quiet</option>
-              <option value="normal">Normal</option>
-              <option value="verbose">Verbose</option>
-            </select>
-          </div>
-          <div id="pref-status" style="font-size:10px;color:var(--text-dim);min-height:14px"></div>
-        </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">System</div>
+      <div class="nav-item" onclick="navigate('policies')" data-page="policies">
+        <span class="nav-icon">&#128220;</span> Policies
       </div>
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title"><span class="icon">&#128737;</span> AngelClaw Shield</span>
-          <span class="card-badge" id="shield-risk">--</span>
-        </div>
-        <div class="shield-grid" id="shield-stats">
-          <div class="shield-stat"><div class="val" id="shield-trifecta">--%</div><div class="lbl">Trifecta</div></div>
-          <div class="shield-stat"><div class="val" id="shield-patterns">--</div><div class="lbl">Patterns</div></div>
-          <div class="shield-stat"><div class="val" id="shield-skills">--</div><div class="lbl">Skills OK</div></div>
-          <div class="shield-stat"><div class="val" id="shield-assessments">--</div><div class="lbl">Checks</div></div>
-        </div>
-        <div id="shield-indicators" style="margin-top:8px;max-height:100px;overflow-y:auto;font-size:11px"></div>
+      <div class="nav-item" onclick="navigate('settings')" data-page="settings">
+        <span class="nav-icon">&#9881;</span> Settings
       </div>
-    </div>
-
-    <!-- Events Feed -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title"><span class="icon">&#128196;</span> Recent Events</span>
-        <span class="card-badge" id="alert-count">0</span>
-      </div>
-      <div class="alert-feed" id="alert-feed"><div class="loading">Loading events...</div></div>
     </div>
   </div>
 
-  <!-- RIGHT PANEL — Chat -->
-  <div class="right-panel">
+  <!-- MAIN CONTENT -->
+  <div class="main-content" id="main-content">
+    <!-- Pages rendered dynamically by JS -->
+  </div>
+
+  <!-- CHAT PANEL -->
+  <div class="chat-panel" id="chat-panel">
     <div class="chat-header">
       <span class="angel-chat-icon">&#128737;</span>
       <span>AngelClaw AI</span>
-      <span style="font-size:10px;color:var(--text-dim);margin-left:auto" id="chat-daemon-pill">--</span>
+      <span style="font-size:9px;color:var(--text-dim);margin-left:auto" id="chat-daemon-pill">--</span>
     </div>
     <div class="chat-messages" id="chat-messages">
       <div class="chat-msg system">
-        I'm <strong>AngelClaw AGI Guardian</strong> &mdash; your fully autonomous security companion. Always on, always watching.<br><br>
-        Ask me anything about threats, exposures, policies, or help using AI safely. I understand natural language &mdash; no commands needed.
+        I'm <strong>AngelClaw AGI Guardian</strong> &mdash; your autonomous security companion.<br><br>
+        Ask about threats, agents, policies, or help using AI safely.
       </div>
     </div>
     <div id="chat-typing" class="chat-typing" style="display:none">
       <span class="typing-dots"><span></span><span></span><span></span></span>
-      AngelClaw is thinking...
+      Thinking...
     </div>
     <div class="chat-input-row">
-      <input class="chat-input" id="chat-input" placeholder="Ask AngelClaw anything..." />
+      <input class="chat-input" id="chat-input" placeholder="Ask AngelClaw..." />
       <button class="chat-send" id="chat-send" onclick="sendChat()">Send</button>
     </div>
   </div>
+</div>
+
+<button class="chat-toggle" id="chat-toggle" onclick="toggleMobileChat()">&#128737;</button>
 </div>
 
 <!-- Timeline Modal -->
@@ -611,452 +432,451 @@
   <div class="modal">
     <div class="modal-header">
       <h2>&#128337; <span id="tl-agent-name">Agent Timeline</span></h2>
-      <button class="modal-close" onclick="closeTimeline()">&times;</button>
+      <button class="modal-close" onclick="closeModal('timeline-modal')">&times;</button>
     </div>
     <div class="modal-body" id="tl-body"><div class="loading">Loading...</div></div>
   </div>
 </div>
-</div>
 
 <script>
+/* ===== ANGELCLAW V3.0 ADMIN CONSOLE ===== */
 const BASE = window.location.origin;
 const chatHistory = [];
-let threatPredictionCount = 0;
 let authToken = localStorage.getItem('angelclaw_token') || '';
 let authUser = null;
-let lastDaemonStatus = null;
+let currentPage = 'dashboard';
+let cachedData = {};
 
+/* Helpers */
 const sevIcon = s => ({critical:'&#9888;&#65039;',high:'&#128308;',warn:'&#128992;',medium:'&#128992;',low:'&#128309;',info:'&#128310;'}[s]||'&#9679;');
 const sevClass = s => 'sev-'+(s==='warn'?'medium':s);
-const statusClass = s => 'status-'+(s==='active'?'active':s==='degraded'?'degraded':'offline');
+const statusClass = s => s==='active'?'status-active':s==='degraded'?'status-degraded':'status-offline';
 const ago = ts => { if(!ts) return 'never'; const d=new Date(ts); const m=Math.floor((Date.now()-d)/60000); return m<1?'just now':m<60?m+'m ago':m<1440?Math.floor(m/60)+'h ago':Math.floor(m/1440)+'d ago'; };
 const catColor = c => ({shell:'var(--red)',network:'var(--orange)',file:'var(--yellow)',ai_tool:'var(--accent)',db:'var(--purple)',auth:'var(--red)',config:'var(--yellow)',system:'var(--text-dim)'}[c]||'var(--accent)');
-const esc = t => t ? t.replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
+const esc = t => t ? String(t).replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
+const haloColor = s => s>=80?'var(--green)':s>=60?'var(--yellow)':s>=40?'var(--orange)':'var(--red)';
 
-function authHeaders() {
-  const h = {};
-  if(authToken) h['Authorization'] = 'Bearer '+authToken;
-  return h;
-}
-
+function authHeaders() { const h={'Content-Type':'application/json'}; if(authToken) h['Authorization']='Bearer '+authToken; return h; }
 async function fetchJSON(path) {
-  try {
-    const r = await fetch(BASE + path, {headers: authHeaders()});
-    if(r.status === 401) { showLogin(); return null; }
-    if(!r.ok) return null;
-    return await r.json();
-  } catch { return null; }
+  try { const r=await fetch(BASE+path,{headers:authHeaders()}); if(r.status===401){showLogin();return null;} if(!r.ok) return null; return await r.json(); } catch{return null;}
+}
+async function postJSON(path, body) {
+  try { const r=await fetch(BASE+path,{method:'POST',headers:authHeaders(),body:JSON.stringify(body)}); if(r.status===401){showLogin();return null;} return await r.json(); } catch{return null;}
 }
 
-// Auth
+/* Auth */
 async function checkAuth() {
   try {
-    const r = await fetch(BASE+'/api/v1/auth/me', {headers: authHeaders()});
-    if(r.ok) {
-      const data = await r.json();
-      if(!data.auth_enabled) { showApp(null); return true; }
-      authUser = data; showApp(data); return true;
-    }
-    const h = await fetch(BASE+'/health');
-    if(h.ok) {
-      const r2 = await fetch(BASE+'/api/v1/auth/me');
-      if(r2.ok) {
-        const data = await r2.json();
-        if(!data.auth_enabled) { showApp(null); return true; }
-      }
-    }
+    const r=await fetch(BASE+'/api/v1/auth/me',{headers:authHeaders()});
+    if(r.ok) { const d=await r.json(); if(!d.auth_enabled){showApp(null);return true;} authUser=d; showApp(d); return true; }
+    const h=await fetch(BASE+'/health'); if(h.ok) { const r2=await fetch(BASE+'/api/v1/auth/me'); if(r2.ok) { const d=await r2.json(); if(!d.auth_enabled){showApp(null);return true;} } }
     showLogin(); return false;
-  } catch { showApp(null); return true; }
+  } catch{showApp(null);return true;}
 }
-
-function showLogin() {
-  document.getElementById('login-page').style.display = 'flex';
-  document.getElementById('main-app').style.display = 'none';
-}
-
+function showLogin() { document.getElementById('login-page').style.display='flex'; document.getElementById('main-app').style.display='none'; }
 function showApp(user) {
-  document.getElementById('login-page').style.display = 'none';
-  document.getElementById('main-app').style.display = 'block';
-  if(user) {
-    document.getElementById('user-badge').style.display = 'flex';
-    document.getElementById('user-name').textContent = user.username;
-    const roleEl = document.getElementById('user-role');
-    roleEl.textContent = user.role;
-    roleEl.className = 'role-tag role-'+user.role;
-    document.getElementById('logout-btn').style.display = 'inline-block';
-  }
+  document.getElementById('login-page').style.display='none'; document.getElementById('main-app').style.display='block';
+  if(user) { document.getElementById('user-badge').style.display='flex'; document.getElementById('user-name').textContent=user.username; const r=document.getElementById('user-role'); r.textContent=user.role; r.className='role-tag role-'+user.role; document.getElementById('logout-btn').style.display='inline-block'; }
 }
-
 async function doLogin() {
-  const user = document.getElementById('login-user').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  const errEl = document.getElementById('login-error');
-  errEl.style.display = 'none';
-  if(!user || !pass) { errEl.textContent='Username and password required'; errEl.style.display='block'; return; }
-  try {
-    const r = await fetch(BASE+'/api/v1/auth/login', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username:user,password:pass})
-    });
-    if(r.ok) {
-      const data = await r.json();
-      authToken = data.access_token;
-      localStorage.setItem('angelclaw_token', authToken);
-      authUser = {username:data.username, role:data.role};
-      showApp(authUser);
-      bootstrapDashboard();
-    } else {
-      const err = await r.json().catch(()=>({detail:'Login failed'}));
-      errEl.textContent = err.detail || 'Login failed';
-      errEl.style.display = 'block';
-    }
-  } catch(e) {
-    errEl.textContent = 'Connection error';
-    errEl.style.display = 'block';
+  const user=document.getElementById('login-user').value.trim(), pass=document.getElementById('login-pass').value, err=document.getElementById('login-error');
+  err.style.display='none'; if(!user||!pass){err.textContent='Username and password required';err.style.display='block';return;}
+  try { const r=await fetch(BASE+'/api/v1/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user,password:pass})}); if(r.ok){const d=await r.json();authToken=d.access_token;localStorage.setItem('angelclaw_token',authToken);authUser={username:d.username,role:d.role};showApp(authUser);bootstrapDashboard();}else{const e=await r.json().catch(()=>({detail:'Login failed'}));err.textContent=e.detail||'Login failed';err.style.display='block';} } catch(e){err.textContent='Connection error';err.style.display='block';}
+}
+function doLogout() { authToken='';authUser=null;localStorage.removeItem('angelclaw_token');showLogin(); }
+document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+/* Navigation */
+function navigate(page) {
+  currentPage=page;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const el=document.querySelector(`.nav-item[data-page="${page}"]`); if(el) el.classList.add('active');
+  document.getElementById('sidebar').classList.remove('open');
+  renderPage();
+}
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function toggleMobileChat() { document.getElementById('chat-panel').classList.toggle('mobile-open'); }
+
+/* Render Halo Score ring */
+function renderHaloRing(score, size=64) {
+  const c=haloColor(score), r=size/2-4, circ=2*Math.PI*r, offset=circ-(score/100)*circ;
+  return `<div class="halo-ring" style="width:${size}px;height:${size}px"><span class="halo-val" style="color:${c}">${score}</span><svg width="${size}" height="${size}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--border)" stroke-width="4"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${c}" stroke-width="4" stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round"/></svg></div>`;
+}
+
+/* Page renderers */
+async function renderPage() {
+  const mc=document.getElementById('main-content');
+  mc.innerHTML='<div class="loading">Loading...</div>';
+  switch(currentPage) {
+    case 'dashboard': return renderDashboard(mc);
+    case 'fleet': return renderFleet(mc);
+    case 'tenants': return renderTenants(mc);
+    case 'alerts': return renderAlerts(mc);
+    case 'legion': return renderLegion(mc);
+    case 'anti-tamper': return renderAntiTamper(mc);
+    case 'analytics': return renderAnalytics(mc);
+    case 'learning': return renderLearning(mc);
+    case 'policies': return renderPolicies(mc);
+    case 'settings': return renderSettings(mc);
+    default: mc.innerHTML='<div class="empty">Page not found</div>';
   }
 }
 
-function doLogout() {
-  authToken = ''; authUser = null;
-  localStorage.removeItem('angelclaw_token');
-  showLogin();
+/* === DASHBOARD === */
+async function renderDashboard(mc) {
+  const [agents,events,orch,activity,daemon,alerts,shield,threats] = await Promise.all([
+    fetchJSON('/api/v1/agents'), fetchJSON('/api/v1/incidents/recent?limit=30'),
+    fetchJSON('/api/v1/orchestrator/status'), fetchJSON('/api/v1/angelclaw/activity/recent?limit=12'),
+    fetchJSON('/api/v1/angelclaw/daemon/status'), fetchJSON('/api/v1/guardian/alerts/recent?tenantId=dev-tenant&limit=10'),
+    fetchJSON('/api/v1/angelclaw/shield/status'), fetchJSON('/api/v1/analytics/threat-matrix?lookback_hours=24'),
+  ]);
+  cachedData.agents=agents; cachedData.alerts=alerts;
+  const agentCount=agents?agents.length:0, eventCount=events?events.length:0;
+  const blocked=events?events.filter(e=>['critical','high'].includes(e.severity)).length:0;
+  const alertCount=alerts?alerts.length:0;
+  const oi=orch?orch.stats||{}:{};
+  document.getElementById('nav-fleet-count').textContent=agentCount;
+  document.getElementById('nav-alert-count').textContent=alertCount;
+
+  let html = `
+    <div class="stats">
+      <div class="stat-card"><div class="stat-value" style="color:var(--accent)">${agentCount}</div><div class="stat-label">Agents</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--angel-gold)">${eventCount}</div><div class="stat-label">Events (24h)</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--green)">${blocked}</div><div class="stat-label">Blocked</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--purple)">${oi.indicators_found||0}</div><div class="stat-label">Indicators</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--red)">${alertCount}</div><div class="stat-label">Alerts</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--orange)">${oi.incidents_created||0}</div><div class="stat-label">Incidents</div></div>
+    </div>`;
+
+  // Activity panel
+  html += `<div class="card glow" style="background:var(--angel-halo)"><div class="card-header"><span class="card-title"><span class="icon">&#128737;</span> Guardian Activity</span><span class="card-badge gold">${daemon&&daemon.running?'ACTIVE ('+daemon.cycles_completed+' cycles)':'STOPPED'}</span></div><div style="max-height:200px;overflow-y:auto">`;
+  if(activity&&activity.length) {
+    html += activity.map(a=>`<div class="activity-item cat-${esc(a.category)}"><div class="activity-body"><span class="activity-cat">${esc(a.category)}</span><span class="activity-time">${ago(a.timestamp)}</span><div class="activity-text">${esc(a.summary)}</div></div></div>`).join('');
+  } else html += '<div class="empty">Guardian starting up...</div>';
+  html += '</div></div>';
+
+  // Two columns: Alerts + Orchestrator
+  html += '<div class="two-col">';
+  // Alerts
+  html += `<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#9888;</span> Guardian Alerts</span><span class="card-badge red">${alertCount}</span></div><div style="max-height:200px;overflow-y:auto">`;
+  if(alerts&&alerts.length) html += alerts.map(a=>`<div class="alert-item"><span class="alert-icon">${sevIcon(a.severity)}</span><div class="alert-body"><div class="alert-title">${esc(a.title)}</div><div class="alert-meta">${esc(a.severity)} &middot; ${ago(a.created_at)}</div></div></div>`).join('');
+  else html += '<div class="empty">No alerts. All clear.</div>';
+  html += '</div></div>';
+  // Orchestrator
+  html += `<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#9881;</span> AGI Orchestrator</span><span class="card-badge ${orch&&orch.running?'green':'red'}">${orch&&orch.running?'RUNNING':'STOPPED'}</span></div>`;
+  if(orch) {
+    html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px"><span><span style="color:var(--text-dim)">Events:</span> ${oi.events_processed||0}</span><span><span style="color:var(--text-dim)">Indicators:</span> ${oi.indicators_found||0}</span><span><span style="color:var(--text-dim)">Incidents:</span> ${oi.incidents_created||0}</span><span><span style="color:var(--text-dim)">Responses:</span> ${oi.responses_executed||0}</span></div>`;
+    if(orch.agents) { html+='<div style="margin-top:8px;font-size:10px">'; for(const [n,i] of Object.entries(orch.agents)){const c=(i.status==='idle'||i.status==='ok')?'var(--green)':'var(--yellow)';html+=`<span style="margin-right:10px"><span style="color:${c}">&#9679;</span> ${n}</span>`;} html+='</div>'; }
+  }
+  html += '</div></div>';
+
+  // Two columns: Fleet + Threats
+  html += '<div class="two-col">';
+  // Fleet preview
+  html += `<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#128421;</span> Fleet</span><span class="card-badge">${agentCount}</span></div><div style="max-height:220px;overflow-y:auto">`;
+  if(agents&&agents.length) {
+    html += '<table class="data-table"><thead><tr><th>Host</th><th>Status</th><th>OS</th><th>Seen</th></tr></thead><tbody>';
+    html += agents.slice(0,10).map(a=>`<tr onclick="navigate('fleet')"><td>${esc(a.hostname)}</td><td><span class="status-badge ${statusClass(a.status)}">${esc(a.status)}</span></td><td>${esc(a.os)}</td><td>${ago(a.last_seen_at)}</td></tr>`).join('');
+    html += '</tbody></table>';
+  } else html += '<div class="empty">No agents registered.</div>';
+  html += '</div></div>';
+  // Threats
+  html += `<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#127919;</span> Threat Landscape</span></div>`;
+  if(threats&&threats.length) {
+    const max=Math.max(...threats.map(d=>d.total_events),1);
+    html += '<div class="threat-chart">'+threats.slice(0,6).map(d=>{const pct=Math.max(8,(d.total_events/max)*100);return `<div class="threat-row"><span class="threat-label">${esc(d.category)}</span><div class="threat-bar-bg"><div class="threat-bar-fill" style="width:${pct}%;background:${catColor(d.category)}">${d.total_events}</div></div></div>`;}).join('')+'</div>';
+  } else html += '<div class="empty">No threat data.</div>';
+  html += '</div></div>';
+
+  // Shield
+  html += `<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#128737;</span> AngelClaw Shield</span><span class="card-badge">${shield?esc(shield.last_risk_level||'unknown').toUpperCase():'--'}</span></div><div class="shield-grid"><div class="shield-stat"><div class="val">${shield?shield.assessments_run||0:'--'}</div><div class="lbl">Checks</div></div><div class="shield-stat"><div class="val">${shield?(shield.injection_patterns||0)+(shield.leakage_patterns||0):'--'}</div><div class="lbl">Patterns</div></div><div class="shield-stat"><div class="val">${shield?shield.skills_registered||0:'--'}</div><div class="lbl">Skills</div></div><div class="shield-stat"><div class="val">${shield?(shield.evil_agi_patterns||0):'--'}</div><div class="lbl">Evil AGI</div></div></div></div>`;
+
+  mc.innerHTML = html;
 }
 
-document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-
-// Data loaders
-async function loadReportStrip() {
-  const data = await fetchJSON('/api/v1/guardian/reports/recent?tenantId=dev-tenant&limit=1');
-  if(!data || !data.length) return;
-  const r = data[0];
-  document.getElementById('rpt-time').textContent = ago(r.timestamp);
-  document.getElementById('rpt-events').textContent = r.incidents_total;
-  document.getElementById('rpt-anomalies').textContent = (r.anomalies||[]).length;
-  document.getElementById('rpt-policy').textContent = r.policy_changes_since_last || 0;
-}
-
-async function loadGuardianAlerts() {
-  const data = await fetchJSON('/api/v1/guardian/alerts/recent?tenantId=dev-tenant&limit=10');
-  const el = document.getElementById('guardian-alert-feed');
-  const countEl = document.getElementById('guardian-alert-count');
-  if(!data || !data.length) { el.innerHTML='<div class="empty">No guardian alerts. All clear.</div>'; countEl.textContent='0'; return 0; }
-  countEl.textContent = data.length;
-  el.innerHTML = data.map(a => {
-    const cls = a.severity === 'critical' ? '' : a.severity === 'high' ? 'sev-high' : 'sev-warn';
-    return '<div class="guardian-alert-item '+cls+'"><div class="guardian-alert-body"><div class="guardian-alert-title">['+esc(a.severity).toUpperCase()+'] '+esc(a.title)+'</div><div class="guardian-alert-meta">'+esc(a.alert_type)+' &middot; '+ago(a.created_at)+'</div></div></div>';
-  }).join('');
-  return data.length;
-}
-
-async function loadFleet() {
+/* === FLEET === */
+async function renderFleet(mc) {
   const agents = await fetchJSON('/api/v1/agents');
-  const el = document.getElementById('fleet-table');
-  const countEl = document.getElementById('fleet-count');
-  if(!agents || !agents.length) { el.innerHTML='<div class="empty">No agents registered.</div>'; countEl.textContent='0'; return agents||[]; }
-  countEl.textContent = agents.length+' agent'+(agents.length!==1?'s':'');
-  el.innerHTML = '<table class="agent-table"><thead><tr><th>Host</th><th>Status</th><th>OS</th><th>Ver</th><th>Seen</th></tr></thead><tbody>' +
-    agents.map(a => '<tr onclick="openTimeline(\''+esc(a.agent_id)+'\',\''+esc(a.hostname)+'\')" title="View timeline"><td>'+esc(a.hostname)+'</td><td><span class="status-badge '+statusClass(a.status)+'">'+esc(a.status)+'</span></td><td>'+esc(a.os)+'</td><td>'+esc(a.version)+'</td><td>'+ago(a.last_seen_at)+'</td></tr>').join('') +
-    '</tbody></table>';
-  return agents;
+  cachedData.agents = agents;
+  const total=agents?agents.length:0, active=agents?agents.filter(a=>a.status==='active').length:0;
+  let html = `<div class="page-title">&#128421; Fleet &mdash; Angel Nodes</div><div class="page-subtitle">${total} total &mdash; ${active} active</div>`;
+  if(agents&&agents.length) {
+    html += `<div class="card"><table class="data-table"><thead><tr><th>Hostname</th><th>Status</th><th>Type</th><th>OS</th><th>Version</th><th>Tags</th><th>Last Seen</th></tr></thead><tbody>`;
+    html += agents.map(a=>`<tr onclick="openTimeline('${esc(a.agent_id)}','${esc(a.hostname)}')"><td><strong>${esc(a.hostname)}</strong></td><td><span class="status-badge ${statusClass(a.status)}">${esc(a.status)}</span></td><td>${esc(a.type||'node')}</td><td>${esc(a.os)}</td><td>${esc(a.version)}</td><td>${(a.tags||[]).map(t=>'<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:var(--surface3);margin-right:3px">'+esc(t)+'</span>').join('')}</td><td>${ago(a.last_seen_at)}</td></tr>`).join('');
+    html += '</tbody></table></div>';
+  } else html += '<div class="empty">No agents registered yet. Deploy Angel Nodes to see them here.</div>';
+  mc.innerHTML = html;
 }
 
-async function loadAlerts() {
-  const events = await fetchJSON('/api/v1/incidents/recent?limit=30');
-  const el = document.getElementById('alert-feed');
-  const countEl = document.getElementById('alert-count');
-  if(!events || !events.length) { el.innerHTML='<div class="empty">No recent events.</div>'; countEl.textContent='0'; return []; }
-  countEl.textContent = events.length;
-  el.innerHTML = events.map(e => '<div class="alert-item"><span class="alert-icon">'+sevIcon(e.severity)+'</span><div class="alert-body"><div class="alert-title">'+esc(e.category)+'/'+esc(e.type)+' <span class="alert-sev '+sevClass(e.severity)+'">'+esc(e.severity)+'</span></div><div class="alert-meta">'+ago(e.timestamp)+' &middot; '+(e.agent_id||'').slice(0,8)+'</div></div></div>').join('');
-  return events;
+/* === TENANTS === */
+async function renderTenants(mc) {
+  const data = await fetchJSON('/api/v1/admin/tenants');
+  const tenants = data || [{id:'dev-tenant',name:'Development',status:'active',agent_count:cachedData.agents?cachedData.agents.length:0,halo_score:85}];
+  let html = `<div class="page-title">&#127970; Tenants</div><div class="page-subtitle">Organization-wide tenant management</div>`;
+  html += '<div class="card"><table class="data-table"><thead><tr><th>Tenant</th><th>Status</th><th>Agents</th><th>Halo Score</th><th>Wingspan</th></tr></thead><tbody>';
+  tenants.forEach(t => {
+    const score = t.halo_score||85;
+    html += `<tr><td><strong>${esc(t.name||t.id)}</strong><div style="font-size:9px;color:var(--text-muted)">${esc(t.id)}</div></td><td><span class="status-badge status-active">${esc(t.status||'active')}</span></td><td>${t.agent_count||0}</td><td>${renderHaloRing(score,40)}</td><td>${t.wingspan||0}%</td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  mc.innerHTML = html;
 }
 
-async function loadThreats() {
-  const data = await fetchJSON('/api/v1/analytics/threat-matrix?lookback_hours=24');
-  const el = document.getElementById('threat-chart');
-  const predEl = document.getElementById('prediction-list');
-  if(!data || !data.length) { el.innerHTML='<div class="empty">No threat data.</div>'; predEl.innerHTML=''; threatPredictionCount=0; return; }
-  const max = Math.max(...data.map(d=>d.total_events),1);
-  el.innerHTML = data.slice(0,6).map(d => {
-    const pct = Math.max(8, (d.total_events/max)*100);
-    return '<div class="threat-row"><span class="threat-label">'+esc(d.category)+'</span><div class="threat-bar-bg"><div class="threat-bar-fill" style="width:'+pct+'%;background:'+catColor(d.category)+'">'+d.total_events+'</div></div></div>';
-  }).join('');
-  const seen = new Set(); const predictions = [];
-  data.forEach(d => { (d.predicted_vectors||[]).forEach(p => { if(!seen.has(p.vector_name)) { seen.add(p.vector_name); predictions.push(p); } }); });
-  predictions.sort((a,b) => b.confidence - a.confidence);
-  threatPredictionCount = predictions.length;
-  if(predictions.length) {
-    predEl.innerHTML = '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Predicted Vectors</div>' +
-      predictions.map(p => { const pct=Math.round(p.confidence*100); const cls=pct>=70?'conf-high':pct>=40?'conf-med':'conf-low'; return '<div class="prediction-item"><span class="prediction-conf '+cls+'">'+pct+'%</span><span>'+esc(p.vector_name.replace(/_/g,' '))+'</span></div>'; }).join('');
-  } else { predEl.innerHTML = ''; }
+/* === ALERTS === */
+async function renderAlerts(mc) {
+  const alerts = await fetchJSON('/api/v1/guardian/alerts/recent?tenantId=dev-tenant&limit=50');
+  let html = `<div class="page-title">&#9888; Guardian Alerts</div><div class="page-subtitle">${alerts?alerts.length:0} recent alerts</div>`;
+  if(alerts&&alerts.length) {
+    html += '<div class="card">'+alerts.map(a=>`<div class="alert-item" style="padding:8px 10px;margin-bottom:4px;background:var(--surface2);border-radius:var(--radius-sm);border-left:3px solid ${a.severity==='critical'?'var(--red)':a.severity==='high'?'var(--orange)':'var(--yellow)'}"><div class="alert-body"><div class="alert-title"><span class="alert-sev ${sevClass(a.severity)}">${esc(a.severity)}</span> ${esc(a.title)}</div><div class="alert-meta">${esc(a.alert_type)} &middot; ${ago(a.created_at)} &middot; ${(a.related_agent_ids||[]).length} agent(s)</div></div></div>`).join('')+'</div>';
+  } else html += '<div class="card"><div class="empty">No alerts. All clear.</div></div>';
+  mc.innerHTML = html;
 }
 
-async function loadOrchestrator() {
-  const data = await fetchJSON('/api/v1/orchestrator/status');
-  if(!data) return;
-  const pill = document.getElementById('orch-status-pill');
-  pill.textContent = data.running ? 'RUNNING' : 'STOPPED';
-  pill.className = 'card-badge '+(data.running?'green':'red');
-  const s = data.stats || {};
-  document.getElementById('orch-stats').innerHTML =
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px">' +
-    '<span><span style="color:var(--text-dim)">Events:</span> '+s.events_processed+'</span>' +
-    '<span><span style="color:var(--text-dim)">Indicators:</span> '+s.indicators_found+'</span>' +
-    '<span><span style="color:var(--text-dim)">Incidents:</span> '+s.incidents_created+'</span>' +
-    '<span><span style="color:var(--text-dim)">Responses:</span> '+s.responses_executed+'</span></div>';
-  const agents2 = data.agents || {};
-  let html = '';
-  for(const [name, info] of Object.entries(agents2)) {
-    const st = info.status;
-    const color = (st==='idle'||st==='ok') ? 'var(--green)' : 'var(--yellow)';
-    html += '<span style="margin-right:12px"><span style="color:'+color+'">&#9679;</span> '+name+'</span>';
-  }
-  document.getElementById('orch-agents').innerHTML = html;
-}
-
-async function loadIncidents() {
-  const data = await fetchJSON('/api/v1/orchestrator/incidents?limit=10');
-  const el = document.getElementById('incident-feed');
-  const countEl = document.getElementById('incident-count');
-  const incidents = data ? (data.incidents || []) : [];
-  if(!incidents.length) { el.innerHTML='<div class="empty">No incidents.</div>'; countEl.textContent='0'; return; }
-  countEl.textContent = incidents.length;
-  el.innerHTML = incidents.map(inc => {
-    const sev = inc.severity || 'info';
-    const state = inc.state || '?';
-    const needsApproval = inc.requires_approval && (state==='triaging' || state==='new');
-    const btn = needsApproval ? ' <button onclick="approveIncident(\''+esc(inc.incident_id)+'\')" style="font-size:9px;padding:1px 6px;border-radius:4px;border:1px solid var(--accent);background:none;color:var(--accent);cursor:pointer">Approve</button>' : '';
-    return '<div class="guardian-alert-item '+(sev==='critical'?'':'sev-'+sev)+'"><div class="guardian-alert-body"><div class="guardian-alert-title">['+esc(state).toUpperCase()+'] '+esc(inc.title||'').substring(0,80)+btn+'</div><div class="guardian-alert-meta">'+esc(sev)+' &middot; '+ago(inc.created_at)+'</div></div></div>';
-  }).join('');
-}
-
-async function approveIncident(id) {
-  const data = await fetch(BASE+'/api/v1/orchestrator/incidents/'+id+'/approve', { method:'POST', headers: authHeaders() }).then(r=>r.json()).catch(()=>null);
-  if(data && !data.error) { loadIncidents(); } else { alert('Approval failed'); }
-}
-
-async function loadStats(agents, events, alertCount) {
-  document.getElementById('stat-agents').textContent = agents ? agents.length : 0;
-  document.getElementById('stat-events').textContent = events ? events.length : 0;
-  const blocked = events ? events.filter(e=>['critical','high'].includes(e.severity)).length : 0;
-  document.getElementById('stat-blocked').textContent = blocked;
-  const policies = await fetchJSON('/api/v1/analytics/policy/evolution');
-  document.getElementById('stat-policies').textContent = policies && policies.length ? policies[0].rule_count : 0;
-  document.getElementById('stat-alerts').textContent = alertCount || 0;
-  document.getElementById('stat-predictions').textContent = threatPredictionCount;
-}
-
-// Guardian Activity
-async function loadActivity() {
-  const data = await fetchJSON('/api/v1/angelclaw/activity/recent?limit=15');
-  const el = document.getElementById('activity-feed');
-  if(!data || !data.length) { el.innerHTML='<div class="empty">Guardian starting up...</div>'; return; }
-  el.innerHTML = data.map(a => {
-    const catColors = {scan:'var(--accent)',cycle:'var(--green)',alert:'var(--red)',drift:'var(--yellow)',lifecycle:'var(--text-muted)',error:'var(--red)',shield:'var(--purple)',shield_alert:'var(--red)',security_alert:'var(--red)'};
-    const color = catColors[a.category] || 'var(--text-dim)';
-    return '<div class="activity-item cat-'+esc(a.category)+'"><div class="activity-body"><span class="activity-cat" style="color:'+color+'">'+esc(a.category)+'</span><span class="activity-time">'+ago(a.timestamp)+'</span><div class="activity-text">'+esc(a.summary)+'</div></div></div>';
-  }).join('');
-}
-
-async function loadDaemonStatus() {
-  const data = await fetchJSON('/api/v1/angelclaw/daemon/status');
-  if(!data) return;
-  lastDaemonStatus = data;
-  const pill = document.getElementById('activity-status');
-  pill.textContent = data.running ? 'ACTIVE ('+data.cycles_completed+' cycles)' : 'STOPPED';
-  pill.className = 'card-badge '+(data.running?'green':'red');
-  const chatPill = document.getElementById('chat-daemon-pill');
-  if(chatPill) chatPill.textContent = data.running ? 'Guardian active' : 'Stopped';
-  // Next scan estimate
-  const nextEl = document.getElementById('next-scan-time');
-  if(data.running) {
-    const prefs = await fetchJSON('/api/v1/angelclaw/preferences?tenantId=dev-tenant');
-    if(prefs) {
-      const freq = prefs.scan_frequency_minutes || 10;
-      nextEl.textContent = 'every '+freq+' min (scan frequency)';
+/* === LEGION === */
+async function renderLegion(mc) {
+  const orch = await fetchJSON('/api/v1/orchestrator/status');
+  let html = `<div class="page-title">&#9876; Angel Legion</div><div class="page-subtitle">Seraph Orchestrator &mdash; Warden status and performance</div>`;
+  if(orch) {
+    html += `<div class="stats" style="grid-template-columns:repeat(4,1fr)">
+      <div class="stat-card"><div class="stat-value" style="color:var(--green)">${orch.running?'ON':'OFF'}</div><div class="stat-label">Status</div></div>
+      <div class="stat-card"><div class="stat-value">${orch.legion?orch.legion.total_agents||0:0}</div><div class="stat-label">Total Wardens</div></div>
+      <div class="stat-card"><div class="stat-value">${(orch.stats||{}).events_processed||0}</div><div class="stat-label">Events Processed</div></div>
+      <div class="stat-card"><div class="stat-value">${(orch.stats||{}).indicators_found||0}</div><div class="stat-label">Indicators</div></div>
+    </div>`;
+    // Warden list
+    if(orch.agents) {
+      html += '<div class="card" style="margin-top:14px"><div class="card-header"><span class="card-title">Wardens</span></div><table class="data-table"><thead><tr><th>Agent</th><th>Type</th><th>Status</th><th>Avg Latency</th><th>Indicators</th></tr></thead><tbody>';
+      for(const [name,info] of Object.entries(orch.agents)) {
+        const perf = (orch.warden_performance||{})[name]||{};
+        const st = info.status; const color = (st==='idle'||st==='ok')?'var(--green)':'var(--yellow)';
+        html += `<tr><td><span style="color:${color}">&#9679;</span> ${esc(name)}</td><td>${esc(info.agent_type||'warden')}</td><td>${esc(st)}</td><td>${perf.avg_latency_ms?perf.avg_latency_ms+'ms':'--'}</td><td>${perf.indicators_found||0}</td></tr>`;
+      }
+      html += '</tbody></table></div>';
     }
-  } else {
-    nextEl.textContent = 'daemon not running';
-  }
+    // Incidents
+    const incidents = await fetchJSON('/api/v1/orchestrator/incidents?limit=10');
+    const incList = incidents?(incidents.incidents||[]):[];
+    html += `<div class="card" style="margin-top:14px"><div class="card-header"><span class="card-title">&#128680; Incidents</span><span class="card-badge">${incList.length}</span></div>`;
+    if(incList.length) {
+      html += incList.map(inc=>{const needsApproval=inc.requires_approval&&(inc.state==='triaging'||inc.state==='new');const btn=needsApproval?` <button class="btn btn-primary" style="font-size:9px;padding:2px 8px" onclick="approveIncident('${esc(inc.incident_id)}')">Approve</button>`:'';return `<div class="alert-item" style="padding:6px 8px;margin-bottom:3px;background:var(--surface2);border-radius:6px"><div class="alert-body"><div class="alert-title"><span class="alert-sev ${sevClass(inc.severity)}">${esc(inc.state)}</span> ${esc((inc.title||'').substring(0,80))}${btn}</div><div class="alert-meta">${esc(inc.severity)} &middot; ${ago(inc.created_at)}</div></div></div>`;}).join('');
+    } else html += '<div class="empty">No incidents.</div>';
+    html += '</div>';
+  } else html += '<div class="card"><div class="empty">Orchestrator unavailable.</div></div>';
+  mc.innerHTML = html;
 }
 
-async function loadPreferences() {
-  const data = await fetchJSON('/api/v1/angelclaw/preferences?tenantId=dev-tenant');
-  if(!data) return;
-  const aEl = document.getElementById('pref-autonomy');
-  const sEl = document.getElementById('pref-scan');
-  const rEl = document.getElementById('pref-reporting');
-  if(aEl) aEl.value = data.autonomy_level || 'suggest_only';
-  if(sEl) sEl.value = String(data.scan_frequency_minutes || 10);
-  if(rEl) rEl.value = data.reporting_level || 'normal';
+/* === ANTI-TAMPER === */
+async function renderAntiTamper(mc) {
+  const status = await fetchJSON('/api/v1/admin/anti-tamper/status');
+  const events = await fetchJSON('/api/v1/admin/anti-tamper/events');
+  let html = `<div class="page-title">&#128274; Anti-Tamper Protection</div><div class="page-subtitle">Monitor and enforce integrity of Angel Nodes</div>`;
+  // Status overview
+  html += '<div class="stats" style="grid-template-columns:repeat(4,1fr)">';
+  if(status) {
+    html += `<div class="stat-card"><div class="stat-value" style="color:var(--green)">${status.enforced_count||0}</div><div class="stat-label">Enforced</div></div>`;
+    html += `<div class="stat-card"><div class="stat-value" style="color:var(--yellow)">${status.monitored_count||0}</div><div class="stat-label">Monitored</div></div>`;
+    html += `<div class="stat-card"><div class="stat-value" style="color:var(--text-muted)">${status.disabled_count||0}</div><div class="stat-label">Disabled</div></div>`;
+    html += `<div class="stat-card"><div class="stat-value" style="color:var(--red)">${status.tamper_events_24h||0}</div><div class="stat-label">Events (24h)</div></div>`;
+  } else { html += '<div class="stat-card"><div class="stat-value">--</div><div class="stat-label">Status unavailable</div></div>'; }
+  html += '</div>';
+  // Configure
+  html += `<div class="two-col"><div class="card"><div class="card-header"><span class="card-title">Configure Anti-Tamper</span></div>
+    <div class="pref-row"><label class="pref-label">Tenant:</label><select class="pref-select" id="at-tenant"><option value="dev-tenant">dev-tenant</option></select></div>
+    <div class="pref-row"><label class="pref-label">Mode:</label><select class="pref-select" id="at-mode"><option value="off">Off</option><option value="monitor" selected>Monitor</option><option value="enforce">Enforce</option></select></div>
+    <div class="pref-row"><label class="pref-label">Agent ID:</label><input class="pref-input" id="at-agent" placeholder="(all agents)" /></div>
+    <button class="btn btn-primary" style="margin-top:8px" onclick="configureAntiTamper()">Apply Configuration</button>
+    <div id="at-result" style="font-size:10px;margin-top:6px;min-height:14px"></div>
+  </div>`;
+  // Events
+  html += `<div class="card"><div class="card-header"><span class="card-title">Tamper Events</span><span class="card-badge red">${events?events.length:0}</span></div><div style="max-height:240px;overflow-y:auto">`;
+  if(events&&events.length) {
+    html += events.map(e=>`<div class="alert-item" style="padding:5px 8px;margin-bottom:3px;background:var(--surface2);border-radius:6px"><div class="alert-body"><div class="alert-title"><span class="alert-sev ${sevClass(e.severity)}">${esc(e.event_type)}</span> ${esc(e.description)}</div><div class="alert-meta">${ago(e.created_at)}</div></div></div>`).join('');
+  } else html += '<div class="empty">No tamper events detected.</div>';
+  html += '</div></div></div>';
+  mc.innerHTML = html;
+}
+async function configureAntiTamper() {
+  const tenant=document.getElementById('at-tenant').value, mode=document.getElementById('at-mode').value, agent=document.getElementById('at-agent').value.trim();
+  const body = {tenant_id:tenant, mode:mode}; if(agent) body.agent_id=agent;
+  const r=await postJSON('/api/v1/admin/anti-tamper/configure',body);
+  document.getElementById('at-result').innerHTML = r?'<span style="color:var(--green)">Configuration applied</span>':'<span style="color:var(--red)">Failed to apply</span>';
+}
+
+/* === ANALYTICS === */
+async function renderAnalytics(mc) {
+  const [threats,reports,trends] = await Promise.all([
+    fetchJSON('/api/v1/analytics/threat-matrix?lookback_hours=24'),
+    fetchJSON('/api/v1/guardian/reports/recent?tenantId=dev-tenant&limit=5'),
+    fetchJSON('/api/v1/admin/analytics/trends'),
+  ]);
+  let html = `<div class="page-title">&#128200; Analytics & Intelligence</div><div class="page-subtitle">Threat landscape, trends, and risk analysis</div>`;
+  // Threats
+  html += '<div class="two-col">';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Threat Matrix (24h)</span></div>';
+  if(threats&&threats.length) {
+    const max=Math.max(...threats.map(d=>d.total_events),1);
+    html += '<div class="threat-chart">'+threats.map(d=>{const pct=Math.max(8,(d.total_events/max)*100);return `<div class="threat-row"><span class="threat-label">${esc(d.category)}</span><div class="threat-bar-bg"><div class="threat-bar-fill" style="width:${pct}%;background:${catColor(d.category)}">${d.total_events}</div></div></div>`;}).join('')+'</div>';
+  } else html += '<div class="empty">No data</div>';
+  html += '</div>';
+  // Trends
+  html += '<div class="card"><div class="card-header"><span class="card-title">Trends</span></div>';
+  if(trends&&trends.overall_direction) {
+    const dir=trends.overall_direction;
+    html += `<div style="font-size:12px;margin-bottom:8px">Direction: <strong style="color:${dir==='escalating'?'var(--red)':dir==='declining'?'var(--green)':'var(--text-dim)'}">${esc(dir)}</strong></div>`;
+    if(trends.by_category) { html += trends.by_category.slice(0,8).map(c=>`<div style="font-size:10px;display:flex;justify-content:space-between;padding:2px 0"><span>${esc(c.category)}</span><span style="color:${c.trend_direction==='escalating'?'var(--red)':c.trend_direction==='declining'?'var(--green)':'var(--text-dim)'}">${c.current_count} (${esc(c.trend_direction)})</span></div>`).join(''); }
+  } else html += '<div class="empty">No trend data</div>';
+  html += '</div></div>';
+  // Reports
+  html += '<div class="card"><div class="card-header"><span class="card-title">Recent Reports</span></div>';
+  if(reports&&reports.length) {
+    html += '<table class="data-table"><thead><tr><th>Time</th><th>Agents</th><th>Events</th><th>Anomalies</th><th>Summary</th></tr></thead><tbody>';
+    html += reports.map(r=>`<tr><td>${ago(r.timestamp)}</td><td>${r.agents_total} (${r.agents_active} active)</td><td>${r.incidents_total}</td><td>${(r.anomalies||[]).length}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.summary)}</td></tr>`).join('');
+    html += '</tbody></table>';
+  } else html += '<div class="empty">No reports</div>';
+  html += '</div>';
+  mc.innerHTML = html;
+}
+
+/* === SELF-LEARNING === */
+async function renderLearning(mc) {
+  const learning = await fetchJSON('/api/v1/admin/analytics/risk-scores');
+  let html = `<div class="page-title">&#129504; Self-Learning Engine</div><div class="page-subtitle">Autonomous learning, feedback tracking, and adaptive thresholds</div>`;
+  html += '<div class="two-col">';
+  // Learning summary
+  html += '<div class="card"><div class="card-header"><span class="card-title">Learning State</span></div>';
+  if(learning) {
+    html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Reflections:</span><span>${learning.total_reflections||0}</span></div>`;
+    html += `<div class="pref-row"><span class="pref-label">Effectiveness:</span><span>${learning.detection_effectiveness!==undefined?(learning.detection_effectiveness*100).toFixed(0)+'%':'--'}</span></div>`;
+    html += `<div class="pref-row"><span class="pref-label">Severity Trend:</span><span>${learning.escalation_rate?esc(learning.escalation_rate.direction):'stable'}</span></div></div>`;
+  } else html += '<div class="empty">Learning data unavailable</div>';
+  html += '</div>';
+  // Playbook ranking
+  html += '<div class="card"><div class="card-header"><span class="card-title">Playbook Ranking</span></div>';
+  if(learning&&learning.playbook_ranking&&learning.playbook_ranking.length) {
+    html += '<table class="data-table"><thead><tr><th>Playbook</th><th>Success</th><th>Fail</th><th>Rate</th></tr></thead><tbody>';
+    html += learning.playbook_ranking.map(p=>`<tr><td>${esc(p.playbook)}</td><td>${p.success_count}</td><td>${p.fail_count}</td><td style="color:${p.success_rate>=0.7?'var(--green)':'var(--yellow)'}">${(p.success_rate*100).toFixed(0)}%</td></tr>`).join('');
+    html += '</tbody></table>';
+  } else html += '<div class="empty">No playbook data yet</div>';
+  html += '</div></div>';
+  mc.innerHTML = html;
+}
+
+/* === POLICIES === */
+async function renderPolicies(mc) {
+  const policies = await fetchJSON('/api/v1/analytics/policy/evolution');
+  let html = `<div class="page-title">&#128220; Policies</div><div class="page-subtitle">Policy management and history</div>`;
+  html += '<div class="card"><div class="card-header"><span class="card-title">Policy Evolution</span></div>';
+  if(policies&&policies.length) {
+    html += '<table class="data-table"><thead><tr><th>Name</th><th>Rules</th><th>Version</th><th>Created</th></tr></thead><tbody>';
+    html += policies.map(p=>`<tr><td>${esc(p.name)}</td><td>${p.rule_count}</td><td style="font-family:var(--mono);font-size:9px">${esc((p.version_hash||'').substring(0,12))}</td><td>${ago(p.created_at)}</td></tr>`).join('');
+    html += '</tbody></table>';
+  } else html += '<div class="empty">No policies</div>';
+  html += '</div>';
+  mc.innerHTML = html;
+}
+
+/* === SETTINGS === */
+async function renderSettings(mc) {
+  const prefs = await fetchJSON('/api/v1/angelclaw/preferences?tenantId=dev-tenant');
+  const daemon = await fetchJSON('/api/v1/angelclaw/daemon/status');
+  let html = `<div class="page-title">&#9881; Settings</div><div class="page-subtitle">Guardian configuration and preferences</div>`;
+  html += '<div class="two-col">';
+  // Preferences
+  html += '<div class="card"><div class="card-header"><span class="card-title">Guardian Preferences</span><span class="card-badge gold">V3.0</span></div><div style="display:flex;flex-direction:column;gap:8px">';
+  const autonomy=prefs?prefs.autonomy_level:'suggest_only', scanFreq=prefs?prefs.scan_frequency_minutes:10, reporting=prefs?prefs.reporting_level:'normal';
+  html += `<div class="pref-row"><label class="pref-label">Autonomy:</label><select class="pref-select" id="pref-autonomy" onchange="updatePref('autonomy_level',this.value)"><option value="observe_only" ${autonomy==='observe_only'?'selected':''}>Observe Only</option><option value="suggest_only" ${autonomy==='suggest_only'?'selected':''}>Suggest Only</option><option value="assist" ${autonomy==='assist'?'selected':''}>Assist</option><option value="autonomous_apply" ${autonomy==='autonomous_apply'?'selected':''}>Autonomous</option></select></div>`;
+  html += `<div class="pref-row"><label class="pref-label">Scan (min):</label><select class="pref-select" id="pref-scan" onchange="updatePref('scan_frequency_minutes',parseInt(this.value))"><option value="1" ${scanFreq==1?'selected':''}>1</option><option value="5" ${scanFreq==5?'selected':''}>5</option><option value="10" ${scanFreq==10?'selected':''}>10</option><option value="30" ${scanFreq==30?'selected':''}>30</option><option value="60" ${scanFreq==60?'selected':''}>60</option></select></div>`;
+  html += `<div class="pref-row"><label class="pref-label">Reporting:</label><select class="pref-select" id="pref-reporting" onchange="updatePref('reporting_level',this.value)"><option value="quiet" ${reporting==='quiet'?'selected':''}>Quiet</option><option value="normal" ${reporting==='normal'?'selected':''}>Normal</option><option value="verbose" ${reporting==='verbose'?'selected':''}>Verbose</option></select></div>`;
+  html += '<div id="pref-status" style="font-size:10px;color:var(--text-dim);min-height:14px"></div></div></div>';
+  // Daemon
+  html += '<div class="card"><div class="card-header"><span class="card-title">Daemon Status</span><span class="card-badge '+(daemon&&daemon.running?'green':'red')+'">'+(daemon&&daemon.running?'ACTIVE':'STOPPED')+'</span></div>';
+  if(daemon) {
+    html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Cycles:</span><span>${daemon.cycles_completed}</span></div><div class="pref-row"><span class="pref-label">Last scan:</span><span>${esc(daemon.last_scan_summary||'none')}</span></div><div class="pref-row"><span class="pref-label">Activity log:</span><span>${daemon.activity_count} entries</span></div></div>`;
+  }
+  html += '</div></div>';
+  mc.innerHTML = html;
 }
 
 async function updatePref(key, value) {
-  const body = {}; body[key] = value;
-  const statusEl = document.getElementById('pref-status');
-  try {
-    const r = await fetch(BASE+'/api/v1/angelclaw/preferences?tenantId=dev-tenant', {
-      method:'POST', headers:{'Content-Type':'application/json', ...authHeaders()}, body: JSON.stringify(body)
-    });
-    if(r.ok) { statusEl.textContent = key.replace(/_/g,' ')+' updated'; statusEl.style.color='var(--green)'; setTimeout(()=>statusEl.textContent='',3000); }
-  } catch { statusEl.textContent='Failed'; statusEl.style.color='var(--red)'; }
+  const body={}; body[key]=value;
+  const r=await fetch(BASE+'/api/v1/angelclaw/preferences?tenantId=dev-tenant',{method:'POST',headers:authHeaders(),body:JSON.stringify(body)});
+  const el=document.getElementById('pref-status');
+  if(r.ok){el.textContent=key.replace(/_/g,' ')+' updated';el.style.color='var(--green)';setTimeout(()=>el.textContent='',3000);}
+  else{el.textContent='Failed';el.style.color='var(--red)';}
 }
 
-async function loadShieldStatus() {
-  const data = await fetchJSON('/api/v1/angelclaw/shield/status');
-  if(!data) return;
-  const riskEl = document.getElementById('shield-risk');
-  const riskColors = {critical:'var(--red)',high:'var(--orange)',medium:'var(--yellow)',low:'var(--green)',info:'var(--accent)',unknown:'var(--text-dim)'};
-  const risk = data.last_risk_level || 'unknown';
-  riskEl.textContent = risk.toUpperCase();
-  riskEl.style.background = (riskColors[risk]||'var(--text-dim)')+'18';
-  riskEl.style.color = riskColors[risk]||'var(--text-dim)';
-  const total = (data.injection_patterns||0)+(data.leakage_patterns||0)+(data.evil_agi_patterns||0);
-  document.getElementById('shield-patterns').textContent = total;
-  document.getElementById('shield-skills').textContent = data.skills_registered || 0;
-  document.getElementById('shield-assessments').textContent = data.assessments_run || 0;
+/* Approvals */
+async function approveIncident(id) {
+  const d=await fetch(BASE+'/api/v1/orchestrator/incidents/'+id+'/approve',{method:'POST',headers:authHeaders()}).then(r=>r.json()).catch(()=>null);
+  if(d&&!d.error) renderPage(); else alert('Approval failed');
 }
 
-async function loadShieldAssessment() {
-  const data = await fetchJSON('/api/v1/angelclaw/skills/status');
-  if(!data) return;
-  const el = document.getElementById('shield-skills');
-  el.textContent = (data.verified||0)+'/'+(data.total||0);
-  el.style.color = data.drifted > 0 ? 'var(--red)' : 'var(--green)';
-  const indEl = document.getElementById('shield-indicators');
-  if(data.drifted > 0) { indEl.innerHTML = '<div style="color:var(--red);padding:4px 8px;background:var(--red-dim);border-radius:6px">'+data.drifted+' module(s) drifted</div>'; }
-  else if(data.total > 0) { indEl.innerHTML = '<div style="color:var(--green);padding:4px 8px;background:var(--green-dim);border-radius:6px">All '+data.total+' verified</div>'; }
-}
-
-// Timeline modal
+/* Timeline */
 async function openTimeline(agentId, hostname) {
-  const modal = document.getElementById('timeline-modal');
-  const body = document.getElementById('tl-body');
-  document.getElementById('tl-agent-name').textContent = hostname + ' Timeline (24h)';
-  body.innerHTML = '<div class="loading">Loading timeline...</div>';
-  modal.classList.add('visible');
-  const data = await fetchJSON('/api/v1/analytics/agent/timeline?agentId='+agentId+'&hours=24');
-  if(!data || !data.entries || !data.entries.length) { body.innerHTML = '<div class="empty">No activity in the last 24 hours.</div>'; return; }
-  let html = '<div style="font-size:11px;color:var(--text-dim);margin-bottom:12px">'+data.total_events+' events</div><div class="timeline">';
-  data.entries.forEach(e => {
-    const t = e.entry_type;
-    let cls = 'tl-event', badge = '<span class="tl-type-badge tl-type-event">event</span>';
-    if(t==='policy_change') { cls='tl-policy'; badge='<span class="tl-type-badge tl-type-policy">policy</span>'; }
-    else if(t==='session_start') { cls='tl-session'; badge='<span class="tl-type-badge tl-type-session">session</span>'; }
-    else if(t==='ai_tool_call') { cls='tl-ai'; badge='<span class="tl-type-badge tl-type-ai">ai</span>'; }
-    if(e.severity==='critical') cls+=' tl-critical'; else if(e.severity==='high') cls+=' tl-high';
-    const ts = new Date(e.timestamp);
-    html += '<div class="tl-entry '+cls+'"><span class="tl-time">'+ts.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</span><div class="tl-content"><div class="tl-summary">'+badge+' '+esc(e.summary);
-    if(e.severity) html += ' <span class="alert-sev '+sevClass(e.severity)+'">'+esc(e.severity)+'</span>';
-    html += '</div></div></div>';
-  });
-  html += '</div>';
-  body.innerHTML = html;
+  const modal=document.getElementById('timeline-modal'), body=document.getElementById('tl-body');
+  document.getElementById('tl-agent-name').textContent=hostname+' Timeline (24h)';
+  body.innerHTML='<div class="loading">Loading...</div>'; modal.classList.add('visible');
+  const data=await fetchJSON('/api/v1/analytics/agent/timeline?agentId='+agentId+'&hours=24');
+  if(!data||!data.entries||!data.entries.length){body.innerHTML='<div class="empty">No activity in 24h.</div>';return;}
+  let html='<div style="font-size:10px;color:var(--text-dim);margin-bottom:10px">'+data.total_events+' events</div><div class="timeline">';
+  data.entries.forEach(e=>{const t=e.entry_type;let cls='tl-event',badge='<span class="tl-type-badge tl-type-event">event</span>';if(t==='policy_change'){cls='tl-policy';badge='<span class="tl-type-badge tl-type-policy">policy</span>';}else if(t==='session_start'){cls='tl-session';badge='<span class="tl-type-badge tl-type-session">session</span>';}else if(t==='ai_tool_call'){cls='tl-ai';badge='<span class="tl-type-badge tl-type-ai">ai</span>';}if(e.severity==='critical')cls+=' tl-critical';else if(e.severity==='high')cls+=' tl-high';const ts=new Date(e.timestamp);html+=`<div class="tl-entry ${cls}"><span class="tl-time">${ts.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span><div class="tl-content"><div class="tl-summary">${badge} ${esc(e.summary)}`;if(e.severity)html+=` <span class="alert-sev ${sevClass(e.severity)}">${esc(e.severity)}</span>`;html+='</div></div></div>';});
+  html+='</div>'; body.innerHTML=html;
 }
+function closeModal(id) { document.getElementById(id).classList.remove('visible'); }
+document.getElementById('timeline-modal').addEventListener('click',function(e){if(e.target===this)closeModal('timeline-modal');});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal('timeline-modal');});
 
-function closeTimeline() { document.getElementById('timeline-modal').classList.remove('visible'); }
-document.getElementById('timeline-modal').addEventListener('click', function(e) { if(e.target===this) closeTimeline(); });
-document.addEventListener('keydown', e => { if(e.key==='Escape') closeTimeline(); });
-
-// Chat
+/* Chat */
 async function sendChat() {
-  const input = document.getElementById('chat-input');
-  const msgs = document.getElementById('chat-messages');
-  const btn = document.getElementById('chat-send');
-  const typing = document.getElementById('chat-typing');
-  const text = input.value.trim();
-  if(!text) return;
-  chatHistory.push({role:'user', content:text});
-  msgs.innerHTML += '<div class="chat-msg user">'+esc(text)+'</div>';
-  input.value = ''; btn.disabled = true;
-  typing.style.display = 'flex';
-  msgs.scrollTop = msgs.scrollHeight;
-
-  let responseHtml = '';
+  const input=document.getElementById('chat-input'),msgs=document.getElementById('chat-messages'),btn=document.getElementById('chat-send'),typing=document.getElementById('chat-typing');
+  const text=input.value.trim(); if(!text) return;
+  chatHistory.push({role:'user',content:text});
+  msgs.innerHTML+='<div class="chat-msg user">'+esc(text)+'</div>';
+  input.value=''; btn.disabled=true; typing.style.display='flex'; msgs.scrollTop=msgs.scrollHeight;
+  let responseHtml='';
   try {
-    const resp = await fetch(BASE+'/api/v1/angelclaw/chat', {
-      method:'POST', headers:{'Content-Type':'application/json', ...authHeaders()},
-      body: JSON.stringify({tenantId: 'dev-tenant', prompt: text})
-    });
+    const resp=await fetch(BASE+'/api/v1/angelclaw/chat',{method:'POST',headers:authHeaders(),body:JSON.stringify({tenantId:'dev-tenant',prompt:text})});
     if(resp.ok) {
-      const data = await resp.json();
-      chatHistory.push({role:'system', content:data.answer});
-      responseHtml = '<div class="chat-msg system">' + formatAnswer(data.answer);
-      if(data.actions && data.actions.length) {
-        responseHtml += '<div class="actions">';
-        data.actions.forEach(a => {
-          const idx = a.index || '';
-          responseHtml += '<div class="action-card"><div class="action-left"><div class="action-title">#'+idx+' '+esc(a.type||a.action_type||'')+'</div><div class="action-desc">'+esc(a.description||'')+'</div></div>';
-          if(a.dry_run) responseHtml += '<span class="apply-btn" onclick="sendChatText(\'apply #'+idx+'\')">Apply</span>';
-          responseHtml += '</div>';
-        });
-        responseHtml += '</div>';
-      }
-      if(data.effects && data.effects.length) {
-        responseHtml += '<div style="margin-top:8px;padding:8px 10px;background:var(--green-dim);border-radius:var(--radius-sm);font-size:11px;border:1px solid rgba(74,222,128,0.15)">';
-        data.effects.forEach(e => { responseHtml += '<div>'+(e.success?'&#9989;':'&#10060;')+' '+esc(e.message||e.type||'')+'</div>'; });
-        responseHtml += '</div>';
-      }
-      if(data.references && data.references.length) {
-        responseHtml += '<div class="chat-refs">Refs: '+data.references.map(r=>'<a href="'+r+'" target="_blank">'+esc(r)+'</a>').join(', ')+'</div>';
-      }
-      responseHtml += '</div>';
-      if(data.effects && data.effects.some(e => e.type === 'preference_update')) { loadPreferences(); }
-    } else {
-      responseHtml = '<div class="chat-msg system">Sorry, I had trouble processing that. Try again?</div>';
-    }
-  } catch(e) {
-    responseHtml = '<div class="chat-msg system">Connection error. Is the Cloud API running?</div>';
-  }
-  typing.style.display = 'none';
-  msgs.innerHTML += responseHtml;
-  msgs.scrollTop = msgs.scrollHeight;
-  btn.disabled = false; input.focus();
+      const data=await resp.json(); chatHistory.push({role:'system',content:data.answer});
+      responseHtml='<div class="chat-msg system">'+formatAnswer(data.answer);
+      if(data.actions&&data.actions.length){responseHtml+='<div class="actions">'+data.actions.map(a=>{const idx=a.index||'';return `<div class="action-card"><div><div class="action-title">#${idx} ${esc(a.type||a.action_type||'')}</div><div class="action-desc">${esc(a.description||'')}</div></div>${a.dry_run?'<span class="apply-btn" onclick="sendChatText(\'apply #'+idx+'\')">Apply</span>':''}</div>`;}).join('')+'</div>';}
+      if(data.effects&&data.effects.length){responseHtml+='<div style="margin-top:6px;padding:6px 8px;background:var(--green-dim);border-radius:var(--radius-sm);font-size:10px;border:1px solid rgba(74,222,128,0.15)">'+data.effects.map(e=>'<div>'+(e.success?'&#9989;':'&#10060;')+' '+esc(e.message||e.type||'')+'</div>').join('')+'</div>';}
+      responseHtml+='</div>';
+    } else responseHtml='<div class="chat-msg system">Sorry, trouble processing that.</div>';
+  } catch(e) { responseHtml='<div class="chat-msg system">Connection error.</div>'; }
+  typing.style.display='none'; msgs.innerHTML+=responseHtml; msgs.scrollTop=msgs.scrollHeight; btn.disabled=false; input.focus();
+}
+function sendChatText(t){document.getElementById('chat-input').value=t;sendChat();}
+function formatAnswer(t) {
+  return esc(t).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code style="background:var(--surface3);padding:1px 3px;border-radius:3px;font-family:var(--mono);font-size:10px">$1</code>').replace(/```(\w*)\n?([\s\S]*?)```/g,'<pre style="background:var(--surface3);padding:6px;border-radius:6px;font-family:var(--mono);font-size:10px;overflow-x:auto;margin:4px 0">$2</pre>').replace(/\n/g,'<br>');
+}
+document.getElementById('chat-input').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat();});
+
+/* WebSocket */
+let ws=null;
+function connectWebSocket() {
+  try { const proto=location.protocol==='https:'?'wss:':'ws:'; ws=new WebSocket(`${proto}//${location.host}/ws/events?tenant_id=dev-tenant`);
+    ws.onopen=()=>console.log('[WS] Connected'); ws.onclose=()=>{setTimeout(connectWebSocket,5000);}; ws.onerror=()=>{};
+    ws.onmessage=e=>{try{const msg=JSON.parse(e.data);if(msg.type==='alert')showToast(`Alert: ${msg.title||'New alert'}`,'red');}catch(err){}};
+  } catch(err){}
+}
+function showToast(msg,color) {
+  const t=document.createElement('div'); t.style.cssText=`position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--${color||'accent'});color:var(--text);padding:10px 16px;border-radius:var(--radius-sm);z-index:9999;font-size:12px;max-width:320px`;
+  t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),4000);
 }
 
-function sendChatText(text) { document.getElementById('chat-input').value = text; sendChat(); }
-
-function formatAnswer(text) {
-  return esc(text)
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`([^`]+)`/g, '<code style="background:var(--surface3);padding:1px 4px;border-radius:3px;font-family:var(--mono);font-size:11px">$1</code>')
-    .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre style="background:var(--surface3);padding:8px;border-radius:6px;font-family:var(--mono);font-size:11px;overflow-x:auto;margin:6px 0">$2</pre>')
-    .replace(/\n/g, '<br>');
-}
-
-document.getElementById('chat-input').addEventListener('keydown', e => { if(e.key==='Enter') sendChat(); });
-
-// Bootstrap
+/* Bootstrap */
 async function bootstrapDashboard() {
-  const agents = await loadFleet();
-  const events = await loadAlerts();
-  await loadThreats();
-  const alertCount = await loadGuardianAlerts();
-  await loadReportStrip();
-  await loadOrchestrator();
-  await loadIncidents();
-  await loadActivity();
-  await loadDaemonStatus();
-  await loadPreferences();
-  await loadShieldStatus();
-  await loadShieldAssessment();
-  await loadStats(agents, events, alertCount);
-  setInterval(async () => {
-    const a = await loadFleet();
-    const e = await loadAlerts();
-    await loadThreats();
-    const ac = await loadGuardianAlerts();
-    await loadReportStrip();
-    await loadOrchestrator();
-    await loadIncidents();
-    await loadActivity();
-    await loadDaemonStatus();
-    await loadShieldStatus();
-    await loadShieldAssessment();
-    await loadStats(a, e, ac);
-  }, 30000);
+  renderPage();
+  // Refresh every 30s
+  setInterval(()=>{ if(document.visibilityState==='visible') renderPage(); },30000);
+  connectWebSocket();
+  // Load daemon status for chat
+  const d=await fetchJSON('/api/v1/angelclaw/daemon/status');
+  if(d){const cp=document.getElementById('chat-daemon-pill');if(cp)cp.textContent=d.running?'Guardian active':'Stopped';}
 }
 
-(async () => { const ok = await checkAuth(); if(ok) bootstrapDashboard(); })();
+(async()=>{const ok=await checkAuth();if(ok)bootstrapDashboard();})();
 </script>
 </body>
 </html>

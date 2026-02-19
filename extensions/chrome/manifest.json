@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "AngelClaw AGI Guardian",
-  "version": "1.2.0",
-  "description": "Secure browser companion for AngelClaw AGI Guardian — your autonomous AI security guardian.",
-  "permissions": ["activeTab", "storage"],
+  "version": "3.0.0",
+  "description": "Administrative Console companion for AngelClaw AGI Guardian — your autonomous AI security guardian.",
+  "permissions": ["activeTab", "storage", "alarms"],
   "host_permissions": ["http://localhost:8500/*", "https://localhost:8500/*"],
   "action": {
     "default_popup": "popup.html",
@@ -12,6 +12,9 @@
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     }
+  },
+  "background": {
+    "service_worker": "background.js"
   },
   "side_panel": {
     "default_path": "sidepanel.html"

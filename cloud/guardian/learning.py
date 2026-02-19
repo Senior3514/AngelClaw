@@ -438,5 +438,57 @@ class LearningEngine:
         return viable[0]["playbook"]
 
 
+    # ------------------------------------------------------------------
+    # V3.0 — Prediction calibration for predictive engine
+    # ------------------------------------------------------------------
+
+    def get_prediction_calibration(self) -> dict[str, float]:
+        """Return confidence adjustments for all known prediction patterns.
+
+        Based on historical precision data. Used by predictive.py to suppress
+        low-precision predictions.
+        """
+        calibrations: dict[str, float] = {}
+        precision_data = self.get_pattern_precision()
+        for pattern_name, data in precision_data.items():
+            total = data["true_positives"] + data["false_positives"]
+            if total >= 3:
+                precision = data["precision"]
+                if precision >= 0.8:
+                    calibrations[pattern_name] = 0.3  # Very reliable, low bar
+                elif precision >= 0.5:
+                    calibrations[pattern_name] = 0.5
+                else:
+                    calibrations[pattern_name] = 0.7  # Unreliable, high bar
+        return calibrations
+
+    # ------------------------------------------------------------------
+    # V3.0 — Trend analysis for severity escalation
+    # ------------------------------------------------------------------
+
+    def get_escalation_rate(self, window: int = 20) -> dict:
+        """Analyze rate of severity escalation over recent incidents."""
+        if len(self._severity_trend) < 4:
+            return {"rate": 0.0, "direction": "stable", "samples": len(self._severity_trend)}
+
+        recent = self._severity_trend[-window:]
+        sev_map = {"info": 0, "low": 1, "warn": 2, "medium": 2, "high": 3, "critical": 4}
+        scores = [sev_map.get(s, 0) for s in recent]
+
+        half = len(scores) // 2
+        first_avg = sum(scores[:half]) / max(half, 1)
+        second_avg = sum(scores[half:]) / max(len(scores) - half, 1)
+        rate = second_avg - first_avg
+
+        direction = "escalating" if rate > 0.3 else ("declining" if rate < -0.3 else "stable")
+        return {
+            "rate": round(rate, 2),
+            "direction": direction,
+            "first_half_avg": round(first_avg, 2),
+            "second_half_avg": round(second_avg, 2),
+            "samples": len(recent),
+        }
+
+
 # Module-level singleton
 learning_engine = LearningEngine()

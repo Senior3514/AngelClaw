@@ -19,6 +19,12 @@ V2.2 patterns:
   - Ransomware indicators (encryption commands, ransom notes)
   - Defense evasion (log clearing, timestomping, security disabling)
   - Cloud API abuse (rapid cloud management API calls)
+
+V2.4 patterns:
+  - Compliance violation (unencrypted data, PII exposure, audit gaps)
+  - API abuse cascade (rapid API calls from single source)
+  - Quarantine breach (events from quarantined agents)
+  - Notification failure (delivery failures accumulating)
 """
 
 from __future__ import annotations
@@ -364,6 +370,106 @@ def check_for_alerts(
             alerts.append(alert)
             logger.warning("Guardian Alert [cloud_api_abuse]: %s", alert.title)
 
+    # V2.4 — Pattern 12: Compliance violation
+    compliance_keywords = {
+        "unencrypted", "plaintext", "pii", "gdpr", "retention_expired",
+        "hipaa", "sox", "pci", "compliance_fail", "audit_gap",
+    }
+    compliance_events = [
+        e for e in events
+        if any(k in ((e.details or {}).get("description", "") or (e.type or "")).lower()
+               for k in compliance_keywords)
+        or e.category == "compliance"
+    ]
+    if len(compliance_events) >= 2:
+        comp_agents = list({e.agent_id for e in compliance_events})
+        alert = GuardianAlertRow(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            alert_type="compliance_violation",
+            title=f"Compliance violation: {len(compliance_events)} events detected",
+            severity="high",
+            details={
+                "event_count": len(compliance_events),
+                "agents": comp_agents[:10],
+            },
+            related_event_ids=[e.id for e in compliance_events],
+            related_agent_ids=comp_agents,
+        )
+        alerts.append(alert)
+        logger.warning("Guardian Alert [compliance_violation]: %s", alert.title)
+
+    # V2.4 — Pattern 13: API abuse cascade
+    api_events = [
+        e for e in events
+        if e.category == "api_security"
+        or (e.type and "api" in e.type.lower() and e.severity in ("high", "critical"))
+    ]
+    api_sources: dict[str, int] = {}
+    for e in api_events:
+        src = (e.details or {}).get("source_ip", e.source or "unknown")
+        api_sources[src] = api_sources.get(src, 0) + 1
+    for src, count in api_sources.items():
+        if count >= 8:
+            src_events = [e for e in api_events
+                          if (e.details or {}).get("source_ip", e.source or "unknown") == src]
+            alert = GuardianAlertRow(
+                id=str(uuid.uuid4()),
+                tenant_id=tenant_id,
+                alert_type="api_abuse_cascade",
+                title=f"API abuse cascade: {count} events from source {src[:20]}",
+                severity="high",
+                details={"source": src, "event_count": count},
+                related_event_ids=[e.id for e in src_events],
+                related_agent_ids=list({e.agent_id for e in src_events}),
+            )
+            alerts.append(alert)
+            logger.warning("Guardian Alert [api_abuse_cascade]: %s", alert.title)
+
+    # V2.4 — Pattern 14: Quarantine breach
+    quarantine_events = [
+        e for e in events
+        if any(k in str(e.details or {}).lower()
+               for k in ("quarantined", "isolated", "quarantine_breach"))
+    ]
+    if quarantine_events:
+        q_agents = list({e.agent_id for e in quarantine_events})
+        alert = GuardianAlertRow(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            alert_type="quarantine_breach",
+            title=f"Quarantine breach: {len(quarantine_events)} events from quarantined agent(s)",
+            severity="critical",
+            details={
+                "event_count": len(quarantine_events),
+                "agents": q_agents[:10],
+            },
+            related_event_ids=[e.id for e in quarantine_events],
+            related_agent_ids=q_agents,
+        )
+        alerts.append(alert)
+        logger.warning("Guardian Alert [quarantine_breach]: %s", alert.title)
+
+    # V2.4 — Pattern 15: Notification failure tracking
+    notif_fail_events = [
+        e for e in events
+        if any(k in ((e.details or {}).get("error", "") or (e.type or "")).lower()
+               for k in ("notification_fail", "webhook_fail", "channel_error", "delivery_fail"))
+    ]
+    if len(notif_fail_events) >= 3:
+        alert = GuardianAlertRow(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            alert_type="notification_failure",
+            title=f"Notification failure: {len(notif_fail_events)} delivery failures",
+            severity="warn",
+            details={"event_count": len(notif_fail_events)},
+            related_event_ids=[e.id for e in notif_fail_events],
+            related_agent_ids=list({e.agent_id for e in notif_fail_events}),
+        )
+        alerts.append(alert)
+        logger.warning("Guardian Alert [notification_failure]: %s", alert.title)
+
     if alerts:
         db.add_all(alerts)
         db.commit()
@@ -379,7 +485,35 @@ def check_for_alerts(
         # Fire webhooks for critical/high alerts (non-blocking)
         _fire_webhooks(alerts, tenant_id)
 
+        # V2.4 — Broadcast alerts to WebSocket clients
+        _broadcast_ws_alerts(alerts, tenant_id)
+
     return alerts
+
+
+def _broadcast_ws_alerts(alerts: list[GuardianAlertRow], tenant_id: str) -> None:
+    """Broadcast alerts to WebSocket clients (best-effort)."""
+    try:
+        import asyncio
+
+        from cloud.websocket.manager import ws_manager
+
+        for a in alerts:
+            alert_data = {
+                "id": a.id,
+                "alert_type": a.alert_type,
+                "title": a.title,
+                "severity": a.severity,
+                "created_at": a.created_at.isoformat() if a.created_at else "",
+            }
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    loop.create_task(ws_manager.broadcast_alert(alert_data, tenant_id))
+            except Exception:
+                pass
+    except Exception:
+        logger.debug("WebSocket broadcast unavailable", exc_info=True)
 
 
 def _fire_webhooks(alerts: list[GuardianAlertRow], tenant_id: str) -> None:

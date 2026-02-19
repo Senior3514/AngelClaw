@@ -1,0 +1,12 @@
+{
+  "name": "example_warden",
+  "version": "1.0.0",
+  "description": "Example AngelClaw warden plugin for demonstration",
+  "author": "AngelClaw Team",
+  "agent_type": "plugin",
+  "entry_point": "warden.ExampleWarden",
+  "permissions": [
+    "read_events"
+  ],
+  "min_angelclaw_version": "2.5.0"
+}

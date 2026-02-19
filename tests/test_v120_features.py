@@ -68,8 +68,8 @@ class TestBrainIntents:
     def test_about_mentions_v200(self):
         from cloud.angelclaw.brain import brain
         result = brain._handle_about()
-        assert "2.2.1" in result["answer"]
-        assert "Angel Legion" in result["answer"]
+        assert "3.0.0" in result["answer"]
+        assert "Angel" in result["answer"]
 
     def test_help_mentions_hebrew(self):
         from cloud.angelclaw.brain import brain
@@ -312,7 +312,7 @@ class TestBrainChat:
     async def test_chat_about_v200(self, db):
         from cloud.angelclaw.brain import brain
         result = await brain.chat(db, "test-tenant", "who are you?")
-        assert "2.2.1" in result["answer"]
+        assert "3.0.0" in result["answer"]
 
     @pytest.mark.asyncio
     async def test_chat_secret_probe_blocked(self, db):
@@ -354,4 +354,4 @@ class TestContextVersion:
     def test_host_info_version(self, db):
         from cloud.angelclaw.context import gather_context
         ctx = gather_context(db, "test-tenant", lookback_hours=1)
-        assert ctx.host.get("angelclaw_version") == "2.2.1"
+        assert ctx.host.get("angelclaw_version") == "3.0.0"

@@ -33,9 +33,7 @@ from cloud.db.models import (
     GuardianAlertRow,
     GuardianChangeRow,
     GuardianReportRow,
-    PolicySetRow,
 )
-
 
 # ---------------------------------------------------------------------------
 # Network Warden tests
@@ -860,9 +858,8 @@ class TestOpenClawAdapter:
 
 class TestAngelNodeServer:
     def test_increment_counter(self):
+        from angelnode.core.server import _get_counters, _increment_counter
         from shared.models.policy import PolicyAction
-
-        from angelnode.core.server import _counters, _get_counters, _increment_counter
 
         initial = _get_counters()["total_evaluations"]
         _increment_counter(PolicyAction.ALLOW)

@@ -28,6 +28,9 @@ class EventCategory(str, Enum):
     SYSTEM = "system"  # OS-level / kernel event
     LOGGING = "logging"  # Internal log emission (low risk)
     METRIC = "metric"  # Telemetry / metric collection (low risk)
+    # V2.4 — Fortress categories
+    COMPLIANCE = "compliance"  # Data handling / regulatory compliance
+    API_SECURITY = "api_security"  # API abuse / auth anomalies
 
 
 class Severity(str, Enum):

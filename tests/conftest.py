@@ -19,7 +19,25 @@ os.environ["ANGELGRID_DATABASE_URL"] = "sqlite:///test_angelgrid.db"
 # before create_all is called. This prevents "no such table" errors.
 from cloud.angelclaw.actions import ActionLogRow  # noqa: F401
 from cloud.angelclaw.preferences import AngelClawPreferencesRow  # noqa: F401
-from cloud.db.models import Base
+
+# V2.4 — Fortress models
+from cloud.db.models import (  # noqa: F401
+    ApiKeyRow,
+    BackupRecordRow,
+    Base,
+    CustomRoleRow,
+    EventReplayRow,
+    GuardianAlertRow,
+    GuardianChangeRow,
+    GuardianReportRow,
+    NotificationChannelRow,
+    NotificationRuleRow,
+    PluginRegistrationRow,
+    PolicySnapshotRow,
+    QuarantineRecordRow,
+    RemediationWorkflowRow,
+    ThreatHuntQueryRow,
+)
 from cloud.db.session import get_db
 
 # In-memory test database — StaticPool ensures all sessions share the same DB
@@ -64,6 +82,10 @@ def client():
     from cloud.api.server import app
 
     app.dependency_overrides[get_db] = _override_get_db
+    # Reset rate limiter state between test clients so accumulated
+    # requests from earlier tests don't trigger 429s.
+    from cloud.middleware.security import _rate_windows
+    _rate_windows.clear()
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()

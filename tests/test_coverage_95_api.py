@@ -14,7 +14,6 @@ Targets missed lines in:
 
 from __future__ import annotations
 
-import os
 import uuid
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
@@ -25,12 +24,7 @@ from sqlalchemy.orm import Session
 from cloud.db.models import (
     AgentNodeRow,
     EventRow,
-    GuardianAlertRow,
-    GuardianChangeRow,
-    GuardianReportRow,
-    PolicySetRow,
 )
-
 
 # ---------------------------------------------------------------------------
 # Auth service tests
@@ -79,9 +73,8 @@ class TestAuthService:
         assert user is None
 
     def test_change_password_admin(self):
-        from cloud.auth.service import change_password
-
         import cloud.auth.config as cfg
+        from cloud.auth.service import change_password
         old = cfg.ADMIN_PASSWORD
         cfg.ADMIN_PASSWORD = "old_pass"
         result = change_password(cfg.ADMIN_USER, "old_pass", "new_pass")
@@ -90,9 +83,8 @@ class TestAuthService:
         cfg.ADMIN_PASSWORD = old  # Reset
 
     def test_change_password_admin_wrong_current(self):
-        from cloud.auth.service import change_password
-
         import cloud.auth.config as cfg
+        from cloud.auth.service import change_password
         old = cfg.ADMIN_PASSWORD
         cfg.ADMIN_PASSWORD = "correct"
         result = change_password(cfg.ADMIN_USER, "wrong", "new")
@@ -100,9 +92,8 @@ class TestAuthService:
         cfg.ADMIN_PASSWORD = old
 
     def test_change_password_secops(self):
-        from cloud.auth.service import change_password
-
         import cloud.auth.config as cfg
+        from cloud.auth.service import change_password
         old = cfg.SECOPS_PASSWORD
         cfg.SECOPS_PASSWORD = "sec_old"
         result = change_password(cfg.SECOPS_USER, "sec_old", "sec_new")
@@ -110,9 +101,8 @@ class TestAuthService:
         cfg.SECOPS_PASSWORD = old
 
     def test_change_password_secops_wrong(self):
-        from cloud.auth.service import change_password
-
         import cloud.auth.config as cfg
+        from cloud.auth.service import change_password
         old = cfg.SECOPS_PASSWORD
         cfg.SECOPS_PASSWORD = "correct"
         result = change_password(cfg.SECOPS_USER, "wrong", "new")
@@ -120,9 +110,8 @@ class TestAuthService:
         cfg.SECOPS_PASSWORD = old
 
     def test_change_password_viewer(self):
-        from cloud.auth.service import change_password
-
         import cloud.auth.config as cfg
+        from cloud.auth.service import change_password
         old = cfg.VIEWER_PASSWORD
         cfg.VIEWER_PASSWORD = "view_old"
         result = change_password(cfg.VIEWER_USER, "view_old", "view_new")
@@ -130,9 +119,8 @@ class TestAuthService:
         cfg.VIEWER_PASSWORD = old
 
     def test_change_password_viewer_wrong(self):
-        from cloud.auth.service import change_password
-
         import cloud.auth.config as cfg
+        from cloud.auth.service import change_password
         old = cfg.VIEWER_PASSWORD
         cfg.VIEWER_PASSWORD = "correct"
         result = change_password(cfg.VIEWER_USER, "wrong", "new")
@@ -164,15 +152,12 @@ class TestAuthService:
         assert verify_jwt("") is None
 
     def test_verify_jwt_expired(self):
-        from cloud.auth.models import AuthUser, UserRole
-        from cloud.auth.service import verify_jwt
-
-        import json
-        import time
-        from cloud.auth.service import _b64encode
         import hashlib
         import hmac
-        from cloud.auth.service import JWT_SECRET
+        import json
+        import time
+
+        from cloud.auth.service import JWT_SECRET, _b64encode, verify_jwt
 
         header = _b64encode(json.dumps({"alg": "HS256", "typ": "JWT"}).encode())
         payload_data = {

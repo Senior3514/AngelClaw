@@ -1538,6 +1538,11 @@ class TestWardenTypesConstant:
             AgentType.BROWSER,
             AgentType.CLOUD,
             AgentType.IDENTITY,
+            # V2.4 — Fortress wardens
+            AgentType.COMPLIANCE,
+            AgentType.API_SECURITY,
+            # V2.5 — Plugin wardens
+            AgentType.PLUGIN,
         }
         assert WARDEN_TYPES == expected
 

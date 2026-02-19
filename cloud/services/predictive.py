@@ -196,6 +196,166 @@ def predict_threat_vectors(
             )
         )
 
+    # V2.5 — Enhanced predictive patterns
+
+    # Pattern: zero-day exploitation (novel event types spike)
+    type_counter: Counter[str] = Counter(e.type for e in events)
+    novel_types = [t for t, c in type_counter.items() if c == 1]
+    if len(novel_types) >= 5 and len(events) >= 10:
+        confidence = min(0.80, len(novel_types) / len(events) + 0.2)
+        predictions.append(
+            ThreatPrediction(
+                vector_name="zero_day_exploitation",
+                confidence=round(confidence, 2),
+                rationale=(
+                    f"Detected {len(novel_types)} novel event types out of "
+                    f"{len(events)} events — spike in unseen patterns may indicate "
+                    "zero-day exploitation or novel attack technique."
+                ),
+                contributing_categories=["novel_types"],
+                event_count=len(novel_types),
+            )
+        )
+
+    # Pattern: account takeover (auth + password change + new session)
+    password_events = [
+        e for e in events
+        if any(k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
+               for k in ("password", "passwd", "reset", "change_pass", "credentials"))
+    ]
+    if auth_count >= 2 and len(password_events) >= 1:
+        confidence = min(0.85, 0.4 + auth_count * 0.05 + len(password_events) * 0.1)
+        predictions.append(
+            ThreatPrediction(
+                vector_name="account_takeover",
+                confidence=round(confidence, 2),
+                rationale=(
+                    f"Detected {auth_count} auth events and "
+                    f"{len(password_events)} credential-change events — "
+                    "pattern suggests account takeover in progress."
+                ),
+                contributing_categories=["auth", "credentials"],
+                event_count=auth_count + len(password_events),
+            )
+        )
+
+    # Pattern: API key compromise (api_security + new source IPs)
+    api_sec_count = cat_counter.get("api_security", 0)
+    if api_sec_count >= 3:
+        api_sources = {(e.details or {}).get("source_ip", "") for e in events
+                       if e.category == "api_security" and (e.details or {}).get("source_ip")}
+        if len(api_sources) >= 2:
+            confidence = min(0.80, 0.3 + api_sec_count * 0.05 + len(api_sources) * 0.1)
+            predictions.append(
+                ThreatPrediction(
+                    vector_name="api_key_compromise",
+                    confidence=round(confidence, 2),
+                    rationale=(
+                        f"Detected {api_sec_count} API security events from "
+                        f"{len(api_sources)} distinct source IPs — "
+                        "pattern suggests compromised API key usage."
+                    ),
+                    contributing_categories=["api_security"],
+                    event_count=api_sec_count,
+                )
+            )
+
+    # Pattern: warden evasion (rapid low-severity followed by high-severity)
+    sorted_events = sorted(events, key=lambda e: e.timestamp if e.timestamp else datetime.min)
+    if len(sorted_events) >= 10:
+        first_half = sorted_events[: len(sorted_events) // 2]
+        second_half = sorted_events[len(sorted_events) // 2:]
+        sev_map = {"info": 0, "low": 1, "warn": 2, "medium": 2, "high": 3, "critical": 4}
+        avg_first = sum(sev_map.get(e.severity, 0) for e in first_half) / max(len(first_half), 1)
+        avg_second = sum(sev_map.get(e.severity, 0) for e in second_half) / max(len(second_half), 1)
+        if avg_second - avg_first >= 1.5:
+            confidence = min(0.75, 0.3 + (avg_second - avg_first) * 0.15)
+            predictions.append(
+                ThreatPrediction(
+                    vector_name="warden_evasion",
+                    confidence=round(confidence, 2),
+                    rationale=(
+                        f"Severity escalation detected: avg severity rose from "
+                        f"{avg_first:.1f} to {avg_second:.1f} — "
+                        "gradual escalation may indicate warden evasion strategy."
+                    ),
+                    contributing_categories=["severity_escalation"],
+                    event_count=len(events),
+                )
+            )
+
+    # V2.5 — Apply confidence calibration from learning engine
+    try:
+        from cloud.guardian.learning import learning_engine
+        for pred in predictions:
+            calibrated = learning_engine.get_confidence_threshold(pred.vector_name, default=None)
+            if calibrated is not None and pred.confidence < calibrated:
+                pred.confidence = 0.0  # Suppress low-confidence predictions
+        predictions = [p for p in predictions if p.confidence > 0]
+    except Exception:
+        pass
+
     # Sort by confidence descending
     predictions.sort(key=lambda p: p.confidence, reverse=True)
     return predictions
+
+
+def predict_trends(
+    db: Session,
+    lookback_hours: int = 24,
+    compare_hours: int = 48,
+) -> list[dict]:
+    """V2.5 — Compare current period to previous period for trend analysis."""
+    now = datetime.now(timezone.utc)
+    current_cutoff = now - timedelta(hours=lookback_hours)
+    previous_cutoff = now - timedelta(hours=compare_hours)
+
+    current_events = db.query(EventRow).filter(EventRow.timestamp >= current_cutoff).all()
+    previous_events = (
+        db.query(EventRow)
+        .filter(EventRow.timestamp >= previous_cutoff, EventRow.timestamp < current_cutoff)
+        .all()
+    )
+
+    if not current_events and not previous_events:
+        return []
+
+    cur_cats: Counter[str] = Counter(e.category for e in current_events)
+    prev_cats: Counter[str] = Counter(e.category for e in previous_events)
+    trends = []
+    all_cats = set(cur_cats.keys()) | set(prev_cats.keys())
+    for cat in all_cats:
+        cur = cur_cats.get(cat, 0)
+        prev = prev_cats.get(cat, 0)
+        if prev == 0:
+            direction = "new" if cur > 0 else "stable"
+            magnitude = cur
+        else:
+            change = (cur - prev) / prev
+            direction = "escalating" if change > 0.2 else ("declining" if change < -0.2 else "stable")
+            magnitude = round(abs(change), 2)
+        trends.append({
+            "category": cat,
+            "current_count": cur,
+            "previous_count": prev,
+            "trend_direction": direction,
+            "trend_magnitude": magnitude,
+        })
+
+    sev_map = {"info": 0, "low": 1, "warn": 2, "medium": 2, "high": 3, "critical": 4}
+    cur_avg_sev = (sum(sev_map.get(e.severity, 0) for e in current_events)
+                   / max(len(current_events), 1))
+    prev_avg_sev = (sum(sev_map.get(e.severity, 0) for e in previous_events)
+                    / max(len(previous_events), 1))
+
+    overall_direction = ("escalating" if cur_avg_sev > prev_avg_sev + 0.3
+                         else ("declining" if cur_avg_sev < prev_avg_sev - 0.3 else "stable"))
+
+    return [{
+        "overall_direction": overall_direction,
+        "current_avg_severity": round(cur_avg_sev, 2),
+        "previous_avg_severity": round(prev_avg_sev, 2),
+        "current_event_count": len(current_events),
+        "previous_event_count": len(previous_events),
+        "by_category": sorted(trends, key=lambda t: t["current_count"], reverse=True),
+    }]

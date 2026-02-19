@@ -420,6 +420,122 @@
       "risk_level": "high",
       "description": "Alert when >30 AI tool calls occur within 10 seconds (burst detection)",
       "enabled": true
+    },
+
+    {
+      "id": "alert-compliance-unencrypted-transfer",
+      "scope": "global",
+      "match": {
+        "categories": ["compliance"],
+        "types": ["unencrypted_transfer", "data_exposure"]
+      },
+      "action": "alert",
+      "risk_level": "high",
+      "description": "Alert on unencrypted data transfers and data exposure events (GDPR/HIPAA/PCI)",
+      "enabled": true
+    },
+    {
+      "id": "block-compliance-retention-breach",
+      "scope": "global",
+      "match": {
+        "categories": ["compliance"],
+        "types": ["retention_breach"]
+      },
+      "action": "block",
+      "risk_level": "critical",
+      "description": "Block operations that violate data retention policies",
+      "enabled": true
+    },
+    {
+      "id": "alert-compliance-access-violation",
+      "scope": "global",
+      "match": {
+        "categories": ["compliance"],
+        "types": ["access_violation", "policy_violation"]
+      },
+      "action": "alert",
+      "risk_level": "high",
+      "description": "Alert on access control and policy compliance violations",
+      "enabled": true
+    },
+    {
+      "id": "alert-compliance-encryption-gap",
+      "scope": "global",
+      "match": {
+        "categories": ["compliance"],
+        "types": ["encryption_gap"]
+      },
+      "action": "alert",
+      "risk_level": "medium",
+      "description": "Alert on weak or deprecated encryption detected in operations",
+      "enabled": true
+    },
+
+    {
+      "id": "alert-api-auth-failure-spike",
+      "scope": "global",
+      "match": {
+        "categories": ["api_security"],
+        "types": ["auth_failure"]
+      },
+      "action": "alert",
+      "risk_level": "high",
+      "description": "Alert on API authentication failures for brute-force and credential stuffing detection",
+      "enabled": true
+    },
+    {
+      "id": "block-api-payload-oversize",
+      "scope": "global",
+      "match": {
+        "categories": ["api_security"],
+        "types": ["payload_oversize"],
+        "detail_conditions": {
+          "payload_bytes_gt": 5242880
+        }
+      },
+      "action": "block",
+      "risk_level": "high",
+      "description": "Block oversized API payloads (>5 MB) to prevent DoS and exploitation",
+      "enabled": true
+    },
+    {
+      "id": "alert-api-enumeration",
+      "scope": "global",
+      "match": {
+        "categories": ["api_security"],
+        "types": ["enumeration"]
+      },
+      "action": "alert",
+      "risk_level": "medium",
+      "description": "Alert on API endpoint enumeration and directory scanning attempts",
+      "enabled": true
+    },
+    {
+      "id": "alert-api-method-abuse",
+      "scope": "global",
+      "match": {
+        "categories": ["api_security"],
+        "types": ["method_abuse"],
+        "detail_conditions": {
+          "method_in": ["TRACE", "CONNECT", "PROPFIND", "MKCOL"]
+        }
+      },
+      "action": "alert",
+      "risk_level": "medium",
+      "description": "Alert on unusual HTTP methods (TRACE, CONNECT, PROPFIND) indicating server probing",
+      "enabled": true
+    },
+    {
+      "id": "block-api-injection-attempt",
+      "scope": "global",
+      "match": {
+        "categories": ["api_security"],
+        "types": ["injection_attempt"]
+      },
+      "action": "block",
+      "risk_level": "critical",
+      "description": "Block API injection attempts (SQLi, XSS, command injection via API)",
+      "enabled": true
     }
   ]
 }

@@ -1,5 +1,64 @@
 # AngelClaw Release Notes
 
+## V3.0.0 — Dominion (2026-02-19)
+
+**Status**: Enterprise-grade autonomous AGI security platform with full-spectrum defense capabilities.
+
+This is a **massive** triple-phase upgrade (V2.4 Fortress + V2.5 Ascension + V3.0 Dominion) that transforms AngelClaw from a monitoring tool into a complete autonomous defense platform with 12 wardens, 67+ NLP intents, enterprise features, and real-time capabilities.
+
+### V2.4 — Fortress
+
+- **Adaptive Rate Limiter** — Token-bucket with per-role tiers (admin:300, secops:200, viewer:100, anon:60/min), per-endpoint limits, burst allowance, X-RateLimit-* headers
+- **WebSocket Live Feed** — Real-time event and alert streaming via `ws://host:8500/ws/events` and `/ws/alerts` with tenant-scoped filtering
+- **Policy Snapshots & Rollback** — Named policy snapshots with diff comparison and one-click rollback
+- **Quarantine Manager** — Agent quarantine with timed release, event suppression, and management API
+- **Notification Channels** — Slack, Discord, and Webhook channels with severity-based routing rules
+- **Compliance Warden (Paladin)** — Detects unencrypted transfers, access control violations, retention breaches, encryption gaps
+- **API Warden (Gate Keeper)** — Detects endpoint enumeration, auth failure spikes, oversized payloads, unusual HTTP methods, rate limit evasion
+- **Event Bus V2.4** — 4 new alert patterns: compliance_violation, api_abuse_cascade, quarantine_breach, notification_failure
+- **Brain V2.4** — 8 new NLP intents: quarantine_status, quarantine_manage, compliance_check, notification_manage, policy_snapshot, policy_rollback, websocket_status, export_data
+- **New Event Categories** — `compliance` and `api_security` categories with 10 new policy rules
+
+### V2.5 — Ascension
+
+- **Plugin System** — Dynamic warden plugin loading from `plugins/` directory with manifest.json validation, hot-reload, enable/disable
+- **API Key Authentication** — SHA-256 hashed API keys with create/validate/revoke/rotate, scoped permissions, X-API-Key header support
+- **Audit Export** — JSON/CSV export for events, audit trail, alerts, and policies with date range and category filters
+- **Backup & Restore** — Full JSON backup of all database tables with restore validation and backup management API
+- **Enhanced Predictive Engine** — 4 new threat patterns (zero-day, account takeover, API key compromise, warden evasion), confidence calibration from learning engine, trend analysis
+- **Brain V2.5** — 7 new NLP intents: plugin_manage, plugin_status, api_key_manage, backup_manage, dashboard_info, prediction_trend, learning_status
+
+### V3.0 — Dominion
+
+- **Admin Console** — Full org-wide dashboard with Halo Score, Wingspan, fleet overview, tenant management, per-agent detail views, and 10-page sidebar navigation
+- **Anti-Tamper Protection** — Three modes (OFF/MONITOR/ENFORCE), per-agent and per-tenant config, heartbeat monitoring, binary checksum verification, tamper event logging
+- **Self-Learning Feedback Loop** — Operator accept/reject/ignore/modify tracking, per-tenant acceptance rates, automatic adjustment recommendations (verbosity, thresholds, autonomy)
+- **Self-Hardening Engine** — Autonomous security weakness detection (scan failures, loose allowlists, missing logs, weak auth, unprotected agents, repeated misconfigs), observe/suggest/auto_apply modes, all actions revertible
+- **Custom RBAC** — User-defined roles with granular permissions beyond the built-in admin/secops/viewer roles
+- **Event Replay** — Replay historical event batches through the detection engine to discover missed indicators
+- **Threat Hunting** — DSL-based query engine for hunting across the event store with saved queries and grouping
+- **Remediation Workflows** — Multi-step automated response playbooks with trigger conditions, rollback steps, and execution tracking
+- **Agent Mesh** — Agent-to-agent communication protocol with message passing, inbox, and request-response patterns
+- **Enhanced Metrics V2** — Trend analysis, hourly event rates, threat predictions, category/severity breakdowns
+- **Brain V3.0** — 10 new NLP intents: role_manage, event_replay, threat_hunt, remediation_manage, mesh_status, fleet_deep, admin_overview, anti_tamper_status, feedback_status, hardening_status
+- **Dashboard V3** — Complete rewrite with sidebar navigation, 10 pages (Dashboard, Fleet, Tenants, Alerts, Legion, Anti-Tamper, Analytics, Self-Learning, Policies, Settings), mobile responsive, PWA support
+- **Mobile PWA** — Manifest.json and service worker for home screen install on iOS/Android, fully responsive UI
+- **Browser Extensions** — Chrome/Chromium extension v3.0.0 with badge alerts, mini chat, quick actions, DuckDuckGo support docs
+- **Daemon V3** — Anti-tamper heartbeat checks, self-hardening cycle, and feedback-based adjustments integrated into autonomous daemon loop
+
+### Infrastructure
+
+- **15 new API routers** mounted in server.py (policy, quarantine, notifications, WebSocket, plugins, API keys, export, backup, roles, replays, remediation, hunting, mesh, metrics v2, admin console)
+- **15 new DB tables** — PolicySnapshotRow, QuarantineRecordRow, NotificationChannelRow, NotificationRuleRow, PluginRegistrationRow, ApiKeyRow, BackupRecordRow, CustomRoleRow, EventReplayRow, RemediationWorkflowRow, ThreatHuntQueryRow, TenantRow, AntiTamperConfigRow, AntiTamperEventRow, FeedbackRecordRow, SelfHardeningLogRow
+- **12 wardens** in Angel Legion (up from 10)
+- **71+ NLP intents** (up from 45)
+- **~40 new files** across services, routes, wardens, mobile, extensions, and tests
+- **15+ new test files** covering all V2.4/V2.5/V3.0 features
+- **Version bumps** to 3.0.0 across pyproject.toml, server.py, brain.py, context.py
+- **PWA serving** via /mobile/* route for manifest.json and service-worker.js
+
+---
+
 ## V2.1.0 — Angel Legion: Seraph Core (2026-02-18)
 
 **Status**: Maximum-performance autonomous AGI security suite with enhanced Seraph Brain core intelligence.

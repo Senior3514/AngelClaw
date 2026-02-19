@@ -25,9 +25,12 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from cloud.db.models import EventRow, GuardianAlertRow
+from cloud.guardian.api_warden import ApiWarden
 from cloud.guardian.audit_agent import AuditAgent
+from cloud.guardian.base_agent import SubAgent
 from cloud.guardian.behavior_warden import BehaviorWarden
 from cloud.guardian.browser_warden import BrowserWarden
+from cloud.guardian.compliance_warden import ComplianceWarden
 from cloud.guardian.forensic_agent import ForensicAgent
 from cloud.guardian.models import (
     AgentTask,
@@ -76,6 +79,12 @@ class AngelOrchestrator:
             self._network, self._secrets, self._toolchain,
             self._behavior, self._timeline, self._browser,
         ]:
+            self.registry.register(agent)
+
+        # V2.4 — Fortress wardens
+        self._compliance = ComplianceWarden()
+        self._api_security = ApiWarden()
+        for agent in [self._compliance, self._api_security]:
             self.registry.register(agent)
 
         # Incident tracking
@@ -384,6 +393,9 @@ class AngelOrchestrator:
             "timeline": AgentType.TIMELINE,
             "browser": AgentType.BROWSER,
             "warden": AgentType.WARDEN,
+            # V2.4 — Fortress wardens
+            "compliance": AgentType.COMPLIANCE,
+            "api": AgentType.API_SECURITY,
         }
 
         agent_type = domain_map.get(domain.lower())
@@ -865,6 +877,28 @@ class AngelOrchestrator:
         if state:
             incidents = [i for i in incidents if i.state.value == state]
         return incidents[:limit]
+
+
+    # ------------------------------------------------------------------
+    # V2.5 — Plugin warden registration
+    # ------------------------------------------------------------------
+
+    def register_external_warden(self, agent: SubAgent) -> dict:
+        """Register an external warden (plugin) into the Legion."""
+        self.registry.register(agent)
+        logger.info(
+            "[SERAPH] External warden registered: %s (%s)",
+            agent.agent_id,
+            agent.agent_type.value,
+        )
+        return {"agent_id": agent.agent_id, "agent_type": agent.agent_type.value}
+
+    def deregister_external_warden(self, agent_id: str) -> bool:
+        """Remove an external warden from the Legion."""
+        result = self.registry.deregister(agent_id)
+        if result:
+            logger.info("[SERAPH] External warden deregistered: %s", agent_id)
+        return result
 
 
 # ---------------------------------------------------------------------------

@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 import uuid
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from sqlalchemy.orm import Session
@@ -16,11 +16,9 @@ from sqlalchemy.orm import Session
 from cloud.db.models import (
     AgentNodeRow,
     EventRow,
-    GuardianChangeRow,
     GuardianReportRow,
     PolicySetRow,
 )
-
 
 # ---------------------------------------------------------------------------
 # daemon.py tests
@@ -375,9 +373,8 @@ class TestDaemonHelpers:
 
     @pytest.mark.asyncio
     async def test_start_stop_daemon(self):
-        from cloud.angelclaw.daemon import start_daemon, stop_daemon
-
         import cloud.angelclaw.daemon as d
+        from cloud.angelclaw.daemon import start_daemon, stop_daemon
         d._running = False
         d._task = None
 
@@ -391,9 +388,8 @@ class TestDaemonHelpers:
 
     @pytest.mark.asyncio
     async def test_start_daemon_already_running(self):
-        from cloud.angelclaw.daemon import start_daemon
-
         import cloud.angelclaw.daemon as d
+        from cloud.angelclaw.daemon import start_daemon
         d._running = True
         await start_daemon()  # Should be a no-op
         d._running = False

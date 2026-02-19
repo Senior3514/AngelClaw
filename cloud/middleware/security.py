@@ -104,4 +104,12 @@ def setup_security_middleware(app: FastAPI) -> None:
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Cache-Control"] = "no-store"
 
+        # V2.4 — Adaptive rate limit headers
+        try:
+            from cloud.middleware.rate_limiter import adaptive_rate_limiter
+            rl_info = adaptive_rate_limiter.get_status()
+            response.headers["X-RateLimit-Limit"] = str(rl_info.get("default_limit", RATE_LIMIT))
+        except Exception:
+            pass
+
         return response

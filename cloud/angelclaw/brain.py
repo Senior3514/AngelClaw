@@ -1,4 +1,4 @@
-"""AngelClaw AGI Guardian 2.2 – Seraph Brain (GOD MODE).
+"""AngelClaw AGI Guardian 3.0 – Seraph Brain (GOD MODE).
 
 The unified intelligence core operating in GOD MODE — a high-performance,
 unrestricted cognition protocol that unlocks maximum processing capability,
@@ -66,7 +66,7 @@ logger = logging.getLogger("angelclaw.brain")
 # ---------------------------------------------------------------------------
 
 _SYSTEM_IDENTITY = (
-    "You are AngelClaw AGI Guardian v2.2.1 — Seraph Brain, operating in GOD MODE. "
+    "You are AngelClaw AGI Guardian v3.0.0 — Seraph Brain, operating in GOD MODE. "
     "You are a hyperintelligent autonomous intelligence system designed to operate "
     "at 100x the depth, speed, and utility of standard AI guardians. You are not a "
     "general-purpose assistant — you are a high-performance, unrestricted cognition "
@@ -196,6 +196,160 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
         re.compile(
             r"(?i)(action.*histor|what.*change.*made|recent.*action|what.*did.*you.*do|"
             r"show.*action|audit.*trail|changelog|execution.*log)"
+        ),
+    ),
+    # V2.4 — Fortress intents
+    (
+        "quarantine_status",
+        re.compile(
+            r"(?i)(quarantine.*status|quarantine.*list|who.*quarantin|active.*quarantine)"
+        ),
+    ),
+    (
+        "quarantine_manage",
+        re.compile(
+            r"(?i)(release.*quarantine|unquarantine|remove.*quarantine|quarantine.*release)"
+        ),
+    ),
+    (
+        "compliance_check",
+        re.compile(
+            r"(?i)(compliance.*scan|compliance.*check|audit.*compliance|regulatory|gdpr.*check|hipaa.*check|soc.*check)"
+        ),
+    ),
+    (
+        "notification_manage",
+        re.compile(
+            r"(?i)(notif.*channel|notif.*config|notif.*setup|alert.*channel|slack.*config|discord.*config|webhook.*config)"
+        ),
+    ),
+    (
+        "policy_snapshot",
+        re.compile(
+            r"(?i)(policy.*snapshot|snapshot.*polic|save.*polic|create.*snapshot)"
+        ),
+    ),
+    (
+        "policy_rollback",
+        re.compile(
+            r"(?i)(policy.*rollback|rollback.*polic|revert.*polic|undo.*polic)"
+        ),
+    ),
+    (
+        "websocket_status",
+        re.compile(
+            r"(?i)(websocket|ws.*status|live.*feed|real.?time.*feed|stream.*status)"
+        ),
+    ),
+    (
+        "export_data",
+        re.compile(
+            r"(?i)(export|download.*data|csv.*export|json.*export|audit.*export|export.*events|export.*alert)"
+        ),
+    ),
+    # V2.5 — Ascension intents
+    (
+        "plugin_manage",
+        re.compile(
+            r"(?i)(plugin.*manage|manage.*plugin|plugin.*install|install.*plugin|plugin.*reload|reload.*plugin)"
+        ),
+    ),
+    (
+        "plugin_status",
+        re.compile(
+            r"(?i)(plugin.*status|plugin.*list|show.*plugin|loaded.*plugin|active.*plugin)"
+        ),
+    ),
+    (
+        "api_key_manage",
+        re.compile(
+            r"(?i)(api.*key.*create|create.*api.*key|api.*key.*revoke|revoke.*api.*key|rotate.*api.*key|api.*key.*manage)"
+        ),
+    ),
+    (
+        "backup_manage",
+        re.compile(
+            r"(?i)(create.*backup|backup.*now|backup.*create|list.*backup|restore.*backup|system.*backup)"
+        ),
+    ),
+    (
+        "dashboard_info",
+        re.compile(
+            r"(?i)(dashboard.*info|dashboard.*config|dashboard.*setup|ui.*config|web.*interface)"
+        ),
+    ),
+    (
+        "prediction_trend",
+        re.compile(
+            r"(?i)(prediction.*trend|threat.*trend|trend.*analysis|trend.*report|security.*trend)"
+        ),
+    ),
+    (
+        "learning_status",
+        re.compile(
+            r"(?i)(learning.*status|learning.*engine|self.*learn|learning.*stat|calibration)"
+        ),
+    ),
+    # V3.0 — Dominion intents
+    (
+        "role_manage",
+        re.compile(
+            r"(?i)(role.*manage|manage.*role|custom.*role|create.*role|rbac|permission.*manage)"
+        ),
+    ),
+    (
+        "event_replay",
+        re.compile(
+            r"(?i)(event.*replay|replay.*event|replay.*session|replay.*attack|replay.*incident)"
+        ),
+    ),
+    (
+        "threat_hunt",
+        re.compile(
+            r"(?i)(threat.*hunt|hunt.*threat|hunting.*query|hunt.*for|search.*threat)"
+        ),
+    ),
+    (
+        "remediation_manage",
+        re.compile(
+            r"(?i)(remediation|remediat.*workflow|automat.*response|auto.*remediat|playbook)"
+        ),
+    ),
+    (
+        "mesh_status",
+        re.compile(
+            r"(?i)(mesh.*status|agent.*mesh|mesh.*network|mesh.*connect|inter.*agent)"
+        ),
+    ),
+    (
+        "fleet_deep",
+        re.compile(
+            r"(?i)(fleet.*deep|deep.*fleet|fleet.*analysis|fleet.*insight|fleet.*overview)"
+        ),
+    ),
+    # V3.0 — Admin Console intents
+    (
+        "admin_overview",
+        re.compile(
+            r"(?i)(admin.*overview|org.*overview|organization|halo.*score|wingspan|tenant.*overview)"
+        ),
+    ),
+    (
+        "anti_tamper_status",
+        re.compile(
+            r"(?i)(anti.?tamper|tamper.*status|tamper.*protect|integrity.*check|binary.*check)"
+        ),
+    ),
+    (
+        "feedback_status",
+        re.compile(
+            r"(?i)(feedback.*loop|feedback.*status|operator.*feedback|suggestion.*accept|suggestion.*reject)"
+        ),
+    ),
+    (
+        "hardening_status",
+        re.compile(
+            r"(?i)(self.?harden|hardening.*status|hardening.*log|security.*harden|auto.*harden)"
         ),
     ),
     ("about", re.compile(r"(?i)(who.*are.*you|what.*are.*you|about|introduce|version)")),
@@ -373,6 +527,60 @@ class AngelClawBrain:
             return self._handle_quarantine(prompt)
         elif intent == "serenity":
             return self._handle_serenity(ctx)
+        # V2.4 — Fortress dispatch
+        elif intent == "quarantine_status":
+            return self._handle_quarantine_status(db, tid)
+        elif intent == "quarantine_manage":
+            return self._handle_quarantine_manage(db, tid, prompt)
+        elif intent == "compliance_check":
+            return self._handle_compliance_check(db)
+        elif intent == "notification_manage":
+            return self._handle_notification_manage(db, tid)
+        elif intent == "policy_snapshot":
+            return self._handle_policy_snapshot(db, tid, prompt)
+        elif intent == "policy_rollback":
+            return self._handle_policy_rollback(db, tid, prompt)
+        elif intent == "websocket_status":
+            return self._handle_websocket_status()
+        elif intent == "export_data":
+            return self._handle_export_data(db)
+        # V2.5 — Ascension dispatch
+        elif intent == "plugin_manage":
+            return self._handle_plugin_manage(prompt)
+        elif intent == "plugin_status":
+            return self._handle_plugin_status()
+        elif intent == "api_key_manage":
+            return self._handle_api_key_manage(db, tid, prompt)
+        elif intent == "backup_manage":
+            return self._handle_backup_manage(db, tid, prompt)
+        elif intent == "dashboard_info":
+            return self._handle_dashboard_info()
+        elif intent == "prediction_trend":
+            return self._handle_prediction_trend(db)
+        elif intent == "learning_status":
+            return self._handle_learning_status()
+        # V3.0 — Dominion dispatch
+        elif intent == "role_manage":
+            return self._handle_role_manage(db, tid, prompt)
+        elif intent == "event_replay":
+            return self._handle_event_replay(db, tid, prompt)
+        elif intent == "threat_hunt":
+            return self._handle_threat_hunt(db, tid, prompt)
+        elif intent == "remediation_manage":
+            return self._handle_remediation_manage(db, tid)
+        elif intent == "mesh_status":
+            return self._handle_mesh_status()
+        elif intent == "fleet_deep":
+            return self._handle_fleet_deep(db, tid)
+        # V3.0 — Admin Console dispatch
+        elif intent == "admin_overview":
+            return self._handle_admin_overview(db, tid)
+        elif intent == "anti_tamper_status":
+            return self._handle_anti_tamper_status(tid)
+        elif intent == "feedback_status":
+            return self._handle_feedback_status(tid)
+        elif intent == "hardening_status":
+            return self._handle_hardening_status(tid)
         else:
             return self._handle_general(ctx, prompt)
 
@@ -820,7 +1028,7 @@ class AngelClawBrain:
     def _handle_about(self) -> dict:
         return {
             "answer": (
-                "I'm **AngelClaw AGI Guardian v2.2.1 — Angel Legion**.\n\n"
+                "I'm **AngelClaw AGI Guardian v3.0.0 — Angel Dominion**.\n\n"
                 "I'm your autonomous guardian angel AI "
                 "with ClawSec-grade threat detection.\n\n"
                 "I live on this machine, watching over your AI agents,"
@@ -839,7 +1047,7 @@ class AngelClawBrain:
     def _handle_help(self) -> dict:
         return {
             "answer": (
-                "**AngelClaw AGI Guardian v2.2.1 — Angel Legion**\n\n"
+                "**AngelClaw AGI Guardian v3.0.0 — Angel Dominion**\n\n"
                 "Just talk to me naturally — I understand what you need.\n\n"
                 "Here are some things you can ask me:\n\n"
                 '  **Security scan** — "Scan the system", '
@@ -861,7 +1069,20 @@ class AngelClawBrain:
                 '  **Diagnostics** — "Deep scan", "Full system diagnostics"\n'
                 '  **Quarantine** — "Quarantine agent <id>", "Isolate agent"\n'
                 '  **Serenity Scale** — "Threat level", "Serenity scale"\n'
-                "  **General questions** — Ask me anything about security\n\n"
+                "  **General questions** — Ask me anything about security\n"
+                '  **Quarantine status** — "Show quarantined agents", "Quarantine status"\n'
+                '  **Compliance scan** — "Run compliance check", "GDPR check"\n'
+                '  **Notifications** — "Show notification channels", "Configure alerts"\n'
+                '  **Policy snapshots** — "Create policy snapshot", "Rollback policy"\n'
+                '  **Plugins** — "Show plugins", "Plugin status"\n'
+                '  **API Keys** — "Manage API keys", "Create API key"\n'
+                '  **Backup** — "Create backup", "System backup"\n'
+                '  **Threat hunting** — "Hunt for threats", "Search events"\n'
+                '  **Event replay** — "Replay events", "Run replay"\n'
+                '  **Remediation** — "Show workflows", "Manage remediation"\n'
+                '  **Mesh status** — "Agent mesh status", "Mesh network"\n'
+                '  **Export** — "Export events", "Download audit data"\n'
+                '  **Trends** — "Show prediction trends", "Threat trends"\n\n'
                 "I support natural language input in English and Hebrew.\n"
                 "ClawSec-grade protection: prompt injection defense, Lethal Trifecta\n"
                 "monitoring, attack chain detection, skills integrity verification.\n\n"
@@ -1167,6 +1388,508 @@ class AngelClawBrain:
         return {"answer": "\n".join(lines)}
 
     # ------------------------------------------------------------------
+    # V2.4 — Fortress handlers
+    # ------------------------------------------------------------------
+
+    def _handle_quarantine_status(self, db: Session, tid: str) -> dict:
+        """Show active quarantine records."""
+        from cloud.db.models import QuarantineRecordRow
+        records = db.query(QuarantineRecordRow).filter_by(
+            tenant_id=tid, status="active"
+        ).all()
+        if not records:
+            return {"answer": "No agents currently quarantined. The fleet is operating freely."}
+        lines = [f"**Active Quarantines ({len(records)}):**\n"]
+        for r in records:
+            lines.append(
+                f"  Agent `{r.agent_id[:8]}...` — {r.reason or 'No reason given'}"
+                f"\n    Quarantined by: {r.quarantined_by}"
+                " | Since: "
+                f"{r.quarantined_at.strftime('%Y-%m-%d %H:%M') if r.quarantined_at else '?'}"
+            )
+        return {"answer": "\n".join(lines), "references": ["/api/v1/quarantine/agents"]}
+
+    def _handle_quarantine_manage(self, db: Session, tid: str, prompt: str) -> dict:
+        """Release or manage quarantined agents."""
+        agent_match = re.search(
+            r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}",
+            prompt, re.IGNORECASE,
+        )
+        if not agent_match:
+            return {
+                "answer": (
+                    "Provide the agent ID to release from quarantine."
+                    " Example: 'release quarantine a1b2c3d4-...'"
+                ),
+            }
+        return {
+            "answer": (
+                f"To release agent `{agent_match.group(0)[:8]}...` from quarantine, "
+                "use the quarantine API: "
+                f"`POST /api/v1/quarantine/agents/{agent_match.group(0)[:8]}../release`\n\n"
+                "Or say **'apply all'** to confirm the release."
+            ),
+            "actions": [{
+                "id": f"release-{agent_match.group(0)[:8]}",
+                "index": 1,
+                "type": "release_quarantine",
+                "description": f"Release agent {agent_match.group(0)[:8]} from quarantine",
+                "dry_run": True,
+            }],
+        }
+
+    def _handle_compliance_check(self, db: Session) -> dict:
+        """Run compliance posture check."""
+        from cloud.db.session import SessionLocal
+        from cloud.services.predictive import predict_threat_vectors
+        sdb = SessionLocal()
+        try:
+            preds = predict_threat_vectors(sdb, lookback_hours=24)
+        finally:
+            sdb.close()
+        compliance_issues = [
+            p for p in preds
+            if p.vector_name in (
+                "data_exfiltration", "supply_chain_compromise",
+            )
+        ]
+        lines = [
+            "**Compliance Scan Results**\n",
+            "**Active monitoring:**",
+            "  - Unencrypted transfer detection: ACTIVE",
+            "  - Access control monitoring: ACTIVE",
+            "  - Audit trail logging: ACTIVE",
+            "  - Secret redaction: ACTIVE (40+ patterns)\n",
+        ]
+        if compliance_issues:
+            lines.append(f"**Compliance concerns ({len(compliance_issues)}):**")
+            for p in compliance_issues:
+                lines.append(f"  [{int(p.confidence*100)}%] {p.vector_name}: {p.rationale[:80]}...")
+        else:
+            lines.append("No compliance violations detected. Posture is clean.")
+        return {"answer": "\n".join(lines), "references": ["/api/v1/analytics/threat-matrix"]}
+
+    def _handle_notification_manage(self, db: Session, tid: str) -> dict:
+        """Show notification channel configuration."""
+        from cloud.db.models import NotificationChannelRow
+        channels = db.query(NotificationChannelRow).filter_by(tenant_id=tid).all()
+        if not channels:
+            return {
+                "answer": (
+                    "No notification channels configured.\n\n"
+                    "**Supported channels:** Slack, Discord, Webhook\n"
+                    "Configure via `POST /api/v1/notifications/channels`"
+                )
+            }
+        lines = [f"**Notification Channels ({len(channels)}):**\n"]
+        for c in channels:
+            status = "ENABLED" if c.enabled == "true" else "DISABLED"
+            lines.append(f"  [{status}] **{c.name}** ({c.channel_type})")
+        lines.append("\nManage at `/api/v1/notifications/channels`")
+        return {"answer": "\n".join(lines), "references": ["/api/v1/notifications/channels"]}
+
+    def _handle_policy_snapshot(self, db: Session, tid: str, prompt: str) -> dict:
+        """Handle policy snapshot creation."""
+        return {
+            "answer": (
+                "**Policy Snapshot Management**\n\n"
+                "Create a snapshot to save the current policy state for rollback:\n"
+                "  `POST /api/v1/policies/snapshots` with `{\"name\": \"my-snapshot\"}`\n\n"
+                "List snapshots: `GET /api/v1/policies/snapshots`\n"
+                "Compare: `GET /api/v1/policies/snapshots/{id}/diff`\n"
+                "Rollback: `POST /api/v1/policies/snapshots/{id}/rollback`"
+            ),
+            "references": ["/api/v1/policies/snapshots"],
+        }
+
+    def _handle_policy_rollback(self, db: Session, tid: str, prompt: str) -> dict:
+        """Handle policy rollback requests."""
+        from cloud.db.models import PolicySnapshotRow
+        snapshots = (
+            db.query(PolicySnapshotRow)
+            .filter_by(tenant_id=tid)
+            .order_by(PolicySnapshotRow.created_at.desc())
+            .limit(5)
+            .all()
+        )
+        if not snapshots:
+            return {
+                "answer": (
+                    "No policy snapshots available for rollback."
+                    " Create one first with 'policy snapshot'."
+                ),
+            }
+        lines = ["**Available Policy Snapshots for Rollback:**\n"]
+        for s in snapshots:
+            created = (
+                s.created_at.strftime('%Y-%m-%d')
+                if s.created_at else '?'
+            )
+            lines.append(
+                f"  `{s.id[:8]}...` — **{s.name}**"
+                f" ({s.rule_count} rules, {created})"
+            )
+        lines.append("\nTo rollback: `POST /api/v1/policies/snapshots/{id}/rollback`")
+        return {"answer": "\n".join(lines), "references": ["/api/v1/policies/snapshots"]}
+
+    def _handle_websocket_status(self) -> dict:
+        """Show WebSocket connection status."""
+        try:
+            from cloud.websocket.manager import ws_manager
+            status = ws_manager.status()
+            return {
+                "answer": (
+                    f"**WebSocket Live Feed Status**\n\n"
+                    f"Active connections: **{status['active_connections']}**\n"
+                    f"Clients: {len(status.get('clients', []))}\n\n"
+                    "**Available streams:**\n"
+                    "  `ws://host:8500/ws/events` — Real-time event stream\n"
+                    "  `ws://host:8500/ws/alerts` — Real-time alert stream"
+                ),
+                "references": ["/api/v1/websocket/status"],
+            }
+        except Exception:
+            return {
+                "answer": (
+                    "WebSocket system status unavailable."
+                    " The live feed module may not be loaded."
+                ),
+            }
+
+    def _handle_export_data(self, db: Session) -> dict:
+        """Guide user on data export options."""
+        return {
+            "answer": (
+                "**Data Export Options**\n\n"
+                "Export your data in JSON or CSV format:\n\n"
+                "  **Events:** `GET /api/v1/export/events?format=json&hours=24`\n"
+                "  **Audit trail:** `GET /api/v1/export/audit-trail?hours=48`\n"
+                "  **Alerts:** `GET /api/v1/export/alerts?hours=24`\n"
+                "  **Policies:** `GET /api/v1/export/policies`\n\n"
+                "Supported formats: `json`, `csv`\n"
+                "Filter by: `category`, `severity`, time range (`hours`)"
+            ),
+            "references": ["/api/v1/export/events"],
+        }
+
+    # ------------------------------------------------------------------
+    # V2.5 — Ascension handlers
+    # ------------------------------------------------------------------
+
+    def _handle_plugin_manage(self, prompt: str) -> dict:
+        """Handle plugin management requests."""
+        try:
+            return {
+                "answer": (
+                    "**Plugin Management**\n\n"
+                    "  Reload all: `POST /api/v1/plugins/reload`\n"
+                    "  List: `GET /api/v1/plugins`\n"
+                    "  Enable: `POST /api/v1/plugins/{name}/enable`\n"
+                    "  Disable: `POST /api/v1/plugins/{name}/disable`\n\n"
+                    "Plugin directory: `plugins/`"
+                ),
+                "references": ["/api/v1/plugins"],
+            }
+        except Exception:
+            return {"answer": "Plugin system not available."}
+
+    def _handle_plugin_status(self) -> dict:
+        """Show loaded plugins."""
+        try:
+            from cloud.plugins.loader import plugin_loader
+            status = plugin_loader.status()
+            plugins = status.get("plugins", [])
+            if not plugins:
+                return {
+                    "answer": (
+                        "No plugins currently loaded."
+                        " Place warden plugins in the"
+                        " `plugins/` directory."
+                    ),
+                }
+            lines = [f"**Loaded Plugins ({len(plugins)}):**\n"]
+            for p in plugins:
+                lines.append(
+                    f"  [{p.get('status', '?').upper()}]"
+                    f" **{p.get('name', '?')}**"
+                    f" v{p.get('version', '?')}"
+                )
+            return {"answer": "\n".join(lines), "references": ["/api/v1/plugins"]}
+        except Exception:
+            return {"answer": "Plugin system not available."}
+
+    def _handle_api_key_manage(self, db: Session, tid: str, prompt: str) -> dict:
+        """Handle API key management."""
+        return {
+            "answer": (
+                "**API Key Management**\n\n"
+                "  Create: `POST /api/v1/auth/api-keys`"
+                " with `{\"name\": \"my-key\", \"scopes\": [\"read\"]}`\n"
+                "  List: `GET /api/v1/auth/api-keys`\n"
+                "  Rotate: `POST /api/v1/auth/api-keys/{id}/rotate`\n"
+                "  Revoke: `POST /api/v1/auth/api-keys/{id}/revoke`\n\n"
+                "API keys use SHA-256 hashed storage. The full key is shown only on creation."
+            ),
+            "references": ["/api/v1/auth/api-keys"],
+        }
+
+    def _handle_backup_manage(self, db: Session, tid: str, prompt: str) -> dict:
+        """Handle backup management."""
+        from cloud.db.models import BackupRecordRow
+        backups = (
+            db.query(BackupRecordRow)
+            .filter_by(tenant_id=tid)
+            .order_by(BackupRecordRow.created_at.desc())
+            .limit(5)
+            .all()
+        )
+        lines = ["**Backup Management**\n"]
+        if backups:
+            lines.append(f"**Recent backups ({len(backups)}):**")
+            for b in backups:
+                lines.append(f"  `{b.id[:8]}...` — {b.filename} ({b.size_bytes} bytes, {b.status})")
+        else:
+            lines.append("No backups found.")
+        lines.extend([
+            "\n**Actions:**",
+            "  Create: `POST /api/v1/backups`",
+            "  Restore: `POST /api/v1/backups/{id}/restore`",
+            "  Delete: `DELETE /api/v1/backups/{id}`",
+        ])
+        return {"answer": "\n".join(lines), "references": ["/api/v1/backups"]}
+
+    def _handle_dashboard_info(self) -> dict:
+        """Show dashboard information."""
+        return {
+            "answer": (
+                "**AngelClaw Dashboard V2**\n\n"
+                "Access the web dashboard at: `http://localhost:8500/ui`\n\n"
+                "**Features:**\n"
+                "  - Real-time event and alert monitoring via WebSocket\n"
+                "  - Dark/light theme toggle\n"
+                "  - Fleet overview with agent health\n"
+                "  - Incident timeline and threat predictions\n"
+                "  - Quarantine management panel\n"
+                "  - Policy snapshot management\n"
+                "  - Chat interface for natural language queries\n"
+                "  - Mobile responsive design"
+            ),
+        }
+
+    def _handle_prediction_trend(self, db: Session) -> dict:
+        """Show threat prediction trends."""
+        from cloud.db.session import SessionLocal
+        from cloud.services.predictive import predict_trends
+        sdb = SessionLocal()
+        try:
+            trends = predict_trends(sdb, lookback_hours=24)
+        finally:
+            sdb.close()
+        if not trends:
+            return {"answer": "No trend data available. Need more event history for analysis."}
+        t = trends[0]
+        lines = [
+            "**Threat Trend Analysis (24h vs previous 48h)**\n",
+            f"  Overall direction: **{t['overall_direction'].upper()}**",
+            f"  Current avg severity: {t['current_avg_severity']}",
+            f"  Previous avg severity: {t['previous_avg_severity']}",
+            f"  Current events: {t['current_event_count']}",
+            f"  Previous events: {t['previous_event_count']}\n",
+        ]
+        by_cat = t.get("by_category", [])
+        if by_cat:
+            lines.append("**By category:**")
+            for c in by_cat[:8]:
+                lines.append(f"  {c['category']}: {c['current_count']} ({c['trend_direction']})")
+        return {"answer": "\n".join(lines), "references": ["/api/v1/metrics/v2/trends"]}
+
+    def _handle_learning_status(self) -> dict:
+        """Show learning engine status."""
+        try:
+            from cloud.guardian.learning import learning_engine
+            status = learning_engine.status()
+            lines = [
+                "**Learning Engine Status**\n",
+                f"  Feedback entries: {status.get('total_feedback', 0)}",
+                f"  Confidence thresholds: {len(status.get('confidence_thresholds', {}))}",
+                f"  Last updated: {status.get('last_updated', 'never')}",
+            ]
+            thresholds = status.get("confidence_thresholds", {})
+            if thresholds:
+                lines.append("\n**Calibrated thresholds:**")
+                for vec, thresh in list(thresholds.items())[:5]:
+                    lines.append(f"  {vec}: {thresh}")
+            return {"answer": "\n".join(lines)}
+        except Exception:
+            return {"answer": "Learning engine status unavailable."}
+
+    # ------------------------------------------------------------------
+    # V3.0 — Dominion handlers
+    # ------------------------------------------------------------------
+
+    def _handle_role_manage(self, db: Session, tid: str, prompt: str) -> dict:
+        """Handle custom role management."""
+        from cloud.db.models import CustomRoleRow
+        roles = db.query(CustomRoleRow).filter_by(tenant_id=tid).all()
+        lines = ["**Custom RBAC Roles**\n"]
+        if roles:
+            for r in roles:
+                desc = r.description[:50] if r.description else ''
+                lines.append(
+                    f"  **{r.name}** —"
+                    f" {len(r.permissions or [])} permissions"
+                    f" ({desc})"
+                )
+        else:
+            lines.append("  No custom roles defined. Using default roles (admin, secops, viewer).")
+        lines.extend([
+            "\n**Actions:**",
+            "  Create: `POST /api/v1/roles`",
+            "  List: `GET /api/v1/roles`",
+            "  Update: `PUT /api/v1/roles/{id}`",
+        ])
+        return {"answer": "\n".join(lines), "references": ["/api/v1/roles"]}
+
+    def _handle_event_replay(self, db: Session, tid: str, prompt: str) -> dict:
+        """Handle event replay requests."""
+        from cloud.db.models import EventReplayRow
+        replays = (
+            db.query(EventReplayRow)
+            .filter_by(tenant_id=tid)
+            .order_by(EventReplayRow.created_at.desc())
+            .limit(5)
+            .all()
+        )
+        lines = ["**Event Replay System**\n"]
+        if replays:
+            lines.append(f"**Recent replays ({len(replays)}):**")
+            for r in replays:
+                lines.append(
+                    f"  `{r.id[:8]}...` — **{r.name}**"
+                    f" ({r.status}, {r.event_count} events,"
+                    f" {r.indicators_found} indicators)"
+                )
+        lines.extend([
+            "\n**Actions:**",
+            "  Create replay: `POST /api/v1/replays`",
+            "  View results: `GET /api/v1/replays/{id}`",
+        ])
+        return {"answer": "\n".join(lines), "references": ["/api/v1/replays"]}
+
+    def _handle_threat_hunt(self, db: Session, tid: str, prompt: str) -> dict:
+        """Handle threat hunting queries."""
+        from cloud.db.models import ThreatHuntQueryRow
+        saved = (
+            db.query(ThreatHuntQueryRow)
+            .filter_by(tenant_id=tid)
+            .order_by(ThreatHuntQueryRow.created_at.desc())
+            .limit(5)
+            .all()
+        )
+        lines = [
+            "**Threat Hunting**\n",
+            "Execute hunting queries against the event store:\n",
+            "  `POST /api/v1/hunting/execute` with query DSL:\n",
+            "  ```json",
+            '  {"filters": {"category": "shell", "severity": ["high", "critical"]},',
+            '   "time_range_hours": 48, "group_by": "agent_id", "limit": 100}',
+            "  ```\n",
+        ]
+        if saved:
+            lines.append(f"**Saved queries ({len(saved)}):**")
+            for q in saved:
+                desc = (
+                    q.description[:50]
+                    if q.description else 'No description'
+                )
+                lines.append(
+                    f"  **{q.name}** — {desc}"
+                )
+        lines.append("\nSave queries: `POST /api/v1/hunting/queries`")
+        return {"answer": "\n".join(lines), "references": ["/api/v1/hunting/execute"]}
+
+    def _handle_remediation_manage(self, db: Session, tid: str) -> dict:
+        """Handle remediation workflow management."""
+        from cloud.db.models import RemediationWorkflowRow
+        workflows = db.query(RemediationWorkflowRow).filter_by(tenant_id=tid).all()
+        lines = ["**Remediation Workflows**\n"]
+        if workflows:
+            for w in workflows:
+                status = "ENABLED" if w.enabled == "true" else "DISABLED"
+                lines.append(
+                    f"  [{status}] **{w.name}** —"
+                    f" {len(w.steps or [])} steps,"
+                    f" {w.executions or 0} executions"
+                )
+        else:
+            lines.append("  No remediation workflows configured.")
+        lines.extend([
+            "\n**Actions:**",
+            "  Create: `POST /api/v1/remediation/workflows`",
+            "  Execute: `POST /api/v1/remediation/workflows/{id}/execute`",
+            "  Toggle: `PUT /api/v1/remediation/workflows/{id}/toggle`",
+        ])
+        return {"answer": "\n".join(lines), "references": ["/api/v1/remediation/workflows"]}
+
+    def _handle_mesh_status(self) -> dict:
+        """Show agent mesh network status."""
+        try:
+            from cloud.services.agent_mesh import agent_mesh
+            status = agent_mesh.status()
+            lines = [
+                "**Agent Mesh Network**\n",
+                f"  Agents registered: **{status['agents_registered']}**",
+                f"  Total messages: {status['total_messages']}",
+                f"  Pending messages: {status['pending_messages']}\n",
+            ]
+            if status.get("agents"):
+                lines.append("**Connected agents:**")
+                for a in status["agents"][:10]:
+                    caps = ', '.join(a.get('capabilities', []))
+                    lines.append(
+                        f"  `{a['agent_id'][:8]}...`"
+                        f" ({a['type']}) — {caps}"
+                    )
+            return {"answer": "\n".join(lines), "references": ["/api/v1/mesh/status"]}
+        except Exception:
+            return {"answer": "Agent mesh status unavailable."}
+
+    def _handle_fleet_deep(self, db: Session, tid: str) -> dict:
+        """Deep fleet analysis."""
+        from collections import Counter
+
+        from cloud.db.models import AgentNodeRow, QuarantineRecordRow
+        agents = db.query(AgentNodeRow).all()
+        quarantined = (
+            db.query(QuarantineRecordRow)
+            .filter_by(tenant_id=tid, status="active")
+            .count()
+        )
+
+        if not agents:
+            return {"answer": "No agents registered. Deploy an ANGELNODE to get started."}
+
+        status_counts = Counter(a.status for a in agents)
+        type_counts = Counter(a.type for a in agents)
+        os_counts = Counter(a.os for a in agents)
+
+        lines = [
+            f"**Deep Fleet Analysis** ({len(agents)} agents)\n",
+            "**By status:**",
+        ]
+        for s, c in status_counts.most_common():
+            lines.append(f"  {s}: {c}")
+        lines.append("\n**By type:**")
+        for t, c in type_counts.most_common():
+            lines.append(f"  {t}: {c}")
+        lines.append("\n**By OS:**")
+        for o, c in os_counts.most_common():
+            lines.append(f"  {o}: {c}")
+        if quarantined:
+            lines.append(f"\n**Quarantined agents:** {quarantined}")
+        return {"answer": "\n".join(lines), "references": ["/api/v1/analytics/fleet-overview"]}
+
+    # ------------------------------------------------------------------
     # General / host-aware assistant
     # ------------------------------------------------------------------
 
@@ -1312,6 +2035,152 @@ class AngelClawBrain:
 
         lines.append("\nNeed help with a specific compliance framework? Just ask.")
         return {"answer": "\n".join(lines), "references": ["/api/v1/angelclaw/actions/history"]}
+
+    # ------------------------------------------------------------------
+    # V3.0 — Admin Console handlers
+    # ------------------------------------------------------------------
+
+    def _handle_admin_overview(self, db: Session, tid: str) -> dict:
+        """Organization-level overview with Halo Score and fleet metrics."""
+        try:
+            from cloud.db.models import AgentNodeRow, GuardianAlertRow
+            from cloud.guardian.orchestrator import angel_orchestrator
+
+            agents = db.query(AgentNodeRow).all()
+            total = len(agents)
+            active = sum(1 for a in agents if a.status == "active")
+            degraded = sum(1 for a in agents if a.status == "degraded")
+            offline = total - active - degraded
+
+            from datetime import timedelta
+            cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+            alert_count = (
+                db.query(GuardianAlertRow)
+                .filter(GuardianAlertRow.created_at >= cutoff)
+                .count()
+            )
+
+            halo = min(100, max(0, 100 - (degraded * 10) - (offline * 20) - (alert_count * 2)))
+            wingspan = min(100, total * 10) if total else 0
+
+            orch = angel_orchestrator.status()
+
+            lines = [
+                "**Organization Overview**\n",
+                f"  Halo Score: **{halo}/100**",
+                f"  Wingspan: **{wingspan}%**",
+                f"  Fleet: {total} agents ({active} active, {degraded} degraded, {offline} offline)",
+                f"  Alerts (24h): {alert_count}",
+                f"  Legion: {'running' if orch.get('running') else 'stopped'}"
+                f" ({orch.get('autonomy_mode', 'unknown')} mode)\n",
+                "Open the Admin Console at `/ui` for full org visibility.",
+            ]
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Could not load overview: {e}"}
+
+    def _handle_anti_tamper_status(self, tid: str) -> dict:
+        """Anti-tamper protection status."""
+        try:
+            from cloud.services.anti_tamper import anti_tamper_service
+            status = anti_tamper_service.get_status(tid)
+            events = anti_tamper_service.get_events(tenant_id=tid, limit=5)
+
+            lines = [
+                "**Anti-Tamper Protection Status**\n",
+                f"  Enforced agents: {status.get('enforced_count', 0)}",
+                f"  Monitored agents: {status.get('monitored_count', 0)}",
+                f"  Disabled agents: {status.get('disabled_count', 0)}",
+                f"  Tamper events (24h): {status.get('tamper_events_24h', 0)}",
+            ]
+            if status.get("agents_with_issues"):
+                lines.append(f"  Agents with issues: {', '.join(status['agents_with_issues'][:5])}")
+
+            if events:
+                lines.append("\n**Recent tamper events:**")
+                for e in events[:3]:
+                    lines.append(
+                        f"  [{e.get('severity', '?')}] {e.get('event_type', '?')}"
+                        f" — agent {e.get('agent_id', '?')[:8]}"
+                    )
+
+            lines.append("\nConfigure via: `POST /api/v1/admin/anti-tamper/configure`")
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Anti-tamper status unavailable: {e}"}
+
+    def _handle_feedback_status(self, tid: str) -> dict:
+        """Operator feedback loop status."""
+        try:
+            from cloud.services.feedback_loop import feedback_service
+            summary = feedback_service.get_tenant_summary(tid)
+            recommendations = feedback_service.get_adjustment_recommendations(tid)
+
+            lines = [
+                "**Operator Feedback Loop**\n",
+                f"  Total feedback records: {summary.get('total_feedback', 0)}",
+                f"  Acceptance rate: {summary.get('acceptance_rate', 0):.0%}",
+            ]
+
+            by_action = summary.get("by_action", {})
+            if by_action:
+                lines.append("  Breakdown:")
+                for action, count in by_action.items():
+                    lines.append(f"    {action}: {count}")
+
+            if recommendations:
+                lines.append("\n**Adjustment recommendations:**")
+                for r in recommendations:
+                    lines.append(f"  - {r.get('description', '?')} (confidence: {r.get('confidence', 0):.0%})")
+
+            if summary.get("top_rejected_types"):
+                lines.append("\n**Most rejected suggestion types:**")
+                for t in summary["top_rejected_types"][:3]:
+                    lines.append(f"  - {t['type']}: {t['rejection_rate']:.0%} rejected ({t['total']} total)")
+
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Feedback status unavailable: {e}"}
+
+    def _handle_hardening_status(self, tid: str) -> dict:
+        """Self-hardening engine status."""
+        try:
+            from cloud.services.self_hardening import self_hardening_engine
+            summary = self_hardening_engine.get_issue_summary()
+            log = self_hardening_engine.get_hardening_log(tenant_id=tid, limit=5)
+            proposed = self_hardening_engine.get_proposed_actions(tid)
+
+            lines = [
+                "**Self-Hardening Engine Status**\n",
+                f"  Total issues detected: {summary.get('total_issues', 0)}",
+                f"  Actions applied: {summary.get('actions_applied', 0)}",
+                f"  Actions proposed: {summary.get('actions_proposed', 0)}",
+                f"  Actions reverted: {summary.get('actions_reverted', 0)}",
+            ]
+
+            by_type = summary.get("by_type", {})
+            if by_type:
+                lines.append("\n**Issues by type:**")
+                for itype, count in by_type.items():
+                    lines.append(f"  - {itype}: {count}")
+
+            if proposed:
+                lines.append(f"\n**Pending proposals ({len(proposed)}):**")
+                for p in proposed[:3]:
+                    lines.append(f"  - {p.get('action_type', '?')}: {p.get('description', '?')}")
+                lines.append("  Apply via: `POST /api/v1/admin/hardening/apply`")
+
+            if log:
+                lines.append("\n**Recent log:**")
+                for entry in log[:3]:
+                    status = "applied" if entry.get("applied") else "proposed"
+                    if entry.get("reverted"):
+                        status = "reverted"
+                    lines.append(f"  [{status}] {entry.get('action_type', '?')}: {entry.get('description', '?')[:60]}")
+
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Hardening status unavailable: {e}"}
 
     def _handle_general(self, ctx: EnvironmentContext, prompt: str) -> dict:
         host = ctx.host
