@@ -66,7 +66,7 @@ async def lifespan(app: FastAPI):
 
     await start_daemon()
     logger.info(
-        "AngelClaw AGI Guardian 7.0.0 started"
+        "AngelClaw AGI Guardian 7.1.0 started"
         " — tables, heartbeat, orchestrator, Wazuh, shield, daemon"
     )
     yield
@@ -78,7 +78,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="AngelClaw AGI Guardian API",
-    version="7.0.0",
+    version="7.1.0",
     lifespan=lifespan,
 )
 
@@ -250,6 +250,11 @@ from cloud.api.singularity_routes import router as empyrion_router  # noqa: E402
 
 app.include_router(empyrion_router)
 
+# V7.1.0 — Quantum Shield routes (Advanced Behavioral Analytics)
+from cloud.api.quantum_routes import router as quantum_router  # noqa: E402
+
+app.include_router(quantum_router)
+
 
 # ---------------------------------------------------------------------------
 # Auth middleware — protect /api/v1/* routes when auth is enabled
@@ -364,7 +369,7 @@ def health_check():
     orch = angel_orchestrator.status()
     return {
         "status": "ok",
-        "version": "7.0.0",
+        "version": "7.1.0",
         "orchestrator": orch["running"],
         "agents": {name: info["status"] for name, info in orch.get("agents", {}).items()},
     }

@@ -1,4 +1,11 @@
-# AngelClaw Release Notes
+# AngelClaw AGI Guardian — Release Notes
+
+## V7.1.0 — Quantum Shield (2026-02-20)
+### Advanced Behavioral Analytics
+- Ueba: new service module
+- Threat Scoring: new service module
+- Brain V7.1: 2 new intents — total 97+ intents
+
 
 ## V7.0.0 — Empyrion (2026-02-19)
 
