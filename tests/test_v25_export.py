@@ -11,28 +11,34 @@ from cloud.services.export import export_service
 
 def _seed_events(db, count=5):
     for _ in range(count):
-        db.add(EventRow(
-            id=str(uuid.uuid4()),
-            agent_id=str(uuid.uuid4()),
-            timestamp=datetime.now(timezone.utc),
-            category="shell",
-            type="shell.exec",
-            severity="medium",
-            details={"command": "ls"},
-        ))
+        db.add(
+            EventRow(
+                id=str(uuid.uuid4()),
+                agent_id=str(uuid.uuid4()),
+                timestamp=datetime.now(timezone.utc),
+                category="shell",
+                type="shell.exec",
+                severity="medium",
+                details={"command": "ls"},
+            )
+        )
     db.commit()
 
 
 class TestExportService:
     def test_export_events_json(self, db):
         _seed_events(db, 3)
-        content, content_type = export_service.export_events(db, tenant_id="dev-tenant", format="json")
+        content, content_type = export_service.export_events(
+            db, tenant_id="dev-tenant", format="json"
+        )
         assert isinstance(content, str)
         assert content_type == "application/json"
 
     def test_export_events_csv(self, db):
         _seed_events(db, 3)
-        content, content_type = export_service.export_events(db, tenant_id="dev-tenant", format="csv")
+        content, content_type = export_service.export_events(
+            db, tenant_id="dev-tenant", format="csv"
+        )
         assert content is not None
         assert content_type == "text/csv"
 
@@ -45,12 +51,14 @@ class TestExportService:
         assert content_type == "application/json"
 
     def test_export_audit_trail(self, db):
-        db.add(GuardianChangeRow(
-            id=str(uuid.uuid4()),
-            tenant_id="dev-tenant",
-            change_type="policy_update",
-            description="Test change",
-        ))
+        db.add(
+            GuardianChangeRow(
+                id=str(uuid.uuid4()),
+                tenant_id="dev-tenant",
+                change_type="policy_update",
+                description="Test change",
+            )
+        )
         db.commit()
         content, content_type = export_service.export_audit_trail(db, tenant_id="dev-tenant")
         assert isinstance(content, str)
@@ -64,7 +72,9 @@ class TestExportService:
         assert isinstance(content, str)
 
     def test_export_empty_events(self, db):
-        content, content_type = export_service.export_events(db, tenant_id="dev-tenant", format="json")
+        content, content_type = export_service.export_events(
+            db, tenant_id="dev-tenant", format="json"
+        )
         assert isinstance(content, str)
 
     def test_export_events_severity_filter(self, db):

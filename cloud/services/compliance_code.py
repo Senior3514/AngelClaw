@@ -23,7 +23,13 @@ from pydantic import BaseModel, Field
 logger = logging.getLogger("angelclaw.compliance_code")
 
 SUPPORTED_FRAMEWORKS = {
-    "GDPR", "HIPAA", "PCI-DSS", "SOC2", "NIST", "ISO27001", "CIS",
+    "GDPR",
+    "HIPAA",
+    "PCI-DSS",
+    "SOC2",
+    "NIST",
+    "ISO27001",
+    "CIS",
 }
 
 
@@ -79,7 +85,12 @@ class ComplianceCodeService:
         created_by: str = "system",
     ) -> dict:
         if framework not in SUPPORTED_FRAMEWORKS:
-            return {"error": f"Unsupported framework: {framework}. Supported: {sorted(SUPPORTED_FRAMEWORKS)}"}
+            return {
+                "error": (
+                    f"Unsupported framework: {framework}."
+                    f" Supported: {sorted(SUPPORTED_FRAMEWORKS)}"
+                )
+            }
 
         rule = ComplianceRule(
             tenant_id=tenant_id,
@@ -96,7 +107,10 @@ class ComplianceCodeService:
         self._tenant_rules[tenant_id].append(rule.id)
         logger.info(
             "[COMPLIANCE] Created rule '%s' [%s/%s] for %s",
-            title, framework, control_id, tenant_id,
+            title,
+            framework,
+            control_id,
+            tenant_id,
         )
         return rule.model_dump(mode="json")
 
@@ -167,7 +181,9 @@ class ComplianceCodeService:
 
         logger.info(
             "[COMPLIANCE] Check %s/%s: %s",
-            rule.framework, rule.control_id, result,
+            rule.framework,
+            rule.control_id,
+            result,
         )
         return check_result.model_dump(mode="json")
 
@@ -223,7 +239,11 @@ class ComplianceCodeService:
 
         logger.info(
             "[COMPLIANCE] Audit %s for %s: %d/%d passed (%.1f%%)",
-            framework, tenant_id, passed, total, compliance_pct,
+            framework,
+            tenant_id,
+            passed,
+            total,
+            compliance_pct,
         )
         return {
             "framework": framework,
@@ -240,16 +260,21 @@ class ComplianceCodeService:
     ) -> dict:
         """Generate a compliance report from the latest check results."""
         rules = [
-            self._rules[rid]
-            for rid in self._tenant_rules.get(tenant_id, [])
-            if rid in self._rules
+            self._rules[rid] for rid in self._tenant_rules.get(tenant_id, []) if rid in self._rules
         ]
         if framework:
             rules = [r for r in rules if r.framework == framework]
 
-        frameworks_data: dict[str, dict] = defaultdict(lambda: {
-            "total": 0, "pass": 0, "fail": 0, "error": 0, "skipped": 0, "unchecked": 0,
-        })
+        frameworks_data: dict[str, dict] = defaultdict(
+            lambda: {
+                "total": 0,
+                "pass": 0,
+                "fail": 0,
+                "error": 0,
+                "skipped": 0,
+                "unchecked": 0,
+            }
+        )
 
         for rule in rules:
             fw = frameworks_data[rule.framework]
@@ -278,11 +303,7 @@ class ComplianceCodeService:
     # -- Stats --
 
     def get_stats(self, tenant_id: str) -> dict:
-        rules = [
-            self._rules[r]
-            for r in self._tenant_rules.get(tenant_id, [])
-            if r in self._rules
-        ]
+        rules = [self._rules[r] for r in self._tenant_rules.get(tenant_id, []) if r in self._rules]
         by_framework: dict[str, int] = defaultdict(int)
         by_result: dict[str, int] = defaultdict(int)
         for rule in rules:
@@ -341,7 +362,11 @@ class ComplianceCodeService:
 
         actual = state.get(required_field)
         if actual is None:
-            return ("fail", f"Field '{required_field}' not found in system state", {"field": required_field})
+            return (
+                "fail",
+                f"Field '{required_field}' not found in system state",
+                {"field": required_field},
+            )
 
         if expected_value is not None and str(actual) != str(expected_value):
             return (
@@ -349,7 +374,11 @@ class ComplianceCodeService:
                 f"Field '{required_field}' is '{actual}', expected '{expected_value}'",
                 {"field": required_field, "actual": actual, "expected": expected_value},
             )
-        return ("pass", f"Field '{required_field}' = '{actual}'", {"field": required_field, "value": actual})
+        return (
+            "pass",
+            f"Field '{required_field}' = '{actual}'",
+            {"field": required_field, "value": actual},
+        )
 
     def _check_config(self, cfg: dict, state: dict) -> tuple[str, str, dict]:
         setting = cfg.get("setting", "")
@@ -366,11 +395,23 @@ class ComplianceCodeService:
             return ("fail", f"Setting '{setting}' is not numeric: {actual}", {"setting": setting})
 
         if min_value is not None and num_actual < float(min_value):
-            return ("fail", f"'{setting}' = {actual} (min: {min_value})", {"setting": setting, "actual": actual})
+            return (
+                "fail",
+                f"'{setting}' = {actual} (min: {min_value})",
+                {"setting": setting, "actual": actual},
+            )
         if max_value is not None and num_actual > float(max_value):
-            return ("fail", f"'{setting}' = {actual} (max: {max_value})", {"setting": setting, "actual": actual})
+            return (
+                "fail",
+                f"'{setting}' = {actual} (max: {max_value})",
+                {"setting": setting, "actual": actual},
+            )
 
-        return ("pass", f"'{setting}' = {actual} within bounds", {"setting": setting, "value": actual})
+        return (
+            "pass",
+            f"'{setting}' = {actual} within bounds",
+            {"setting": setting, "value": actual},
+        )
 
     def _check_access(self, cfg: dict, state: dict) -> tuple[str, str, dict]:
         required_mfa = cfg.get("require_mfa", False)
@@ -383,7 +424,11 @@ class ComplianceCodeService:
             return ("fail", "MFA is not enabled", {"mfa_enabled": False})
         if max_session_hours and session_hours is not None:
             if float(session_hours) > float(max_session_hours):
-                return ("fail", f"Session timeout {session_hours}h exceeds max {max_session_hours}h", {})
+                return (
+                    "fail",
+                    f"Session timeout {session_hours}h exceeds max {max_session_hours}h",
+                    {},
+                )
 
         return ("pass", "Access controls compliant", {"mfa_enabled": mfa_enabled})
 
@@ -402,7 +447,11 @@ class ComplianceCodeService:
 
         if failures:
             return ("fail", "; ".join(failures), {"at_rest": at_rest, "in_transit": in_transit})
-        return ("pass", "Encryption requirements met", {"at_rest": at_rest, "in_transit": in_transit})
+        return (
+            "pass",
+            "Encryption requirements met",
+            {"at_rest": at_rest, "in_transit": in_transit},
+        )
 
     def _check_logging(self, cfg: dict, state: dict) -> tuple[str, str, dict]:
         required_sources = cfg.get("required_sources", [])

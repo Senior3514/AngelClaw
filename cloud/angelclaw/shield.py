@@ -1068,9 +1068,7 @@ class AngelClawShield:
                     severity=ThreatSeverity.MEDIUM if trifecta.score > 0.5 else ThreatSeverity.LOW,
                     title=f"Partial Trifecta ({int(trifecta.score * 100)}%)",
                     description=(
-                        "Lethal Trifecta score:"
-                        f" {trifecta.score:.0%}"
-                        " — monitoring for escalation"
+                        f"Lethal Trifecta score: {trifecta.score:.0%} — monitoring for escalation"
                     ),
                 )
             )
@@ -1123,8 +1121,7 @@ class AngelClawShield:
                         " file(s) modified"
                     ),
                     description=(
-                        "One or more AngelClaw module files"
-                        " have been modified since registration"
+                        "One or more AngelClaw module files have been modified since registration"
                     ),
                     mitigations=[
                         "Verify changes are authorized",

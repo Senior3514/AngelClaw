@@ -175,9 +175,7 @@ class QuarantineManager:
         )
         return exists is not None
 
-    def get_quarantine_status(
-        self, db: Session, agent_id: str
-    ) -> Optional[QuarantineRecordRow]:
+    def get_quarantine_status(self, db: Session, agent_id: str) -> Optional[QuarantineRecordRow]:
         """Return the active quarantine record for an agent, or None.
 
         Args:
@@ -196,9 +194,7 @@ class QuarantineManager:
             .first()
         )
 
-    def list_quarantined(
-        self, db: Session, tenant_id: str
-    ) -> list[QuarantineRecordRow]:
+    def list_quarantined(self, db: Session, tenant_id: str) -> list[QuarantineRecordRow]:
         """Return all active quarantine records for a tenant.
 
         Args:

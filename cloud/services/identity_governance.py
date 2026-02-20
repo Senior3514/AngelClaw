@@ -114,7 +114,9 @@ class IdentityGovernanceService:
             "identities_analyzed": len(identities),
             "unique_roles": len(all_roles),
             "suggested_consolidations": max(0, len(all_roles) - 3),
-            "over_privileged_users": len([i for i in identities.values() if len(i.get("roles", [])) > 3]),
+            "over_privileged_users": len(
+                [i for i in identities.values() if len(i.get("roles", [])) > 3]
+            ),
             "analysed_at": datetime.now(timezone.utc).isoformat(),
         }
 

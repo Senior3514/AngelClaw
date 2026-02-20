@@ -117,9 +117,7 @@ class AGIDefenseService:
                 "event_count": len(events),
                 "unique_categories": sorted(categories),
                 "unique_sources": sorted(sources),
-                "severity_distribution": {
-                    s: severities.count(s) for s in set(severities)
-                },
+                "severity_distribution": {s: severities.count(s) for s in set(severities)},
             },
         )
 
@@ -128,7 +126,10 @@ class AGIDefenseService:
 
         logger.info(
             "[AGI_DEF] Analysed %d events: %d patterns, confidence=%.1f%% for %s",
-            len(events), analysis.patterns_identified, confidence, tenant_id,
+            len(events),
+            analysis.patterns_identified,
+            confidence,
+            tenant_id,
         )
         return analysis.model_dump(mode="json")
 
@@ -154,7 +155,12 @@ class AGIDefenseService:
 
         # Generate rule logic based on analysis
         rule_logic = self._synthesize_rule(analysis)
-        rule_name = f"AGI-{analysis.threat_categories[0] if analysis.threat_categories else 'generic'}-{uuid.uuid4().hex[:6]}"
+        category = (
+            analysis.threat_categories[0]
+            if analysis.threat_categories
+            else "generic"
+        )
+        rule_name = f"AGI-{category}-{uuid.uuid4().hex[:6]}"
 
         rule = GeneratedRule(
             tenant_id=tenant_id,
@@ -170,7 +176,10 @@ class AGIDefenseService:
 
         logger.info(
             "[AGI_DEF] Generated rule '%s' (%s) confidence=%.1f%% for %s",
-            rule_name, rule.detection_type, rule.confidence, tenant_id,
+            rule_name,
+            rule.detection_type,
+            rule.confidence,
+            tenant_id,
         )
         return rule.model_dump(mode="json")
 
@@ -217,7 +226,10 @@ class AGIDefenseService:
 
         logger.info(
             "[AGI_DEF] Validated rule '%s': F1=%.3f precision=%.3f recall=%.3f",
-            rule.rule_name, f1, precision, recall,
+            rule.rule_name,
+            f1,
+            precision,
+            recall,
         )
         return rule.model_dump(mode="json")
 
@@ -240,8 +252,7 @@ class AGIDefenseService:
         if rule.confidence < _AUTO_DEPLOY_THRESHOLD:
             return {
                 "error": (
-                    f"Confidence {rule.confidence}% below threshold "
-                    f"{_AUTO_DEPLOY_THRESHOLD}%"
+                    f"Confidence {rule.confidence}% below threshold {_AUTO_DEPLOY_THRESHOLD}%"
                 ),
                 "rule_id": rule_id,
                 "confidence": rule.confidence,
@@ -253,7 +264,9 @@ class AGIDefenseService:
 
         logger.info(
             "[AGI_DEF] Auto-deployed rule '%s' (confidence=%.1f%%) for %s",
-            rule.rule_name, rule.confidence, tenant_id,
+            rule.rule_name,
+            rule.confidence,
+            tenant_id,
         )
         return {
             "rule_id": rule_id,
@@ -275,7 +288,8 @@ class AGIDefenseService:
 
         logger.warning(
             "[AGI_DEF] Kill switch engaged for rule '%s': %s",
-            rule.rule_name, rule.kill_reason,
+            rule.rule_name,
+            rule.kill_reason,
         )
         return rule.model_dump(mode="json")
 
@@ -312,9 +326,7 @@ class AGIDefenseService:
             if aid in self._analyses
         ]
         rules = [
-            self._rules[rid]
-            for rid in self._tenant_rules.get(tenant_id, [])
-            if rid in self._rules
+            self._rules[rid] for rid in self._tenant_rules.get(tenant_id, []) if rid in self._rules
         ]
 
         return {
@@ -324,7 +336,8 @@ class AGIDefenseService:
             "deployed_rules": sum(1 for r in rules if r.deployed),
             "killed_rules": sum(1 for r in rules if r.killed),
             "avg_confidence": round(
-                sum(r.confidence for r in rules) / max(len(rules), 1), 1,
+                sum(r.confidence for r in rules) / max(len(rules), 1),
+                1,
             ),
             "auto_deploy_threshold": _AUTO_DEPLOY_THRESHOLD,
         }

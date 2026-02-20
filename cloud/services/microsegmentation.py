@@ -107,7 +107,11 @@ class MicrosegmentationEngine:
         self._tenant_segments[tenant_id].append(segment.id)
         logger.info(
             "[MICROSEG] Created segment %s (%s) for tenant %s \u2014 priority %d, action=%s",
-            segment.id[:8], name, tenant_id, priority, action,
+            segment.id[:8],
+            name,
+            tenant_id,
+            priority,
+            action,
         )
         return segment.to_dict()
 
@@ -138,9 +142,14 @@ class MicrosegmentationEngine:
         if not segment:
             return None
         allowed_fields = {
-            "name", "source_criteria", "target_criteria",
-            "allowed_protocols", "priority", "action",
-            "enabled", "description",
+            "name",
+            "source_criteria",
+            "target_criteria",
+            "allowed_protocols",
+            "priority",
+            "action",
+            "enabled",
+            "description",
         }
         for key, value in kwargs.items():
             if key in allowed_fields:
@@ -199,10 +208,7 @@ class MicrosegmentationEngine:
                 continue
 
             # Check protocol match
-            protocol_match = (
-                protocol in seg.allowed_protocols
-                or "*" in seg.allowed_protocols
-            )
+            protocol_match = protocol in seg.allowed_protocols or "*" in seg.allowed_protocols
             if not protocol_match:
                 continue
 
@@ -213,7 +219,12 @@ class MicrosegmentationEngine:
             decision = seg.action
             logger.debug(
                 "[MICROSEG] %s connection %s -> %s [%s] \u2014 matched segment %s (%s)",
-                decision.upper(), source, target, protocol, seg.id[:8], seg.name,
+                decision.upper(),
+                source,
+                target,
+                protocol,
+                seg.id[:8],
+                seg.name,
             )
             return {
                 "decision": decision,
@@ -229,7 +240,9 @@ class MicrosegmentationEngine:
         # No segment matched \u2014 default deny (zero trust)
         logger.info(
             "[MICROSEG] DENY (default) connection %s -> %s [%s] \u2014 no matching segment",
-            source, target, protocol,
+            source,
+            target,
+            protocol,
         )
         return {
             "decision": "deny",

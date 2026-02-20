@@ -49,6 +49,7 @@ class TestEventBusV24Patterns:
     def test_quarantine_breach_pattern(self, db):
         """Pattern 14: events from quarantined agent."""
         from cloud.db.models import QuarantineRecordRow
+
         agent = str(uuid.uuid4())
         # Create quarantine record
         qr = QuarantineRecordRow(
@@ -79,12 +80,27 @@ class TestEventBusV24Patterns:
     def test_notification_failure_pattern(self, db):
         """Pattern 15: notification system errors."""
         rows = [
-            _make_row(db, "system", "notification.send_failed", "warn",
-                       details={"channel": "slack", "error": "timeout"}),
-            _make_row(db, "system", "notification.send_failed", "warn",
-                       details={"channel": "slack", "error": "timeout"}),
-            _make_row(db, "system", "notification.send_failed", "warn",
-                       details={"channel": "discord", "error": "rate_limited"}),
+            _make_row(
+                db,
+                "system",
+                "notification.send_failed",
+                "warn",
+                details={"channel": "slack", "error": "timeout"},
+            ),
+            _make_row(
+                db,
+                "system",
+                "notification.send_failed",
+                "warn",
+                details={"channel": "slack", "error": "timeout"},
+            ),
+            _make_row(
+                db,
+                "system",
+                "notification.send_failed",
+                "warn",
+                details={"channel": "discord", "error": "rate_limited"},
+            ),
         ]
         alerts = check_for_alerts(db, rows)
         assert isinstance(alerts, list)

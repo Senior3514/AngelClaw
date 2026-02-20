@@ -83,8 +83,10 @@ class TestApiKeyService:
 
     def test_create_key_with_scopes(self, db, key_service):
         created = key_service.create_key(
-            db, "dev-tenant", name="scoped-key",
+            db,
+            "dev-tenant",
+            name="scoped-key",
             scopes=["read", "write", "admin"],
-            created_by="test"
+            created_by="test",
         )
         assert created is not None

@@ -54,13 +54,15 @@ class QuantumCryptoService:
     def __init__(self) -> None:
         self._store: dict[str, dict] = defaultdict(dict)
 
-    def scan_crypto_inventory(self, tenant_id: str, targets: list[str] | None = None) -> dict[str, Any]:
+    def scan_crypto_inventory(
+        self, tenant_id: str, targets: list[str] | None = None
+    ) -> dict[str, Any]:
         """Scan infrastructure for cryptographic assets and assess quantum readiness."""
         if tenant_id not in self._store:
             self._store[tenant_id] = {}
         scan_id = str(uuid.uuid4())
         vulnerable_algos = ["RSA-2048", "RSA-4096", "ECDSA-P256", "ECDH", "DH"]
-        safe_algos = ["Kyber-1024", "SPHINCS+", "Dilithium", "AES-256"]
+        # safe_algos: Kyber-1024, SPHINCS+, Dilithium, AES-256 (reserved for future use)
         total = len(targets) if targets else 5
         vulnerable = max(1, total // 2)
         result = {

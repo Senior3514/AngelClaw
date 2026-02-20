@@ -117,35 +117,50 @@ class BehaviorProfileService:
         current_vol = current_metrics.get("event_count", 0)
         expected_vol = bl.get("avg_events_per_hour", 0)
         if expected_vol > 0 and current_vol > expected_vol * threshold:
-            deviations.append({
-                "type": "volume_spike",
-                "description": f"Event volume {current_vol} exceeds baseline {expected_vol:.1f} by {threshold}x",
-                "severity": "high" if current_vol > expected_vol * 3 else "medium",
-                "current": current_vol,
-                "baseline": round(expected_vol, 1),
-            })
+            deviations.append(
+                {
+                    "type": "volume_spike",
+                    "description": (
+                        f"Event volume {current_vol} exceeds"
+                        f" baseline {expected_vol:.1f}"
+                        f" by {threshold}x"
+                    ),
+                    "severity": "high" if current_vol > expected_vol * 3 else "medium",
+                    "current": current_vol,
+                    "baseline": round(expected_vol, 1),
+                }
+            )
 
         # Check new categories
         current_cats = set(current_metrics.get("categories", []))
         known_cats = set(bl.get("common_categories", {}).keys())
         new_cats = current_cats - known_cats
         if new_cats and len(known_cats) > 3:
-            deviations.append({
-                "type": "category_novelty",
-                "description": f"New event categories observed: {', '.join(new_cats)}",
-                "severity": "medium",
-                "new_categories": list(new_cats),
-            })
+            deviations.append(
+                {
+                    "type": "category_novelty",
+                    "description": f"New event categories observed: {', '.join(new_cats)}",
+                    "severity": "medium",
+                    "new_categories": list(new_cats),
+                }
+            )
 
         # Check severity escalation
         current_high = current_metrics.get("high_severity_count", 0)
-        baseline_high = bl.get("severity_distribution", {}).get("high", 0) + bl.get("severity_distribution", {}).get("critical", 0)
+        baseline_high = bl.get("severity_distribution", {}).get("high", 0) + bl.get(
+            "severity_distribution", {}
+        ).get("critical", 0)
         if baseline_high > 0 and current_high > baseline_high * threshold:
-            deviations.append({
-                "type": "severity_escalation",
-                "description": f"High/critical events ({current_high}) exceeds baseline ({baseline_high:.1f})",
-                "severity": "high",
-            })
+            deviations.append(
+                {
+                    "type": "severity_escalation",
+                    "description": (
+                        f"High/critical events ({current_high})"
+                        f" exceeds baseline ({baseline_high:.1f})"
+                    ),
+                    "severity": "high",
+                }
+            )
 
         return deviations
 
@@ -168,7 +183,11 @@ class BehaviorProfileService:
         return profile.to_dict()
 
     def get_stats(self, tenant_id: str) -> dict:
-        profiles = [self._profiles[e] for e in self._tenant_profiles.get(tenant_id, []) if e in self._profiles]
+        profiles = [
+            self._profiles[e]
+            for e in self._tenant_profiles.get(tenant_id, [])
+            if e in self._profiles
+        ]
         by_status: dict[str, int] = defaultdict(int)
         for p in profiles:
             by_status[p.status] += 1

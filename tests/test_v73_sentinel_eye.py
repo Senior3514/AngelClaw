@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
-from cloud.services.log_analytics import LogAnalyticsService
 from cloud.services.distributed_tracing import DistributedTracingService
-
+from cloud.services.log_analytics import LogAnalyticsService
 
 TENANT = "test-tenant"
 
@@ -41,6 +38,7 @@ class TestLogAnalyticsService:
         assert result["tenant_id"] == TENANT
         assert result["service"] == "LogAnalyticsService"
         assert result["version"] == "7.3.0"
+
 
 class TestDistributedTracingService:
     """DistributedTracingService tests."""

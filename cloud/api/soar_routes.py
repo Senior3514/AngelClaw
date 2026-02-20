@@ -44,14 +44,21 @@ class TimelineEntryRequest(BaseModel):
 
 # -- SOAR Playbook endpoints --
 
+
 @router.post("/playbooks")
 def create_playbook(
     req: PlaybookCreateRequest,
     tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"),
 ):
     return soar_engine.create_playbook(
-        tenant_id, req.name, req.trigger_type, req.trigger_config,
-        req.actions, req.description, req.priority, req.max_executions_per_hour,
+        tenant_id,
+        req.name,
+        req.trigger_type,
+        req.trigger_config,
+        req.actions,
+        req.description,
+        req.priority,
+        req.max_executions_per_hour,
     )
 
 
@@ -103,14 +110,18 @@ def soar_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
 
 # -- SLA endpoints --
 
+
 @router.post("/sla/configs")
 def create_sla_config(
     req: SLAConfigRequest,
     tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"),
 ):
     return sla_tracking_service.create_config(
-        tenant_id, req.name, req.severity,
-        req.response_time_minutes, req.resolution_time_minutes,
+        tenant_id,
+        req.name,
+        req.severity,
+        req.response_time_minutes,
+        req.resolution_time_minutes,
         req.escalation_contacts,
     )
 
@@ -132,14 +143,19 @@ def sla_compliance(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
 
 # -- Timeline endpoints --
 
+
 @router.post("/timeline")
 def add_timeline_entry(
     req: TimelineEntryRequest,
     tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"),
 ):
     return incident_timeline_service.add_entry(
-        tenant_id, req.incident_id, req.entry_type,
-        req.title, req.description, req.actor,
+        tenant_id,
+        req.incident_id,
+        req.entry_type,
+        req.title,
+        req.description,
+        req.actor,
     )
 
 

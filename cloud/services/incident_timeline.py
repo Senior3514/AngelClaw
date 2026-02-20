@@ -98,18 +98,30 @@ class IncidentTimelineService:
         entries.sort(key=lambda e: e["timestamp"])
         return entries
 
-    def add_comment(self, tenant_id: str, incident_id: str, comment: str, actor: str = "operator") -> dict:
+    def add_comment(
+        self, tenant_id: str, incident_id: str, comment: str, actor: str = "operator"
+    ) -> dict:
         return self.add_entry(tenant_id, incident_id, "comment", "Comment added", comment, actor)
 
-    def add_escalation(self, tenant_id: str, incident_id: str, escalated_to: str, reason: str = "") -> dict:
+    def add_escalation(
+        self, tenant_id: str, incident_id: str, escalated_to: str, reason: str = ""
+    ) -> dict:
         return self.add_entry(
-            tenant_id, incident_id, "escalation",
-            f"Escalated to {escalated_to}", reason, "system",
+            tenant_id,
+            incident_id,
+            "escalation",
+            f"Escalated to {escalated_to}",
+            reason,
+            "system",
             details={"escalated_to": escalated_to},
         )
 
-    def add_resolution(self, tenant_id: str, incident_id: str, resolution: str, actor: str = "operator") -> dict:
-        return self.add_entry(tenant_id, incident_id, "resolution", "Incident resolved", resolution, actor)
+    def add_resolution(
+        self, tenant_id: str, incident_id: str, resolution: str, actor: str = "operator"
+    ) -> dict:
+        return self.add_entry(
+            tenant_id, incident_id, "resolution", "Incident resolved", resolution, actor
+        )
 
     def get_stats(self, tenant_id: str) -> dict:
         tenant_entries = [e for e in self._entries.values() if e.tenant_id == tenant_id]

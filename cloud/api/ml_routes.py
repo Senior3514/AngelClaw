@@ -51,6 +51,7 @@ class ForecastRequest(BaseModel):
 
 # -- Anomaly Detection endpoints --
 
+
 @router.post("/anomaly/baseline")
 def update_baseline(req: BaselineUpdateRequest):
     return ml_anomaly_engine.update_baseline(req.entity_id, req.metrics)
@@ -78,6 +79,7 @@ def anomaly_stats():
 
 
 # -- Behavior Profile endpoints --
+
 
 @router.post("/profiles")
 def create_profile(
@@ -113,13 +115,17 @@ def profile_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
 
 # -- Attack Path endpoints --
 
+
 @router.post("/attack-paths/compute")
 def compute_attack_paths(
     req: AttackPathRequest,
     tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"),
 ):
     return attack_path_engine.compute_paths(
-        tenant_id, req.topology_links, req.asset_risks, req.critical_assets,
+        tenant_id,
+        req.topology_links,
+        req.asset_risks,
+        req.critical_assets,
     )
 
 
@@ -143,6 +149,7 @@ def attack_path_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
 
 
 # -- Risk Forecast endpoints --
+
 
 @router.post("/forecasts/generate")
 def generate_forecasts(

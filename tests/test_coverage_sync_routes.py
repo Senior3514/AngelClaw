@@ -210,9 +210,7 @@ class TestCloudSyncRegister:
         mock_http = AsyncMock()
         mock_http.__aenter__ = AsyncMock(return_value=mock_http)
         mock_http.__aexit__ = AsyncMock(return_value=False)
-        mock_http.post = AsyncMock(
-            side_effect=httpx.ConnectError("refused")
-        )
+        mock_http.post = AsyncMock(side_effect=httpx.ConnectError("refused"))
 
         with patch("httpx.AsyncClient", return_value=mock_http):
             result = _run(client.register())
@@ -301,9 +299,7 @@ class TestCloudSyncPolicy:
         mock_http = AsyncMock()
         mock_http.__aenter__ = AsyncMock(return_value=mock_http)
         mock_http.__aexit__ = AsyncMock(return_value=False)
-        mock_http.get = AsyncMock(
-            side_effect=httpx.ConnectError("timeout")
-        )
+        mock_http.get = AsyncMock(side_effect=httpx.ConnectError("timeout"))
 
         with patch("httpx.AsyncClient", return_value=mock_http):
             _run(client._sync_policy())
@@ -329,9 +325,7 @@ class TestCloudSyncPolicy:
         )
         assert client._agent_id is None
 
-        with patch.object(
-            client, "register", new_callable=AsyncMock
-        ) as mock_reg:
+        with patch.object(client, "register", new_callable=AsyncMock) as mock_reg:
             mock_reg.return_value = False
             _run(client._sync_policy())
 
@@ -442,9 +436,7 @@ class TestCloudSyncLogEvent:
             on_agent_id_update=MagicMock(),
             on_sync_timestamp=MagicMock(),
         )
-        client._log_sync_event(
-            "register", success=False, error="connection refused"
-        )
+        client._log_sync_event("register", success=False, error="connection refused")
         record = log_cb.call_args[0][0]
         assert record["success"] is False
         assert record["error"] == "connection refused"
@@ -564,9 +556,7 @@ class TestRoutesChat:
             mock_brain = MagicMock()
             mock_brain.chat = AsyncMock(return_value=mock_result)
             # The route does `from cloud.angelclaw.brain import brain`
-            with patch(
-                "cloud.angelclaw.brain.brain", mock_brain
-            ):
+            with patch("cloud.angelclaw.brain.brain", mock_brain):
                 resp = client.post(
                     "/api/v1/angelclaw/chat",
                     json={
@@ -707,9 +697,7 @@ class TestRoutesActionsHistory:
         app = _get_test_app()
         client = TestClient(app)
 
-        mock_history = [
-            {"id": "h-1", "action_type": "scan", "status": "applied"}
-        ]
+        mock_history = [{"id": "h-1", "action_type": "scan", "status": "applied"}]
 
         with patch(
             "cloud.angelclaw.actions.get_action_history",
@@ -768,13 +756,9 @@ class TestRoutesShieldStatus:
             "skills_registered": 8,
         }
 
-        with patch(
-            "cloud.angelclaw.shield.shield"
-        ) as mock_shield:
+        with patch("cloud.angelclaw.shield.shield") as mock_shield:
             mock_shield.get_status.return_value = mock_status
-            resp = client.get(
-                "/api/v1/angelclaw/shield/status"
-            )
+            resp = client.get("/api/v1/angelclaw/shield/status")
 
         assert resp.status_code == 200
         data = resp.json()
@@ -797,9 +781,7 @@ class TestRoutesShieldAssess:
         client = TestClient(app)
 
         ctx = EnvironmentContext()
-        ctx.recent_events = [
-            {"category": "process", "type": "exec", "details": {}}
-        ]
+        ctx.recent_events = [{"category": "process", "type": "exec", "details": {}}]
 
         report = ShieldReport(
             overall_risk=ThreatSeverity.LOW,
@@ -809,12 +791,13 @@ class TestRoutesShieldAssess:
             skills_status={"total": 0},
         )
 
-        with patch(
-            "cloud.angelclaw.context.gather_context",
-            return_value=ctx,
-        ), patch(
-            "cloud.angelclaw.shield.shield"
-        ) as mock_shield:
+        with (
+            patch(
+                "cloud.angelclaw.context.gather_context",
+                return_value=ctx,
+            ),
+            patch("cloud.angelclaw.shield.shield") as mock_shield,
+        ):
             mock_shield.assess_events.return_value = report
             resp = client.post(
                 "/api/v1/angelclaw/shield/assess",
@@ -848,9 +831,7 @@ class TestRoutesSkillsStatus:
             "cloud.angelclaw.shield.verify_all_skills",
             return_value=mock_skills,
         ):
-            resp = client.get(
-                "/api/v1/angelclaw/skills/status"
-            )
+            resp = client.get("/api/v1/angelclaw/skills/status")
 
         assert resp.status_code == 200
         data = resp.json()
@@ -897,24 +878,13 @@ class TestEventBusSecretExfil:
             db.add(e)
         db.commit()
 
-        with patch(
-            "cloud.services.event_bus._fire_webhooks"
-        ):
-            alerts = check_for_alerts(
-                db, events, "test-tenant"
-            )
+        with patch("cloud.services.event_bus._fire_webhooks"):
+            alerts = check_for_alerts(db, events, "test-tenant")
 
-        secret_alerts = [
-            a
-            for a in alerts
-            if a.alert_type == "repeated_secret_exfil"
-        ]
+        secret_alerts = [a for a in alerts if a.alert_type == "repeated_secret_exfil"]
         assert len(secret_alerts) == 1
         assert secret_alerts[0].severity == "critical"
-        assert (
-            secret_alerts[0].details["secret_event_count"]
-            == 2
-        )
+        assert secret_alerts[0].details["secret_event_count"] == 2
         db.close()
 
     def test_one_secret_event_no_alert(self):
@@ -932,18 +902,10 @@ class TestEventBusSecretExfil:
             db.add(e)
         db.commit()
 
-        with patch(
-            "cloud.services.event_bus._fire_webhooks"
-        ):
-            alerts = check_for_alerts(
-                db, events, "test-tenant"
-            )
+        with patch("cloud.services.event_bus._fire_webhooks"):
+            alerts = check_for_alerts(db, events, "test-tenant")
 
-        secret_alerts = [
-            a
-            for a in alerts
-            if a.alert_type == "repeated_secret_exfil"
-        ]
+        secret_alerts = [a for a in alerts if a.alert_type == "repeated_secret_exfil"]
         assert len(secret_alerts) == 0
         db.close()
 
@@ -967,23 +929,13 @@ class TestEventBusHighSeverityBurst:
             db.add(e)
         db.commit()
 
-        with patch(
-            "cloud.services.event_bus._fire_webhooks"
-        ):
-            alerts = check_for_alerts(
-                db, events, "test-tenant"
-            )
+        with patch("cloud.services.event_bus._fire_webhooks"):
+            alerts = check_for_alerts(db, events, "test-tenant")
 
-        burst_alerts = [
-            a
-            for a in alerts
-            if a.alert_type == "high_severity_burst"
-        ]
+        burst_alerts = [a for a in alerts if a.alert_type == "high_severity_burst"]
         assert len(burst_alerts) == 1
         assert burst_alerts[0].severity == "high"
-        assert (
-            burst_alerts[0].details["event_count"] == 5
-        )
+        assert burst_alerts[0].details["event_count"] == 5
         db.close()
 
     def test_four_high_severity_no_alert(self):
@@ -1002,18 +954,10 @@ class TestEventBusHighSeverityBurst:
             db.add(e)
         db.commit()
 
-        with patch(
-            "cloud.services.event_bus._fire_webhooks"
-        ):
-            alerts = check_for_alerts(
-                db, events, "test-tenant"
-            )
+        with patch("cloud.services.event_bus._fire_webhooks"):
+            alerts = check_for_alerts(db, events, "test-tenant")
 
-        burst_alerts = [
-            a
-            for a in alerts
-            if a.alert_type == "high_severity_burst"
-        ]
+        burst_alerts = [a for a in alerts if a.alert_type == "high_severity_burst"]
         assert len(burst_alerts) == 0
         db.close()
 
@@ -1040,18 +984,10 @@ class TestEventBusHighSeverityBurst:
             db.add(e)
         db.commit()
 
-        with patch(
-            "cloud.services.event_bus._fire_webhooks"
-        ):
-            alerts = check_for_alerts(
-                db, events, "test-tenant"
-            )
+        with patch("cloud.services.event_bus._fire_webhooks"):
+            alerts = check_for_alerts(db, events, "test-tenant")
 
-        burst_alerts = [
-            a
-            for a in alerts
-            if a.alert_type == "high_severity_burst"
-        ]
+        burst_alerts = [a for a in alerts if a.alert_type == "high_severity_burst"]
         assert len(burst_alerts) == 1
         db.close()
 
@@ -1074,23 +1010,13 @@ class TestEventBusAgentFlapping:
             db.add(e)
         db.commit()
 
-        with patch(
-            "cloud.services.event_bus._fire_webhooks"
-        ):
-            alerts = check_for_alerts(
-                db, events, "test-tenant"
-            )
+        with patch("cloud.services.event_bus._fire_webhooks"):
+            alerts = check_for_alerts(db, events, "test-tenant")
 
-        flap_alerts = [
-            a
-            for a in alerts
-            if a.alert_type == "agent_flapping"
-        ]
+        flap_alerts = [a for a in alerts if a.alert_type == "agent_flapping"]
         assert len(flap_alerts) == 1
         assert flap_alerts[0].severity == "warn"
-        assert (
-            flap_alerts[0].details["distinct_types"] == 8
-        )
+        assert flap_alerts[0].details["distinct_types"] == 8
         db.close()
 
     def test_seven_types_no_alert(self):
@@ -1108,18 +1034,10 @@ class TestEventBusAgentFlapping:
             db.add(e)
         db.commit()
 
-        with patch(
-            "cloud.services.event_bus._fire_webhooks"
-        ):
-            alerts = check_for_alerts(
-                db, events, "test-tenant"
-            )
+        with patch("cloud.services.event_bus._fire_webhooks"):
+            alerts = check_for_alerts(db, events, "test-tenant")
 
-        flap_alerts = [
-            a
-            for a in alerts
-            if a.alert_type == "agent_flapping"
-        ]
+        flap_alerts = [a for a in alerts if a.alert_type == "agent_flapping"]
         assert len(flap_alerts) == 0
         db.close()
 
@@ -1157,12 +1075,8 @@ class TestEventBusCombinedPatterns:
             db.add(e)
         db.commit()
 
-        with patch(
-            "cloud.services.event_bus._fire_webhooks"
-        ):
-            alerts = check_for_alerts(
-                db, events, "test-tenant"
-            )
+        with patch("cloud.services.event_bus._fire_webhooks"):
+            alerts = check_for_alerts(db, events, "test-tenant")
 
         types = {a.alert_type for a in alerts}
         assert "repeated_secret_exfil" in types
@@ -1265,9 +1179,7 @@ class TestWazuhClientDisabled:
 
     def test_send_active_response_disabled(self):
         client = self._make_disabled_client()
-        result = _run(
-            client.send_active_response("a1", "block")
-        )
+        result = _run(client.send_active_response("a1", "block"))
         assert result is False
 
     def test_get_syscheck_events_disabled(self):
@@ -1340,21 +1252,15 @@ class TestWazuhEnsureToken:
         client = self._make_enabled_client()
 
         mock_resp = MagicMock()
-        mock_resp.json.return_value = {
-            "data": {"token": "jwt-abc-123"}
-        }
+        mock_resp.json.return_value = {"data": {"token": "jwt-abc-123"}}
         mock_resp.raise_for_status = MagicMock()
 
         mock_http = AsyncMock()
-        mock_http.__aenter__ = AsyncMock(
-            return_value=mock_http
-        )
+        mock_http.__aenter__ = AsyncMock(return_value=mock_http)
         mock_http.__aexit__ = AsyncMock(return_value=False)
         mock_http.post = AsyncMock(return_value=mock_resp)
 
-        with patch(
-            "httpx.AsyncClient", return_value=mock_http
-        ):
+        with patch("httpx.AsyncClient", return_value=mock_http):
             token = _run(client._ensure_token())
 
         assert token == "jwt-abc-123"
@@ -1364,9 +1270,7 @@ class TestWazuhEnsureToken:
     def test_ensure_token_cached(self):
         client = self._make_enabled_client()
         client._token = "cached-token"
-        client._token_expires = (
-            datetime.now(timezone.utc) + timedelta(minutes=5)
-        )
+        client._token_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
 
         token = _run(client._ensure_token())
         assert token == "cached-token"
@@ -1375,17 +1279,11 @@ class TestWazuhEnsureToken:
         client = self._make_enabled_client()
 
         mock_http = AsyncMock()
-        mock_http.__aenter__ = AsyncMock(
-            return_value=mock_http
-        )
+        mock_http.__aenter__ = AsyncMock(return_value=mock_http)
         mock_http.__aexit__ = AsyncMock(return_value=False)
-        mock_http.post = AsyncMock(
-            side_effect=httpx.ConnectError("refused")
-        )
+        mock_http.post = AsyncMock(side_effect=httpx.ConnectError("refused"))
 
-        with patch(
-            "httpx.AsyncClient", return_value=mock_http
-        ):
+        with patch("httpx.AsyncClient", return_value=mock_http):
             token = _run(client._ensure_token())
 
         assert token is None
@@ -1424,32 +1322,22 @@ class TestWazuhRequest:
         ):
             client = WazuhClient()
         client._token = "valid-token"
-        client._token_expires = (
-            datetime.now(timezone.utc) + timedelta(minutes=5)
-        )
+        client._token_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
         return client
 
     def test_request_success(self):
         client = self._make_enabled_client()
 
         mock_resp = MagicMock()
-        mock_resp.json.return_value = {
-            "data": {"items": ["a"]}
-        }
+        mock_resp.json.return_value = {"data": {"items": ["a"]}}
         mock_resp.raise_for_status = MagicMock()
 
         mock_http = AsyncMock()
-        mock_http.__aenter__ = AsyncMock(
-            return_value=mock_http
-        )
+        mock_http.__aenter__ = AsyncMock(return_value=mock_http)
         mock_http.__aexit__ = AsyncMock(return_value=False)
-        mock_http.request = AsyncMock(
-            return_value=mock_resp
-        )
+        mock_http.request = AsyncMock(return_value=mock_resp)
 
-        with patch(
-            "httpx.AsyncClient", return_value=mock_http
-        ):
+        with patch("httpx.AsyncClient", return_value=mock_http):
             result = _run(client._request("GET", "/test"))
 
         assert result == {"data": {"items": ["a"]}}
@@ -1468,15 +1356,11 @@ class TestWazuhRequest:
         )
 
         mock_http = AsyncMock()
-        mock_http.__aenter__ = AsyncMock(
-            return_value=mock_http
-        )
+        mock_http.__aenter__ = AsyncMock(return_value=mock_http)
         mock_http.__aexit__ = AsyncMock(return_value=False)
         mock_http.request = AsyncMock(side_effect=exc)
 
-        with patch(
-            "httpx.AsyncClient", return_value=mock_http
-        ):
+        with patch("httpx.AsyncClient", return_value=mock_http):
             result = _run(client._request("GET", "/test"))
 
         assert result == {}
@@ -1486,17 +1370,11 @@ class TestWazuhRequest:
         client = self._make_enabled_client()
 
         mock_http = AsyncMock()
-        mock_http.__aenter__ = AsyncMock(
-            return_value=mock_http
-        )
+        mock_http.__aenter__ = AsyncMock(return_value=mock_http)
         mock_http.__aexit__ = AsyncMock(return_value=False)
-        mock_http.request = AsyncMock(
-            side_effect=httpx.ConnectError("down")
-        )
+        mock_http.request = AsyncMock(side_effect=httpx.ConnectError("down"))
 
-        with patch(
-            "httpx.AsyncClient", return_value=mock_http
-        ):
+        with patch("httpx.AsyncClient", return_value=mock_http):
             result = _run(client._request("GET", "/fail"))
 
         assert result == {}
@@ -1508,17 +1386,11 @@ class TestWazuhRequest:
         client._token_expires = None
 
         mock_http = AsyncMock()
-        mock_http.__aenter__ = AsyncMock(
-            return_value=mock_http
-        )
+        mock_http.__aenter__ = AsyncMock(return_value=mock_http)
         mock_http.__aexit__ = AsyncMock(return_value=False)
-        mock_http.post = AsyncMock(
-            side_effect=httpx.ConnectError("no auth")
-        )
+        mock_http.post = AsyncMock(side_effect=httpx.ConnectError("no auth"))
 
-        with patch(
-            "httpx.AsyncClient", return_value=mock_http
-        ):
+        with patch("httpx.AsyncClient", return_value=mock_http):
             result = _run(client._request("GET", "/x"))
 
         assert result == {}
@@ -1542,9 +1414,7 @@ class TestWazuhGetAlerts:
         ):
             client = WazuhClient()
         client._token = "tok"
-        client._token_expires = (
-            datetime.now(timezone.utc) + timedelta(minutes=5)
-        )
+        client._token_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
         return client
 
     def test_get_alerts_returns_items(self):
@@ -1552,26 +1422,16 @@ class TestWazuhGetAlerts:
 
         mock_resp = MagicMock()
         mock_resp.json.return_value = {
-            "data": {
-                "affected_items": [
-                    {"id": 1, "rule": {"level": 10}}
-                ]
-            }
+            "data": {"affected_items": [{"id": 1, "rule": {"level": 10}}]}
         }
         mock_resp.raise_for_status = MagicMock()
 
         mock_http = AsyncMock()
-        mock_http.__aenter__ = AsyncMock(
-            return_value=mock_http
-        )
+        mock_http.__aenter__ = AsyncMock(return_value=mock_http)
         mock_http.__aexit__ = AsyncMock(return_value=False)
-        mock_http.request = AsyncMock(
-            return_value=mock_resp
-        )
+        mock_http.request = AsyncMock(return_value=mock_resp)
 
-        with patch(
-            "httpx.AsyncClient", return_value=mock_http
-        ):
+        with patch("httpx.AsyncClient", return_value=mock_http):
             alerts = _run(client.get_alerts(limit=10))
 
         assert len(alerts) == 1
@@ -1581,26 +1441,16 @@ class TestWazuhGetAlerts:
         client = self._make_client_with_token()
 
         mock_resp = MagicMock()
-        mock_resp.json.return_value = {
-            "data": {"affected_items": []}
-        }
+        mock_resp.json.return_value = {"data": {"affected_items": []}}
         mock_resp.raise_for_status = MagicMock()
 
         mock_http = AsyncMock()
-        mock_http.__aenter__ = AsyncMock(
-            return_value=mock_http
-        )
+        mock_http.__aenter__ = AsyncMock(return_value=mock_http)
         mock_http.__aexit__ = AsyncMock(return_value=False)
-        mock_http.request = AsyncMock(
-            return_value=mock_resp
-        )
+        mock_http.request = AsyncMock(return_value=mock_resp)
 
-        with patch(
-            "httpx.AsyncClient", return_value=mock_http
-        ):
-            alerts = _run(
-                client.get_alerts(severity=7, limit=50)
-            )
+        with patch("httpx.AsyncClient", return_value=mock_http):
+            alerts = _run(client.get_alerts(severity=7, limit=50))
 
         assert alerts == []
 
@@ -1623,9 +1473,7 @@ class TestWazuhAgentStatus:
         ):
             client = WazuhClient()
         client._token = "tok"
-        client._token_expires = (
-            datetime.now(timezone.utc) + timedelta(minutes=5)
-        )
+        client._token_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
         return client
 
     def test_get_agent_status_found(self):
@@ -1646,9 +1494,7 @@ class TestWazuhAgentStatus:
                     ]
                 }
             }
-            result = _run(
-                client.get_agent_status("001")
-            )
+            result = _run(client.get_agent_status("001"))
 
         assert result["status"] == "active"
 
@@ -1660,12 +1506,8 @@ class TestWazuhAgentStatus:
             "_request",
             new_callable=AsyncMock,
         ) as mock_req:
-            mock_req.return_value = {
-                "data": {"affected_items": []}
-            }
-            result = _run(
-                client.get_agent_status("999")
-            )
+            mock_req.return_value = {"data": {"affected_items": []}}
+            result = _run(client.get_agent_status("999"))
 
         assert result == {}
 
@@ -1708,9 +1550,7 @@ class TestWazuhActiveResponse:
         ):
             client = WazuhClient()
         client._token = "tok"
-        client._token_expires = (
-            datetime.now(timezone.utc) + timedelta(minutes=5)
-        )
+        client._token_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
         return client
 
     def test_active_response_success(self):
@@ -1721,14 +1561,8 @@ class TestWazuhActiveResponse:
             "_request",
             new_callable=AsyncMock,
         ) as mock_req:
-            mock_req.return_value = {
-                "data": {"total_affected_items": 1}
-            }
-            result = _run(
-                client.send_active_response(
-                    "001", "block-ip", ["-ip", "10.0.0.1"]
-                )
-            )
+            mock_req.return_value = {"data": {"total_affected_items": 1}}
+            result = _run(client.send_active_response("001", "block-ip", ["-ip", "10.0.0.1"]))
 
         assert result is True
 
@@ -1740,14 +1574,8 @@ class TestWazuhActiveResponse:
             "_request",
             new_callable=AsyncMock,
         ) as mock_req:
-            mock_req.return_value = {
-                "data": {"total_affected_items": 0}
-            }
-            result = _run(
-                client.send_active_response(
-                    "001", "quarantine"
-                )
-            )
+            mock_req.return_value = {"data": {"total_affected_items": 0}}
+            result = _run(client.send_active_response("001", "quarantine"))
 
         assert result is False
 
@@ -1770,9 +1598,7 @@ class TestWazuhSyscheck:
         ):
             client = WazuhClient()
         client._token = "tok"
-        client._token_expires = (
-            datetime.now(timezone.utc) + timedelta(minutes=5)
-        )
+        client._token_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
 
         with patch.object(
             client,
@@ -1780,15 +1606,9 @@ class TestWazuhSyscheck:
             new_callable=AsyncMock,
         ) as mock_req:
             mock_req.return_value = {
-                "data": {
-                    "affected_items": [
-                        {"file": "/etc/passwd", "event": "m"}
-                    ]
-                }
+                "data": {"affected_items": [{"file": "/etc/passwd", "event": "m"}]}
             }
-            result = _run(
-                client.get_syscheck_events("001")
-            )
+            result = _run(client.get_syscheck_events("001"))
 
         assert len(result) == 1
         assert result[0]["file"] == "/etc/passwd"
@@ -1812,18 +1632,14 @@ class TestWazuhHealthCheck:
         ):
             client = WazuhClient()
         client._token = "tok"
-        client._token_expires = (
-            datetime.now(timezone.utc) + timedelta(minutes=5)
-        )
+        client._token_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
 
         with patch.object(
             client,
             "_request",
             new_callable=AsyncMock,
         ) as mock_req:
-            mock_req.return_value = {
-                "data": {"nodes": ["master"]}
-            }
+            mock_req.return_value = {"data": {"nodes": ["master"]}}
             result = _run(client.health_check())
 
         assert result["status"] == "ok"
@@ -1844,9 +1660,7 @@ class TestWazuhHealthCheck:
         ):
             client = WazuhClient()
         client._token = "tok"
-        client._token_expires = (
-            datetime.now(timezone.utc) + timedelta(minutes=5)
-        )
+        client._token_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
 
         with patch.object(
             client,
@@ -1875,9 +1689,7 @@ class TestWazuhVerifySSL:
                 "ANGELCLAW_WAZUH_PASSWORD": "p",
             },
         ):
-            os.environ.pop(
-                "ANGELCLAW_WAZUH_VERIFY_SSL", None
-            )
+            os.environ.pop("ANGELCLAW_WAZUH_VERIFY_SSL", None)
             client = WazuhClient()
         assert client.verify_ssl is True
 

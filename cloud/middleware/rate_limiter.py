@@ -80,19 +80,24 @@ class RateLimitTier:
 
 DEFAULT_TIERS: dict[RoleTierName, RateLimitTier] = {
     RoleTierName.ADMIN: RateLimitTier(
-        name=RoleTierName.ADMIN, requests_per_minute=300,
+        name=RoleTierName.ADMIN,
+        requests_per_minute=300,
     ),
     RoleTierName.SECOPS: RateLimitTier(
-        name=RoleTierName.SECOPS, requests_per_minute=200,
+        name=RoleTierName.SECOPS,
+        requests_per_minute=200,
     ),
     RoleTierName.VIEWER: RateLimitTier(
-        name=RoleTierName.VIEWER, requests_per_minute=100,
+        name=RoleTierName.VIEWER,
+        requests_per_minute=100,
     ),
     RoleTierName.ANONYMOUS: RateLimitTier(
-        name=RoleTierName.ANONYMOUS, requests_per_minute=60,
+        name=RoleTierName.ANONYMOUS,
+        requests_per_minute=60,
     ),
     RoleTierName.SERVICE: RateLimitTier(
-        name=RoleTierName.SERVICE, requests_per_minute=500,
+        name=RoleTierName.SERVICE,
+        requests_per_minute=500,
     ),
 }
 
@@ -162,9 +167,7 @@ class TokenBucket:
                 # Time until next whole token
                 deficit = 1.0 - (self.tokens % 1.0) if self.tokens > 0 else 1.0
                 reset_seconds = (
-                    deficit / self.tier.refill_rate
-                    if self.tier.refill_rate > 0
-                    else 60.0
+                    deficit / self.tier.refill_rate if self.tier.refill_rate > 0 else 60.0
                 )
             return limit, remaining, reset_seconds
 
@@ -379,7 +382,7 @@ def resolve_role(request: Any) -> RoleTierName:
     _ROLE_MAP: dict[str, RoleTierName] = {
         "admin": RoleTierName.ADMIN,
         "secops": RoleTierName.SECOPS,
-        "operator": RoleTierName.SECOPS,   # operator → secops tier
+        "operator": RoleTierName.SECOPS,  # operator → secops tier
         "viewer": RoleTierName.VIEWER,
         "service": RoleTierName.SERVICE,
     }

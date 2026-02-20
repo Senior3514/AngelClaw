@@ -97,7 +97,10 @@ class ThreatHunterService:
 
         logger.info(
             "[THREAT_HUNT] Created hunt '%s' (%s) for %s — hypothesis: %s",
-            name, htype, tenant_id, hypothesis[:80] if hypothesis else "none",
+            name,
+            htype,
+            tenant_id,
+            hypothesis[:80] if hypothesis else "none",
         )
         return hunt.model_dump(mode="json")
 
@@ -128,7 +131,10 @@ class ThreatHunterService:
 
         logger.info(
             "[THREAT_HUNT] Hunt '%s' %s — %d findings, %d IOC matches",
-            hunt.name, hunt.status, hunt.findings_count, hunt.iocs_matched,
+            hunt.name,
+            hunt.status,
+            hunt.findings_count,
+            hunt.iocs_matched,
         )
         return hunt.model_dump(mode="json")
 
@@ -196,7 +202,9 @@ class ThreatHunterService:
 
         logger.info(
             "[THREAT_HUNT] Created playbook '%s' with %d steps for %s",
-            name, len(pb.steps), tenant_id,
+            name,
+            len(pb.steps),
+            tenant_id,
         )
         return pb.model_dump(mode="json")
 
@@ -215,9 +223,7 @@ class ThreatHunterService:
     def get_stats(self, tenant_id: str) -> dict:
         """Return threat hunter statistics for a tenant."""
         hunts = [
-            self._hunts[hid]
-            for hid in self._tenant_hunts.get(tenant_id, [])
-            if hid in self._hunts
+            self._hunts[hid] for hid in self._tenant_hunts.get(tenant_id, []) if hid in self._hunts
         ]
         playbooks = [
             self._playbooks[pid]
@@ -243,7 +249,8 @@ class ThreatHunterService:
             "total_iocs_matched": total_iocs,
             "total_playbooks": len(playbooks),
             "avg_findings_per_hunt": round(
-                total_findings / max(len(hunts), 1), 1,
+                total_findings / max(len(hunts), 1),
+                1,
             ),
         }
 
@@ -259,37 +266,45 @@ class ThreatHunterService:
         """
         results = []
         if hunt.hunt_type == "ioc_sweep":
-            results.append({
-                "step": "ioc_sweep",
-                "events_scanned": 5000,
-                "ioc_match": True,
-                "finding": True,
-                "details": "Matched 3 known-bad IPs in network logs",
-            })
+            results.append(
+                {
+                    "step": "ioc_sweep",
+                    "events_scanned": 5000,
+                    "ioc_match": True,
+                    "finding": True,
+                    "details": "Matched 3 known-bad IPs in network logs",
+                }
+            )
         elif hunt.hunt_type == "behavioral":
-            results.append({
-                "step": "behavioral_analysis",
-                "events_scanned": 8000,
-                "ioc_match": False,
-                "finding": True,
-                "details": "Detected lateral movement pattern",
-            })
+            results.append(
+                {
+                    "step": "behavioral_analysis",
+                    "events_scanned": 8000,
+                    "ioc_match": False,
+                    "finding": True,
+                    "details": "Detected lateral movement pattern",
+                }
+            )
         elif hunt.hunt_type == "anomaly":
-            results.append({
-                "step": "anomaly_detection",
-                "events_scanned": 12000,
-                "ioc_match": False,
-                "finding": False,
-                "details": "No significant anomalies detected",
-            })
+            results.append(
+                {
+                    "step": "anomaly_detection",
+                    "events_scanned": 12000,
+                    "ioc_match": False,
+                    "finding": False,
+                    "details": "No significant anomalies detected",
+                }
+            )
         else:
-            results.append({
-                "step": "hypothesis_test",
-                "events_scanned": 3000,
-                "ioc_match": False,
-                "finding": False,
-                "details": f"Tested hypothesis: {hunt.hypothesis}",
-            })
+            results.append(
+                {
+                    "step": "hypothesis_test",
+                    "events_scanned": 3000,
+                    "ioc_match": False,
+                    "finding": False,
+                    "details": f"Tested hypothesis: {hunt.hypothesis}",
+                }
+            )
 
         return results
 

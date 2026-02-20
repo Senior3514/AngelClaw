@@ -36,9 +36,7 @@ class ChannelCreateRequest(BaseModel):
     """Body for creating a notification channel."""
 
     name: str = Field(..., min_length=1, max_length=128, description="Channel display name")
-    channel_type: str = Field(
-        ..., description="Channel type: slack, discord, or webhook"
-    )
+    channel_type: str = Field(..., description="Channel type: slack, discord, or webhook")
     config: dict[str, Any] = Field(
         ..., description="Channel-specific config (must include webhook_url)"
     )
@@ -172,8 +170,7 @@ def create_channel(
         raise HTTPException(
             status_code=400,
             detail=(
-                f"Invalid channel_type '{body.channel_type}'."
-                f" Must be one of: {sorted(valid_types)}"
+                f"Invalid channel_type '{body.channel_type}'. Must be one of: {sorted(valid_types)}"
             ),
         )
 

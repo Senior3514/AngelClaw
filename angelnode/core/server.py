@@ -174,6 +174,11 @@ from angelnode.ai_shield.openclaw_adapter import router as openclaw_router  # no
 
 app.include_router(openclaw_router)
 
+# Mount the AngelClaw defense agent adapter — the angel-side mirror of OpenClaw.
+from angelnode.ai_shield.angelbot_adapter import router as angelclaw_agent_router  # noqa: E402
+
+app.include_router(angelclaw_agent_router)
+
 
 # ---------------------------------------------------------------------------
 # Token auth dependency for /status

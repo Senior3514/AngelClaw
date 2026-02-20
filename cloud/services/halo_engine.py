@@ -121,16 +121,16 @@ class HaloScoreEngine:
         self._current_scores[tenant_id] = score
         self._score_history[tenant_id].append(score)
         if len(self._score_history[tenant_id]) > self._max_history:
-            self._score_history[tenant_id] = self._score_history[tenant_id][
-                -self._max_history:
-            ]
+            self._score_history[tenant_id] = self._score_history[tenant_id][-self._max_history :]
 
         # Update dimension cache
         self._dimension_cache[tenant_id] = raw
 
         logger.info(
             "[HALO] Computed score %.1f (%s) for %s",
-            overall, classification, tenant_id,
+            overall,
+            classification,
+            tenant_id,
         )
         return score.model_dump(mode="json")
 
@@ -163,13 +163,15 @@ class HaloScoreEngine:
         for dim_name, weight in _DIMENSION_WEIGHTS.items():
             raw = score.dimensions.get(dim_name, 0.0)
             weighted = score.weighted_dimensions.get(dim_name, 0.0)
-            breakdown.append({
-                "dimension": dim_name,
-                "weight_pct": round(weight * 100),
-                "raw_score": raw,
-                "weighted_contribution": weighted,
-                "classification": self._classify(raw),
-            })
+            breakdown.append(
+                {
+                    "dimension": dim_name,
+                    "weight_pct": round(weight * 100),
+                    "raw_score": raw,
+                    "weighted_contribution": weighted,
+                    "classification": self._classify(raw),
+                }
+            )
 
         # Sort by weighted contribution descending
         breakdown.sort(key=lambda d: d["weighted_contribution"], reverse=True)
@@ -200,9 +202,7 @@ class HaloScoreEngine:
             "avg_score": round(sum(scores) / max(len(scores), 1), 1) if scores else 0.0,
             "min_score": round(min(scores), 1) if scores else 0.0,
             "max_score": round(max(scores), 1) if scores else 0.0,
-            "dimension_weights": {
-                k: round(v * 100) for k, v in _DIMENSION_WEIGHTS.items()
-            },
+            "dimension_weights": {k: round(v * 100) for k, v in _DIMENSION_WEIGHTS.items()},
         }
 
     # ------------------------------------------------------------------

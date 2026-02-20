@@ -86,6 +86,7 @@ def client():
     # Reset rate limiter state between test clients so accumulated
     # requests from earlier tests don't trigger 429s.
     from cloud.middleware.security import _rate_windows
+
     _rate_windows.clear()
     with TestClient(app) as c:
         yield c

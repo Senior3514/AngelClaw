@@ -30,7 +30,8 @@ class WazuhClient:
         self.username = os.environ.get("ANGELCLAW_WAZUH_USER", "")
         self.password = os.environ.get("ANGELCLAW_WAZUH_PASSWORD", "")
         self.verify_ssl: bool = os.environ.get(
-            "ANGELCLAW_WAZUH_VERIFY_SSL", "true",
+            "ANGELCLAW_WAZUH_VERIFY_SSL",
+            "true",
         ).lower() not in ("0", "false", "no")
         self._token: str | None = None
         self._token_expires: datetime | None = None

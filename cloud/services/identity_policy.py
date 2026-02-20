@@ -43,12 +43,12 @@ class IdentityPolicy:
         self.id = str(uuid.uuid4())
         self.tenant_id = tenant_id
         self.name = name
-        self.identity_type = identity_type       # user, service, group, role
+        self.identity_type = identity_type  # user, service, group, role
         self.identity_pattern = identity_pattern  # e.g. "admin-*", "svc-payment"
         self.resource_pattern = resource_pattern  # e.g. "/api/billing/*", "db:production"
-        self.decision = decision                  # allow | deny | mfa_required | step_up
-        self.conditions = conditions or {}        # time_of_day, geo, device_trust_min, risk_max
-        self.priority = priority                  # Lower = evaluated first
+        self.decision = decision  # allow | deny | mfa_required | step_up
+        self.conditions = conditions or {}  # time_of_day, geo, device_trust_min, risk_max
+        self.priority = priority  # Lower = evaluated first
         self.enabled = enabled
         self.description = description
         self.match_count = 0
@@ -103,7 +103,9 @@ class IdentityPolicyService:
     ) -> dict:
         """Create a new identity-based access policy."""
         if decision not in _DECISION_PRIORITY:
-            raise ValueError(f"Invalid decision '{decision}'; must be one of {list(_DECISION_PRIORITY)}")
+            raise ValueError(
+                f"Invalid decision '{decision}'; must be one of {list(_DECISION_PRIORITY)}"
+            )
         policy = IdentityPolicy(
             tenant_id=tenant_id,
             name=name,
@@ -120,7 +122,12 @@ class IdentityPolicyService:
         self._tenant_policies[tenant_id].append(policy.id)
         logger.info(
             "[IDENTITY_POLICY] Created policy %s (%s) for tenant %s \u2014 %s %s on %s",
-            policy.id[:8], name, tenant_id, decision, identity_pattern, resource_pattern,
+            policy.id[:8],
+            name,
+            tenant_id,
+            decision,
+            identity_pattern,
+            resource_pattern,
         )
         return policy.to_dict()
 
@@ -150,9 +157,15 @@ class IdentityPolicyService:
         if not policy:
             return None
         allowed_fields = {
-            "name", "identity_type", "identity_pattern",
-            "resource_pattern", "decision", "conditions",
-            "priority", "enabled", "description",
+            "name",
+            "identity_type",
+            "identity_pattern",
+            "resource_pattern",
+            "decision",
+            "conditions",
+            "priority",
+            "enabled",
+            "description",
         }
         for key, value in kwargs.items():
             if key in allowed_fields:
@@ -217,16 +230,20 @@ class IdentityPolicyService:
             policy.last_matched_at = datetime.now(timezone.utc)
 
             effective_decision = condition_result.get("elevated_decision", policy.decision)
-            matched_policies.append({
-                "policy_id": policy.id,
-                "policy_name": policy.name,
-                "decision": effective_decision,
-                "priority": policy.priority,
-                "conditions_evaluated": condition_result,
-            })
+            matched_policies.append(
+                {
+                    "policy_id": policy.id,
+                    "policy_name": policy.name,
+                    "decision": effective_decision,
+                    "priority": policy.priority,
+                    "conditions_evaluated": condition_result,
+                }
+            )
 
             # Keep strongest decision
-            if _DECISION_PRIORITY.get(effective_decision, 0) > _DECISION_PRIORITY.get(strongest_decision, 0):
+            if _DECISION_PRIORITY.get(effective_decision, 0) > _DECISION_PRIORITY.get(
+                strongest_decision, 0
+            ):
                 strongest_decision = effective_decision
 
         if not matched_policies:
@@ -238,7 +255,11 @@ class IdentityPolicyService:
 
         logger.info(
             "[IDENTITY_POLICY] %s access for %s:%s -> %s \u2014 %d policies matched",
-            strongest_decision.upper(), identity_type, identity_name, resource, len(matched_policies),
+            strongest_decision.upper(),
+            identity_type,
+            identity_name,
+            resource,
+            len(matched_policies),
         )
         return {
             "decision": strongest_decision,
@@ -351,7 +372,9 @@ class IdentityPolicyService:
             }
             if not trust_ok:
                 new_decision = "mfa_required" if current_trust >= trust_min * 0.5 else "deny"
-                if _DECISION_PRIORITY.get(new_decision, 0) > _DECISION_PRIORITY.get(elevated_decision or "allow", 0):
+                if _DECISION_PRIORITY.get(new_decision, 0) > _DECISION_PRIORITY.get(
+                    elevated_decision or "allow", 0
+                ):
                     elevated_decision = new_decision
 
         # Risk maximum
@@ -366,7 +389,9 @@ class IdentityPolicyService:
             }
             if not risk_ok:
                 new_decision = "step_up" if current_risk <= risk_max * 1.5 else "deny"
-                if _DECISION_PRIORITY.get(new_decision, 0) > _DECISION_PRIORITY.get(elevated_decision or "allow", 0):
+                if _DECISION_PRIORITY.get(new_decision, 0) > _DECISION_PRIORITY.get(
+                    elevated_decision or "allow", 0
+                ):
                     elevated_decision = new_decision
 
         if elevated_decision:

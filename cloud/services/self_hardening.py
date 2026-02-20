@@ -31,7 +31,9 @@ logger = logging.getLogger("angelclaw.self_hardening")
 class HardeningAction(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     tenant_id: str = "dev-tenant"
-    action_type: str  # tighten_allowlist, enable_logging, increase_scan_freq, strengthen_auth, block_source
+    action_type: (
+        str  # tighten_allowlist, enable_logging, increase_scan_freq, strengthen_auth, block_source
+    )
     description: str = ""
     reason: str = ""
     before_state: dict[str, Any] = {}
@@ -135,7 +137,11 @@ class SelfHardeningEngine:
             action = HardeningAction(
                 tenant_id=tenant_id,
                 action_type="enable_anti_tamper",
-                description=f"Enable anti-tamper monitoring for {len(unprotected_agents)} high-risk agent(s)",
+                description=(
+                    "Enable anti-tamper monitoring for"
+                    f" {len(unprotected_agents)}"
+                    " high-risk agent(s)"
+                ),
                 reason="High-risk agents detected without anti-tamper protection",
                 before_state={"unprotected": unprotected_agents[:10]},
                 after_state={"mode": "monitor"},
@@ -151,7 +157,10 @@ class SelfHardeningEngine:
                 tenant_id=tenant_id,
                 action_type="propose_stronger_defaults",
                 description="Propose stronger default configuration based on repeated issues",
-                reason=f"{misconfig_count} misconfigurations detected — stronger defaults recommended",
+                reason=(
+                    f"{misconfig_count} misconfigurations"
+                    " detected — stronger defaults recommended"
+                ),
                 before_state={"misconfig_count": misconfig_count},
                 after_state={"action": "defaults_strengthened"},
                 autonomy_mode=autonomy_mode,
@@ -167,18 +176,21 @@ class SelfHardeningEngine:
                 self._actions.append(action)
                 logger.info(
                     "[HARDENING] AUTO-APPLIED: %s — %s",
-                    action.action_type, action.description,
+                    action.action_type,
+                    action.description,
                 )
             elif autonomy_mode == "suggest":
                 self._proposed.append(action)
                 logger.info(
                     "[HARDENING] PROPOSED: %s — %s",
-                    action.action_type, action.description,
+                    action.action_type,
+                    action.description,
                 )
             else:  # observe
                 logger.info(
                     "[HARDENING] OBSERVED: %s — %s",
-                    action.action_type, action.description,
+                    action.action_type,
+                    action.description,
                 )
 
             self._tenant_issues[tenant_id][action.action_type] += 1
@@ -204,7 +216,9 @@ class SelfHardeningEngine:
                 self._proposed.pop(i)
                 logger.info(
                     "[HARDENING] Applied by %s: %s — %s",
-                    applied_by, action.action_type, action.description,
+                    applied_by,
+                    action.action_type,
+                    action.description,
                 )
                 return action.model_dump(mode="json")
         return None
@@ -222,7 +236,9 @@ class SelfHardeningEngine:
                 action.reverted_by = reverted_by
                 logger.info(
                     "[HARDENING] Reverted by %s: %s — %s",
-                    reverted_by, action.action_type, action.description,
+                    reverted_by,
+                    action.action_type,
+                    action.description,
                 )
                 return action.model_dump(mode="json")
         return None

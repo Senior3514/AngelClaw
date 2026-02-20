@@ -45,9 +45,9 @@ class MajorIncident:
         self.id = str(uuid.uuid4())
         self.tenant_id = tenant_id
         self.title = title
-        self.severity = severity              # critical, high, medium, low
+        self.severity = severity  # critical, high, medium, low
         self.description = description
-        self.status = "declared"              # declared, investigating, mitigating, resolved, postmortem
+        self.status = "declared"  # declared, investigating, mitigating, resolved, postmortem
         self.commander_ai = commander_ai
         self.timeline: list[dict[str, Any]] = []
         self.related_incident_ids: list[str] = related_incident_ids or []
@@ -78,7 +78,7 @@ class IncidentCommanderService:
     def __init__(self) -> None:
         self._incidents: dict[str, MajorIncident] = {}
         self._tenant_incidents: dict[str, list[str]] = defaultdict(list)
-        self._commander_idx = 0               # round-robin index
+        self._commander_idx = 0  # round-robin index
 
     # ------------------------------------------------------------------
     # Core operations
@@ -103,17 +103,22 @@ class IncidentCommanderService:
             related_incident_ids=related_ids,
         )
         # Seed the timeline with the declaration event
-        incident.timeline.append({
-            "timestamp": incident.declared_at.isoformat(),
-            "status": "declared",
-            "update": f"Incident declared — commander {commander} assigned.",
-        })
+        incident.timeline.append(
+            {
+                "timestamp": incident.declared_at.isoformat(),
+                "status": "declared",
+                "update": f"Incident declared — commander {commander} assigned.",
+            }
+        )
 
         self._incidents[incident.id] = incident
         self._tenant_incidents[tenant_id].append(incident.id)
         logger.info(
             "[INCIDENT_CMD] Declared incident '%s' severity=%s commander=%s for %s",
-            title, severity, commander, tenant_id,
+            title,
+            severity,
+            commander,
+            tenant_id,
         )
         return incident.to_dict()
 
@@ -153,7 +158,8 @@ class IncidentCommanderService:
         incident.timeline.append(entry)
         logger.info(
             "[INCIDENT_CMD] Update on %s — status=%s",
-            incident_id[:8], status or incident.status,
+            incident_id[:8],
+            status or incident.status,
         )
         return incident.to_dict()
 
@@ -190,8 +196,11 @@ class IncidentCommanderService:
             "by_status": dict(by_status),
             "by_severity": dict(by_severity),
             "avg_mttr_seconds": round(
-                sum(mttr_values) / max(len(mttr_values), 1), 2,
-            ) if mttr_values else None,
+                sum(mttr_values) / max(len(mttr_values), 1),
+                2,
+            )
+            if mttr_values
+            else None,
         }
 
     # ------------------------------------------------------------------

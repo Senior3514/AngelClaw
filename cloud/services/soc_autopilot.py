@@ -26,7 +26,11 @@ logger = logging.getLogger("angelclaw.soc_autopilot")
 
 _TRIAGE_LEVELS = {"p1_critical", "p2_high", "p3_medium", "p4_low", "p5_info"}
 _INVESTIGATION_STATUSES = {
-    "open", "investigating", "escalated", "resolved", "closed",
+    "open",
+    "investigating",
+    "escalated",
+    "resolved",
+    "closed",
 }
 
 
@@ -122,7 +126,10 @@ class SOCAutopilotService:
 
         logger.info(
             "[SOC_AUTO] Triaged alert %s as %s (%s) for %s",
-            alert_id, triage_level, category, tenant_id,
+            alert_id,
+            triage_level,
+            category,
+            tenant_id,
         )
         return alert.model_dump(mode="json")
 
@@ -147,8 +154,16 @@ class SOCAutopilotService:
         # Simulate evidence collection
         evidence_items = [
             {"type": "log_analysis", "source": "siem", "summary": "Correlated 15 log events"},
-            {"type": "network_capture", "source": "ndr", "summary": "Captured suspicious traffic patterns"},
-            {"type": "endpoint_telemetry", "source": "edr", "summary": "Process tree reconstruction complete"},
+            {
+                "type": "network_capture",
+                "source": "ndr",
+                "summary": "Captured suspicious traffic patterns",
+            },
+            {
+                "type": "endpoint_telemetry",
+                "source": "edr",
+                "summary": "Process tree reconstruction complete",
+            },
         ]
         inv.evidence.extend(evidence_items)
 
@@ -162,7 +177,8 @@ class SOCAutopilotService:
 
         logger.info(
             "[SOC_AUTO] Investigation %s: collected %d evidence items",
-            investigation_id[:8], len(evidence_items),
+            investigation_id[:8],
+            len(evidence_items),
         )
         return inv.model_dump(mode="json")
 
@@ -190,7 +206,9 @@ class SOCAutopilotService:
 
         logger.info(
             "[SOC_AUTO] Created investigation %s with %d alerts for %s",
-            inv.id[:8], len(alert_ids), tenant_id,
+            inv.id[:8],
+            len(alert_ids),
+            tenant_id,
         )
         return inv.model_dump(mode="json")
 
@@ -219,7 +237,9 @@ class SOCAutopilotService:
 
         logger.info(
             "[SOC_AUTO] Registered analyst '%s' (shift=%s) for %s",
-            name or analyst_id, shift, tenant_id,
+            name or analyst_id,
+            shift,
+            tenant_id,
         )
         return analyst.model_dump(mode="json")
 
@@ -257,7 +277,8 @@ class SOCAutopilotService:
 
         logger.info(
             "[SOC_AUTO] Assigned alert %s to analyst '%s'",
-            alert_id, analyst_id,
+            alert_id,
+            analyst_id,
         )
         return target.model_dump(mode="json")
 
@@ -271,16 +292,19 @@ class SOCAutopilotService:
 
         by_shift: dict[str, list[dict]] = defaultdict(list)
         for a in analysts:
-            by_shift[a.shift].append({
-                "analyst_id": a.analyst_id,
-                "name": a.name,
-                "active": a.active,
-                "workload": a.current_workload,
-                "max_workload": a.max_workload,
-                "utilization_pct": round(
-                    a.current_workload / max(a.max_workload, 1) * 100, 1,
-                ),
-            })
+            by_shift[a.shift].append(
+                {
+                    "analyst_id": a.analyst_id,
+                    "name": a.name,
+                    "active": a.active,
+                    "workload": a.current_workload,
+                    "max_workload": a.max_workload,
+                    "utilization_pct": round(
+                        a.current_workload / max(a.max_workload, 1) * 100,
+                        1,
+                    ),
+                }
+            )
 
         return {
             "tenant_id": tenant_id,
@@ -297,12 +321,10 @@ class SOCAutopilotService:
         total_current = sum(a.current_workload for a in analysts if a.active)
 
         overloaded = [
-            a.analyst_id for a in analysts
-            if a.active and a.current_workload >= a.max_workload
+            a.analyst_id for a in analysts if a.active and a.current_workload >= a.max_workload
         ]
         available = [
-            a.analyst_id for a in analysts
-            if a.active and a.current_workload < a.max_workload
+            a.analyst_id for a in analysts if a.active and a.current_workload < a.max_workload
         ]
 
         return {
@@ -310,7 +332,8 @@ class SOCAutopilotService:
             "total_capacity": total_capacity,
             "current_workload": total_current,
             "utilization_pct": round(
-                total_current / max(total_capacity, 1) * 100, 1,
+                total_current / max(total_capacity, 1) * 100,
+                1,
             ),
             "overloaded_analysts": overloaded,
             "available_analysts": available,
@@ -330,9 +353,7 @@ class SOCAutopilotService:
         ]
 
         open_alerts = [a for a in alerts if a.status not in ("resolved", "closed")]
-        active_investigations = [
-            i for i in investigations if i.status in ("open", "investigating")
-        ]
+        active_investigations = [i for i in investigations if i.status in ("open", "investigating")]
 
         by_priority: dict[str, int] = defaultdict(int)
         for a in open_alerts:
@@ -396,8 +417,7 @@ class SOCAutopilotService:
             "auto_triaged": sum(1 for a in alerts if a.auto_triaged),
             "total_investigations": len(investigations),
             "active_investigations": sum(
-                1 for i in investigations
-                if i.status in ("open", "investigating")
+                1 for i in investigations if i.status in ("open", "investigating")
             ),
             "total_analysts": len(analysts),
             "active_analysts": sum(1 for a in analysts if a.active),
@@ -449,10 +469,7 @@ class SOCAutopilotService:
     def _auto_assign(self, tenant_id: str, alert: TriagedAlert) -> None:
         """Auto-assign a high-priority alert to the least-loaded analyst."""
         analysts = self._get_tenant_analysts(tenant_id)
-        available = [
-            a for a in analysts
-            if a.active and a.current_workload < a.max_workload
-        ]
+        available = [a for a in analysts if a.active and a.current_workload < a.max_workload]
 
         if not available:
             logger.warning(
@@ -471,7 +488,9 @@ class SOCAutopilotService:
 
         logger.info(
             "[SOC_AUTO] Auto-assigned %s alert %s to '%s'",
-            alert.triage_level, alert.alert_id, chosen.analyst_id,
+            alert.triage_level,
+            alert.alert_id,
+            chosen.analyst_id,
         )
 
     def _get_tenant_analysts(self, tenant_id: str) -> list[SOCAnalyst]:

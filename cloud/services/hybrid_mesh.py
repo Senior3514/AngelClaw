@@ -92,7 +92,9 @@ class HybridMeshService:
 
         logger.info(
             "[HYBRID_MESH] Registered environment '%s' (%s) for %s",
-            env_name, etype, tenant_id,
+            env_name,
+            etype,
+            tenant_id,
         )
         return env.model_dump(mode="json")
 
@@ -116,9 +118,7 @@ class HybridMeshService:
             if other and env_id in other.federated_with:
                 other.federated_with.remove(env_id)
 
-        self._tenant_envs[tenant_id] = [
-            e for e in self._tenant_envs[tenant_id] if e != env_id
-        ]
+        self._tenant_envs[tenant_id] = [e for e in self._tenant_envs[tenant_id] if e != env_id]
         del self._environments[env_id]
         logger.info("[HYBRID_MESH] Removed environment '%s'", env.env_name)
         return True
@@ -150,7 +150,7 @@ class HybridMeshService:
         )
 
         # Simulate policy sync
-        policies_count = random.randint(5, 30)
+        policies_count = random.randint(5, 30)  # noqa: S311
         sync.policies_count = policies_count
         sync.status = "completed"
         sync.completed_at = datetime.now(timezone.utc)
@@ -163,7 +163,9 @@ class HybridMeshService:
 
         logger.info(
             "[HYBRID_MESH] Synced %d policies from '%s' to '%s'",
-            policies_count, src.env_name, tgt.env_name,
+            policies_count,
+            src.env_name,
+            tgt.env_name,
         )
         return sync.model_dump(mode="json")
 
@@ -214,9 +216,7 @@ class HybridMeshService:
                     base = self._estimate_latency(env_a.env_type, env_b.env_type)
                     self._latency_cache[pair_key] = base
 
-                latency_map[env_a.env_name][env_b.env_name] = (
-                    self._latency_cache[pair_key]
-                )
+                latency_map[env_a.env_name][env_b.env_name] = self._latency_cache[pair_key]
 
         return {
             "tenant_id": tenant_id,
@@ -246,7 +246,7 @@ class HybridMeshService:
         # Create federation links between all pairs
         links_created = 0
         for i, env_a in enumerate(envs):
-            for env_b in envs[i + 1:]:
+            for env_b in envs[i + 1 :]:
                 if env_b.id not in env_a.federated_with:
                     env_a.federated_with.append(env_b.id)
                     env_b.federated_with.append(env_a.id)
@@ -254,7 +254,9 @@ class HybridMeshService:
 
         logger.info(
             "[HYBRID_MESH] Federated %d environments with %d new links for %s",
-            len(envs), links_created, tenant_id,
+            len(envs),
+            links_created,
+            tenant_id,
         )
         return {
             "federated_environments": len(envs),
@@ -270,9 +272,7 @@ class HybridMeshService:
         """Return hybrid mesh statistics for a tenant."""
         envs = self._get_tenant_envs(tenant_id)
         syncs = [
-            self._syncs[sid]
-            for sid in self._tenant_syncs.get(tenant_id, [])
-            if sid in self._syncs
+            self._syncs[sid] for sid in self._tenant_syncs.get(tenant_id, []) if sid in self._syncs
         ]
 
         return {
@@ -302,14 +302,14 @@ class HybridMeshService:
         """Estimate latency between two environment types in milliseconds."""
         # Same type has low latency
         if type_a == type_b:
-            return round(random.uniform(1.0, 10.0), 1)
+            return round(random.uniform(1.0, 10.0), 1)  # noqa: S311
         # Edge to anything has higher latency
         if "edge" in (type_a, type_b):
-            return round(random.uniform(20.0, 80.0), 1)
+            return round(random.uniform(20.0, 80.0), 1)  # noqa: S311
         # Cloud to on-prem
         if {"cloud", "on_prem"} == {type_a, type_b}:
-            return round(random.uniform(10.0, 50.0), 1)
-        return round(random.uniform(5.0, 30.0), 1)
+            return round(random.uniform(10.0, 50.0), 1)  # noqa: S311
+        return round(random.uniform(5.0, 30.0), 1)  # noqa: S311
 
 
 # Module-level singleton

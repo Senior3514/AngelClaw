@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
-
-from cloud.services.quantum_crypto import QuantumCryptoService
 from cloud.services.attack_surface import AttackSurfaceService
+from cloud.services.quantum_crypto import QuantumCryptoService
 from cloud.services.runtime_protection import RuntimeProtectionService
-
 
 TENANT = "test-tenant"
 
@@ -15,6 +12,7 @@ TENANT = "test-tenant"
 # ===========================================================================
 # QuantumCryptoService
 # ===========================================================================
+
 
 class TestQuantumCryptoService:
     """QuantumCryptoService tests."""
@@ -41,7 +39,9 @@ class TestQuantumCryptoService:
 
     def test_create_migration_plan(self):
         svc = QuantumCryptoService()
-        result = svc.create_migration_plan(TENANT, {"name": "RSA-to-Kyber", "target_algorithm": "kyber-1024"})
+        result = svc.create_migration_plan(
+            TENANT, {"name": "RSA-to-Kyber", "target_algorithm": "kyber-1024"}
+        )
         assert "id" in result
         assert result["tenant_id"] == TENANT
         assert result["target_algorithm"] == "kyber-1024"
@@ -75,6 +75,7 @@ class TestQuantumCryptoService:
 # ===========================================================================
 # AttackSurfaceService
 # ===========================================================================
+
 
 class TestAttackSurfaceService:
     """AttackSurfaceService tests."""
@@ -131,6 +132,7 @@ class TestAttackSurfaceService:
 # ===========================================================================
 # RuntimeProtectionService
 # ===========================================================================
+
 
 class TestRuntimeProtectionService:
     """RuntimeProtectionService tests."""

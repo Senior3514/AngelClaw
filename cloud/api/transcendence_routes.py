@@ -93,50 +93,69 @@ class RuleOutcomeRequest(BaseModel):
 
 # -- AI Model Orchestration --
 
+
 @router.post("/ai/models")
-def register_model(req: AIModelRegisterRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def register_model(
+    req: AIModelRegisterRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.ai_orchestrator import ai_orchestrator_service
+
     return ai_orchestrator_service.register_model(
-        tenant_id, req.name, req.model_type, req.provider,
-        req.endpoint, req.capabilities, req.config, req.priority,
+        tenant_id,
+        req.name,
+        req.model_type,
+        req.provider,
+        req.endpoint,
+        req.capabilities,
+        req.config,
+        req.priority,
     )
 
 
 @router.get("/ai/models")
 def list_models(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.ai_orchestrator import ai_orchestrator_service
+
     return ai_orchestrator_service.list_models(tenant_id)
 
 
 @router.post("/ai/route")
 def route_request(req: AIRouteRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.ai_orchestrator import ai_orchestrator_service
+
     return ai_orchestrator_service.route_request(tenant_id, req.capability, req.payload)
 
 
 @router.get("/ai/stats")
 def ai_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.ai_orchestrator import ai_orchestrator_service
+
     return ai_orchestrator_service.get_stats(tenant_id)
 
 
 # -- Natural Language Policies --
 
+
 @router.post("/policies/nl")
-def create_nl_policy(req: NLPolicyCreateRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def create_nl_policy(
+    req: NLPolicyCreateRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.nl_policy import nl_policy_service
+
     return nl_policy_service.create_nl_policy(tenant_id, req.natural_language)
 
 
 @router.get("/policies/nl")
 def list_nl_policies(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.nl_policy import nl_policy_service
+
     return nl_policy_service.list_policies(tenant_id)
 
 
 @router.put("/policies/nl/{policy_id}/approve")
 def approve_nl_policy(policy_id: str, approved_by: str = "operator"):
     from cloud.services.nl_policy import nl_policy_service
+
     result = nl_policy_service.approve_policy(policy_id, approved_by)
     return result or {"error": "Policy not found"}
 
@@ -144,64 +163,92 @@ def approve_nl_policy(policy_id: str, approved_by: str = "operator"):
 @router.get("/policies/nl/stats")
 def nl_policy_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.nl_policy import nl_policy_service
+
     return nl_policy_service.get_stats(tenant_id)
 
 
 # -- Incident Commander --
 
+
 @router.post("/incidents/declare")
-def declare_incident(req: IncidentDeclareRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def declare_incident(
+    req: IncidentDeclareRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.incident_commander import incident_commander_service
+
     return incident_commander_service.declare_incident(
-        tenant_id, req.title, req.severity, req.description, req.related_incident_ids,
+        tenant_id,
+        req.title,
+        req.severity,
+        req.description,
+        req.related_incident_ids,
     )
 
 
 @router.post("/incidents/update")
-def update_incident(req: IncidentUpdateRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def update_incident(
+    req: IncidentUpdateRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.incident_commander import incident_commander_service
+
     return incident_commander_service.add_update(req.incident_id, req.update_text, req.status)
 
 
 @router.get("/incidents")
 def list_major_incidents(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.incident_commander import incident_commander_service
+
     return incident_commander_service.list_incidents(tenant_id)
 
 
 @router.get("/incidents/stats")
 def incident_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.incident_commander import incident_commander_service
+
     return incident_commander_service.get_stats(tenant_id)
 
 
 # -- Threat Sharing --
 
+
 @router.post("/sharing/indicators")
-def share_indicator(req: ThreatShareRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def share_indicator(
+    req: ThreatShareRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.threat_sharing import threat_sharing_service
+
     return threat_sharing_service.share_indicator(
-        tenant_id, req.indicator_type, req.indicator_value, req.severity, req.context,
+        tenant_id,
+        req.indicator_type,
+        req.indicator_value,
+        req.severity,
+        req.context,
     )
 
 
 @router.get("/sharing/indicators")
 def list_shared(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.threat_sharing import threat_sharing_service
+
     return threat_sharing_service.list_shared(tenant_id)
 
 
 @router.get("/sharing/stats")
 def sharing_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.threat_sharing import threat_sharing_service
+
     return threat_sharing_service.get_stats(tenant_id)
 
 
 # -- Deception Technology --
 
+
 @router.post("/deception/tokens")
-def deploy_token(req: DeceptionDeployRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def deploy_token(
+    req: DeceptionDeployRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.deception import deception_service
+
     return deception_service.deploy_token(
         tenant_id=tenant_id,
         name=req.name,
@@ -215,12 +262,14 @@ def deploy_token(req: DeceptionDeployRequest, tenant_id: str = Header("dev-tenan
 @router.get("/deception/tokens")
 def list_tokens(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.deception import deception_service
+
     return deception_service.list_tokens(tenant_id)
 
 
 @router.post("/deception/tokens/{token_id}/check")
 def check_trigger(token_id: str):
     from cloud.services.deception import deception_service
+
     token = deception_service.get_token(token_id)
     if not token:
         return {"error": "Token not found"}
@@ -230,6 +279,7 @@ def check_trigger(token_id: str):
 @router.put("/deception/tokens/{token_id}/deactivate")
 def deactivate_token(token_id: str):
     from cloud.services.deception import deception_service
+
     result = deception_service.deactivate_token(token_id)
     return result or {"error": "Token not found"}
 
@@ -237,14 +287,19 @@ def deactivate_token(token_id: str):
 @router.get("/deception/stats")
 def deception_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.deception import deception_service
+
     return deception_service.get_stats(tenant_id)
 
 
 # -- Digital Forensics --
 
+
 @router.post("/forensics/cases")
-def create_case(req: ForensicCaseRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def create_case(
+    req: ForensicCaseRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.forensics_auto import forensics_service
+
     return forensics_service.create_case(
         tenant_id=tenant_id,
         title=req.title,
@@ -257,6 +312,7 @@ def create_case(req: ForensicCaseRequest, tenant_id: str = Header("dev-tenant", 
 @router.post("/forensics/evidence")
 def add_evidence(req: EvidenceRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.forensics_auto import forensics_service
+
     return forensics_service.add_evidence(
         case_id=req.case_id,
         evidence_type=req.evidence_type,
@@ -268,12 +324,14 @@ def add_evidence(req: EvidenceRequest, tenant_id: str = Header("dev-tenant", ali
 @router.get("/forensics/cases")
 def list_cases(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.forensics_auto import forensics_service
+
     return forensics_service.list_cases(tenant_id)
 
 
 @router.get("/forensics/cases/{case_id}")
 def get_case(case_id: str):
     from cloud.services.forensics_auto import forensics_service
+
     result = forensics_service.get_case(case_id)
     return result or {"error": "Case not found"}
 
@@ -281,6 +339,7 @@ def get_case(case_id: str):
 @router.put("/forensics/cases/{case_id}/close")
 def close_case(case_id: str):
     from cloud.services.forensics_auto import forensics_service
+
     result = forensics_service.close_case(case_id)
     return result or {"error": "Case not found"}
 
@@ -288,49 +347,72 @@ def close_case(case_id: str):
 @router.get("/forensics/stats")
 def forensics_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.forensics_auto import forensics_service
+
     return forensics_service.get_stats(tenant_id)
 
 
 # -- Compliance-as-Code --
 
+
 @router.post("/compliance/rules")
-def create_compliance_rule(req: ComplianceRuleRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def create_compliance_rule(
+    req: ComplianceRuleRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.compliance_code import compliance_code_service
+
     return compliance_code_service.create_rule(
-        tenant_id, req.framework, req.control_id, req.title,
-        req.description, req.check_type, req.check_config, req.severity,
+        tenant_id,
+        req.framework,
+        req.control_id,
+        req.title,
+        req.description,
+        req.check_type,
+        req.check_config,
+        req.severity,
     )
 
 
 @router.get("/compliance/rules")
-def list_compliance_rules(framework: str | None = None, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def list_compliance_rules(
+    framework: str | None = None, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.compliance_code import compliance_code_service
+
     return compliance_code_service.list_rules(tenant_id, framework)
 
 
 @router.post("/compliance/audit/{framework}")
-def run_compliance_audit(framework: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def run_compliance_audit(
+    framework: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.compliance_code import compliance_code_service
+
     return compliance_code_service.run_framework_audit(tenant_id, framework)
 
 
 @router.get("/compliance/report")
 def compliance_report(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.compliance_code import compliance_code_service
+
     return compliance_code_service.get_compliance_report(tenant_id)
 
 
 @router.get("/compliance/stats")
 def compliance_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.compliance_code import compliance_code_service
+
     return compliance_code_service.get_stats(tenant_id)
 
 
 # -- Evolving Rules --
 
+
 @router.post("/rules/evolving")
-def create_evolving_rule(req: EvolvingRuleRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def create_evolving_rule(
+    req: EvolvingRuleRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.evolving_rules import evolving_rules_service
+
     return evolving_rules_service.create_rule(
         tenant_id=tenant_id,
         name=req.name,
@@ -343,12 +425,14 @@ def create_evolving_rule(req: EvolvingRuleRequest, tenant_id: str = Header("dev-
 @router.get("/rules/evolving")
 def list_evolving_rules(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.evolving_rules import evolving_rules_service
+
     return evolving_rules_service.list_rules(tenant_id)
 
 
 @router.post("/rules/evolving/outcome")
 def record_rule_outcome(req: RuleOutcomeRequest):
     from cloud.services.evolving_rules import evolving_rules_service
+
     outcome = "true_positive" if req.is_true_positive else "false_positive"
     return evolving_rules_service.record_outcome(req.rule_id, outcome)
 
@@ -356,22 +440,26 @@ def record_rule_outcome(req: RuleOutcomeRequest):
 @router.post("/rules/evolving/evolve")
 def evolve_rules(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.evolving_rules import evolving_rules_service
+
     return evolving_rules_service.evolve_rules(tenant_id)
 
 
 @router.get("/rules/evolving/{rule_id}/lineage")
 def get_rule_lineage(rule_id: str):
     from cloud.services.evolving_rules import evolving_rules_service
+
     return evolving_rules_service.get_lineage(rule_id)
 
 
 @router.get("/rules/evolving/stats")
 def evolving_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.evolving_rules import evolving_rules_service
+
     return evolving_rules_service.get_stats(tenant_id)
 
 
 # -- Combined Transcendence Status --
+
 
 @router.get("/status")
 def transcendence_status(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
@@ -383,6 +471,7 @@ def transcendence_status(tenant_id: str = Header("dev-tenant", alias="X-TENANT-I
     from cloud.services.incident_commander import incident_commander_service
     from cloud.services.nl_policy import nl_policy_service
     from cloud.services.threat_sharing import threat_sharing_service
+
     return {
         "ai_orchestrator": ai_orchestrator_service.get_stats(tenant_id),
         "nl_policies": nl_policy_service.get_stats(tenant_id),

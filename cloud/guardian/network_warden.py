@@ -24,9 +24,7 @@ logger = logging.getLogger("angelgrid.cloud.guardian.network_warden")
 # Suspicious outbound destinations (private ranges are OK)
 _SUSPICIOUS_PORTS = {4444, 5555, 6666, 1337, 31337, 9001, 9050, 9150}
 
-_PRIVATE_RE = re.compile(
-    r"^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.|::1|fd[0-9a-f]{2}:)"
-)
+_PRIVATE_RE = re.compile(r"^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.|::1|fd[0-9a-f]{2}:)")
 
 # Event types relevant to this warden
 _NETWORK_TYPES = frozenset(
@@ -71,8 +69,9 @@ class NetworkWarden(SubAgent):
 
         # Filter to network-relevant events
         network_events = [
-            e for e in events_data if e.get("type", "") in _NETWORK_TYPES
-            or "network" in e.get("type", "").lower()
+            e
+            for e in events_data
+            if e.get("type", "") in _NETWORK_TYPES or "network" in e.get("type", "").lower()
         ]
 
         indicators: list[ThreatIndicator] = []
@@ -215,8 +214,7 @@ def _detect_port_scan(events: list[dict]) -> list[ThreatIndicator]:
                     severity="critical",
                     confidence=0.9,
                     description=(
-                        f"Port scan detected: {len(ports)} distinct ports "
-                        f"from agent {agent_id[:8]}"
+                        f"Port scan detected: {len(ports)} distinct ports from agent {agent_id[:8]}"
                     ),
                     related_event_ids=agent_event_ids[agent_id][:20],
                     related_agent_ids=[agent_id],
@@ -300,7 +298,7 @@ def _detect_beaconing(events: list[dict]) -> list[ThreatIndicator]:
                 continue
             timestamps.sort()
             intervals = [
-                (timestamps[i+1] - timestamps[i]).total_seconds()
+                (timestamps[i + 1] - timestamps[i]).total_seconds()
                 for i in range(len(timestamps) - 1)
             ]
             if not intervals:
@@ -310,7 +308,7 @@ def _detect_beaconing(events: list[dict]) -> list[ThreatIndicator]:
                 continue
             # Check regularity: std dev < 20% of mean
             variance = sum((iv - avg_interval) ** 2 for iv in intervals) / len(intervals)
-            std_dev = variance ** 0.5
+            std_dev = variance**0.5
             if avg_interval > 5 and std_dev / avg_interval < 0.2:
                 indicators.append(
                     ThreatIndicator(

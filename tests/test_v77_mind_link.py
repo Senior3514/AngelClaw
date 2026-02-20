@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
 from cloud.services.intel_marketplace import IntelMarketplaceService
 from cloud.services.report_generator import ReportGeneratorService
-
 
 TENANT = "test-tenant"
 
@@ -49,6 +46,7 @@ class TestIntelMarketplaceService:
         assert result["service"] == "IntelMarketplaceService"
         assert result["version"] == "7.7.0"
 
+
 class TestReportGeneratorService:
     """ReportGeneratorService tests."""
 
@@ -78,4 +76,3 @@ class TestReportGeneratorService:
         assert result["tenant_id"] == TENANT
         assert result["service"] == "ReportGeneratorService"
         assert result["version"] == "7.7.0"
-

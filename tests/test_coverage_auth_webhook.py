@@ -20,6 +20,7 @@ from cloud.guardian.models import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _run(coro):
     """Run an async coroutine synchronously."""
     loop = asyncio.new_event_loop()
@@ -392,9 +393,7 @@ class TestWebhookSendAlertHMAC:
             mock_client.post = AsyncMock(return_value=mock_response)
             sink._client = mock_client
 
-            result = _run(
-                sink.send_alert("alert", "Test Alert", "medium")
-            )
+            result = _run(sink.send_alert("alert", "Test Alert", "medium"))
             assert result is True
 
             call_kwargs = mock_client.post.call_args
@@ -417,14 +416,10 @@ class TestWebhookSendAlertRequestFails:
             sink = WebhookSink()
 
             mock_client = AsyncMock(spec=httpx.AsyncClient)
-            mock_client.post = AsyncMock(
-                side_effect=httpx.ConnectError("Connection refused")
-            )
+            mock_client.post = AsyncMock(side_effect=httpx.ConnectError("Connection refused"))
             sink._client = mock_client
 
-            result = _run(
-                sink.send_alert("alert", "Title", "high")
-            )
+            result = _run(sink.send_alert("alert", "Title", "high"))
             assert result is False
 
 
@@ -449,9 +444,7 @@ class TestWebhookSendAlertServerError:
             mock_client.post = AsyncMock(return_value=mock_response)
             sink._client = mock_client
 
-            result = _run(
-                sink.send_alert("alert", "Title", "high")
-            )
+            result = _run(sink.send_alert("alert", "Title", "high"))
             assert result is False
 
 
@@ -536,7 +529,8 @@ def _sample_playbook(auto_respond=True, steps=None, rollback=None):
         name="test-playbook",
         description="Test playbook",
         auto_respond=auto_respond,
-        steps=steps or [
+        steps=steps
+        or [
             PlaybookStep(
                 action="pause_agent",
                 target="{{ agent_id }}",
@@ -576,11 +570,13 @@ class TestResponseAgentHandleTaskApprovalRequired:
         agent = _make_agent()
         pb = _sample_playbook(auto_respond=False)
         agent._playbooks["needs-approval"] = pb
-        task = _make_task({
-            "playbook_name": "needs-approval",
-            "approved": True,
-            "incident": {"agent_id": "node-42"},
-        })
+        task = _make_task(
+            {
+                "playbook_name": "needs-approval",
+                "approved": True,
+                "incident": {"agent_id": "node-42"},
+            }
+        )
         result = _run(agent.handle_task(task))
         assert result.success is True
 
@@ -593,10 +589,12 @@ class TestResponseAgentCircuitBreaker:
         agent._consecutive_failures = 3  # >= _max_failures
         pb = _sample_playbook()
         agent._playbooks["test-playbook"] = pb
-        task = _make_task({
-            "playbook_name": "test-playbook",
-            "incident": {},
-        })
+        task = _make_task(
+            {
+                "playbook_name": "test-playbook",
+                "incident": {},
+            }
+        )
         result = _run(agent.handle_task(task))
         assert result.success is False
         assert "Circuit breaker" in result.error
@@ -609,11 +607,13 @@ class TestResponseAgentDryRun:
         agent = _make_agent()
         pb = _sample_playbook()
         agent._playbooks["test-playbook"] = pb
-        task = _make_task({
-            "playbook_name": "test-playbook",
-            "incident": {"agent_id": "node-99"},
-            "dry_run": True,
-        })
+        task = _make_task(
+            {
+                "playbook_name": "test-playbook",
+                "incident": {"agent_id": "node-99"},
+                "dry_run": True,
+            }
+        )
         result = _run(agent.handle_task(task))
         assert result.success is True
         assert result.result_data["dry_run"] is True
@@ -698,9 +698,7 @@ class TestResponseAgentActions:
 
     def test_pause_agent(self):
         agent = _make_agent()
-        result = _run(
-            agent._action_pause_agent("node-1", {}, {})
-        )
+        result = _run(agent._action_pause_agent("node-1", {}, {}))
         assert result.success is True
         assert result.action == "pause_agent"
         assert "paused" in result.message.lower()
@@ -708,9 +706,7 @@ class TestResponseAgentActions:
 
     def test_resume_agent(self):
         agent = _make_agent()
-        result = _run(
-            agent._action_resume_agent("node-1", {}, {})
-        )
+        result = _run(agent._action_resume_agent("node-1", {}, {}))
         assert result.success is True
         assert result.action == "resume_agent"
         assert "resumed" in result.message.lower()
@@ -718,51 +714,39 @@ class TestResponseAgentActions:
 
     def test_revoke_token(self):
         agent = _make_agent()
-        result = _run(
-            agent._action_revoke_token("user-abc", {}, {})
-        )
+        result = _run(agent._action_revoke_token("user-abc", {}, {}))
         assert result.success is True
         assert "revoked" in result.message.lower()
 
     def test_throttle_agent_default_rate(self):
         agent = _make_agent()
-        result = _run(
-            agent._action_throttle_agent("node-1", {}, {})
-        )
+        result = _run(agent._action_throttle_agent("node-1", {}, {}))
         assert result.success is True
         assert "1req/10s" in result.message
 
     def test_throttle_agent_custom_rate(self):
         agent = _make_agent()
-        result = _run(
-            agent._action_throttle_agent("node-1", {}, {"rate": "5req/1s"})
-        )
+        result = _run(agent._action_throttle_agent("node-1", {}, {"rate": "5req/1s"}))
         assert result.success is True
         assert "5req/1s" in result.message
         assert result.after_state["throttle_rate"] == "5req/1s"
 
     def test_block_source_default_duration(self):
         agent = _make_agent()
-        result = _run(
-            agent._action_block_source("10.0.0.1", {}, {})
-        )
+        result = _run(agent._action_block_source("10.0.0.1", {}, {}))
         assert result.success is True
         assert "blocked" in result.message.lower()
         assert result.after_state["duration"] == 3600
 
     def test_block_source_custom_duration(self):
         agent = _make_agent()
-        result = _run(
-            agent._action_block_source("10.0.0.1", {}, {"duration_seconds": 7200})
-        )
+        result = _run(agent._action_block_source("10.0.0.1", {}, {"duration_seconds": 7200}))
         assert result.success is True
         assert result.after_state["duration"] == 7200
 
     def test_snapshot_state(self):
         agent = _make_agent()
-        result = _run(
-            agent._action_snapshot_state("node-1", {}, {})
-        )
+        result = _run(agent._action_snapshot_state("node-1", {}, {}))
         assert result.success is True
         assert "snapshot" in result.message.lower()
 
@@ -785,9 +769,7 @@ class TestResponseAgentActions:
         agent = _make_agent()
         with patch("cloud.services.webhook.webhook_sink") as mock_sink:
             mock_sink.enabled = False
-            result = _run(
-                agent._action_notify_operator("target", {}, {})
-            )
+            result = _run(agent._action_notify_operator("target", {}, {}))
         assert result.success is True
         assert result.target == "webhook"
 
@@ -813,9 +795,7 @@ class TestResponseAgentActions:
         mock_sink.enabled = True
         mock_sink.send_alert = AsyncMock(side_effect=RuntimeError("webhook fail"))
         with patch("cloud.services.webhook.webhook_sink", mock_sink):
-            result = _run(
-                agent._action_notify_operator("target", {}, {"message": "Alert"})
-            )
+            result = _run(agent._action_notify_operator("target", {}, {"message": "Alert"}))
         # Should still succeed (webhook failure is swallowed)
         assert result.success is True
 
@@ -850,17 +830,13 @@ class TestResponseAgentWazuhAction:
 
     def test_no_command(self):
         agent = _make_agent()
-        result = _run(
-            agent._action_wazuh_active_response("agent-1", {}, {"command": ""})
-        )
+        result = _run(agent._action_wazuh_active_response("agent-1", {}, {"command": ""}))
         assert result.success is False
         assert "No command" in result.message
 
     def test_no_command_param(self):
         agent = _make_agent()
-        result = _run(
-            agent._action_wazuh_active_response("agent-1", {}, {})
-        )
+        result = _run(agent._action_wazuh_active_response("agent-1", {}, {}))
         assert result.success is False
         assert "No command" in result.message
 
@@ -868,13 +844,9 @@ class TestResponseAgentWazuhAction:
         agent = _make_agent()
         mock_client = MagicMock()
         mock_client.enabled = False
-        with patch(
-            "cloud.integrations.wazuh_client.wazuh_client", mock_client
-        ):
+        with patch("cloud.integrations.wazuh_client.wazuh_client", mock_client):
             result = _run(
-                agent._action_wazuh_active_response(
-                    "agent-1", {}, {"command": "firewall-drop"}
-                )
+                agent._action_wazuh_active_response("agent-1", {}, {"command": "firewall-drop"})
             )
         assert result.success is False
         assert "not configured" in result.message
@@ -884,9 +856,7 @@ class TestResponseAgentWazuhAction:
         mock_client = MagicMock()
         mock_client.enabled = True
         mock_client.send_active_response = AsyncMock(return_value=True)
-        with patch(
-            "cloud.integrations.wazuh_client.wazuh_client", mock_client
-        ):
+        with patch("cloud.integrations.wazuh_client.wazuh_client", mock_client):
             result = _run(
                 agent._action_wazuh_active_response(
                     "agent-1",
@@ -907,13 +877,9 @@ class TestResponseAgentWazuhAction:
         mock_client = MagicMock()
         mock_client.enabled = True
         mock_client.send_active_response = AsyncMock(return_value=False)
-        with patch(
-            "cloud.integrations.wazuh_client.wazuh_client", mock_client
-        ):
+        with patch("cloud.integrations.wazuh_client.wazuh_client", mock_client):
             result = _run(
-                agent._action_wazuh_active_response(
-                    "agent-1", {}, {"command": "firewall-drop"}
-                )
+                agent._action_wazuh_active_response("agent-1", {}, {"command": "firewall-drop"})
             )
         assert result.success is False
         assert "failed" in result.message
@@ -931,9 +897,7 @@ class TestResponseAgentWazuhAction:
         # Patch the import to raise
         with patch.dict("sys.modules", {"cloud.integrations.wazuh_client": None}):
             result = _run(
-                agent._action_wazuh_active_response(
-                    "agent-1", {}, {"command": "firewall-drop"}
-                )
+                agent._action_wazuh_active_response("agent-1", {}, {"command": "firewall-drop"})
             )
         assert result.success is False
         assert "error" in result.message.lower()
@@ -1055,10 +1019,12 @@ class TestResponseAgentRollback:
         )
         agent._playbooks["failing-playbook"] = pb
 
-        task = _make_task({
-            "playbook_name": "failing-playbook",
-            "incident": {"agent_id": "node-77"},
-        })
+        task = _make_task(
+            {
+                "playbook_name": "failing-playbook",
+                "incident": {"agent_id": "node-77"},
+            }
+        )
 
         result = _run(agent.handle_task(task))
         assert result.success is False
@@ -1087,11 +1053,13 @@ class TestResponseAgentRollback:
         )
         agent._playbooks["dry-fail"] = pb
 
-        task = _make_task({
-            "playbook_name": "dry-fail",
-            "dry_run": True,
-            "incident": {},
-        })
+        task = _make_task(
+            {
+                "playbook_name": "dry-fail",
+                "dry_run": True,
+                "incident": {},
+            }
+        )
 
         result = _run(agent.handle_task(task))
         # In dry_run, unknown_action still returns failure (not a dry run skip)
@@ -1118,10 +1086,12 @@ class TestResponseAgentConsecutiveFailures:
         )
         agent._playbooks["fail-pb"] = pb
 
-        task = _make_task({
-            "playbook_name": "fail-pb",
-            "incident": {},
-        })
+        task = _make_task(
+            {
+                "playbook_name": "fail-pb",
+                "incident": {},
+            }
+        )
         _run(agent.handle_task(task))
         assert agent._consecutive_failures == 1
 
@@ -1131,10 +1101,12 @@ class TestResponseAgentConsecutiveFailures:
 
         pb = _sample_playbook()
         agent._playbooks["test-playbook"] = pb
-        task = _make_task({
-            "playbook_name": "test-playbook",
-            "incident": {"agent_id": "node-1"},
-        })
+        task = _make_task(
+            {
+                "playbook_name": "test-playbook",
+                "incident": {"agent_id": "node-1"},
+            }
+        )
         result = _run(agent.handle_task(task))
         assert result.success is True
         assert agent._consecutive_failures == 0
@@ -1149,9 +1121,7 @@ class TestResponseAgentApplyPolicyRule:
         agent.permissions.discard("write_policies")
 
         with pytest.raises(PermissionError):
-            _run(
-                agent._action_apply_policy_rule("target", {}, {"rule_id": "r-1"})
-            )
+            _run(agent._action_apply_policy_rule("target", {}, {"rule_id": "r-1"}))
 
     def test_apply_policy_rule_with_rule_id(self):
         agent = _make_agent()
@@ -1159,9 +1129,7 @@ class TestResponseAgentApplyPolicyRule:
         from cloud.guardian.models import Permission
 
         agent.permissions.add(Permission.WRITE_POLICIES)
-        result = _run(
-            agent._action_apply_policy_rule("target", {}, {"rule_id": "block-ip"})
-        )
+        result = _run(agent._action_apply_policy_rule("target", {}, {"rule_id": "block-ip"}))
         assert result.success is True
         assert "block-ip" in result.message
 
@@ -1170,8 +1138,6 @@ class TestResponseAgentApplyPolicyRule:
         from cloud.guardian.models import Permission
 
         agent.permissions.add(Permission.WRITE_POLICIES)
-        result = _run(
-            agent._action_apply_policy_rule("target", {}, {})
-        )
+        result = _run(agent._action_apply_policy_rule("target", {}, {}))
         assert result.success is True
         assert "auto-generated" in result.message

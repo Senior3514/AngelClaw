@@ -92,7 +92,10 @@ class ThreatSharingService:
         self._tenant_shared[tenant_id].append(indicator.id)
         logger.info(
             "[THREAT_SHARE] Tenant %s shared %s indicator '%s' (trust=%.2f)",
-            tenant_id, indicator_type, indicator_value, indicator.trust_score,
+            tenant_id,
+            indicator_type,
+            indicator_value,
+            indicator.trust_score,
         )
         return indicator.to_dict()
 
@@ -118,7 +121,8 @@ class ThreatSharingService:
             indicator.consumed_by.append(consumer_tenant_id)
         logger.info(
             "[THREAT_SHARE] Tenant %s consumed indicator %s",
-            consumer_tenant_id, indicator_id[:8],
+            consumer_tenant_id,
+            indicator_id[:8],
         )
         return indicator.to_dict()
 
@@ -161,7 +165,8 @@ class ThreatSharingService:
             "total_consumed": total_consumed,
             "by_type": dict(by_type),
             "avg_trust": round(
-                sum(trust_scores) / max(len(trust_scores), 1), 4,
+                sum(trust_scores) / max(len(trust_scores), 1),
+                4,
             ),
         }
 

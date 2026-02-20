@@ -25,8 +25,14 @@ from pydantic import BaseModel, Field
 logger = logging.getLogger("angelclaw.adversary_sim")
 
 _ATTACK_TYPES = {
-    "phishing", "ransomware", "lateral_movement", "privilege_escalation",
-    "data_exfiltration", "credential_theft", "supply_chain", "insider_threat",
+    "phishing",
+    "ransomware",
+    "lateral_movement",
+    "privilege_escalation",
+    "data_exfiltration",
+    "credential_theft",
+    "supply_chain",
+    "insider_threat",
 }
 
 
@@ -111,7 +117,10 @@ class AdversarySimService:
 
         logger.info(
             "[ADV_SIM] Created scenario '%s' (%s) with %d techniques for %s",
-            name, atype, len(scenario.mitre_techniques), tenant_id,
+            name,
+            atype,
+            len(scenario.mitre_techniques),
+            tenant_id,
         )
         return scenario.model_dump(mode="json")
 
@@ -158,7 +167,9 @@ class AdversarySimService:
 
         logger.info(
             "[ADV_SIM] Simulation for '%s': detection=%.0f%% block=%.0f%%",
-            scenario.name, result.detection_rate, result.block_rate,
+            scenario.name,
+            result.detection_rate,
+            result.block_rate,
         )
         return result.model_dump(mode="json")
 
@@ -211,7 +222,9 @@ class AdversarySimService:
 
         logger.info(
             "[ADV_SIM] Validated defense for %s: %s (%.0f%% confidence)",
-            technique_id, status, confidence,
+            technique_id,
+            status,
+            confidence,
         )
         return validation.model_dump(mode="json")
 
@@ -226,10 +239,7 @@ class AdversarySimService:
             for sid in self._tenant_scenarios.get(tenant_id, [])
             if sid in self._scenarios
         ]
-        results = [
-            r for r in self._results.values()
-            if r.tenant_id == tenant_id
-        ]
+        results = [r for r in self._results.values() if r.tenant_id == tenant_id]
         validations = self._validations.get(tenant_id, [])
 
         by_attack_type: dict[str, int] = defaultdict(int)
@@ -239,19 +249,19 @@ class AdversarySimService:
         completed_results = [r for r in results if r.status == "completed"]
         avg_detection = (
             round(
-                sum(r.detection_rate for r in completed_results)
-                / max(len(completed_results), 1),
+                sum(r.detection_rate for r in completed_results) / max(len(completed_results), 1),
                 1,
             )
-            if completed_results else 0.0
+            if completed_results
+            else 0.0
         )
         avg_block = (
             round(
-                sum(r.block_rate for r in completed_results)
-                / max(len(completed_results), 1),
+                sum(r.block_rate for r in completed_results) / max(len(completed_results), 1),
                 1,
             )
-            if completed_results else 0.0
+            if completed_results
+            else 0.0
         )
 
         return {
@@ -301,18 +311,22 @@ class AdversarySimService:
         result.techniques_blocked = blocked
         result.techniques_missed = missed
         result.detection_rate = round(
-            len(detected) / max(len(techniques), 1) * 100, 1,
+            len(detected) / max(len(techniques), 1) * 100,
+            1,
         )
         result.block_rate = round(
-            len(blocked) / max(len(techniques), 1) * 100, 1,
+            len(blocked) / max(len(techniques), 1) * 100,
+            1,
         )
 
-        result.findings.append({
-            "summary": f"Tested {len(techniques)} techniques",
-            "detected": len(detected),
-            "blocked": len(blocked),
-            "missed": len(missed),
-        })
+        result.findings.append(
+            {
+                "summary": f"Tested {len(techniques)} techniques",
+                "detected": len(detected),
+                "blocked": len(blocked),
+                "missed": len(missed),
+            }
+        )
 
 
 # Module-level singleton

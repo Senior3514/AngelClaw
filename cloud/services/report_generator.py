@@ -66,7 +66,7 @@ class ReportGeneratorService:
         self._store[tenant_id][item_id] = result
         return result
 
-    def generate_compliance(self, tenant_id: str, framework: str = 'soc2') -> dict[str, Any]:
+    def generate_compliance(self, tenant_id: str, framework: str = "soc2") -> dict[str, Any]:
         """Generate compliance report."""
         if tenant_id not in self._store:
             self._store[tenant_id] = {}

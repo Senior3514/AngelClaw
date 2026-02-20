@@ -140,9 +140,12 @@ def predict_threat_vectors(
 
     # Pattern: secret access + network + encoding → supply chain compromise
     encoding_events = [
-        e for e in events
-        if any(k in ((e.details or {}).get("command", "") or "").lower()
-               for k in ("base64", "gzip", "tar", "zip", "encode"))
+        e
+        for e in events
+        if any(
+            k in ((e.details or {}).get("command", "") or "").lower()
+            for k in ("base64", "gzip", "tar", "zip", "encode")
+        )
     ]
     if len(secret_events) > 0 and network_count > 0 and len(encoding_events) > 0:
         confidence = min(0.90, 0.4 + len(secret_events) * 0.1 + len(encoding_events) * 0.05)
@@ -219,9 +222,12 @@ def predict_threat_vectors(
 
     # Pattern: account takeover (auth + password change + new session)
     password_events = [
-        e for e in events
-        if any(k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
-               for k in ("password", "passwd", "reset", "change_pass", "credentials"))
+        e
+        for e in events
+        if any(
+            k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
+            for k in ("password", "passwd", "reset", "change_pass", "credentials")
+        )
     ]
     if auth_count >= 2 and len(password_events) >= 1:
         confidence = min(0.85, 0.4 + auth_count * 0.05 + len(password_events) * 0.1)
@@ -242,8 +248,11 @@ def predict_threat_vectors(
     # Pattern: API key compromise (api_security + new source IPs)
     api_sec_count = cat_counter.get("api_security", 0)
     if api_sec_count >= 3:
-        api_sources = {(e.details or {}).get("source_ip", "") for e in events
-                       if e.category == "api_security" and (e.details or {}).get("source_ip")}
+        api_sources = {
+            (e.details or {}).get("source_ip", "")
+            for e in events
+            if e.category == "api_security" and (e.details or {}).get("source_ip")
+        }
         if len(api_sources) >= 2:
             confidence = min(0.80, 0.3 + api_sec_count * 0.05 + len(api_sources) * 0.1)
             predictions.append(
@@ -264,7 +273,7 @@ def predict_threat_vectors(
     sorted_events = sorted(events, key=lambda e: e.timestamp if e.timestamp else datetime.min)
     if len(sorted_events) >= 10:
         first_half = sorted_events[: len(sorted_events) // 2]
-        second_half = sorted_events[len(sorted_events) // 2:]
+        second_half = sorted_events[len(sorted_events) // 2 :]
         sev_map = {"info": 0, "low": 1, "warn": 2, "medium": 2, "high": 3, "critical": 4}
         avg_first = sum(sev_map.get(e.severity, 0) for e in first_half) / max(len(first_half), 1)
         avg_second = sum(sev_map.get(e.severity, 0) for e in second_half) / max(len(second_half), 1)
@@ -287,6 +296,7 @@ def predict_threat_vectors(
     # V2.5 — Apply confidence calibration from learning engine
     try:
         from cloud.guardian.learning import learning_engine
+
         for pred in predictions:
             calibrated = learning_engine.get_confidence_threshold(pred.vector_name, default=None)
             if calibrated is not None and pred.confidence < calibrated:
@@ -332,30 +342,41 @@ def predict_trends(
             magnitude = cur
         else:
             change = (cur - prev) / prev
-            direction = "escalating" if change > 0.2 else ("declining" if change < -0.2 else "stable")
+            direction = (
+                "escalating" if change > 0.2 else ("declining" if change < -0.2 else "stable")
+            )
             magnitude = round(abs(change), 2)
-        trends.append({
-            "category": cat,
-            "current_count": cur,
-            "previous_count": prev,
-            "trend_direction": direction,
-            "trend_magnitude": magnitude,
-        })
+        trends.append(
+            {
+                "category": cat,
+                "current_count": cur,
+                "previous_count": prev,
+                "trend_direction": direction,
+                "trend_magnitude": magnitude,
+            }
+        )
 
     sev_map = {"info": 0, "low": 1, "warn": 2, "medium": 2, "high": 3, "critical": 4}
-    cur_avg_sev = (sum(sev_map.get(e.severity, 0) for e in current_events)
-                   / max(len(current_events), 1))
-    prev_avg_sev = (sum(sev_map.get(e.severity, 0) for e in previous_events)
-                    / max(len(previous_events), 1))
+    cur_avg_sev = sum(sev_map.get(e.severity, 0) for e in current_events) / max(
+        len(current_events), 1
+    )
+    prev_avg_sev = sum(sev_map.get(e.severity, 0) for e in previous_events) / max(
+        len(previous_events), 1
+    )
 
-    overall_direction = ("escalating" if cur_avg_sev > prev_avg_sev + 0.3
-                         else ("declining" if cur_avg_sev < prev_avg_sev - 0.3 else "stable"))
+    overall_direction = (
+        "escalating"
+        if cur_avg_sev > prev_avg_sev + 0.3
+        else ("declining" if cur_avg_sev < prev_avg_sev - 0.3 else "stable")
+    )
 
-    return [{
-        "overall_direction": overall_direction,
-        "current_avg_severity": round(cur_avg_sev, 2),
-        "previous_avg_severity": round(prev_avg_sev, 2),
-        "current_event_count": len(current_events),
-        "previous_event_count": len(previous_events),
-        "by_category": sorted(trends, key=lambda t: t["current_count"], reverse=True),
-    }]
+    return [
+        {
+            "overall_direction": overall_direction,
+            "current_avg_severity": round(cur_avg_sev, 2),
+            "previous_avg_severity": round(prev_avg_sev, 2),
+            "current_event_count": len(current_events),
+            "previous_event_count": len(previous_events),
+            "by_category": sorted(trends, key=lambda t: t["current_count"], reverse=True),
+        }
+    ]

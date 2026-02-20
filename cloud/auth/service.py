@@ -40,7 +40,10 @@ def _hash_password(password: str) -> str:
     """
     salt = os.urandom(16)
     dk = hashlib.pbkdf2_hmac(
-        "sha256", password.encode(), salt, _PBKDF2_ITERATIONS,
+        "sha256",
+        password.encode(),
+        salt,
+        _PBKDF2_ITERATIONS,
     )
     return f"{salt.hex()}:{dk.hex()}"
 
@@ -54,7 +57,10 @@ def _verify_password(password: str, stored: str) -> bool:
     except (ValueError, AttributeError):
         return False
     dk = hashlib.pbkdf2_hmac(
-        "sha256", password.encode(), salt, _PBKDF2_ITERATIONS,
+        "sha256",
+        password.encode(),
+        salt,
+        _PBKDF2_ITERATIONS,
     )
     return hmac.compare_digest(dk, expected)
 
@@ -67,13 +73,28 @@ def _verify_password(password: str, stored: str) -> bool:
 def authenticate_local(username: str, password: str) -> AuthUser | None:
     """Authenticate against configured local credentials."""
     if username == ADMIN_USER and ADMIN_PASSWORD and password == ADMIN_PASSWORD:
-        return AuthUser(username=username, role=UserRole.ADMIN, tenant_id="dev-tenant", organization_id="default-org")
+        return AuthUser(
+            username=username,
+            role=UserRole.ADMIN,
+            tenant_id="dev-tenant",
+            organization_id="default-org",
+        )
 
     if username == SECOPS_USER and SECOPS_PASSWORD and password == SECOPS_PASSWORD:
-        return AuthUser(username=username, role=UserRole.SECOPS, tenant_id="dev-tenant", organization_id="default-org")
+        return AuthUser(
+            username=username,
+            role=UserRole.SECOPS,
+            tenant_id="dev-tenant",
+            organization_id="default-org",
+        )
 
     if username == VIEWER_USER and VIEWER_PASSWORD and password == VIEWER_PASSWORD:
-        return AuthUser(username=username, role=UserRole.VIEWER, tenant_id="dev-tenant", organization_id="default-org")
+        return AuthUser(
+            username=username,
+            role=UserRole.VIEWER,
+            tenant_id="dev-tenant",
+            organization_id="default-org",
+        )
 
     # Backward compat: operator role for admin user
     return None

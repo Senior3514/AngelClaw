@@ -22,7 +22,7 @@ _AUTH_THRESHOLDS = [
     (80, "impossible_travel_block"),
     (50, "biometric"),
     (20, "mfa"),
-    (0,  "password"),
+    (0, "password"),
 ]
 
 
@@ -67,7 +67,9 @@ class AdaptiveAuthService:
     """Adaptive authentication engine combining session risk and device trust."""
 
     def __init__(self) -> None:
-        self._decisions: dict[str, list[AuthDecision]] = defaultdict(list)  # tenant_id -> [decisions]
+        self._decisions: dict[str, list[AuthDecision]] = defaultdict(
+            list
+        )  # tenant_id -> [decisions]
 
     # ------------------------------------------------------------------
     # Core operations
@@ -95,8 +97,8 @@ class AdaptiveAuthService:
         The combined risk is calculated as a weighted blend of the session
         risk score (60 %) and the inverse device trust score (40 %).
         """
-        from cloud.services.session_risk import session_risk_service
         from cloud.services.device_trust import device_trust_service
+        from cloud.services.session_risk import session_risk_service
 
         factors: list[str] = []
         session_risk_score = 0
@@ -143,9 +145,15 @@ class AdaptiveAuthService:
         self._decisions[tenant_id].append(decision)
 
         logger.info(
-            "[ADAPTIVE_AUTH] %s for user %s on %s — risk=%d (session=%d, device_trust=%d), level=%s",
-            required_auth_level.upper(), user_id, resource,
-            combined_risk, session_risk_score, device_trust_score,
+            "[ADAPTIVE_AUTH] %s for user %s on %s"
+            " — risk=%d (session=%d, device_trust=%d),"
+            " level=%s",
+            required_auth_level.upper(),
+            user_id,
+            resource,
+            combined_risk,
+            session_risk_score,
+            device_trust_score,
             required_auth_level,
         )
         return decision.to_dict()

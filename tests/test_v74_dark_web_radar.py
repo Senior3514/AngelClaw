@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
 from cloud.services.darkweb_monitor import DarkWebMonitorService
 from cloud.services.supply_chain import SupplyChainService
-
 
 TENANT = "test-tenant"
 
@@ -49,6 +46,7 @@ class TestDarkWebMonitorService:
         assert result["service"] == "DarkWebMonitorService"
         assert result["version"] == "7.4.0"
 
+
 class TestSupplyChainService:
     """SupplyChainService tests."""
 
@@ -79,4 +77,3 @@ class TestSupplyChainService:
         assert result["tenant_id"] == TENANT
         assert result["service"] == "SupplyChainService"
         assert result["version"] == "7.4.0"
-

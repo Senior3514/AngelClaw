@@ -30,9 +30,18 @@ def test_orchestrator_status(orchestrator):
 
     agents = status["agents"]
     agent_types = {info["agent_type"] for info in agents.values()}
-    for expected in ("warden", "response", "forensic", "audit",
-                     "network", "secrets", "toolchain", "behavior",
-                     "timeline", "browser"):
+    for expected in (
+        "warden",
+        "response",
+        "forensic",
+        "audit",
+        "network",
+        "secrets",
+        "toolchain",
+        "behavior",
+        "timeline",
+        "browser",
+    ):
         assert expected in agent_types, f"Missing agent type: {expected}"
 
 

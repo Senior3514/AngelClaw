@@ -61,12 +61,18 @@ class TestNetworkWarden:
         from cloud.guardian.network_warden import NetworkWarden
 
         warden = NetworkWarden()
-        events = [{
-            "id": "e1", "agent_id": "a1", "type": "network.connection",
-            "severity": "high", "details": {"dst_port": 4444},
-            "source": "", "timestamp": datetime.now(timezone.utc).isoformat(),
-            "tenant_id": "dev",
-        }]
+        events = [
+            {
+                "id": "e1",
+                "agent_id": "a1",
+                "type": "network.connection",
+                "severity": "high",
+                "details": {"dst_port": 4444},
+                "source": "",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "tenant_id": "dev",
+            }
+        ]
         task = AgentTask(
             task_type="detect",
             payload={"events": events, "window_seconds": 300},
@@ -82,12 +88,18 @@ class TestNetworkWarden:
         from cloud.guardian.network_warden import NetworkWarden
 
         warden = NetworkWarden()
-        events = [{
-            "id": "e2", "agent_id": "a1", "type": "network.listen",
-            "severity": "high", "details": {"bind_address": "203.0.113.5"},
-            "source": "", "timestamp": datetime.now(timezone.utc).isoformat(),
-            "tenant_id": "dev",
-        }]
+        events = [
+            {
+                "id": "e2",
+                "agent_id": "a1",
+                "type": "network.listen",
+                "severity": "high",
+                "details": {"bind_address": "203.0.113.5"},
+                "source": "",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "tenant_id": "dev",
+            }
+        ]
         task = AgentTask(task_type="detect", payload={"events": events})
         result = await warden.execute(task)
         assert result.success
@@ -100,12 +112,18 @@ class TestNetworkWarden:
         from cloud.guardian.network_warden import NetworkWarden
 
         warden = NetworkWarden()
-        events = [{
-            "id": "e3", "agent_id": "a1", "type": "network.dns",
-            "severity": "high", "details": {"dns_query": "evil.onion"},
-            "source": "", "timestamp": datetime.now(timezone.utc).isoformat(),
-            "tenant_id": "dev",
-        }]
+        events = [
+            {
+                "id": "e3",
+                "agent_id": "a1",
+                "type": "network.dns",
+                "severity": "high",
+                "details": {"dns_query": "evil.onion"},
+                "source": "",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "tenant_id": "dev",
+            }
+        ]
         task = AgentTask(task_type="detect", payload={"events": events})
         result = await warden.execute(task)
         assert result.success
@@ -120,9 +138,12 @@ class TestNetworkWarden:
         warden = NetworkWarden()
         events = [
             {
-                "id": f"e-{i}", "agent_id": "scanner-agent",
-                "type": "network.connection", "severity": "info",
-                "details": {"dst_port": 1000 + i}, "source": "",
+                "id": f"e-{i}",
+                "agent_id": "scanner-agent",
+                "type": "network.connection",
+                "severity": "info",
+                "details": {"dst_port": 1000 + i},
+                "source": "",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "tenant_id": "dev",
             }
@@ -143,10 +164,13 @@ class TestNetworkWarden:
         # Create events with very long DNS labels
         events = [
             {
-                "id": f"dns-{i}", "agent_id": "tunnel-agent",
-                "type": "network.dns", "severity": "info",
+                "id": f"dns-{i}",
+                "agent_id": "tunnel-agent",
+                "type": "network.dns",
+                "severity": "info",
                 "details": {"dns_query": f"{'a' * 55}.sub{i}.example.com"},
-                "source": "", "tenant_id": "dev",
+                "source": "",
+                "tenant_id": "dev",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
             for i in range(5)
@@ -166,10 +190,13 @@ class TestNetworkWarden:
         base = datetime.now(timezone.utc)
         events = [
             {
-                "id": f"beacon-{i}", "agent_id": "beacon-agent",
-                "type": "network.connection", "severity": "info",
+                "id": f"beacon-{i}",
+                "agent_id": "beacon-agent",
+                "type": "network.connection",
+                "severity": "info",
                 "details": {"dst_ip": "10.10.10.10", "dst_port": 443},
-                "source": "", "tenant_id": "dev",
+                "source": "",
+                "tenant_id": "dev",
                 "timestamp": (base + timedelta(seconds=60 * i)).isoformat(),
             }
             for i in range(6)  # Regular 60s intervals
@@ -184,12 +211,18 @@ class TestNetworkWarden:
         from cloud.guardian.network_warden import NetworkWarden
 
         warden = NetworkWarden()
-        events = [{
-            "id": "tor-1", "agent_id": "tor-agent",
-            "type": "network.connection", "severity": "high",
-            "details": {"dst_port": 9050}, "source": "", "tenant_id": "dev",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }]
+        events = [
+            {
+                "id": "tor-1",
+                "agent_id": "tor-agent",
+                "type": "network.connection",
+                "severity": "high",
+                "details": {"dst_port": 9050},
+                "source": "",
+                "tenant_id": "dev",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        ]
         task = AgentTask(task_type="detect", payload={"events": events})
         result = await warden.execute(task)
         assert result.success
@@ -225,9 +258,12 @@ class TestCorrelator:
 
         engine = CorrelationEngine()
         event = EventRow(
-            id="c-1", agent_id="a1",
+            id="c-1",
+            agent_id="a1",
             timestamp=datetime.now(timezone.utc),
-            category="shell", type="exec", severity="high",
+            category="shell",
+            type="exec",
+            severity="high",
         )
         assert engine.correlate([event]) == []
 
@@ -238,12 +274,30 @@ class TestCorrelator:
         now = datetime.now(timezone.utc)
 
         events = [
-            EventRow(id="kc-1", agent_id="a1", timestamp=now,
-                     category="auth", type="auth_failure", severity="high"),
-            EventRow(id="kc-2", agent_id="a1", timestamp=now + timedelta(seconds=30),
-                     category="shell", type="shell_exec", severity="critical"),
-            EventRow(id="kc-3", agent_id="a1", timestamp=now + timedelta(seconds=60),
-                     category="network", type="network_upload", severity="high"),
+            EventRow(
+                id="kc-1",
+                agent_id="a1",
+                timestamp=now,
+                category="auth",
+                type="auth_failure",
+                severity="high",
+            ),
+            EventRow(
+                id="kc-2",
+                agent_id="a1",
+                timestamp=now + timedelta(seconds=30),
+                category="shell",
+                type="shell_exec",
+                severity="critical",
+            ),
+            EventRow(
+                id="kc-3",
+                agent_id="a1",
+                timestamp=now + timedelta(seconds=60),
+                category="network",
+                type="network_upload",
+                severity="high",
+            ),
         ]
         chains = engine.correlate(events)
         # Should find a chain with multiple tactics
@@ -256,12 +310,24 @@ class TestCorrelator:
         now = datetime.now(timezone.utc)
 
         events = [
-            EventRow(id="ca-1", agent_id="a1", timestamp=now,
-                     category="ai_tool", type="shell_exec", severity="high",
-                     details={"tool_name": "bash"}),
-            EventRow(id="ca-2", agent_id="a2", timestamp=now + timedelta(seconds=10),
-                     category="ai_tool", type="shell_exec", severity="critical",
-                     details={"tool_name": "bash"}),
+            EventRow(
+                id="ca-1",
+                agent_id="a1",
+                timestamp=now,
+                category="ai_tool",
+                type="shell_exec",
+                severity="high",
+                details={"tool_name": "bash"},
+            ),
+            EventRow(
+                id="ca-2",
+                agent_id="a2",
+                timestamp=now + timedelta(seconds=10),
+                category="ai_tool",
+                type="shell_exec",
+                severity="critical",
+                details={"tool_name": "bash"},
+            ),
         ]
         chains = engine.correlate(events)
         assert isinstance(chains, list)
@@ -273,15 +339,33 @@ class TestCorrelator:
         now = datetime.now(timezone.utc)
 
         events = [
-            EventRow(id="cs-1", agent_id="a1", timestamp=now,
-                     category="shell", type="shell_exec", severity="high",
-                     details={"source_ip": "192.168.1.100"}),
-            EventRow(id="cs-2", agent_id="a2", timestamp=now + timedelta(seconds=10),
-                     category="network", type="network_upload", severity="high",
-                     details={"source_ip": "192.168.1.100"}),
-            EventRow(id="cs-3", agent_id="a3", timestamp=now + timedelta(seconds=20),
-                     category="shell", type="exec", severity="critical",
-                     details={"source_ip": "192.168.1.100"}),
+            EventRow(
+                id="cs-1",
+                agent_id="a1",
+                timestamp=now,
+                category="shell",
+                type="shell_exec",
+                severity="high",
+                details={"source_ip": "192.168.1.100"},
+            ),
+            EventRow(
+                id="cs-2",
+                agent_id="a2",
+                timestamp=now + timedelta(seconds=10),
+                category="network",
+                type="network_upload",
+                severity="high",
+                details={"source_ip": "192.168.1.100"},
+            ),
+            EventRow(
+                id="cs-3",
+                agent_id="a3",
+                timestamp=now + timedelta(seconds=20),
+                category="shell",
+                type="exec",
+                severity="critical",
+                details={"source_ip": "192.168.1.100"},
+            ),
         ]
         chains = engine.correlate(events)
         assert isinstance(chains, list)
@@ -293,12 +377,24 @@ class TestCorrelator:
         now = datetime.now(timezone.utc)
 
         events = [
-            EventRow(id="sc-1", agent_id="a1", timestamp=now,
-                     category="shell", type="install", severity="medium",
-                     details={"command": "pip install malware-pkg"}),
-            EventRow(id="sc-2", agent_id="a1", timestamp=now + timedelta(seconds=30),
-                     category="shell", type="shell_exec", severity="high",
-                     details={"command": "python -c 'import os; os.system(\"whoami\")'"}),
+            EventRow(
+                id="sc-1",
+                agent_id="a1",
+                timestamp=now,
+                category="shell",
+                type="install",
+                severity="medium",
+                details={"command": "pip install malware-pkg"},
+            ),
+            EventRow(
+                id="sc-2",
+                agent_id="a1",
+                timestamp=now + timedelta(seconds=30),
+                category="shell",
+                type="shell_exec",
+                severity="high",
+                details={"command": "python -c 'import os; os.system(\"whoami\")'"},
+            ),
         ]
         chains = engine.correlate(events)
         assert isinstance(chains, list)
@@ -310,16 +406,22 @@ class TestCorrelator:
         engine = CorrelationEngine()
         chains = [
             CorrelationChain(
-                event_ids=["e1", "e2"], agent_ids=["a1"],
+                event_ids=["e1", "e2"],
+                agent_ids=["a1"],
                 tactics=["initial_access", "execution"],
-                severity="critical", confidence=0.85,
-                description="Test chain", time_span_seconds=30,
+                severity="critical",
+                confidence=0.85,
+                description="Test chain",
+                time_span_seconds=30,
             ),
             CorrelationChain(
-                event_ids=["e3", "e4", "e5"], agent_ids=["a1", "a2", "a3"],
+                event_ids=["e3", "e4", "e5"],
+                agent_ids=["a1", "a2", "a3"],
                 tactics=["execution", "exfiltration"],
-                severity="high", confidence=0.7,
-                description="Multi-agent chain", time_span_seconds=60,
+                severity="high",
+                confidence=0.7,
+                description="Multi-agent chain",
+                time_span_seconds=60,
             ),
         ]
         indicators = engine.chains_to_indicators(chains)
@@ -330,15 +432,25 @@ class TestCorrelator:
     def test_infer_tactic(self):
         from cloud.guardian.detection.correlator import _infer_tactic
 
-        event = EventRow(id="t1", agent_id="a1",
-                        timestamp=datetime.now(timezone.utc),
-                        category="shell", type="shell_exec", severity="high")
+        event = EventRow(
+            id="t1",
+            agent_id="a1",
+            timestamp=datetime.now(timezone.utc),
+            category="shell",
+            type="shell_exec",
+            severity="high",
+        )
         tactic = _infer_tactic(event)
         assert tactic is not None
 
-        event2 = EventRow(id="t2", agent_id="a1",
-                         timestamp=datetime.now(timezone.utc),
-                         category="custom", type="unknown_random_type", severity="info")
+        event2 = EventRow(
+            id="t2",
+            agent_id="a1",
+            timestamp=datetime.now(timezone.utc),
+            category="custom",
+            type="unknown_random_type",
+            severity="info",
+        )
         tactic2 = _infer_tactic(event2)
         # Might be None for unknown types
         assert tactic2 is None or isinstance(tactic2, str)
@@ -361,12 +473,17 @@ class TestEventBus:
 
         events = []
         for i in range(4):
-            events.append(EventRow(
-                id=str(uuid.uuid4()), agent_id="priv-agent",
-                timestamp=datetime.now(timezone.utc),
-                category="shell", type=f"sudo_exec_{i}", severity="critical",
-                details={"command": f"sudo chmod 777 /etc/important_{i}"},
-            ))
+            events.append(
+                EventRow(
+                    id=str(uuid.uuid4()),
+                    agent_id="priv-agent",
+                    timestamp=datetime.now(timezone.utc),
+                    category="shell",
+                    type=f"sudo_exec_{i}",
+                    severity="critical",
+                    details={"command": f"sudo chmod 777 /etc/important_{i}"},
+                )
+            )
         for e in events:
             db.add(e)
         db.commit()
@@ -379,12 +496,17 @@ class TestEventBus:
 
         events = []
         for i, agent in enumerate(["agent-a", "agent-b", "agent-c"]):
-            events.append(EventRow(
-                id=str(uuid.uuid4()), agent_id=agent,
-                timestamp=datetime.now(timezone.utc),
-                category="network", type=f"ssh_exec_{i}", severity="high",
-                details={"command": f"ssh root@target_{i}"},
-            ))
+            events.append(
+                EventRow(
+                    id=str(uuid.uuid4()),
+                    agent_id=agent,
+                    timestamp=datetime.now(timezone.utc),
+                    category="network",
+                    type=f"ssh_exec_{i}",
+                    severity="high",
+                    details={"command": f"ssh root@target_{i}"},
+                )
+            )
         for e in events:
             db.add(e)
         db.commit()
@@ -397,12 +519,17 @@ class TestEventBus:
 
         events = []
         for i in range(3):
-            events.append(EventRow(
-                id=str(uuid.uuid4()), agent_id="staging-agent",
-                timestamp=datetime.now(timezone.utc),
-                category="shell", type="compress", severity="info",
-                details={"command": f"tar czf archive_{i}.tar.gz /data"},
-            ))
+            events.append(
+                EventRow(
+                    id=str(uuid.uuid4()),
+                    agent_id="staging-agent",
+                    timestamp=datetime.now(timezone.utc),
+                    category="shell",
+                    type="compress",
+                    severity="info",
+                    details={"command": f"tar czf archive_{i}.tar.gz /data"},
+                )
+            )
         for e in events:
             db.add(e)
         db.commit()
@@ -416,11 +543,16 @@ class TestEventBus:
         events = []
         for agent in ["spray-a", "spray-b"]:
             for i in range(3):
-                events.append(EventRow(
-                    id=str(uuid.uuid4()), agent_id=agent,
-                    timestamp=datetime.now(timezone.utc),
-                    category="auth", type=f"auth_failure_{i}", severity="high",
-                ))
+                events.append(
+                    EventRow(
+                        id=str(uuid.uuid4()),
+                        agent_id=agent,
+                        timestamp=datetime.now(timezone.utc),
+                        category="auth",
+                        type=f"auth_failure_{i}",
+                        severity="high",
+                    )
+                )
         for e in events:
             db.add(e)
         db.commit()
@@ -431,12 +563,17 @@ class TestEventBus:
     def test_c2_callback(self, db: Session):
         from cloud.services.event_bus import check_for_alerts
 
-        events = [EventRow(
-            id=str(uuid.uuid4()), agent_id="c2-agent",
-            timestamp=datetime.now(timezone.utc),
-            category="shell", type="reverse shell exec", severity="critical",
-            details={"target": "10.0.0.1:4444"},
-        )]
+        events = [
+            EventRow(
+                id=str(uuid.uuid4()),
+                agent_id="c2-agent",
+                timestamp=datetime.now(timezone.utc),
+                category="shell",
+                type="reverse shell exec",
+                severity="critical",
+                details={"target": "10.0.0.1:4444"},
+            )
+        ]
         for e in events:
             db.add(e)
         db.commit()
@@ -449,12 +586,17 @@ class TestEventBus:
 
         events = []
         for i in range(3):
-            events.append(EventRow(
-                id=str(uuid.uuid4()), agent_id="ransom-agent",
-                timestamp=datetime.now(timezone.utc),
-                category="shell", type=f"encrypt_files_{i}", severity="critical",
-                details={"command": f"openssl enc -aes-256-cbc -in /data/file_{i}"},
-            ))
+            events.append(
+                EventRow(
+                    id=str(uuid.uuid4()),
+                    agent_id="ransom-agent",
+                    timestamp=datetime.now(timezone.utc),
+                    category="shell",
+                    type=f"encrypt_files_{i}",
+                    severity="critical",
+                    details={"command": f"openssl enc -aes-256-cbc -in /data/file_{i}"},
+                )
+            )
         for e in events:
             db.add(e)
         db.commit()
@@ -465,12 +607,17 @@ class TestEventBus:
     def test_defense_evasion(self, db: Session):
         from cloud.services.event_bus import check_for_alerts
 
-        events = [EventRow(
-            id=str(uuid.uuid4()), agent_id="evasion-agent",
-            timestamp=datetime.now(timezone.utc),
-            category="shell", type="log_clear", severity="high",
-            details={"command": "history -c && rm -f /var/log/auth.log"},
-        )]
+        events = [
+            EventRow(
+                id=str(uuid.uuid4()),
+                agent_id="evasion-agent",
+                timestamp=datetime.now(timezone.utc),
+                category="shell",
+                type="log_clear",
+                severity="high",
+                details={"command": "history -c && rm -f /var/log/auth.log"},
+            )
+        ]
         for e in events:
             db.add(e)
         db.commit()
@@ -483,12 +630,17 @@ class TestEventBus:
 
         events = []
         for i in range(12):
-            events.append(EventRow(
-                id=str(uuid.uuid4()), agent_id="cloud-agent",
-                timestamp=datetime.now(timezone.utc),
-                category="shell", type="cloud_cmd", severity="info",
-                details={"command": f"aws s3api list-buckets --region us-east-{i}"},
-            ))
+            events.append(
+                EventRow(
+                    id=str(uuid.uuid4()),
+                    agent_id="cloud-agent",
+                    timestamp=datetime.now(timezone.utc),
+                    category="shell",
+                    type="cloud_cmd",
+                    severity="info",
+                    details={"command": f"aws s3api list-buckets --region us-east-{i}"},
+                )
+            )
         for e in events:
             db.add(e)
         db.commit()
@@ -549,9 +701,12 @@ class TestGuardianChatHandlers:
         from cloud.services.guardian_chat import _handle_alerts
 
         alert = GuardianAlertRow(
-            id=str(uuid.uuid4()), tenant_id="dev-tenant",
-            alert_type="test_alert", title="Test Alert",
-            severity="critical", details={},
+            id=str(uuid.uuid4()),
+            tenant_id="dev-tenant",
+            alert_type="test_alert",
+            title="Test Alert",
+            severity="critical",
+            details={},
         )
         db.add(alert)
         db.commit()
@@ -568,9 +723,12 @@ class TestGuardianChatHandlers:
         from cloud.services.guardian_chat import _handle_changes
 
         change = GuardianChangeRow(
-            id=str(uuid.uuid4()), tenant_id="dev-tenant",
-            change_type="policy_update", description="Updated policy",
-            changed_by="admin", created_at=datetime.now(timezone.utc),
+            id=str(uuid.uuid4()),
+            tenant_id="dev-tenant",
+            change_type="policy_update",
+            description="Updated policy",
+            changed_by="admin",
+            created_at=datetime.now(timezone.utc),
         )
         db.add(change)
         db.commit()
@@ -594,9 +752,12 @@ class TestGuardianChatHandlers:
 
         event_id = str(uuid.uuid4())
         event = EventRow(
-            id=event_id, agent_id="a1",
+            id=event_id,
+            agent_id="a1",
             timestamp=datetime.now(timezone.utc),
-            category="shell", type="exec", severity="high",
+            category="shell",
+            type="exec",
+            severity="high",
         )
         db.add(event)
         db.commit()
@@ -621,20 +782,30 @@ class TestGuardianChatHandlers:
         from cloud.services.guardian_chat import _handle_status_report
 
         report = GuardianReportRow(
-            id=str(uuid.uuid4()), tenant_id="dev-tenant",
+            id=str(uuid.uuid4()),
+            tenant_id="dev-tenant",
             timestamp=datetime.now(timezone.utc),
-            agents_total=5, agents_active=4, agents_degraded=1, agents_offline=0,
-            incidents_total=10, incidents_by_severity={"critical": 2},
+            agents_total=5,
+            agents_active=4,
+            agents_degraded=1,
+            agents_offline=0,
+            incidents_total=10,
+            incidents_by_severity={"critical": 2},
             anomalies=["Test anomaly"],
             summary="5 agents healthy, 10 events",
         )
         db.add(report)
         # Add a second report
         report2 = GuardianReportRow(
-            id=str(uuid.uuid4()), tenant_id="dev-tenant",
+            id=str(uuid.uuid4()),
+            tenant_id="dev-tenant",
             timestamp=datetime.now(timezone.utc) - timedelta(minutes=5),
-            agents_total=5, agents_active=4, agents_degraded=1, agents_offline=0,
-            incidents_total=5, summary="Earlier report",
+            agents_total=5,
+            agents_active=4,
+            agents_degraded=1,
+            agents_offline=0,
+            incidents_total=5,
+            summary="Earlier report",
         )
         db.add(report2)
         db.commit()
@@ -694,9 +865,12 @@ class TestGuardianScan:
         from cloud.services.guardian_scan import run_guardian_scan
 
         event = EventRow(
-            id=str(uuid.uuid4()), agent_id="scan-agent",
+            id=str(uuid.uuid4()),
+            agent_id="scan-agent",
             timestamp=datetime.now(timezone.utc),
-            category="ai_tool", type="secret_access", severity="critical",
+            category="ai_tool",
+            type="secret_access",
+            severity="critical",
             details={"accesses_secrets": True},
         )
         db.add(event)
@@ -709,9 +883,12 @@ class TestGuardianScan:
         from cloud.services.guardian_scan import run_guardian_scan
 
         event = EventRow(
-            id=str(uuid.uuid4()), agent_id="scan-agent-2",
+            id=str(uuid.uuid4()),
+            agent_id="scan-agent-2",
             timestamp=datetime.now(timezone.utc),
-            category="ai_tool", type="injection_attempt", severity="high",
+            category="ai_tool",
+            type="injection_attempt",
+            severity="high",
             details={"prompt_injection": True},
         )
         db.add(event)
@@ -729,8 +906,10 @@ class TestGuardianHeartbeat:
     def test_run_heartbeat(self, db: Session):
         from cloud.services.guardian_heartbeat import _run_heartbeat
 
-        with patch("cloud.services.guardian_heartbeat.SessionLocal") as mock_sl, \
-             patch.object(db, "close"):
+        with (
+            patch("cloud.services.guardian_heartbeat.SessionLocal") as mock_sl,
+            patch.object(db, "close"),
+        ):
             mock_sl.return_value = db
             report = _run_heartbeat("dev-tenant")
             assert report is not None
@@ -741,33 +920,45 @@ class TestGuardianHeartbeat:
 
         # Add stale agent
         stale = AgentNodeRow(
-            id="hb-stale-1", type="server", os="linux", hostname="hb-stale",
-            status="active", registered_at=datetime.now(timezone.utc),
+            id="hb-stale-1",
+            type="server",
+            os="linux",
+            hostname="hb-stale",
+            status="active",
+            registered_at=datetime.now(timezone.utc),
             last_seen_at=datetime.now(timezone.utc) - timedelta(minutes=15),
         )
         db.add(stale)
 
         # Add critical events
-        for i in range(5):
+        for _ in range(5):
             event = EventRow(
-                id=str(uuid.uuid4()), agent_id="hb-stale-1",
+                id=str(uuid.uuid4()),
+                agent_id="hb-stale-1",
                 timestamp=datetime.now(timezone.utc),
-                category="shell", type="exec", severity="critical",
+                category="shell",
+                type="exec",
+                severity="critical",
             )
             db.add(event)
 
         # Add repeated pattern events
-        for i in range(12):
+        for _ in range(12):
             event = EventRow(
-                id=str(uuid.uuid4()), agent_id="hb-stale-1",
+                id=str(uuid.uuid4()),
+                agent_id="hb-stale-1",
                 timestamp=datetime.now(timezone.utc),
-                category="shell", type="repeated_type", severity="info",
+                category="shell",
+                type="repeated_type",
+                severity="info",
             )
             db.add(event)
         db.commit()
 
-        with patch("cloud.services.guardian_heartbeat.SessionLocal") as mock_sl, \
-             patch.object(db, "close"):
+        with (
+            patch("cloud.services.guardian_heartbeat.SessionLocal") as mock_sl,
+            patch.object(db, "close"),
+        ):
             mock_sl.return_value = db
             report = _run_heartbeat("dev-tenant")
             assert report is not None
@@ -823,7 +1014,8 @@ class TestOpenClawAdapter:
         from angelnode.ai_shield.openclaw_adapter import ToolCallRequest, evaluate_tool
 
         req = ToolCallRequest(
-            tool_name="bash", arguments={"command": "ls"},
+            tool_name="bash",
+            arguments={"command": "ls"},
             agent_id="test-agent",
         )
         # Mock httpx to simulate unreachable engine

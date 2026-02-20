@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
 from cloud.services.pentest_auto import PentestAutoService
 from cloud.services.red_team import RedTeamService
-
 
 TENANT = "test-tenant"
 
@@ -49,6 +46,7 @@ class TestPentestAutoService:
         assert result["service"] == "PentestAutoService"
         assert result["version"] == "7.9.0"
 
+
 class TestRedTeamService:
     """RedTeamService tests."""
 
@@ -86,4 +84,3 @@ class TestRedTeamService:
         assert result["tenant_id"] == TENANT
         assert result["service"] == "RedTeamService"
         assert result["version"] == "7.9.0"
-

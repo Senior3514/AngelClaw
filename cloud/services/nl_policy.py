@@ -42,7 +42,7 @@ class NLPolicy:
         self.tenant_id = tenant_id
         self.natural_language = natural_language
         self.parsed_rules: list[dict[str, Any]] = parsed_rules or []
-        self.status = "draft"                # draft, pending_review, approved, rejected
+        self.status = "draft"  # draft, pending_review, approved, rejected
         self.confidence_score = confidence_score
         self.created_by = created_by
         self.approved_by: str | None = None
@@ -102,7 +102,10 @@ class NLPolicyService:
         self._tenant_policies[tenant_id].append(policy.id)
         logger.info(
             "[NL_POLICY] Created policy %s for %s — confidence=%.2f, %d rules extracted",
-            policy.id[:8], tenant_id, confidence, len(parsed_rules),
+            policy.id[:8],
+            tenant_id,
+            confidence,
+            len(parsed_rules),
         )
         return policy.to_dict()
 
@@ -182,7 +185,7 @@ class NLPolicyService:
                     idx = tokens.index(kw)
                     rule["action"] = kw
                     # Capture the next few tokens as target
-                    target_tokens = tokens[idx + 1: idx + 4]
+                    target_tokens = tokens[idx + 1 : idx + 4]
                     if target_tokens:
                         rule["target"] = " ".join(target_tokens)
                     break
@@ -191,7 +194,7 @@ class NLPolicyService:
             for kw in _CONDITION_KEYWORDS:
                 if kw in tokens:
                     idx = tokens.index(kw)
-                    condition_tokens = tokens[idx + 1: idx + 6]
+                    condition_tokens = tokens[idx + 1 : idx + 6]
                     if condition_tokens:
                         rule["condition"] = " ".join(condition_tokens)
                     break
@@ -200,7 +203,7 @@ class NLPolicyService:
             for kw in _DIRECTION_KEYWORDS:
                 if kw in tokens:
                     idx = tokens.index(kw)
-                    direction_tokens = tokens[idx + 1: idx + 4]
+                    direction_tokens = tokens[idx + 1 : idx + 4]
                     if direction_tokens:
                         rule[kw] = " ".join(direction_tokens)
 
@@ -229,9 +232,7 @@ class NLPolicyService:
 
         # Bonus: average number of extracted fields per rule
         if parsed_rules:
-            fields_per_rule = [
-                sum(1 for k in r if k != "raw") for r in parsed_rules
-            ]
+            fields_per_rule = [sum(1 for k in r if k != "raw") for r in parsed_rules]
             avg_fields = sum(fields_per_rule) / len(fields_per_rule)
             field_bonus = min(avg_fields / 4.0, 0.3)  # cap bonus at 0.3
         else:

@@ -8,12 +8,9 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-import pytest
-
-from cloud.services.threat_intel import ThreatIntelService
 from cloud.services.ioc_engine import IOCMatchingEngine
 from cloud.services.reputation import ReputationService
-
+from cloud.services.threat_intel import ThreatIntelService
 
 # ---------------------------------------------------------------------------
 # ThreatIntelService
@@ -94,10 +91,14 @@ class TestThreatIntelIOCIngestion:
     def test_ingest_iocs_adds_new(self):
         svc = ThreatIntelService()
         feed = svc.create_feed("t1", "Feed A", "csv")
-        result = svc.ingest_iocs("t1", feed["id"], [
-            {"ioc_type": "ip", "value": "10.0.0.1", "severity": "high"},
-            {"ioc_type": "domain", "value": "evil.com", "severity": "critical"},
-        ])
+        result = svc.ingest_iocs(
+            "t1",
+            feed["id"],
+            [
+                {"ioc_type": "ip", "value": "10.0.0.1", "severity": "high"},
+                {"ioc_type": "domain", "value": "evil.com", "severity": "critical"},
+            ],
+        )
         assert result["added"] == 2
         assert result["updated"] == 0
         assert result["total"] == 2
@@ -105,33 +106,49 @@ class TestThreatIntelIOCIngestion:
     def test_ingest_iocs_deduplicates(self):
         svc = ThreatIntelService()
         feed = svc.create_feed("t1", "Feed A", "csv")
-        svc.ingest_iocs("t1", feed["id"], [
-            {"ioc_type": "ip", "value": "10.0.0.1", "confidence": 50},
-        ])
-        result = svc.ingest_iocs("t1", feed["id"], [
-            {"ioc_type": "ip", "value": "10.0.0.1", "confidence": 90},
-        ])
+        svc.ingest_iocs(
+            "t1",
+            feed["id"],
+            [
+                {"ioc_type": "ip", "value": "10.0.0.1", "confidence": 50},
+            ],
+        )
+        result = svc.ingest_iocs(
+            "t1",
+            feed["id"],
+            [
+                {"ioc_type": "ip", "value": "10.0.0.1", "confidence": 90},
+            ],
+        )
         assert result["added"] == 0
         assert result["updated"] == 1
 
     def test_ingest_updates_feed_ioc_count(self):
         svc = ThreatIntelService()
         feed = svc.create_feed("t1", "Feed A", "csv")
-        svc.ingest_iocs("t1", feed["id"], [
-            {"ioc_type": "ip", "value": "1.1.1.1"},
-            {"ioc_type": "ip", "value": "2.2.2.2"},
-        ])
+        svc.ingest_iocs(
+            "t1",
+            feed["id"],
+            [
+                {"ioc_type": "ip", "value": "1.1.1.1"},
+                {"ioc_type": "ip", "value": "2.2.2.2"},
+            ],
+        )
         updated_feed = svc.get_feed(feed["id"])
         assert updated_feed["ioc_count"] == 2
 
     def test_search_iocs_by_type(self):
         svc = ThreatIntelService()
         feed = svc.create_feed("t1", "Feed A", "csv")
-        svc.ingest_iocs("t1", feed["id"], [
-            {"ioc_type": "ip", "value": "10.0.0.1"},
-            {"ioc_type": "domain", "value": "evil.com"},
-            {"ioc_type": "ip", "value": "10.0.0.2"},
-        ])
+        svc.ingest_iocs(
+            "t1",
+            feed["id"],
+            [
+                {"ioc_type": "ip", "value": "10.0.0.1"},
+                {"ioc_type": "domain", "value": "evil.com"},
+                {"ioc_type": "ip", "value": "10.0.0.2"},
+            ],
+        )
         results = svc.search_iocs("t1", ioc_type="ip")
         assert len(results) == 2
         assert all(r["ioc_type"] == "ip" for r in results)
@@ -139,10 +156,14 @@ class TestThreatIntelIOCIngestion:
     def test_search_iocs_by_value(self):
         svc = ThreatIntelService()
         feed = svc.create_feed("t1", "Feed A", "csv")
-        svc.ingest_iocs("t1", feed["id"], [
-            {"ioc_type": "domain", "value": "evil.com"},
-            {"ioc_type": "domain", "value": "good.org"},
-        ])
+        svc.ingest_iocs(
+            "t1",
+            feed["id"],
+            [
+                {"ioc_type": "domain", "value": "evil.com"},
+                {"ioc_type": "domain", "value": "good.org"},
+            ],
+        )
         results = svc.search_iocs("t1", value="evil")
         assert len(results) == 1
         assert results[0]["value"] == "evil.com"
@@ -150,10 +171,14 @@ class TestThreatIntelIOCIngestion:
     def test_search_iocs_by_severity(self):
         svc = ThreatIntelService()
         feed = svc.create_feed("t1", "Feed A", "csv")
-        svc.ingest_iocs("t1", feed["id"], [
-            {"ioc_type": "ip", "value": "1.1.1.1", "severity": "high"},
-            {"ioc_type": "ip", "value": "2.2.2.2", "severity": "low"},
-        ])
+        svc.ingest_iocs(
+            "t1",
+            feed["id"],
+            [
+                {"ioc_type": "ip", "value": "1.1.1.1", "severity": "high"},
+                {"ioc_type": "ip", "value": "2.2.2.2", "severity": "low"},
+            ],
+        )
         results = svc.search_iocs("t1", severity="high")
         assert len(results) == 1
         assert results[0]["severity"] == "high"
@@ -181,10 +206,14 @@ class TestThreatIntelIOCExpiry:
         svc = ThreatIntelService()
         feed = svc.create_feed("t1", "Feed A", "csv")
         past = datetime.now(timezone.utc) - timedelta(hours=1)
-        svc.ingest_iocs("t1", feed["id"], [
-            {"ioc_type": "ip", "value": "1.1.1.1", "expires_at": past},
-            {"ioc_type": "ip", "value": "2.2.2.2"},
-        ])
+        svc.ingest_iocs(
+            "t1",
+            feed["id"],
+            [
+                {"ioc_type": "ip", "value": "1.1.1.1", "expires_at": past},
+                {"ioc_type": "ip", "value": "2.2.2.2"},
+            ],
+        )
         removed = svc.expire_stale_iocs()
         assert removed == 1
         # Only the non-expired IOC remains
@@ -196,9 +225,13 @@ class TestThreatIntelIOCExpiry:
         svc = ThreatIntelService()
         feed = svc.create_feed("t1", "Feed A", "csv")
         future = datetime.now(timezone.utc) + timedelta(hours=24)
-        svc.ingest_iocs("t1", feed["id"], [
-            {"ioc_type": "ip", "value": "1.1.1.1", "expires_at": future},
-        ])
+        svc.ingest_iocs(
+            "t1",
+            feed["id"],
+            [
+                {"ioc_type": "ip", "value": "1.1.1.1", "expires_at": future},
+            ],
+        )
         removed = svc.expire_stale_iocs()
         assert removed == 0
 
@@ -221,11 +254,15 @@ class TestThreatIntelStats:
     def test_get_stats_counts(self):
         svc = ThreatIntelService()
         feed = svc.create_feed("t1", "Feed A", "csv")
-        svc.ingest_iocs("t1", feed["id"], [
-            {"ioc_type": "ip", "value": "1.1.1.1", "severity": "high"},
-            {"ioc_type": "ip", "value": "2.2.2.2", "severity": "high"},
-            {"ioc_type": "domain", "value": "evil.com", "severity": "critical"},
-        ])
+        svc.ingest_iocs(
+            "t1",
+            feed["id"],
+            [
+                {"ioc_type": "ip", "value": "1.1.1.1", "severity": "high"},
+                {"ioc_type": "ip", "value": "2.2.2.2", "severity": "high"},
+                {"ioc_type": "domain", "value": "evil.com", "severity": "critical"},
+            ],
+        )
         stats = svc.get_stats("t1")
         assert stats["total_feeds"] == 1
         assert stats["total_iocs"] == 3
@@ -250,10 +287,14 @@ class TestThreatIntelEdgeCases:
     def test_delete_feed_removes_associated_iocs(self):
         svc = ThreatIntelService()
         feed = svc.create_feed("t1", "Feed A", "csv")
-        svc.ingest_iocs("t1", feed["id"], [
-            {"ioc_type": "ip", "value": "1.1.1.1"},
-            {"ioc_type": "ip", "value": "2.2.2.2"},
-        ])
+        svc.ingest_iocs(
+            "t1",
+            feed["id"],
+            [
+                {"ioc_type": "ip", "value": "1.1.1.1"},
+                {"ioc_type": "ip", "value": "2.2.2.2"},
+            ],
+        )
         assert len(svc.search_iocs("t1")) == 2
         svc.delete_feed(feed["id"])
         assert len(svc.search_iocs("t1")) == 0
@@ -261,9 +302,13 @@ class TestThreatIntelEdgeCases:
     def test_match_value_exact(self):
         svc = ThreatIntelService()
         feed = svc.create_feed("t1", "Feed A", "csv")
-        svc.ingest_iocs("t1", feed["id"], [
-            {"ioc_type": "ip", "value": "10.0.0.99"},
-        ])
+        svc.ingest_iocs(
+            "t1",
+            feed["id"],
+            [
+                {"ioc_type": "ip", "value": "10.0.0.99"},
+            ],
+        )
         matches = svc.match_value("t1", "10.0.0.99")
         assert len(matches) == 1
         assert matches[0]["value"] == "10.0.0.99"
@@ -276,22 +321,34 @@ class TestThreatIntelEdgeCases:
     def test_match_event_multiple_fields(self):
         svc = ThreatIntelService()
         feed = svc.create_feed("t1", "Feed A", "csv")
-        svc.ingest_iocs("t1", feed["id"], [
-            {"ioc_type": "ip", "value": "10.0.0.1"},
-            {"ioc_type": "domain", "value": "evil.com"},
-        ])
+        svc.ingest_iocs(
+            "t1",
+            feed["id"],
+            [
+                {"ioc_type": "ip", "value": "10.0.0.1"},
+                {"ioc_type": "domain", "value": "evil.com"},
+            ],
+        )
         matches = svc.match_event("t1", {"source_ip": "10.0.0.1", "domain": "evil.com"})
         assert len(matches) == 2
 
     def test_ingest_iocs_merges_tags_on_update(self):
         svc = ThreatIntelService()
         feed = svc.create_feed("t1", "Feed A", "csv")
-        svc.ingest_iocs("t1", feed["id"], [
-            {"ioc_type": "ip", "value": "10.0.0.1", "tags": ["apt"]},
-        ])
-        svc.ingest_iocs("t1", feed["id"], [
-            {"ioc_type": "ip", "value": "10.0.0.1", "tags": ["c2"]},
-        ])
+        svc.ingest_iocs(
+            "t1",
+            feed["id"],
+            [
+                {"ioc_type": "ip", "value": "10.0.0.1", "tags": ["apt"]},
+            ],
+        )
+        svc.ingest_iocs(
+            "t1",
+            feed["id"],
+            [
+                {"ioc_type": "ip", "value": "10.0.0.1", "tags": ["c2"]},
+            ],
+        )
         results = svc.search_iocs("t1", value="10.0.0.1")
         assert len(results) == 1
         assert "apt" in results[0]["tags"]
@@ -454,7 +511,9 @@ class TestIOCMatchingStats:
     def test_get_stats_after_acknowledge(self):
         engine = IOCMatchingEngine()
         ioc_lookup = {"10.0.0.1": [{"id": "ioc-1", "severity": "high"}]}
-        matches = engine.scan_events("t1", [{"id": "e1", "details": {"ip": "10.0.0.1"}}], ioc_lookup)
+        matches = engine.scan_events(
+            "t1", [{"id": "e1", "details": {"ip": "10.0.0.1"}}], ioc_lookup
+        )
         engine.acknowledge_match(matches[0]["id"])
         stats = engine.get_stats("t1")
         assert stats["total_matches"] == 1
@@ -632,7 +691,7 @@ class TestReputationWorstEntities:
         svc = ReputationService()
         svc.update_score("t1", "ip", "bad-ip-1", -40)  # score=10
         svc.update_score("t1", "ip", "bad-ip-2", -20)  # score=30
-        svc.update_score("t1", "ip", "good-ip", 30)    # score=80
+        svc.update_score("t1", "ip", "good-ip", 30)  # score=80
         worst = svc.get_worst("t1", limit=2)
         assert len(worst) == 2
         assert worst[0]["score"] <= worst[1]["score"]
@@ -663,9 +722,9 @@ class TestReputationStats:
 
     def test_get_stats_counts(self):
         svc = ReputationService()
-        svc.lookup("t1", "ip", "8.8.8.8")        # medium
-        svc.lookup("t1", "domain", "example.com") # medium
-        svc.lookup("t1", "ip", "192.168.1.1")     # clean (90)
+        svc.lookup("t1", "ip", "8.8.8.8")  # medium
+        svc.lookup("t1", "domain", "example.com")  # medium
+        svc.lookup("t1", "ip", "192.168.1.1")  # clean (90)
         stats = svc.get_stats("t1")
         assert stats["total_entries"] == 3
         assert stats["by_type"]["ip"] == 2

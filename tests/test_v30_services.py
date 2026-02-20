@@ -13,10 +13,10 @@ from cloud.services.anti_tamper import AntiTamperService
 from cloud.services.feedback_loop import FeedbackService
 from cloud.services.self_hardening import SelfHardeningEngine
 
-
 # ---------------------------------------------------------------------------
 # AntiTamperService
 # ---------------------------------------------------------------------------
+
 
 class TestAntiTamperBasic:
     """Basic enable/disable/status operations."""
@@ -217,6 +217,7 @@ class TestAntiTamperHeartbeat:
 
     def test_heartbeat_timeout_detected(self):
         from datetime import datetime, timedelta, timezone
+
         svc = AntiTamperService()
         svc.configure("t1", mode="monitor", heartbeat_timeout_seconds=60)
         # Simulate a heartbeat far in the past
@@ -227,6 +228,7 @@ class TestAntiTamperHeartbeat:
 
     def test_heartbeat_off_mode_ignored(self):
         from datetime import datetime, timedelta, timezone
+
         svc = AntiTamperService()
         # No config => OFF
         svc._agent_heartbeats["a1"] = datetime.now(timezone.utc) - timedelta(seconds=9999)
@@ -324,6 +326,7 @@ class TestAntiTamperMultiTenant:
 # ---------------------------------------------------------------------------
 # FeedbackService
 # ---------------------------------------------------------------------------
+
 
 class TestFeedbackBasic:
     """Record feedback and query."""
@@ -523,6 +526,7 @@ class TestFeedbackMultiTenant:
 # SelfHardeningEngine
 # ---------------------------------------------------------------------------
 
+
 class TestSelfHardeningCycle:
     """run_hardening_cycle with various contexts."""
 
@@ -546,7 +550,8 @@ class TestSelfHardeningCycle:
     def test_loose_allowlist_any(self):
         engine = SelfHardeningEngine()
         actions = engine.run_hardening_cycle(
-            "t1", "suggest",
+            "t1",
+            "suggest",
             context={"network_allowlist": ["ANY"], "known_safe_destinations": ["10.0.0.1"]},
         )
         types = [a["action_type"] for a in actions]
@@ -555,7 +560,8 @@ class TestSelfHardeningCycle:
     def test_loose_allowlist_wildcard(self):
         engine = SelfHardeningEngine()
         actions = engine.run_hardening_cycle(
-            "t1", "suggest",
+            "t1",
+            "suggest",
             context={"network_allowlist": ["*"]},
         )
         types = [a["action_type"] for a in actions]
@@ -570,7 +576,9 @@ class TestSelfHardeningCycle:
     def test_auth_issues(self):
         engine = SelfHardeningEngine()
         actions = engine.run_hardening_cycle(
-            "t1", "suggest", context={"auth_issues": ["weak_password", "no_mfa"]},
+            "t1",
+            "suggest",
+            context={"auth_issues": ["weak_password", "no_mfa"]},
         )
         types = [a["action_type"] for a in actions]
         assert types.count("strengthen_auth") == 2
@@ -578,7 +586,9 @@ class TestSelfHardeningCycle:
     def test_unprotected_agents(self):
         engine = SelfHardeningEngine()
         actions = engine.run_hardening_cycle(
-            "t1", "suggest", context={"unprotected_high_risk_agents": ["a1", "a2"]},
+            "t1",
+            "suggest",
+            context={"unprotected_high_risk_agents": ["a1", "a2"]},
         )
         types = [a["action_type"] for a in actions]
         assert "enable_anti_tamper" in types
@@ -597,11 +607,15 @@ class TestSelfHardeningCycle:
 
     def test_multiple_issues_combined(self):
         engine = SelfHardeningEngine()
-        actions = engine.run_hardening_cycle("t1", "suggest", context={
-            "scan_failures": 5,
-            "logging_enabled": False,
-            "misconfig_count": 10,
-        })
+        actions = engine.run_hardening_cycle(
+            "t1",
+            "suggest",
+            context={
+                "scan_failures": 5,
+                "logging_enabled": False,
+                "misconfig_count": 10,
+            },
+        )
         types = [a["action_type"] for a in actions]
         assert "increase_scan_freq" in types
         assert "enable_logging" in types
@@ -734,11 +748,15 @@ class TestSelfHardeningLog:
 
     def test_hardening_log_limit(self):
         engine = SelfHardeningEngine()
-        engine.run_hardening_cycle("t1", "suggest", context={
-            "scan_failures": 5,
-            "logging_enabled": False,
-            "misconfig_count": 10,
-        })
+        engine.run_hardening_cycle(
+            "t1",
+            "suggest",
+            context={
+                "scan_failures": 5,
+                "logging_enabled": False,
+                "misconfig_count": 10,
+            },
+        )
         log = engine.get_hardening_log(limit=2)
         assert len(log) == 2
 

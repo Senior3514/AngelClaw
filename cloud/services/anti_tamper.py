@@ -192,7 +192,9 @@ class AntiTamperService:
         try:
             tamper_mode = AntiTamperMode(mode)
         except ValueError:
-            raise ValueError(f"Invalid mode: {mode}. Must be one of: off, monitor, enforce")
+            raise ValueError(
+                f"Invalid mode: {mode}. Must be one of: off, monitor, enforce"
+            ) from None
 
         config = AntiTamperConfig(
             tenant_id=tenant_id,
@@ -210,7 +212,10 @@ class AntiTamperService:
 
         logger.info(
             "[ANTI-TAMPER] Configured: tenant=%s agent=%s mode=%s by=%s",
-            tenant_id, agent_id or "ALL", mode, enabled_by,
+            tenant_id,
+            agent_id or "ALL",
+            mode,
+            enabled_by,
         )
         return config
 
@@ -287,8 +292,14 @@ class AntiTamperService:
                 tenant_id=tenant_id,
                 agent_id=agent_id,
                 event_type="heartbeat_miss",
-                description=f"Agent heartbeat missed (timeout: {config.heartbeat_timeout_seconds}s)",
-                details={"last_heartbeat": last_hb.isoformat(), "timeout_s": config.heartbeat_timeout_seconds},
+                description=(
+                    "Agent heartbeat missed"
+                    f" (timeout: {config.heartbeat_timeout_seconds}s)"
+                ),
+                details={
+                    "last_heartbeat": last_hb.isoformat(),
+                    "timeout_s": config.heartbeat_timeout_seconds,
+                },
             )
         return None
 
@@ -304,7 +315,7 @@ class AntiTamperService:
         if old_checksum and old_checksum != checksum:
             # Look up tenant for this agent (best effort)
             tenant_id = "dev-tenant"
-            for key, config in self._configs.items():
+            for _, config in self._configs.items():
                 if config.agent_id == agent_id:
                     tenant_id = config.tenant_id
                     break

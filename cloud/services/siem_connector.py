@@ -52,11 +52,16 @@ class SIEMConnectorService:
         event_filter: dict | None = None,
     ) -> dict:
         if siem_type not in SUPPORTED_SIEMS:
-            return {"error": f"Unsupported SIEM type. Supported: {', '.join(sorted(SUPPORTED_SIEMS))}"}
+            return {
+                "error": f"Unsupported SIEM type. Supported: {', '.join(sorted(SUPPORTED_SIEMS))}"
+            }
         connector = SIEMConnector(
-            tenant_id=tenant_id, name=name, siem_type=siem_type,
+            tenant_id=tenant_id,
+            name=name,
+            siem_type=siem_type,
             connection_config=connection_config or {},
-            sync_direction=sync_direction, event_filter=event_filter or {},
+            sync_direction=sync_direction,
+            event_filter=event_filter or {},
         )
         self._connectors[connector.id] = connector
         self._tenant_connectors[tenant_id].append(connector.id)
@@ -105,14 +110,18 @@ class SIEMConnectorService:
         c.last_sync_at = datetime.now(timezone.utc)
         c.error = None
 
-        self._sync_log.append({
-            "connector_id": connector_id,
-            "siem_type": c.siem_type,
-            "events_synced": len(filtered),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
+        self._sync_log.append(
+            {
+                "connector_id": connector_id,
+                "siem_type": c.siem_type,
+                "events_synced": len(filtered),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
 
-        logger.info("[SIEM] Synced %d events via %s connector '%s'", len(filtered), c.siem_type, c.name)
+        logger.info(
+            "[SIEM] Synced %d events via %s connector '%s'", len(filtered), c.siem_type, c.name
+        )
         return {"synced": len(filtered), "filtered_out": len(events) - len(filtered)}
 
     def test_connection(self, connector_id: str) -> dict:
@@ -130,14 +139,16 @@ class SIEMConnectorService:
     def get_sync_log(self, tenant_id: str, limit: int = 50) -> list[dict]:
         tenant_connectors = set(self._tenant_connectors.get(tenant_id, []))
         results = [
-            entry for entry in reversed(self._sync_log)
+            entry
+            for entry in reversed(self._sync_log)
             if entry.get("connector_id") in tenant_connectors
         ]
         return results[:limit]
 
     def get_stats(self, tenant_id: str) -> dict:
         connectors = [
-            self._connectors[c] for c in self._tenant_connectors.get(tenant_id, [])
+            self._connectors[c]
+            for c in self._tenant_connectors.get(tenant_id, [])
             if c in self._connectors
         ]
         by_type: dict[str, int] = defaultdict(int)

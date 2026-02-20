@@ -100,7 +100,10 @@ class SaaSShieldService:
 
         logger.info(
             "[SAAS_SHIELD] Registered app '%s' (%s/%s) for %s",
-            app_name, app_type, auth_method, tenant_id,
+            app_name,
+            app_type,
+            auth_method,
+            tenant_id,
         )
         return app.model_dump(mode="json")
 
@@ -155,12 +158,16 @@ class SaaSShieldService:
         # Update risk score
         if app.total_sessions > 0:
             app.risk_score = round(
-                (app.anomalous_sessions / app.total_sessions) * 100, 1,
+                (app.anomalous_sessions / app.total_sessions) * 100,
+                1,
             )
 
         logger.debug(
             "[SAAS_SHIELD] Session: app=%s user=%s action=%s anomaly=%s",
-            app.app_name, user_id, action, anomaly,
+            app.app_name,
+            user_id,
+            action,
+            anomaly,
         )
         return event.model_dump(mode="json")
 
@@ -185,7 +192,9 @@ class SaaSShieldService:
 
         logger.info(
             "[SAAS_SHIELD] Shadow IT discovered: '%s' via %s for %s",
-            entry.app_name, entry.discovered_source, tenant_id,
+            entry.app_name,
+            entry.discovered_source,
+            tenant_id,
         )
         return entry.model_dump(mode="json")
 
@@ -196,9 +205,7 @@ class SaaSShieldService:
     def get_risk_summary(self, tenant_id: str) -> dict:
         """Return risk summary across all SaaS apps for a tenant."""
         apps = [
-            self._apps[aid]
-            for aid in self._tenant_apps.get(tenant_id, [])
-            if aid in self._apps
+            self._apps[aid] for aid in self._tenant_apps.get(tenant_id, []) if aid in self._apps
         ]
 
         high_risk = [a for a in apps if a.risk_score > 50]
@@ -210,14 +217,13 @@ class SaaSShieldService:
             "sanctioned_apps": sum(1 for a in apps if a.sanctioned),
             "high_risk_apps": len(high_risk),
             "avg_risk_score": round(
-                sum(a.risk_score for a in apps) / max(len(apps), 1), 1,
+                sum(a.risk_score for a in apps) / max(len(apps), 1),
+                1,
             ),
             "total_sessions": sum(a.total_sessions for a in apps),
             "anomalous_sessions": sum(a.anomalous_sessions for a in apps),
             "shadow_it_count": len(shadow_entries),
-            "shadow_it_under_review": sum(
-                1 for s in shadow_entries if s.status == "under_review"
-            ),
+            "shadow_it_under_review": sum(1 for s in shadow_entries if s.status == "under_review"),
         }
 
     # ------------------------------------------------------------------
@@ -227,9 +233,7 @@ class SaaSShieldService:
     def get_stats(self, tenant_id: str) -> dict:
         """Return SaaS Shield statistics for a tenant."""
         apps = [
-            self._apps[aid]
-            for aid in self._tenant_apps.get(tenant_id, [])
-            if aid in self._apps
+            self._apps[aid] for aid in self._tenant_apps.get(tenant_id, []) if aid in self._apps
         ]
 
         by_type: dict[str, int] = defaultdict(int)
@@ -246,7 +250,8 @@ class SaaSShieldService:
             "anomalous_sessions": sum(a.anomalous_sessions for a in apps),
             "shadow_it_discovered": len(self._shadow_it.get(tenant_id, [])),
             "avg_risk_score": round(
-                sum(a.risk_score for a in apps) / max(len(apps), 1), 1,
+                sum(a.risk_score for a in apps) / max(len(apps), 1),
+                1,
             ),
         }
 

@@ -176,16 +176,15 @@ def prometheus_metrics(db: Session = Depends(get_db)):
         agent_type = info.get("agent_type", "unknown")
         healthy = 1 if info["status"] in ("ok", "idle") else 0
         lines.append(
-            f'angelclaw_agent_healthy{{agent="{agent_type}",'
-            f'id="{agent_id[:8]}"}} {healthy}'
+            f'angelclaw_agent_healthy{{agent="{agent_type}",id="{agent_id[:8]}"}} {healthy}'
         )
         lines.append(
             f'angelclaw_agent_tasks_completed{{agent="{agent_type}",id="{agent_id[:8]}"}} '
-            f'{info["tasks_completed"]}'
+            f"{info['tasks_completed']}"
         )
         lines.append(
             f'angelclaw_agent_tasks_failed{{agent="{agent_type}",id="{agent_id[:8]}"}} '
-            f'{info["tasks_failed"]}'
+            f"{info['tasks_failed']}"
         )
 
     # --- Playbooks ---

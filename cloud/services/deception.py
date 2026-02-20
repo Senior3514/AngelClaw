@@ -27,7 +27,9 @@ class DeceptionToken(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     tenant_id: str = "dev-tenant"
     name: str
-    token_type: str  # honey_credential, honey_file, honey_token, canary_dns, canary_url, honey_api_key
+    token_type: (
+        str  # honey_credential, honey_file, honey_token, canary_dns, canary_url, honey_api_key
+    )
     decoy_value: str = ""  # the fake credential/path/URL
     placement: str = ""  # where the token is deployed
     description: str = ""
@@ -82,7 +84,10 @@ class DeceptionService:
 
         logger.info(
             "[DECEPTION] Deployed %s token '%s' at '%s' for %s",
-            token_type, name, placement, tenant_id,
+            token_type,
+            name,
+            placement,
+            tenant_id,
         )
         return token.model_dump(mode="json")
 
@@ -177,7 +182,10 @@ class DeceptionService:
 
         logger.warning(
             "[DECEPTION] Token '%s' (%s) triggered from %s -- trigger #%d",
-            token.name, token.token_type, source_ip, token.trigger_count,
+            token.name,
+            token.token_type,
+            source_ip,
+            token.trigger_count,
         )
         return token.model_dump(mode="json")
 
@@ -185,9 +193,7 @@ class DeceptionService:
 
     def get_stats(self, tenant_id: str) -> dict:
         tokens = [
-            self._tokens[t]
-            for t in self._tenant_tokens.get(tenant_id, [])
-            if t in self._tokens
+            self._tokens[t] for t in self._tenant_tokens.get(tenant_id, []) if t in self._tokens
         ]
         by_type: dict[str, int] = defaultdict(int)
         total_triggers = 0

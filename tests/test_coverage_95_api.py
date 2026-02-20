@@ -35,8 +35,10 @@ class TestAuthService:
     def test_authenticate_local_admin(self):
         from cloud.auth.service import authenticate_local
 
-        with patch("cloud.auth.service.ADMIN_USER", "admin"), \
-             patch("cloud.auth.service.ADMIN_PASSWORD", "secret"):
+        with (
+            patch("cloud.auth.service.ADMIN_USER", "admin"),
+            patch("cloud.auth.service.ADMIN_PASSWORD", "secret"),
+        ):
             user = authenticate_local("admin", "secret")
             assert user is not None
             assert user.username == "admin"
@@ -45,8 +47,10 @@ class TestAuthService:
     def test_authenticate_local_secops(self):
         from cloud.auth.service import authenticate_local
 
-        with patch("cloud.auth.service.SECOPS_USER", "secops"), \
-             patch("cloud.auth.service.SECOPS_PASSWORD", "secpwd"):
+        with (
+            patch("cloud.auth.service.SECOPS_USER", "secops"),
+            patch("cloud.auth.service.SECOPS_PASSWORD", "secpwd"),
+        ):
             user = authenticate_local("secops", "secpwd")
             assert user is not None
             assert user.role.value == "secops"
@@ -54,8 +58,10 @@ class TestAuthService:
     def test_authenticate_local_viewer(self):
         from cloud.auth.service import authenticate_local
 
-        with patch("cloud.auth.service.VIEWER_USER", "viewer"), \
-             patch("cloud.auth.service.VIEWER_PASSWORD", "viewpwd"):
+        with (
+            patch("cloud.auth.service.VIEWER_USER", "viewer"),
+            patch("cloud.auth.service.VIEWER_PASSWORD", "viewpwd"),
+        ):
             user = authenticate_local("viewer", "viewpwd")
             assert user is not None
             assert user.role.value == "viewer"
@@ -75,6 +81,7 @@ class TestAuthService:
     def test_change_password_admin(self):
         import cloud.auth.config as cfg
         from cloud.auth.service import change_password
+
         old = cfg.ADMIN_PASSWORD
         cfg.ADMIN_PASSWORD = "old_pass"
         result = change_password(cfg.ADMIN_USER, "old_pass", "new_pass")
@@ -85,6 +92,7 @@ class TestAuthService:
     def test_change_password_admin_wrong_current(self):
         import cloud.auth.config as cfg
         from cloud.auth.service import change_password
+
         old = cfg.ADMIN_PASSWORD
         cfg.ADMIN_PASSWORD = "correct"
         result = change_password(cfg.ADMIN_USER, "wrong", "new")
@@ -94,6 +102,7 @@ class TestAuthService:
     def test_change_password_secops(self):
         import cloud.auth.config as cfg
         from cloud.auth.service import change_password
+
         old = cfg.SECOPS_PASSWORD
         cfg.SECOPS_PASSWORD = "sec_old"
         result = change_password(cfg.SECOPS_USER, "sec_old", "sec_new")
@@ -103,6 +112,7 @@ class TestAuthService:
     def test_change_password_secops_wrong(self):
         import cloud.auth.config as cfg
         from cloud.auth.service import change_password
+
         old = cfg.SECOPS_PASSWORD
         cfg.SECOPS_PASSWORD = "correct"
         result = change_password(cfg.SECOPS_USER, "wrong", "new")
@@ -112,6 +122,7 @@ class TestAuthService:
     def test_change_password_viewer(self):
         import cloud.auth.config as cfg
         from cloud.auth.service import change_password
+
         old = cfg.VIEWER_PASSWORD
         cfg.VIEWER_PASSWORD = "view_old"
         result = change_password(cfg.VIEWER_USER, "view_old", "view_new")
@@ -121,6 +132,7 @@ class TestAuthService:
     def test_change_password_viewer_wrong(self):
         import cloud.auth.config as cfg
         from cloud.auth.service import change_password
+
         old = cfg.VIEWER_PASSWORD
         cfg.VIEWER_PASSWORD = "correct"
         result = change_password(cfg.VIEWER_USER, "wrong", "new")
@@ -161,7 +173,9 @@ class TestAuthService:
 
         header = _b64encode(json.dumps({"alg": "HS256", "typ": "JWT"}).encode())
         payload_data = {
-            "sub": "test", "role": "admin", "tenant_id": "t1",
+            "sub": "test",
+            "role": "admin",
+            "tenant_id": "t1",
             "exp": int(time.time()) - 3600,  # expired 1 hour ago
             "iat": int(time.time()) - 7200,
         }
@@ -243,12 +257,16 @@ class TestAnalyticsRoutes:
     def test_threat_matrix(self, client, db: Session):
         # Add events for threat matrix
         from tests.conftest import TestSessionLocal
+
         tdb = TestSessionLocal()
         for sev in ["critical", "high", "medium"]:
             event = EventRow(
-                id=str(uuid.uuid4()), agent_id="agent-tm-1",
+                id=str(uuid.uuid4()),
+                agent_id="agent-tm-1",
                 timestamp=datetime.now(timezone.utc),
-                category="shell", type="exec", severity=sev,
+                category="shell",
+                type="exec",
+                severity=sev,
             )
             tdb.add(event)
         tdb.commit()
@@ -259,11 +277,15 @@ class TestAnalyticsRoutes:
 
     def test_ai_traffic(self, client, db: Session):
         from tests.conftest import TestSessionLocal
+
         tdb = TestSessionLocal()
         event = EventRow(
-            id=str(uuid.uuid4()), agent_id="agent-ai-1",
+            id=str(uuid.uuid4()),
+            agent_id="agent-ai-1",
             timestamp=datetime.now(timezone.utc),
-            category="ai_tool", type="tool_call", severity="info",
+            category="ai_tool",
+            type="tool_call",
+            severity="info",
             details={"tool_name": "bash", "action": "exec"},
         )
         tdb.add(event)
@@ -275,18 +297,26 @@ class TestAnalyticsRoutes:
 
     def test_agent_identity(self, client, db: Session):
         from tests.conftest import TestSessionLocal
+
         tdb = TestSessionLocal()
         agent = AgentNodeRow(
-            id="identity-agent-1", type="server", os="linux", hostname="id-host",
-            status="active", registered_at=datetime.now(timezone.utc),
+            id="identity-agent-1",
+            type="server",
+            os="linux",
+            hostname="id-host",
+            status="active",
+            registered_at=datetime.now(timezone.utc),
         )
         tdb.add(agent)
         # Add events for the agent
         for sev in ["info", "high", "critical"]:
             event = EventRow(
-                id=str(uuid.uuid4()), agent_id="identity-agent-1",
+                id=str(uuid.uuid4()),
+                agent_id="identity-agent-1",
                 timestamp=datetime.now(timezone.utc),
-                category="shell", type="exec", severity=sev,
+                category="shell",
+                type="exec",
+                severity=sev,
             )
             tdb.add(event)
         tdb.commit()
@@ -304,21 +334,28 @@ class TestAnalyticsRoutes:
 
     def test_session_analytics(self, client, db: Session):
         from tests.conftest import TestSessionLocal
+
         tdb = TestSessionLocal()
         base_time = datetime.now(timezone.utc)
         # Create a session of events
         for i in range(3):
             event = EventRow(
-                id=str(uuid.uuid4()), agent_id="sess-agent-1",
+                id=str(uuid.uuid4()),
+                agent_id="sess-agent-1",
                 timestamp=base_time + timedelta(seconds=i * 30),
-                category="shell", type="exec", severity="info",
+                category="shell",
+                type="exec",
+                severity="info",
             )
             tdb.add(event)
         # Create a gap then another session
         event = EventRow(
-            id=str(uuid.uuid4()), agent_id="sess-agent-1",
+            id=str(uuid.uuid4()),
+            agent_id="sess-agent-1",
             timestamp=base_time + timedelta(minutes=10),
-            category="network", type="connection", severity="high",
+            category="network",
+            type="connection",
+            severity="high",
         )
         tdb.add(event)
         tdb.commit()
@@ -333,10 +370,15 @@ class TestAnalyticsRoutes:
 
     def test_agent_timeline(self, client, db: Session):
         from tests.conftest import TestSessionLocal
+
         tdb = TestSessionLocal()
         agent = AgentNodeRow(
-            id="timeline-agent-1", type="server", os="linux", hostname="tl-host",
-            status="active", registered_at=datetime.now(timezone.utc),
+            id="timeline-agent-1",
+            type="server",
+            os="linux",
+            hostname="tl-host",
+            status="active",
+            registered_at=datetime.now(timezone.utc),
         )
         tdb.merge(agent)
         tdb.commit()
@@ -369,12 +411,16 @@ class TestAssistantRoutes:
 
     def test_explain_event(self, client, db: Session):
         from tests.conftest import TestSessionLocal
+
         tdb = TestSessionLocal()
         event_id = str(uuid.uuid4())
         event = EventRow(
-            id=event_id, agent_id="explain-agent",
+            id=event_id,
+            agent_id="explain-agent",
             timestamp=datetime.now(timezone.utc),
-            category="shell", type="command_exec", severity="high",
+            category="shell",
+            type="command_exec",
+            severity="high",
             source="test",
             details={"command": "ls -la"},
         )
@@ -389,29 +435,34 @@ class TestAssistantRoutes:
 
     def test_explain_event_with_context(self, client, db: Session):
         from tests.conftest import TestSessionLocal
+
         tdb = TestSessionLocal()
         event_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc)
         event = EventRow(
-            id=event_id, agent_id="ctx-agent",
+            id=event_id,
+            agent_id="ctx-agent",
             timestamp=now,
-            category="shell", type="command_exec", severity="high",
+            category="shell",
+            type="command_exec",
+            severity="high",
             source="test",
         )
         # Add context events
         ctx_event = EventRow(
-            id=str(uuid.uuid4()), agent_id="ctx-agent",
+            id=str(uuid.uuid4()),
+            agent_id="ctx-agent",
             timestamp=now - timedelta(minutes=2),
-            category="ai_tool", type="tool_call", severity="info",
+            category="ai_tool",
+            type="tool_call",
+            severity="info",
         )
         tdb.add(event)
         tdb.add(ctx_event)
         tdb.commit()
         tdb.close()
 
-        resp = client.get(
-            f"/api/v1/assistant/explain?event_id={event_id}&include_context=true"
-        )
+        resp = client.get(f"/api/v1/assistant/explain?event_id={event_id}&include_context=true")
         assert resp.status_code == 200
 
 
@@ -498,7 +549,10 @@ class TestGuardianRoutes:
     async def test_guardian_chat_explain(self, client, db: Session):
         resp = client.post(
             "/api/v1/guardian/chat",
-            json={"prompt": "Explain event 12345678-1234-1234-1234-123456789abc", "tenant_id": "dev-tenant"},
+            json={
+                "prompt": "Explain event 12345678-1234-1234-1234-123456789abc",
+                "tenant_id": "dev-tenant",
+            },
         )
         assert resp.status_code == 200
         assert resp.json()["intent"] == "explain"
@@ -549,24 +603,35 @@ class TestGuardianRoutes:
 
     def test_event_context(self, client, db: Session):
         from tests.conftest import TestSessionLocal
+
         tdb = TestSessionLocal()
         event_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc)
         event = EventRow(
-            id=event_id, agent_id="ctx-agent-2",
-            timestamp=now, category="shell", type="command_exec",
-            severity="high", source="test",
+            id=event_id,
+            agent_id="ctx-agent-2",
+            timestamp=now,
+            category="shell",
+            type="command_exec",
+            severity="high",
+            source="test",
         )
         # Add related events
         related = EventRow(
-            id=str(uuid.uuid4()), agent_id="ctx-agent-2",
+            id=str(uuid.uuid4()),
+            agent_id="ctx-agent-2",
             timestamp=now - timedelta(minutes=1),
-            category="shell", type="exec", severity="info",
+            category="shell",
+            type="exec",
+            severity="info",
         )
         ai_event = EventRow(
-            id=str(uuid.uuid4()), agent_id="ctx-agent-2",
+            id=str(uuid.uuid4()),
+            agent_id="ctx-agent-2",
             timestamp=now - timedelta(minutes=1),
-            category="ai_tool", type="tool_call", severity="info",
+            category="ai_tool",
+            type="tool_call",
+            severity="info",
             details={"tool_name": "bash"},
         )
         tdb.add(event)
@@ -716,13 +781,16 @@ class TestAuthRoutes:
 
     def test_login_with_auth_enabled(self, client):
         import cloud.auth.config as cfg
+
         old_enabled = cfg.AUTH_ENABLED
         old_admin_pwd = cfg.ADMIN_PASSWORD
         cfg.AUTH_ENABLED = True
         cfg.ADMIN_PASSWORD = "test_pass"
 
-        with patch("cloud.auth.routes.AUTH_ENABLED", True), \
-             patch("cloud.auth.service.ADMIN_PASSWORD", "test_pass"):
+        with (
+            patch("cloud.auth.routes.AUTH_ENABLED", True),
+            patch("cloud.auth.service.ADMIN_PASSWORD", "test_pass"),
+        ):
             resp = client.post(
                 "/api/v1/auth/login",
                 json={"username": cfg.ADMIN_USER, "password": "test_pass"},
@@ -736,6 +804,7 @@ class TestAuthRoutes:
 
     def test_login_invalid_credentials(self, client):
         import cloud.auth.config as cfg
+
         old_enabled = cfg.AUTH_ENABLED
         cfg.AUTH_ENABLED = True
 
@@ -795,39 +864,50 @@ class TestServerMiddleware:
 
     def test_ingest_events(self, client, db: Session):
         from tests.conftest import TestSessionLocal
+
         tdb = TestSessionLocal()
         agent = AgentNodeRow(
-            id="ingest-agent-1", type="server", os="linux", hostname="ingest-host",
-            status="active", registered_at=datetime.now(timezone.utc),
+            id="ingest-agent-1",
+            type="server",
+            os="linux",
+            hostname="ingest-host",
+            status="active",
+            registered_at=datetime.now(timezone.utc),
         )
         tdb.merge(agent)
         tdb.commit()
         tdb.close()
 
-        resp = client.post("/api/v1/events/batch", json={
-            "agent_id": "ingest-agent-1",
-            "events": [
-                {
-                    "agent_id": "ingest-agent-1",
-                    "category": "shell",
-                    "type": "command_exec",
-                    "severity": "info",
-                    "details": {"command": "ls"},
-                },
-            ],
-        })
+        resp = client.post(
+            "/api/v1/events/batch",
+            json={
+                "agent_id": "ingest-agent-1",
+                "events": [
+                    {
+                        "agent_id": "ingest-agent-1",
+                        "category": "shell",
+                        "type": "command_exec",
+                        "severity": "info",
+                        "details": {"command": "ls"},
+                    },
+                ],
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["accepted"] == 1
 
     def test_register_agent(self, client):
-        resp = client.post("/api/v1/agents/register", json={
-            "hostname": "new-test-agent",
-            "type": "server",
-            "os": "linux",
-            "tags": ["test"],
-            "version": "1.0.0",
-        })
+        resp = client.post(
+            "/api/v1/agents/register",
+            json={
+                "hostname": "new-test-agent",
+                "type": "server",
+                "os": "linux",
+                "tags": ["test"],
+                "version": "1.0.0",
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "registered"
@@ -835,21 +915,29 @@ class TestServerMiddleware:
     def test_register_agent_existing(self, client):
         # Register twice - should update
         for _ in range(2):
-            resp = client.post("/api/v1/agents/register", json={
-                "hostname": "existing-agent",
-                "type": "server",
-                "os": "linux",
-                "tags": ["test"],
-                "version": "2.0.0",
-            })
+            resp = client.post(
+                "/api/v1/agents/register",
+                json={
+                    "hostname": "existing-agent",
+                    "type": "server",
+                    "os": "linux",
+                    "tags": ["test"],
+                    "version": "2.0.0",
+                },
+            )
             assert resp.status_code == 200
 
     def test_get_current_policy(self, client, db: Session):
         from tests.conftest import TestSessionLocal
+
         tdb = TestSessionLocal()
         agent = AgentNodeRow(
-            id="policy-agent-1", type="server", os="linux", hostname="policy-host",
-            status="active", registered_at=datetime.now(timezone.utc),
+            id="policy-agent-1",
+            type="server",
+            os="linux",
+            hostname="policy-host",
+            status="active",
+            registered_at=datetime.now(timezone.utc),
         )
         tdb.merge(agent)
         tdb.commit()

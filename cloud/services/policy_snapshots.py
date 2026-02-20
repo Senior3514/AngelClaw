@@ -43,20 +43,15 @@ class PolicySnapshotService:
         Raises ``ValueError`` if no policy set exists for the tenant.
         """
         policy_set: PolicySetRow | None = (
-            db.query(PolicySetRow)
-            .order_by(PolicySetRow.created_at.desc())
-            .first()
+            db.query(PolicySetRow).order_by(PolicySetRow.created_at.desc()).first()
         )
         if policy_set is None:
             raise ValueError(
-                f"No policy set found for tenant '{tenant_id}'; "
-                "cannot create snapshot"
+                f"No policy set found for tenant '{tenant_id}'; cannot create snapshot"
             )
 
         rules = policy_set.rules_json or []
-        version_hash = hashlib.sha256(
-            json.dumps(rules, sort_keys=True).encode()
-        ).hexdigest()
+        version_hash = hashlib.sha256(json.dumps(rules, sort_keys=True).encode()).hexdigest()
 
         snapshot = PolicySnapshotRow(
             id=str(uuid4()),
@@ -112,11 +107,7 @@ class PolicySnapshotService:
         snapshot_id: str,
     ) -> PolicySnapshotRow | None:
         """Return a single snapshot by primary key, or ``None``."""
-        return (
-            db.query(PolicySnapshotRow)
-            .filter(PolicySnapshotRow.id == snapshot_id)
-            .first()
-        )
+        return db.query(PolicySnapshotRow).filter(PolicySnapshotRow.id == snapshot_id).first()
 
     # ------------------------------------------------------------------
     # diff_snapshots
@@ -170,9 +161,7 @@ class PolicySnapshotService:
             if rid not in map_a:
                 added.append(rule)
             elif rule != map_a[rid]:
-                modified.append(
-                    {"rule_id": rid, "before": map_a[rid], "after": rule}
-                )
+                modified.append({"rule_id": rid, "before": map_a[rid], "after": rule})
         for rid, rule in map_a.items():
             if rid not in map_b:
                 removed.append(rule)
@@ -212,16 +201,12 @@ class PolicySnapshotService:
             raise ValueError(f"Snapshot '{snapshot_id}' not found")
 
         rules = snapshot.rules_json or []
-        version_hash = hashlib.sha256(
-            json.dumps(rules, sort_keys=True).encode()
-        ).hexdigest()
+        version_hash = hashlib.sha256(json.dumps(rules, sort_keys=True).encode()).hexdigest()
         now = datetime.now(timezone.utc)
 
         # Capture the current latest policy set id for the change record
         current_policy: PolicySetRow | None = (
-            db.query(PolicySetRow)
-            .order_by(PolicySetRow.created_at.desc())
-            .first()
+            db.query(PolicySetRow).order_by(PolicySetRow.created_at.desc()).first()
         )
         before_snapshot_id = current_policy.id if current_policy else None
 
@@ -229,8 +214,7 @@ class PolicySnapshotService:
             id=str(uuid4()),
             name=f"Rollback to snapshot '{snapshot.name}'",
             description=(
-                f"Rolled back by {rolled_back_by} from snapshot "
-                f"{snapshot.id} ({snapshot.name})"
+                f"Rolled back by {rolled_back_by} from snapshot {snapshot.id} ({snapshot.name})"
             ),
             rules_json=rules,
             version_hash=version_hash,
@@ -243,8 +227,7 @@ class PolicySnapshotService:
             tenant_id=tenant_id,
             change_type="policy_rollback",
             description=(
-                f"Policy rolled back to snapshot '{snapshot.name}' "
-                f"(snapshot {snapshot.id})"
+                f"Policy rolled back to snapshot '{snapshot.name}' (snapshot {snapshot.id})"
             ),
             before_snapshot=before_snapshot_id,
             after_snapshot=new_policy.id,
@@ -263,8 +246,7 @@ class PolicySnapshotService:
         db.refresh(new_policy)
 
         logger.info(
-            "Policy rolled back to snapshot '%s' (new policy_set=%s, hash=%s) "
-            "by %s",
+            "Policy rolled back to snapshot '%s' (new policy_set=%s, hash=%s) by %s",
             snapshot.name,
             new_policy.id,
             version_hash[:12],

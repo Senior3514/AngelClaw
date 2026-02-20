@@ -76,8 +76,12 @@ class AngelOrchestrator:
         self._timeline = TimelineWarden()
         self._browser = BrowserWarden()
         for agent in [
-            self._network, self._secrets, self._toolchain,
-            self._behavior, self._timeline, self._browser,
+            self._network,
+            self._secrets,
+            self._toolchain,
+            self._behavior,
+            self._timeline,
+            self._browser,
         ]:
             self.registry.register(agent)
 
@@ -108,7 +112,7 @@ class AngelOrchestrator:
         self._warden_failures: dict[str, int] = {}
 
         # V2.2 — Per-warden performance metrics
-        self._warden_latency: dict[str, list[float]] = {}   # agent_id -> recent latencies (ms)
+        self._warden_latency: dict[str, list[float]] = {}  # agent_id -> recent latencies (ms)
         self._warden_indicator_counts: dict[str, int] = {}  # agent_id -> total indicators found
         self._total_detection_ms: float = 0.0
 
@@ -259,7 +263,8 @@ class AngelOrchestrator:
 
         # Filter out circuit-broken wardens
         active_wardens = [
-            s for s in wardens
+            s
+            for s in wardens
             if self._warden_failures.get(s.agent_id, 0) < _CIRCUIT_BREAKER_THRESHOLD
         ]
 
@@ -281,6 +286,7 @@ class AngelOrchestrator:
 
         # Fan-out: run all wardens in parallel (with timing)
         import time as _time
+
         _t0 = _time.monotonic()
         results = await asyncio.gather(*coroutines, return_exceptions=True)
         _elapsed_ms = (_time.monotonic() - _t0) * 1000
@@ -295,7 +301,9 @@ class AngelOrchestrator:
                 )
                 logger.error(
                     "[SERAPH] %s (%s) raised exception: %s",
-                    warden.agent_id, warden.agent_type.value, result,
+                    warden.agent_id,
+                    warden.agent_type.value,
+                    result,
                 )
                 continue
 
@@ -305,13 +313,15 @@ class AngelOrchestrator:
                 )
                 logger.error(
                     "[SERAPH] %s (%s) failed: %s",
-                    warden.agent_id, warden.agent_type.value, result.error,
+                    warden.agent_id,
+                    warden.agent_type.value,
+                    result.error,
                 )
                 continue
 
             # Success — reset circuit breaker and track metrics
             self._warden_failures.pop(warden.agent_id, None)
-            latency = result.duration_ms if hasattr(result, 'duration_ms') else 0.0
+            latency = result.duration_ms if hasattr(result, "duration_ms") else 0.0
             if warden.agent_id not in self._warden_latency:
                 self._warden_latency[warden.agent_id] = []
             self._warden_latency[warden.agent_id].append(latency)
@@ -360,12 +370,7 @@ class AngelOrchestrator:
     async def halo_sweep(self, db: Session, tenant_id: str = "dev-tenant") -> dict:
         """Halo Sweep — full system scan. All wardens fire."""
         # Gather recent events from DB for scanning
-        recent_events = (
-            db.query(EventRow)
-            .order_by(EventRow.timestamp.desc())
-            .limit(500)
-            .all()
-        )
+        recent_events = db.query(EventRow).order_by(EventRow.timestamp.desc()).limit(500).all()
 
         indicators = await self._run_detection(recent_events)
 
@@ -406,12 +411,7 @@ class AngelOrchestrator:
         if not warden:
             return {"error": f"No warden for domain: {domain}"}
 
-        recent_events = (
-            db.query(EventRow)
-            .order_by(EventRow.timestamp.desc())
-            .limit(200)
-            .all()
-        )
+        recent_events = db.query(EventRow).order_by(EventRow.timestamp.desc()).limit(200).all()
 
         serialized = [
             {
@@ -877,7 +877,6 @@ class AngelOrchestrator:
         if state:
             incidents = [i for i in incidents if i.state.value == state]
         return incidents[:limit]
-
 
     # ------------------------------------------------------------------
     # V2.5 — Plugin warden registration

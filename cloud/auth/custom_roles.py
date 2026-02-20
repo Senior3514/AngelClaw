@@ -123,9 +123,7 @@ class CustomRoleService:
 
         invalid = self.validate_permissions(permissions)
         if invalid:
-            raise ValueError(
-                f"Invalid permissions: {', '.join(invalid)}"
-            )
+            raise ValueError(f"Invalid permissions: {', '.join(invalid)}")
 
         # Prevent duplicate custom-role names within the same tenant
         existing = (
@@ -252,9 +250,7 @@ class CustomRoleService:
         if permissions is not None:
             invalid = self.validate_permissions(permissions)
             if invalid:
-                raise ValueError(
-                    f"Invalid permissions: {', '.join(invalid)}"
-                )
+                raise ValueError(f"Invalid permissions: {', '.join(invalid)}")
             row.permissions = permissions
 
         if description is not None:

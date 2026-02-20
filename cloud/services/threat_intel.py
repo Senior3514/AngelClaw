@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 import uuid
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -166,13 +166,14 @@ class ThreatIntelService:
         if feed:
             feed.last_polled_at = datetime.now(timezone.utc)
             feed.ioc_count = sum(
-                1 for ioc in self._iocs.values()
-                if ioc.feed_id == feed_id and ioc.active
+                1 for ioc in self._iocs.values() if ioc.feed_id == feed_id and ioc.active
             )
 
         logger.info(
             "[THREAT_INTEL] Ingested %d new, %d updated IOCs from feed %s",
-            added, updated, feed_id[:8],
+            added,
+            updated,
+            feed_id[:8],
         )
         return {"added": added, "updated": updated, "total": added + updated}
 
@@ -216,11 +217,17 @@ class ThreatIntelService:
         """Match event fields against active IOCs."""
         matches = []
         check_fields = [
-            ("source_ip", "ip"), ("dest_ip", "ip"), ("ip", "ip"),
-            ("domain", "domain"), ("url", "url"), ("hash", "hash_sha256"),
-            ("md5", "hash_md5"), ("sha256", "hash_sha256"), ("email", "email"),
+            ("source_ip", "ip"),
+            ("dest_ip", "ip"),
+            ("ip", "ip"),
+            ("domain", "domain"),
+            ("url", "url"),
+            ("hash", "hash_sha256"),
+            ("md5", "hash_md5"),
+            ("sha256", "hash_sha256"),
+            ("email", "email"),
         ]
-        for field_name, ioc_type in check_fields:
+        for field_name, _ in check_fields:
             val = event_details.get(field_name)
             if val:
                 for m in self.match_value(tenant_id, str(val)):
@@ -254,7 +261,8 @@ class ThreatIntelService:
             "by_type": dict(by_type),
             "by_severity": dict(by_severity),
             "active_feeds": sum(
-                1 for fid in self._tenant_feeds.get(tenant_id, [])
+                1
+                for fid in self._tenant_feeds.get(tenant_id, [])
                 if self._feeds.get(fid, ThreatIntelFeed(name="", feed_type="")).enabled
             ),
         }

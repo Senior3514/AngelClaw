@@ -24,9 +24,9 @@ from cloud.guardian.models import (
 logger = logging.getLogger("angelgrid.cloud.guardian.timeline_warden")
 
 # Thresholds
-_RAPID_SUCCESSION_SECONDS = 2.0    # events closer than this from different agents
-_COORDINATED_MIN_AGENTS = 2        # minimum agents for coordinated detection
-_COORDINATED_MIN_EVENTS = 3        # minimum events in window
+_RAPID_SUCCESSION_SECONDS = 2.0  # events closer than this from different agents
+_COORDINATED_MIN_AGENTS = 2  # minimum agents for coordinated detection
+_COORDINATED_MIN_EVENTS = 3  # minimum events in window
 _SEQUENCE_SUSPICIOUS_PATTERNS = [
     ["reconnaissance", "initial_access", "execution"],
     ["credential_access", "lateral_movement"],
@@ -150,8 +150,7 @@ def _detect_coordinated_activity(events: list[dict]) -> list[ThreatIndicator]:
                     severity="high",
                     confidence=0.8,
                     description=(
-                        f"Coordinated '{event_type}' from {len(agents)} agents "
-                        f"within {span:.0f}s"
+                        f"Coordinated '{event_type}' from {len(agents)} agents within {span:.0f}s"
                     ),
                     related_event_ids=[e.get("id", "") for e in type_events[:20]],
                     related_agent_ids=list(agents)[:10],
@@ -284,10 +283,7 @@ def _detect_time_clustering(events: list[dict]) -> list[ThreatIndicator]:
     window = total_span * 0.2
     max_in_window = 0
     for i, (ts_i, _) in enumerate(timed):
-        count = sum(
-            1 for ts_j, _ in timed[i:]
-            if (ts_j - ts_i).total_seconds() <= window
-        )
+        count = sum(1 for ts_j, _ in timed[i:] if (ts_j - ts_i).total_seconds() <= window)
         max_in_window = max(max_in_window, count)
 
     indicators: list[ThreatIndicator] = []
@@ -331,7 +327,7 @@ def _detect_multi_phase_attack(events: list[dict]) -> list[ThreatIndicator]:
         # Check for events with large gaps (>5 min) but consistent pattern
         gaps = []
         for i in range(1, len(timed_events)):
-            gap = (timed_events[i][0] - timed_events[i-1][0]).total_seconds()
+            gap = (timed_events[i][0] - timed_events[i - 1][0]).total_seconds()
             gaps.append(gap)
         large_gaps = [g for g in gaps if g > 300]
         if len(large_gaps) >= 2 and len(timed_events) >= 4:
@@ -345,7 +341,7 @@ def _detect_multi_phase_attack(events: list[dict]) -> list[ThreatIndicator]:
                     description=(
                         f"Multi-phase attack: {len(timed_events)} events from "
                         f"agent {agent_id[:8]} with {len(large_gaps)} temporal gaps "
-                        f"over {total_span/60:.0f} minutes"
+                        f"over {total_span / 60:.0f} minutes"
                     ),
                     related_event_ids=[e.get("id", "") for _, e in timed_events[:20]],
                     related_agent_ids=[agent_id],

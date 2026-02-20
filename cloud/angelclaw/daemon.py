@@ -696,8 +696,7 @@ def _run_self_hardening_cycle(db, tenant_id: str, prefs) -> list[dict]:
         # Gather context for the hardening engine
         agents = db.query(AgentNodeRow).filter(AgentNodeRow.status == "active").all()
         unprotected = [
-            a.id for a in agents
-            if not anti_tamper_service.is_protected(tenant_id, a.id)
+            a.id for a in agents if not anti_tamper_service.is_protected(tenant_id, a.id)
         ]
 
         context = {
@@ -785,9 +784,7 @@ def _run_threat_intel_cycle(tenant_id: str) -> int:
             return 0
 
         # Scan sample events
-        sample_events = [
-            {"source_ip": "10.0.0.1", "dest_ip": "8.8.8.8", "domain": "example.com"}
-        ]
+        sample_events = [{"source_ip": "10.0.0.1", "dest_ip": "8.8.8.8", "domain": "example.com"}]
         matches = ioc_engine.scan_events(tenant_id, sample_events, ioc_lookup)
 
         if matches:
@@ -965,6 +962,7 @@ def _run_realtime_cycle(tenant_id: str) -> int:
     """Aggregate real-time metrics from recent events."""
     try:
         from cloud.services.realtime_engine import realtime_engine_service
+
         stats = realtime_engine_service.get_stats(tenant_id)
         return stats.get("total_events", 0)
     except Exception:
@@ -981,6 +979,7 @@ def _run_halo_cycle(tenant_id: str) -> bool:
     """Recompute Halo Score with latest dimensions."""
     try:
         from cloud.services.halo_engine import halo_score_engine
+
         current = halo_score_engine.get_current_score(tenant_id)
         if current:
             _log_activity(
@@ -1004,6 +1003,7 @@ def _run_cspm_cycle(tenant_id: str) -> int:
     """Check cloud security posture for misconfigurations."""
     try:
         from cloud.services.cspm import cspm_service
+
         stats = cspm_service.get_stats(tenant_id)
         count = stats.get("total_findings", 0)
         if count > 0:
@@ -1027,6 +1027,7 @@ def _run_hunt_cycle(tenant_id: str) -> int:
     """Execute any pending autonomous threat hunts."""
     try:
         from cloud.services.threat_hunter import threat_hunter_service
+
         stats = threat_hunter_service.get_stats(tenant_id)
         return stats.get("total_findings", 0)
     except Exception:
@@ -1043,6 +1044,7 @@ def _run_correlation_cycle(tenant_id: str) -> int:
     """Discover new patterns from correlated intelligence."""
     try:
         from cloud.services.intel_correlation import intel_correlation_service
+
         stats = intel_correlation_service.get_stats(tenant_id)
         return stats.get("total_correlations", 0)
     except Exception:
@@ -1059,6 +1061,7 @@ def _run_agi_defense_cycle(tenant_id: str) -> int:
     """Check for AGI-generated defense rules pending deployment."""
     try:
         from cloud.services.agi_defense import agi_defense_service
+
         stats = agi_defense_service.get_stats(tenant_id)
         count = stats.get("total_rules", 0)
         if count > 0:
@@ -1082,6 +1085,7 @@ def _run_soc_cycle(tenant_id: str) -> int:
     """Run SOC autopilot triage on pending alerts."""
     try:
         from cloud.services.soc_autopilot import soc_autopilot_service
+
         stats = soc_autopilot_service.get_stats(tenant_id)
         return stats.get("total_triaged", 0)
     except Exception:

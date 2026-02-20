@@ -537,16 +537,13 @@ class ResponseAgent(SubAgent):
         """Network-isolate an agent — drop all non-essential connections."""
         self.require_permission(Permission.WRITE_AGENT_STATE)
         allow_dns = params.get("allow_dns", True)
-        logger.warning(
-            "[ACTION] isolate_network: %s (allow_dns=%s)", target, allow_dns
-        )
+        logger.warning("[ACTION] isolate_network: %s (allow_dns=%s)", target, allow_dns)
         return ResponseResult(
             action="isolate_network",
             target=target,
             success=True,
             message=(
-                f"Agent {target} network-isolated"
-                f" (DNS={'allowed' if allow_dns else 'blocked'})"
+                f"Agent {target} network-isolated (DNS={'allowed' if allow_dns else 'blocked'})"
             ),
             after_state={"network_isolated": True, "allow_dns": allow_dns},
         )
@@ -579,9 +576,7 @@ class ResponseAgent(SubAgent):
         self.require_permission(Permission.EXECUTE_RESPONSE)
         pid = params.get("pid", "")
         process_name = params.get("process_name", "")
-        logger.warning(
-            "[ACTION] kill_process: %s pid=%s name=%s", target, pid, process_name
-        )
+        logger.warning("[ACTION] kill_process: %s pid=%s name=%s", target, pid, process_name)
         return ResponseResult(
             action="kill_process",
             target=target,
@@ -617,9 +612,7 @@ class ResponseAgent(SubAgent):
         """Sinkhole a malicious domain — redirect DNS to safe address."""
         self.require_permission(Permission.CALL_EXTERNAL)
         sinkhole_ip = params.get("sinkhole_ip", "0.0.0.0")
-        logger.warning(
-            "[ACTION] dns_sinkhole: %s → %s", target, sinkhole_ip
-        )
+        logger.warning("[ACTION] dns_sinkhole: %s → %s", target, sinkhole_ip)
         return ResponseResult(
             action="dns_sinkhole",
             target=target,

@@ -37,7 +37,7 @@ _SECRET_TYPES = frozenset(
 
 # Thresholds
 _ACCESS_BURST_THRESHOLD = 5  # N secret accesses from one agent in one batch = suspicious
-_FAILED_AUTH_THRESHOLD = 3   # N failed logins from one agent
+_FAILED_AUTH_THRESHOLD = 3  # N failed logins from one agent
 
 
 class SecretsWarden(SubAgent):
@@ -69,7 +69,9 @@ class SecretsWarden(SubAgent):
 
         # Filter to secret-relevant events
         secret_events = [
-            e for e in events_data if e.get("type", "") in _SECRET_TYPES
+            e
+            for e in events_data
+            if e.get("type", "") in _SECRET_TYPES
             or "secret" in e.get("type", "").lower()
             or "credential" in e.get("type", "").lower()
         ]
@@ -95,9 +97,7 @@ class SecretsWarden(SubAgent):
                         pattern_name="secret_exfiltration",
                         severity="critical",
                         confidence=0.95,
-                        description=(
-                            f"Secret exfiltration detected from agent {agent_id[:8]}"
-                        ),
+                        description=(f"Secret exfiltration detected from agent {agent_id[:8]}"),
                         related_event_ids=[event.get("id", "")],
                         related_agent_ids=[agent_id] if agent_id else [],
                         suggested_playbook="quarantine_agent",
@@ -154,8 +154,7 @@ def _detect_access_burst(events: list[dict]) -> list[ThreatIndicator]:
                 severity="high",
                 confidence=0.8,
                 description=(
-                    f"Agent {agent_id[:8]} accessed {len(agent_events)} secrets "
-                    f"in rapid succession"
+                    f"Agent {agent_id[:8]} accessed {len(agent_events)} secrets in rapid succession"
                 ),
                 related_event_ids=[e.get("id", "") for e in agent_events[:20]],
                 related_agent_ids=[agent_id],
@@ -222,8 +221,7 @@ def _detect_auth_brute_force(events: list[dict]) -> list[ThreatIndicator]:
                 severity="high",
                 confidence=0.85,
                 description=(
-                    f"Brute-force detected: {count} failed login attempts "
-                    f"from agent {agent_id[:8]}"
+                    f"Brute-force detected: {count} failed login attempts from agent {agent_id[:8]}"
                 ),
                 related_event_ids=per_agent_ids[agent_id][:20],
                 related_agent_ids=[agent_id],
@@ -293,8 +291,7 @@ def _detect_cross_agent_secret_sharing(events: list[dict]) -> list[ThreatIndicat
                     severity="high",
                     confidence=0.75,
                     description=(
-                        f"Secret '{secret_path[:30]}' accessed by {len(agents)} "
-                        f"different agents"
+                        f"Secret '{secret_path[:30]}' accessed by {len(agents)} different agents"
                     ),
                     related_event_ids=secret_events[secret_path][:20],
                     related_agent_ids=sorted(agents)[:10],

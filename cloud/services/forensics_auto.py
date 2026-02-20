@@ -94,7 +94,9 @@ class ForensicsService:
         self._tenant_cases[tenant_id].append(case.id)
         logger.info(
             "[FORENSICS] Created case '%s' severity=%s for %s",
-            title, severity, tenant_id,
+            title,
+            severity,
+            tenant_id,
         )
         return case.model_dump(mode="json")
 
@@ -199,13 +201,15 @@ class ForensicsService:
         )
 
         # Initial chain of custody entry
-        evidence.chain_of_custody.append({
-            "action": "collected",
-            "by": collected_by,
-            "at": datetime.now(timezone.utc).isoformat(),
-            "hash_sha256": hash_value,
-            "notes": f"Evidence collected from {source}",
-        })
+        evidence.chain_of_custody.append(
+            {
+                "action": "collected",
+                "by": collected_by,
+                "at": datetime.now(timezone.utc).isoformat(),
+                "hash_sha256": hash_value,
+                "notes": f"Evidence collected from {source}",
+            }
+        )
 
         self._evidence[evidence.id] = evidence
         case.evidence_ids.append(evidence.id)
@@ -213,7 +217,9 @@ class ForensicsService:
 
         logger.info(
             "[FORENSICS] Added %s evidence to case %s from %s",
-            evidence_type, case_id[:8], source,
+            evidence_type,
+            case_id[:8],
+            source,
         )
         return evidence.model_dump(mode="json")
 
@@ -242,12 +248,14 @@ class ForensicsService:
         if not evidence:
             return None
 
-        evidence.chain_of_custody.append({
-            "action": action,
-            "by": by,
-            "at": datetime.now(timezone.utc).isoformat(),
-            "notes": notes,
-        })
+        evidence.chain_of_custody.append(
+            {
+                "action": action,
+                "by": by,
+                "at": datetime.now(timezone.utc).isoformat(),
+                "notes": notes,
+            }
+        )
         return evidence.model_dump(mode="json")
 
     # -- Timeline Reconstruction --
@@ -267,15 +275,17 @@ class ForensicsService:
 
             # Use evidence timestamp if available, else collection time
             ts = evidence.timestamp or evidence.collected_at
-            events.append({
-                "timestamp": ts.isoformat(),
-                "sort_key": ts,
-                "evidence_id": evidence.id,
-                "evidence_type": evidence.evidence_type,
-                "source": evidence.source,
-                "description": evidence.description,
-                "tags": evidence.tags,
-            })
+            events.append(
+                {
+                    "timestamp": ts.isoformat(),
+                    "sort_key": ts,
+                    "evidence_id": evidence.id,
+                    "evidence_type": evidence.evidence_type,
+                    "source": evidence.source,
+                    "description": evidence.description,
+                    "tags": evidence.tags,
+                }
+            )
 
             # Add events from metadata if present
             for meta_event in evidence.metadata.get("events", []):
@@ -284,15 +294,17 @@ class ForensicsService:
                     parsed_ts = datetime.fromisoformat(meta_ts) if isinstance(meta_ts, str) else ts
                 except (ValueError, TypeError):
                     parsed_ts = ts
-                events.append({
-                    "timestamp": meta_ts,
-                    "sort_key": parsed_ts,
-                    "evidence_id": evidence.id,
-                    "evidence_type": evidence.evidence_type,
-                    "source": evidence.source,
-                    "description": meta_event.get("description", ""),
-                    "tags": meta_event.get("tags", []),
-                })
+                events.append(
+                    {
+                        "timestamp": meta_ts,
+                        "sort_key": parsed_ts,
+                        "evidence_id": evidence.id,
+                        "evidence_type": evidence.evidence_type,
+                        "source": evidence.source,
+                        "description": meta_event.get("description", ""),
+                        "tags": meta_event.get("tags", []),
+                    }
+                )
 
         # Sort chronologically
         events.sort(key=lambda e: e["sort_key"])
@@ -304,17 +316,15 @@ class ForensicsService:
         case.timeline = timeline
         case.updated_at = datetime.now(timezone.utc)
 
-        logger.info("[FORENSICS] Built timeline with %d events for case %s", len(timeline), case_id[:8])
+        logger.info(
+            "[FORENSICS] Built timeline with %d events for case %s", len(timeline), case_id[:8]
+        )
         return timeline
 
     # -- Stats --
 
     def get_stats(self, tenant_id: str) -> dict:
-        cases = [
-            self._cases[c]
-            for c in self._tenant_cases.get(tenant_id, [])
-            if c in self._cases
-        ]
+        cases = [self._cases[c] for c in self._tenant_cases.get(tenant_id, []) if c in self._cases]
 
         by_status: dict[str, int] = defaultdict(int)
         by_severity: dict[str, int] = defaultdict(int)

@@ -29,10 +29,10 @@ class AgentBaseline:
         self.type_dist: Counter[str] = Counter()
         self.updated_at: datetime = datetime.now(timezone.utc)
         # V2.2 — expanded baseline tracking
-        self.hour_dist: Counter[int] = Counter()       # events per hour-of-day
-        self.peer_agents: set[str] = set()              # known peer agents
-        self.avg_session_duration: float = 0.0          # avg session length in seconds
-        self.source_ips: set[str] = set()               # known source IPs
+        self.hour_dist: Counter[int] = Counter()  # events per hour-of-day
+        self.peer_agents: set[str] = set()  # known peer agents
+        self.avg_session_duration: float = 0.0  # avg session length in seconds
+        self.source_ips: set[str] = set()  # known source IPs
 
     @property
     def event_rate_per_hour(self) -> float:
@@ -180,10 +180,13 @@ class AnomalyDetector:
         # 5. Failure rate spike (V2.1)
         fail_keywords = {"fail", "error", "denied", "blocked", "reject", "timeout"}
         failure_count = sum(
-            1 for e in events
+            1
+            for e in events
             if e.severity in ("high", "critical")
-            and any(k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
-                    for k in fail_keywords)
+            and any(
+                k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
+                for k in fail_keywords
+            )
         )
         failure_rate = failure_count / max(len(events), 1)
         failure_score = min(1.0, failure_rate * 3.0)
@@ -210,7 +213,8 @@ class AnomalyDetector:
                 if e.timestamp:
                     current_hours[e.timestamp.hour] += 1
             unusual_hour_count = sum(
-                count for hour, count in current_hours.items()
+                count
+                for hour, count in current_hours.items()
                 if baseline.hour_dist.get(hour, 0) == 0
             )
             time_score = min(1.0, unusual_hour_count / max(len(events), 1) * 2.0)

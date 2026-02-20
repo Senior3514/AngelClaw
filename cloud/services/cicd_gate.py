@@ -107,14 +107,23 @@ class CICDGateService:
         )
         self._results[result.id] = result
         self._tenant_results[tenant_id].append(result.id)
-        logger.info("[CICD] Gate %s for %s: %s (%d pass, %d fail)", gate_type, pipeline_name, decision, passed, failed)
+        logger.info(
+            "[CICD] Gate %s for %s: %s (%d pass, %d fail)",
+            gate_type,
+            pipeline_name,
+            decision,
+            passed,
+            failed,
+        )
         return result.model_dump(mode="json")
 
     def get_result(self, result_id: str) -> dict | None:
         r = self._results.get(result_id)
         return r.model_dump(mode="json") if r else None
 
-    def list_results(self, tenant_id: str, pipeline_name: str | None = None, limit: int = 100) -> list[dict]:
+    def list_results(
+        self, tenant_id: str, pipeline_name: str | None = None, limit: int = 100
+    ) -> list[dict]:
         results = []
         for rid in reversed(self._tenant_results.get(tenant_id, [])):
             r = self._results.get(rid)
@@ -128,13 +137,17 @@ class CICDGateService:
         return results
 
     def get_stats(self, tenant_id: str) -> dict:
-        results = [self._results[r] for r in self._tenant_results.get(tenant_id, []) if r in self._results]
+        results = [
+            self._results[r] for r in self._tenant_results.get(tenant_id, []) if r in self._results
+        ]
         return {
             "total_evaluations": len(results),
             "passed": sum(1 for r in results if r.decision == "pass"),
             "warned": sum(1 for r in results if r.decision == "warn"),
             "failed": sum(1 for r in results if r.decision == "fail"),
-            "pass_rate": round(sum(1 for r in results if r.decision == "pass") / max(len(results), 1) * 100, 1),
+            "pass_rate": round(
+                sum(1 for r in results if r.decision == "pass") / max(len(results), 1) * 100, 1
+            ),
         }
 
 

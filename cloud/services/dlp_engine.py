@@ -43,7 +43,9 @@ class DLPService:
     def __init__(self) -> None:
         self._store: dict[str, dict] = defaultdict(dict)
 
-    def scan_content(self, tenant_id: str, content: str, context: dict | None = None) -> dict[str, Any]:
+    def scan_content(
+        self, tenant_id: str, content: str, context: dict | None = None
+    ) -> dict[str, Any]:
         """Scan content for sensitive data."""
         if tenant_id not in self._store:
             self._store[tenant_id] = {}

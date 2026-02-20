@@ -148,8 +148,7 @@ def propose_policy_tightening(
         return ProposedPolicyChanges(
             agent_group_id=agent_group_id,
             analysis_summary=(
-                "No high-severity events in the lookback period."
-                " Current policy appears adequate."
+                "No high-severity events in the lookback period. Current policy appears adequate."
             ),
         )
 
@@ -177,8 +176,7 @@ def propose_policy_tightening(
                     + (
                         "Recommend blocking — pattern is persistent."
                         if count >= 5
-                        else "Recommend alerting for further"
-                        " investigation."
+                        else "Recommend alerting for further investigation."
                     )
                 ),
             )

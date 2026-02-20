@@ -77,12 +77,16 @@ class AttackSurfaceService:
     def get_exposure_map(self, tenant_id: str) -> dict[str, Any]:
         """Get complete attack surface exposure map."""
         assets = self._store.get(tenant_id, {})
-        total_exposure = sum(a.get("exposure_score", 0) for a in assets.values()) / max(len(assets), 1)
+        total_exposure = sum(a.get("exposure_score", 0) for a in assets.values()) / max(
+            len(assets), 1
+        )
         return {
             "tenant_id": tenant_id,
             "total_assets": len(assets),
             "avg_exposure_score": round(total_exposure, 1),
-            "critical_exposures": len([a for a in assets.values() if a.get("exposure_score", 0) > 70]),
+            "critical_exposures": len(
+                [a for a in assets.values() if a.get("exposure_score", 0) > 70]
+            ),
             "assets": list(assets.values()),
         }
 
@@ -95,13 +99,15 @@ class AttackSurfaceService:
         certs = []
         for asset in self._store.get(tenant_id, {}).values():
             if asset.get("domain"):
-                certs.append({
-                    "domain": asset["domain"],
-                    "issuer": "Let's Encrypt",
-                    "valid": True,
-                    "days_until_expiry": 45 + (hash(asset.get("id", "")) % 300),
-                    "protocol": "TLS 1.3",
-                })
+                certs.append(
+                    {
+                        "domain": asset["domain"],
+                        "issuer": "Let's Encrypt",
+                        "valid": True,
+                        "days_until_expiry": 45 + (hash(asset.get("id", "")) % 300),
+                        "protocol": "TLS 1.3",
+                    }
+                )
         return certs
 
     def discover_apis(self, tenant_id: str, base_url: str) -> dict[str, Any]:

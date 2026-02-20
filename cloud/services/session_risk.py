@@ -28,8 +28,12 @@ _RISK_WEIGHTS = {
 
 # Known geolocations considered baseline (simplified)
 _BASELINE_GEOLOCATIONS = {
-    "us-east", "us-west", "eu-west", "eu-central",
-    "ap-southeast", "ap-northeast",
+    "us-east",
+    "us-west",
+    "eu-west",
+    "eu-central",
+    "ap-southeast",
+    "ap-northeast",
 }
 
 # Business hours window (UTC)
@@ -55,7 +59,7 @@ class SessionRiskAssessment:
         self.device_id = device_id
         self.geo_location = geo_location
         self.risk_score: int = 0
-        self.risk_level: str = "low"           # low | medium | high | critical
+        self.risk_level: str = "low"  # low | medium | high | critical
         self.risk_factors: list[str] = []
         self.recommended_action: str = "allow"  # allow | step_up | terminate
         self.assessed_at = datetime.now(timezone.utc)
@@ -84,9 +88,11 @@ class SessionRiskService:
     """Continuous session risk assessment engine."""
 
     def __init__(self) -> None:
-        self._sessions: dict[str, SessionRiskAssessment] = {}           # session_id -> assessment
-        self._tenant_sessions: dict[str, list[str]] = defaultdict(list)  # tenant_id -> [session_id, ...]
-        self._known_devices: dict[str, set[str]] = defaultdict(set)      # tenant_id -> {device_id, ...}
+        self._sessions: dict[str, SessionRiskAssessment] = {}  # session_id -> assessment
+        self._tenant_sessions: dict[str, list[str]] = defaultdict(
+            list
+        )  # tenant_id -> [session_id, ...]
+        self._known_devices: dict[str, set[str]] = defaultdict(set)  # tenant_id -> {device_id, ...}
 
     # ------------------------------------------------------------------
     # Core operations
@@ -147,8 +153,11 @@ class SessionRiskService:
 
         logger.info(
             "[SESSION_RISK] Assessed session %s — score=%d, level=%s, action=%s, factors=%s",
-            session_id[:8], risk_score, assessment.risk_level,
-            assessment.recommended_action, risk_factors,
+            session_id[:8],
+            risk_score,
+            assessment.risk_level,
+            assessment.recommended_action,
+            risk_factors,
         )
         return assessment.to_dict()
 
@@ -196,8 +205,10 @@ class SessionRiskService:
 
         logger.info(
             "[SESSION_RISK] Reassessed session %s (#%d) — score=%d, level=%s",
-            session_id[:8], assessment.reassessment_count,
-            risk_score, assessment.risk_level,
+            session_id[:8],
+            assessment.reassessment_count,
+            risk_score,
+            assessment.risk_level,
         )
         return assessment.to_dict()
 
@@ -211,7 +222,8 @@ class SessionRiskService:
         assessment.assessed_at = datetime.now(timezone.utc)
         logger.info(
             "[SESSION_RISK] Terminated session %s in tenant %s",
-            session_id[:8], tenant_id,
+            session_id[:8],
+            tenant_id,
         )
         return assessment.to_dict()
 
@@ -272,10 +284,9 @@ class SessionRiskService:
 
         # Multiple active sessions for the same user: +20
         active_sessions = [
-            s for s in self._sessions.values()
-            if s.tenant_id == tenant_id
-            and s.user_id == user_id
-            and not s.terminated
+            s
+            for s in self._sessions.values()
+            if s.tenant_id == tenant_id and s.user_id == user_id and not s.terminated
         ]
         if len(active_sessions) > 1:
             score += _RISK_WEIGHTS["multiple_sessions"]

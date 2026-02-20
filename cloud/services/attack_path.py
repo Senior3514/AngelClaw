@@ -187,7 +187,9 @@ class AttackPathEngine:
                     techniques.extend(_TECHNIQUE_MAP.get(protocol, []))
         return list(set(techniques))
 
-    def _compute_risk(self, path: list[str], asset_risks: dict[str, int], techniques: list[str]) -> int:
+    def _compute_risk(
+        self, path: list[str], asset_risks: dict[str, int], techniques: list[str]
+    ) -> int:
         path_risk = max((asset_risks.get(n, 0) for n in path), default=0)
         technique_bonus = min(30, len(techniques) * 5)
         hop_penalty = max(0, 5 - len(path)) * 5  # shorter paths = higher risk

@@ -23,7 +23,7 @@ class IncidentState(str, Enum):
     TRIAGING = "triaging"
     INVESTIGATING = "investigating"
     RESPONDING = "responding"
-    CONTAINED = "contained"      # V2.2 — threat contained, monitoring
+    CONTAINED = "contained"  # V2.2 — threat contained, monitoring
     RESOLVED = "resolved"
     ESCALATED = "escalated"
 
@@ -85,11 +85,11 @@ class Permission(str, Enum):
 class SerenityLevel(str, Enum):
     """AngelClaw-themed risk levels (Serenity Scale)."""
 
-    SERENE = "serene"        # info
-    WHISPER = "whisper"      # low
-    MURMUR = "murmur"        # medium
+    SERENE = "serene"  # info
+    WHISPER = "whisper"  # low
+    MURMUR = "murmur"  # medium
     DISTURBED = "disturbed"  # high
-    STORM = "storm"          # critical
+    STORM = "storm"  # critical
 
 
 # Bidirectional severity <-> serenity mapping
@@ -110,12 +110,12 @@ class MitreTactic(str, Enum):
     EXECUTION = "execution"
     PERSISTENCE = "persistence"
     PRIVILEGE_ESCALATION = "privilege_escalation"
-    DEFENSE_EVASION = "defense_evasion"           # V2.2
+    DEFENSE_EVASION = "defense_evasion"  # V2.2
     CREDENTIAL_ACCESS = "credential_access"
-    DISCOVERY = "discovery"                        # V2.2
+    DISCOVERY = "discovery"  # V2.2
     LATERAL_MOVEMENT = "lateral_movement"
-    COLLECTION = "collection"                      # V2.2
-    COMMAND_AND_CONTROL = "command_and_control"     # V2.2
+    COLLECTION = "collection"  # V2.2
+    COMMAND_AND_CONTROL = "command_and_control"  # V2.2
     EXFILTRATION = "exfiltration"
     IMPACT = "impact"
 

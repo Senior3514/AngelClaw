@@ -225,9 +225,7 @@ class TestVerifyStatusToken:
         tok = "secret" + "-tok"  # noqa: S105
         try:
             srv.STATUS_TOKEN = tok
-            result = _run(
-                srv._verify_status_token(x_angelnode_token=tok)
-            )
+            result = _run(srv._verify_status_token(x_angelnode_token=tok))
             assert result is None
         finally:
             srv.STATUS_TOKEN = original
@@ -244,9 +242,7 @@ class TestVerifyStatusToken:
             srv.STATUS_TOKEN = tok
             bad_tok = "wrong" + "-value"
             with pytest.raises(HTTPException) as exc_info:
-                _run(
-                    srv._verify_status_token(x_angelnode_token=bad_tok)
-                )
+                _run(srv._verify_status_token(x_angelnode_token=bad_tok))
             assert exc_info.value.status_code == 401
         finally:
             srv.STATUS_TOKEN = original
@@ -352,7 +348,10 @@ class TestServerEndpoints:
         assert "event_id" in data
         assert "decision" in data
         assert data["decision"]["action"] in [
-            "allow", "block", "alert", "audit",
+            "allow",
+            "block",
+            "alert",
+            "audit",
         ]
 
     def test_evaluate_increments_counters(self):
@@ -476,9 +475,7 @@ class TestActionExecutorHandlers:
                 params={"frequency_minutes": 15},
                 dry_run=False,
             )
-            result = _run(
-                executor.execute(action, db, "test-tenant", "api")
-            )
+            result = _run(executor.execute(action, db, "test-tenant", "api"))
             assert result.success is True
             assert "15" in result.message
             assert result.after_state.get("scan_frequency_minutes") == 15
@@ -497,9 +494,7 @@ class TestActionExecutorHandlers:
                 params={"level": "observe_only"},
                 dry_run=False,
             )
-            result = _run(
-                executor.execute(action, db, "test-tenant", "cli")
-            )
+            result = _run(executor.execute(action, db, "test-tenant", "cli"))
             assert result.success is True
             assert "observe_only" in result.message
         finally:
@@ -517,9 +512,7 @@ class TestActionExecutorHandlers:
                 params={"level": "verbose"},
                 dry_run=False,
             )
-            result = _run(
-                executor.execute(action, db, "test-tenant", "chat")
-            )
+            result = _run(executor.execute(action, db, "test-tenant", "chat"))
             assert result.success is True
             assert "verbose" in result.message
         finally:
@@ -537,9 +530,7 @@ class TestActionExecutorHandlers:
                 params={"rule_id": "r1", "new_action": "block"},
                 dry_run=False,
             )
-            result = _run(
-                executor.execute(action, db, "test-tenant")
-            )
+            result = _run(executor.execute(action, db, "test-tenant"))
             assert result.success is False
             assert "No policy found" in result.message
         finally:
@@ -889,9 +880,7 @@ class TestActionExecutorHandlers:
                     params={"incident_id": "inc-123"},
                     dry_run=False,
                 )
-                result = _run(
-                    executor.execute(action, db, "test-tenant")
-                )
+                result = _run(executor.execute(action, db, "test-tenant"))
             assert result.success is True
             assert "acknowledged" in result.message
             assert incident.state == IncidentState.RESOLVED
@@ -916,9 +905,7 @@ class TestActionExecutorHandlers:
                     params={"incident_id": "no-such-inc"},
                     dry_run=False,
                 )
-                result = _run(
-                    executor.execute(action, db, "test-tenant")
-                )
+                result = _run(executor.execute(action, db, "test-tenant"))
             assert result.success is False
             assert "not found" in result.message
         finally:
@@ -934,6 +921,7 @@ class TestActionExecutorFailurePaths:
         db = _fresh_db()
         try:
             executor = ActionExecutor()
+
             # Replace a handler to raise
             async def _boom(action, db, tenant_id):
                 raise RuntimeError("something broke")
@@ -970,13 +958,9 @@ class TestActionExecutorFailurePaths:
 
             # Patch db.commit to raise
             original_commit = db.commit
-            db.commit = MagicMock(
-                side_effect=Exception("DB locked")
-            )
+            db.commit = MagicMock(side_effect=Exception("DB locked"))
             # Should not raise
-            executor._log_action(
-                db, action, "test-tenant", "chat", "", "proposed"
-            )
+            executor._log_action(db, action, "test-tenant", "chat", "", "proposed")
             # Restore
             db.commit = original_commit
         finally:
@@ -1011,15 +995,11 @@ class TestGetActionHistory:
                 params={"frequency_minutes": 20},
                 dry_run=True,
             )
-            _run(
-                executor.execute(action, db, "history-tenant", "api")
-            )
+            _run(executor.execute(action, db, "history-tenant", "api"))
 
             history = get_action_history(db, "history-tenant", limit=10)
             assert len(history) >= 1
-            found = [
-                h for h in history if h["id"] == action.id
-            ]
+            found = [h for h in history if h["id"] == action.id]
             assert len(found) == 1
             assert found[0]["action_type"] == "set_scan_frequency"
             assert found[0]["status"] == "proposed"
@@ -1038,15 +1018,9 @@ class TestGetActionHistory:
                     description=f"Action {i}",
                     dry_run=True,
                 )
-                _run(
-                    executor.execute(
-                        action, db, "limit-tenant", "api"
-                    )
-                )
+                _run(executor.execute(action, db, "limit-tenant", "api"))
 
-            history = get_action_history(
-                db, "limit-tenant", limit=3
-            )
+            history = get_action_history(db, "limit-tenant", limit=3)
             assert len(history) <= 3
         finally:
             db.rollback()
@@ -1154,12 +1128,8 @@ class TestOrchestratorGetAndListIncidents:
     def test_list_incidents_with_state_filter(self):
         """list_incidents filters by state."""
         orch = AngelOrchestrator()
-        inc_new = Incident(
-            state=IncidentState.NEW, severity="high", title="New"
-        )
-        inc_resolved = Incident(
-            state=IncidentState.RESOLVED, severity="low", title="Done"
-        )
+        inc_new = Incident(state=IncidentState.NEW, severity="high", title="New")
+        inc_resolved = Incident(state=IncidentState.RESOLVED, severity="low", title="Done")
         orch._incidents[inc_new.incident_id] = inc_new
         orch._incidents[inc_resolved.incident_id] = inc_resolved
 
@@ -1257,11 +1227,7 @@ class TestOrchestratorPersistAlerts:
             )
             orch._persist_alerts(db, [ind], "test-tenant")
 
-            row = (
-                db.query(GuardianAlertRow)
-                .filter_by(id="alert-1")
-                .first()
-            )
+            row = db.query(GuardianAlertRow).filter_by(id="alert-1").first()
             assert row is not None
             assert row.severity == "high"
             assert row.tenant_id == "test-tenant"
@@ -1282,17 +1248,11 @@ class TestOrchestratorPersistAlerts:
                 description="Medium anomaly",
             )
             # Delete any existing rows
-            db.query(GuardianAlertRow).filter_by(
-                id="alert-med"
-            ).delete()
+            db.query(GuardianAlertRow).filter_by(id="alert-med").delete()
             db.commit()
 
             orch._persist_alerts(db, [ind], "test-tenant")
-            row = (
-                db.query(GuardianAlertRow)
-                .filter_by(id="alert-med")
-                .first()
-            )
+            row = db.query(GuardianAlertRow).filter_by(id="alert-med").first()
             assert row is None
         finally:
             db.rollback()
@@ -1311,9 +1271,7 @@ class TestOrchestratorPersistAlerts:
                 description="Critical threat",
             )
             original_commit = db.commit
-            db.commit = MagicMock(
-                side_effect=Exception("DB write error")
-            )
+            db.commit = MagicMock(side_effect=Exception("DB write error"))
             # Should not raise
             orch._persist_alerts(db, [ind], "test-tenant")
             db.commit = original_commit
@@ -1330,9 +1288,7 @@ class TestOrchestratorProcessEvents:
         db = _fresh_db()
         try:
             orch = AngelOrchestrator()
-            result = _run(
-                orch.process_events([], db, "test-tenant")
-            )
+            result = _run(orch.process_events([], db, "test-tenant"))
             assert result == []
         finally:
             db.close()
@@ -1350,9 +1306,7 @@ class TestOrchestratorProcessEvents:
                 success=True,
                 result_data={"indicators": []},
             )
-            orch.warden.execute = AsyncMock(
-                return_value=mock_result
-            )
+            orch.warden.execute = AsyncMock(return_value=mock_result)
 
             event = EventRow(
                 id="ev-1",
@@ -1364,9 +1318,7 @@ class TestOrchestratorProcessEvents:
                 details={},
                 source="test",
             )
-            result = _run(
-                orch.process_events([event], db, "test-tenant")
-            )
+            result = _run(orch.process_events([event], db, "test-tenant"))
             assert result == []
             assert orch._events_processed == 1
         finally:
@@ -1394,9 +1346,7 @@ class TestOrchestratorProcessEvents:
                 success=True,
                 result_data={"indicators": [indicator_data]},
             )
-            orch.warden.execute = AsyncMock(
-                return_value=mock_warden_result
-            )
+            orch.warden.execute = AsyncMock(return_value=mock_warden_result)
 
             # Mock response agent to succeed
             mock_response_result = AgentResult(
@@ -1406,31 +1356,23 @@ class TestOrchestratorProcessEvents:
                 success=True,
                 result_data={},
             )
-            orch.response.execute = AsyncMock(
-                return_value=mock_response_result
-            )
+            orch.response.execute = AsyncMock(return_value=mock_response_result)
             # Mock forensic agent
             mock_forensic_result = AgentResult(
                 task_id="t3",
                 agent_id="forensic-1",
                 agent_type="forensic",
                 success=True,
-                result_data={
-                    "report": {"root_cause": "test cause"}
-                },
+                result_data={"report": {"root_cause": "test cause"}},
             )
-            orch.forensic.execute = AsyncMock(
-                return_value=mock_forensic_result
-            )
+            orch.forensic.execute = AsyncMock(return_value=mock_forensic_result)
 
             # Mock get_playbook to return a playbook with auto_respond
             mock_playbook = Playbook(
                 name="quarantine_agent",
                 auto_respond=True,
             )
-            orch.response.get_playbook = MagicMock(
-                return_value=mock_playbook
-            )
+            orch.response.get_playbook = MagicMock(return_value=mock_playbook)
 
             event = EventRow(
                 id="ev-1",
@@ -1442,9 +1384,7 @@ class TestOrchestratorProcessEvents:
                 details={},
                 source="test",
             )
-            result = _run(
-                orch.process_events([event], db, "test-tenant")
-            )
+            result = _run(orch.process_events([event], db, "test-tenant"))
             assert len(result) == 1
             assert orch._incidents_created >= 1
             assert orch._indicators_found >= 1
@@ -1464,9 +1404,7 @@ class TestOrchestratorProcessEvents:
                 success=False,
                 error="Warden crashed",
             )
-            orch.warden.execute = AsyncMock(
-                return_value=mock_result
-            )
+            orch.warden.execute = AsyncMock(return_value=mock_result)
 
             event = EventRow(
                 id="ev-1",
@@ -1478,9 +1416,7 @@ class TestOrchestratorProcessEvents:
                 details={},
                 source="test",
             )
-            result = _run(
-                orch.process_events([event], db, "test-tenant")
-            )
+            result = _run(orch.process_events([event], db, "test-tenant"))
             assert result == []
         finally:
             db.close()
@@ -1512,26 +1448,18 @@ class TestOrchestratorApproveIncident:
                 success=True,
                 result_data={},
             )
-            orch.response.execute = AsyncMock(
-                return_value=mock_result
-            )
+            orch.response.execute = AsyncMock(return_value=mock_result)
             orch.forensic.execute = AsyncMock(
                 return_value=AgentResult(
                     task_id="t2",
                     agent_id="forensic-1",
                     agent_type="forensic",
                     success=True,
-                    result_data={
-                        "report": {"root_cause": "test"}
-                    },
+                    result_data={"report": {"root_cause": "test"}},
                 )
             )
 
-            result = _run(
-                orch.approve_incident(
-                    inc.incident_id, "admin", db, "test-tenant"
-                )
-            )
+            result = _run(orch.approve_incident(inc.incident_id, "admin", db, "test-tenant"))
             assert result["approved_by"] == "admin"
             assert result["response_executed"] is True
         finally:
@@ -1542,11 +1470,7 @@ class TestOrchestratorApproveIncident:
         orch = AngelOrchestrator()
         db = _fresh_db()
         try:
-            result = _run(
-                orch.approve_incident(
-                    "no-such-id", "admin", db
-                )
-            )
+            result = _run(orch.approve_incident("no-such-id", "admin", db))
             assert "error" in result
         finally:
             db.close()
@@ -1563,11 +1487,7 @@ class TestOrchestratorApproveIncident:
             )
             orch._incidents[inc.incident_id] = inc
 
-            result = _run(
-                orch.approve_incident(
-                    inc.incident_id, "admin", db
-                )
-            )
+            result = _run(orch.approve_incident(inc.incident_id, "admin", db))
             assert "error" in result
             assert "cannot approve" in result["error"].lower()
         finally:
@@ -1594,26 +1514,18 @@ class TestOrchestratorApproveIncident:
                 success=True,
                 result_data={},
             )
-            orch.response.execute = AsyncMock(
-                return_value=mock_result
-            )
+            orch.response.execute = AsyncMock(return_value=mock_result)
             orch.forensic.execute = AsyncMock(
                 return_value=AgentResult(
                     task_id="t2",
                     agent_id="forensic-1",
                     agent_type="forensic",
                     success=True,
-                    result_data={
-                        "report": {"root_cause": "found"}
-                    },
+                    result_data={"report": {"root_cause": "found"}},
                 )
             )
 
-            result = _run(
-                orch.approve_incident(
-                    inc.incident_id, "ops", db
-                )
-            )
+            result = _run(orch.approve_incident(inc.incident_id, "ops", db))
             assert result["response_executed"] is True
             assert result["approved_by"] == "ops"
         finally:
@@ -1690,9 +1602,7 @@ class TestOrchestratorHandleIncidentEscalation:
                 title="Bad playbook",
                 playbook_name="nonexistent_playbook",
             )
-            orch.response.get_playbook = MagicMock(
-                return_value=None
-            )
+            orch.response.get_playbook = MagicMock(return_value=None)
             _run(orch._handle_incident(inc, db, "test-tenant"))
             assert inc.state == IncidentState.ESCALATED
         finally:
@@ -1713,9 +1623,7 @@ class TestOrchestratorHandleIncidentEscalation:
                 name="manual_playbook",
                 auto_respond=False,
             )
-            orch.response.get_playbook = MagicMock(
-                return_value=manual_pb
-            )
+            orch.response.get_playbook = MagicMock(return_value=manual_pb)
             _run(orch._handle_incident(inc, db, "test-tenant"))
             assert inc.requires_approval is True
             assert inc.state == IncidentState.TRIAGING
@@ -1740,9 +1648,7 @@ class TestOrchestratorHandleIncidentEscalation:
                 name="auto_playbook",
                 auto_respond=True,
             )
-            orch.response.get_playbook = MagicMock(
-                return_value=auto_pb
-            )
+            orch.response.get_playbook = MagicMock(return_value=auto_pb)
             mock_result = AgentResult(
                 task_id="t1",
                 agent_id="response-1",
@@ -1750,14 +1656,10 @@ class TestOrchestratorHandleIncidentEscalation:
                 success=False,
                 error="Playbook execution error",
             )
-            orch.response.execute = AsyncMock(
-                return_value=mock_result
-            )
+            orch.response.execute = AsyncMock(return_value=mock_result)
 
             _run(orch._handle_incident(inc, db, "test-tenant"))
             assert inc.state == IncidentState.ESCALATED
-            assert any(
-                "failed" in n.lower() for n in inc.notes
-            )
+            assert any("failed" in n.lower() for n in inc.notes)
         finally:
             db.close()

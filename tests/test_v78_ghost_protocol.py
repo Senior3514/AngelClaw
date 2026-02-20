@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
 from cloud.services.deception_depth import DeceptionDepthService
 from cloud.services.moving_target import MovingTargetService
-
 
 TENANT = "test-tenant"
 
@@ -57,6 +54,7 @@ class TestDeceptionDepthService:
         assert result["service"] == "DeceptionDepthService"
         assert result["version"] == "7.8.0"
 
+
 class TestMovingTargetService:
     """MovingTargetService tests."""
 
@@ -94,4 +92,3 @@ class TestMovingTargetService:
         assert result["tenant_id"] == TENANT
         assert result["service"] == "MovingTargetService"
         assert result["version"] == "7.8.0"
-

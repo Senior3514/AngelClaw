@@ -20,7 +20,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 logger = logging.getLogger("angelclaw.ueba")
 
@@ -34,6 +34,7 @@ class UserProfile(BaseModel):
     anomalies_detected: int = 0
     peer_group: str = "default"
     last_activity: datetime | None = None
+
 
 class EntityProfile(BaseModel):
     entity_id: str = ""
@@ -50,7 +51,9 @@ class UEBAService:
     def __init__(self) -> None:
         self._store: dict[str, dict] = defaultdict(dict)
 
-    def profile_user(self, tenant_id: str, user_id: str, activity_data: list[dict]) -> dict[str, Any]:
+    def profile_user(
+        self, tenant_id: str, user_id: str, activity_data: list[dict]
+    ) -> dict[str, Any]:
         """Profile user behavior and update baseline."""
         if tenant_id not in self._store:
             self._store[tenant_id] = {}

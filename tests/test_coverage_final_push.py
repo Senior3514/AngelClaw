@@ -39,21 +39,25 @@ class TestWazuhLevelToSeverity:
 
     def test_critical(self):
         from cloud.integrations.wazuh_ingest import _wazuh_level_to_severity
+
         assert _wazuh_level_to_severity(12) == "critical"
         assert _wazuh_level_to_severity(15) == "critical"
 
     def test_high(self):
         from cloud.integrations.wazuh_ingest import _wazuh_level_to_severity
+
         assert _wazuh_level_to_severity(8) == "high"
         assert _wazuh_level_to_severity(11) == "high"
 
     def test_warn(self):
         from cloud.integrations.wazuh_ingest import _wazuh_level_to_severity
+
         assert _wazuh_level_to_severity(5) == "warn"
         assert _wazuh_level_to_severity(7) == "warn"
 
     def test_info(self):
         from cloud.integrations.wazuh_ingest import _wazuh_level_to_severity
+
         assert _wazuh_level_to_severity(1) == "info"
         assert _wazuh_level_to_severity(4) == "info"
 
@@ -63,17 +67,20 @@ class TestWazuhRuleToCategory:
 
     def test_auth_groups(self):
         from cloud.integrations.wazuh_ingest import _wazuh_rule_to_category
+
         assert _wazuh_rule_to_category(["authentication_failed"]) == "auth"
         assert _wazuh_rule_to_category(["authentication_success"]) == "auth"
         assert _wazuh_rule_to_category(["PAM"]) == "auth"
 
     def test_file_system_groups(self):
         from cloud.integrations.wazuh_ingest import _wazuh_rule_to_category
+
         assert _wazuh_rule_to_category(["syscheck"]) == "file_system"
         assert _wazuh_rule_to_category(["FIM"]) == "file_system"
 
     def test_network_groups(self):
         from cloud.integrations.wazuh_ingest import _wazuh_rule_to_category
+
         assert _wazuh_rule_to_category(["firewall"]) == "network"
         assert _wazuh_rule_to_category(["iptables"]) == "network"
         assert _wazuh_rule_to_category(["ids"]) == "network"
@@ -82,12 +89,14 @@ class TestWazuhRuleToCategory:
 
     def test_process_groups(self):
         from cloud.integrations.wazuh_ingest import _wazuh_rule_to_category
+
         assert _wazuh_rule_to_category(["rootkit"]) == "process"
         assert _wazuh_rule_to_category(["malware"]) == "process"
         assert _wazuh_rule_to_category(["trojan"]) == "process"
 
     def test_default_system(self):
         from cloud.integrations.wazuh_ingest import _wazuh_rule_to_category
+
         assert _wazuh_rule_to_category(["some_unknown_group"]) == "system"
         assert _wazuh_rule_to_category([]) == "system"
 
@@ -443,7 +452,9 @@ class TestLLMChatEnabled:
 
         mock_client = AsyncMock()
         mock_client.post.side_effect = httpx.HTTPStatusError(
-            "error", request=MagicMock(), response=mock_response,
+            "error",
+            request=MagicMock(),
+            response=mock_response,
         )
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
@@ -659,11 +670,13 @@ class TestCorrelationContext:
 
     def test_get_default_empty(self):
         from cloud.services.structured_logger import get_correlation_id, set_correlation_id
+
         set_correlation_id("")
         assert get_correlation_id() == ""
 
     def test_set_and_get(self):
         from cloud.services.structured_logger import get_correlation_id, set_correlation_id
+
         set_correlation_id("test-cid-123")
         assert get_correlation_id() == "test-cid-123"
         set_correlation_id("")  # reset
@@ -678,8 +691,13 @@ class TestStructuredJsonFormatter:
         set_correlation_id("")
         fmt = StructuredJsonFormatter()
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="",
-            lineno=0, msg="Hello %s", args=("world",), exc_info=None,
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="Hello %s",
+            args=("world",),
+            exc_info=None,
         )
         output = fmt.format(record)
         data = json.loads(output)
@@ -694,8 +712,13 @@ class TestStructuredJsonFormatter:
         set_correlation_id("cid-abc")
         fmt = StructuredJsonFormatter()
         record = logging.LogRecord(
-            name="test", level=logging.WARNING, pathname="",
-            lineno=0, msg="warning", args=(), exc_info=None,
+            name="test",
+            level=logging.WARNING,
+            pathname="",
+            lineno=0,
+            msg="warning",
+            args=(),
+            exc_info=None,
         )
         output = fmt.format(record)
         data = json.loads(output)
@@ -710,11 +733,17 @@ class TestStructuredJsonFormatter:
             raise ValueError("boom")
         except ValueError:
             import sys
+
             exc_info = sys.exc_info()
 
         record = logging.LogRecord(
-            name="test", level=logging.ERROR, pathname="",
-            lineno=0, msg="failed", args=(), exc_info=exc_info,
+            name="test",
+            level=logging.ERROR,
+            pathname="",
+            lineno=0,
+            msg="failed",
+            args=(),
+            exc_info=exc_info,
         )
         output = fmt.format(record)
         data = json.loads(output)
@@ -726,8 +755,13 @@ class TestStructuredJsonFormatter:
 
         fmt = StructuredJsonFormatter()
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="",
-            lineno=0, msg="req", args=(), exc_info=None,
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="req",
+            args=(),
+            exc_info=None,
         )
         record.component = "http"
         record.agent_id = "a1"
@@ -756,6 +790,7 @@ class TestSetupStructuredLogging:
         root = logging.getLogger()
         assert len(root.handlers) >= 1
         from cloud.services.structured_logger import StructuredJsonFormatter
+
         assert any(isinstance(h.formatter, StructuredJsonFormatter) for h in root.handlers)
 
     def test_text_format(self):
@@ -765,6 +800,7 @@ class TestSetupStructuredLogging:
         root = logging.getLogger()
         assert len(root.handlers) >= 1
         from cloud.services.structured_logger import StructuredJsonFormatter
+
         assert not any(isinstance(h.formatter, StructuredJsonFormatter) for h in root.handlers)
 
     def test_env_driven_format(self):
@@ -774,6 +810,7 @@ class TestSetupStructuredLogging:
             setup_structured_logging(force_json=None)
             root = logging.getLogger()
             from cloud.services.structured_logger import StructuredJsonFormatter
+
             assert not any(isinstance(h.formatter, StructuredJsonFormatter) for h in root.handlers)
 
 
@@ -860,14 +897,16 @@ class TestSelfAuditCheckOrphanAlerts:
         from cloud.guardian.self_audit import _check_orphan_alerts
 
         for i in range(7):
-            db.add(GuardianAlertRow(
-                id=str(uuid.uuid4()),
-                tenant_id="t1",
-                alert_type="threat",
-                title=f"Old alert {i}",
-                severity="critical",
-                created_at=datetime.now(timezone.utc) - timedelta(hours=48),
-            ))
+            db.add(
+                GuardianAlertRow(
+                    id=str(uuid.uuid4()),
+                    tenant_id="t1",
+                    alert_type="threat",
+                    title=f"Old alert {i}",
+                    severity="critical",
+                    created_at=datetime.now(timezone.utc) - timedelta(hours=48),
+                )
+            )
         db.commit()
 
         findings = _check_orphan_alerts(db)
@@ -881,10 +920,14 @@ class TestSelfAuditCheckAuthRisks:
     def test_auth_disabled_finding(self):
         from cloud.guardian.self_audit import _check_auth_risks
 
-        with patch.dict(os.environ, {
-            "ANGELCLAW_AUTH_ENABLED": "false",
-            "ANGELCLAW_BIND_HOST": "127.0.0.1",
-        }, clear=False):
+        with patch.dict(
+            os.environ,
+            {
+                "ANGELCLAW_AUTH_ENABLED": "false",
+                "ANGELCLAW_BIND_HOST": "127.0.0.1",
+            },
+            clear=False,
+        ):
             findings = _check_auth_risks()
 
         cats = [f.category for f in findings]
@@ -925,24 +968,28 @@ class TestSelfAuditCheckEventCoverage:
         from cloud.guardian.self_audit import _check_event_coverage
 
         # Add event with uncovered category
-        db.add(EventRow(
-            id=str(uuid.uuid4()),
-            agent_id="a1",
-            timestamp=datetime.now(timezone.utc),
-            category="exotic_category",
-            type="test",
-            severity="info",
-        ))
+        db.add(
+            EventRow(
+                id=str(uuid.uuid4()),
+                agent_id="a1",
+                timestamp=datetime.now(timezone.utc),
+                category="exotic_category",
+                type="test",
+                severity="info",
+            )
+        )
 
         # Add policy covering only "auth"
-        db.add(PolicySetRow(
-            id=str(uuid.uuid4()),
-            name="coverage-policy",
-            rules_json=[
-                {"conditions": {"category": "auth"}, "action": "allow"},
-            ],
-            version_hash="covhash",
-        ))
+        db.add(
+            PolicySetRow(
+                id=str(uuid.uuid4()),
+                name="coverage-policy",
+                rules_json=[
+                    {"conditions": {"category": "auth"}, "action": "allow"},
+                ],
+                version_hash="covhash",
+            )
+        )
         db.commit()
 
         findings = _check_event_coverage(db)
@@ -959,23 +1006,27 @@ class TestSelfAuditCheckEventCoverage:
         db.query(PolicySetRow).delete()
         db.commit()
 
-        db.add(EventRow(
-            id=str(uuid.uuid4()),
-            agent_id="a1",
-            timestamp=datetime.now(timezone.utc),
-            category="net_cat",
-            type="test",
-            severity="info",
-        ))
+        db.add(
+            EventRow(
+                id=str(uuid.uuid4()),
+                agent_id="a1",
+                timestamp=datetime.now(timezone.utc),
+                category="net_cat",
+                type="test",
+                severity="info",
+            )
+        )
 
-        db.add(PolicySetRow(
-            id=str(uuid.uuid4()),
-            name="coverage-policy-list",
-            rules_json=[
-                {"conditions": {"category_in": ["net_cat", "auth"]}, "action": "allow"},
-            ],
-            version_hash="covhash2",
-        ))
+        db.add(
+            PolicySetRow(
+                id=str(uuid.uuid4()),
+                name="coverage-policy-list",
+                rules_json=[
+                    {"conditions": {"category_in": ["net_cat", "auth"]}, "action": "allow"},
+                ],
+                version_hash="covhash2",
+            )
+        )
         db.commit()
 
         findings = _check_event_coverage(db)
@@ -1002,14 +1053,16 @@ class TestSelfAuditCheckNoisyAgents:
 
         now = datetime.now(timezone.utc)
         for _i in range(510):
-            db.add(EventRow(
-                id=str(uuid.uuid4()),
-                agent_id="noisy-agent-001",
-                timestamp=now - timedelta(minutes=5),
-                category="system",
-                type="heartbeat",
-                severity="info",
-            ))
+            db.add(
+                EventRow(
+                    id=str(uuid.uuid4()),
+                    agent_id="noisy-agent-001",
+                    timestamp=now - timedelta(minutes=5),
+                    category="system",
+                    type="heartbeat",
+                    severity="info",
+                )
+            )
         db.commit()
 
         findings = _check_noisy_agents(db)
@@ -1029,12 +1082,17 @@ class TestRunSelfAudit:
         mock_db.query.return_value.filter.return_value.count.return_value = 0
         mock_db.query.return_value.first.return_value = None
 
-        with patch.dict(os.environ, {
-            "ANGELCLAW_AUTH_ENABLED": "true",
-            "ANGELCLAW_ADMIN_PASSWORD": "secure-password",
-            "ANGELCLAW_BIND_HOST": "127.0.0.1",
-        }, clear=False), patch(
-            "cloud.guardian.self_audit._check_warden_health", return_value=[]
+        with (
+            patch.dict(
+                os.environ,
+                {
+                    "ANGELCLAW_AUTH_ENABLED": "true",
+                    "ANGELCLAW_ADMIN_PASSWORD": "secure-password",
+                    "ANGELCLAW_BIND_HOST": "127.0.0.1",
+                },
+                clear=False,
+            ),
+            patch("cloud.guardian.self_audit._check_warden_health", return_value=[]),
         ):
             report = asyncio.get_event_loop().run_until_complete(run_self_audit(mock_db))
 
@@ -1051,10 +1109,14 @@ class TestRunSelfAudit:
         mock_db.query.return_value.filter.return_value.count.return_value = 0
         mock_db.query.return_value.first.return_value = None
 
-        with patch.dict(os.environ, {
-            "ANGELCLAW_AUTH_ENABLED": "false",
-            "ANGELCLAW_BIND_HOST": "0.0.0.0",  # noqa: S104
-        }, clear=False):
+        with patch.dict(
+            os.environ,
+            {
+                "ANGELCLAW_AUTH_ENABLED": "false",
+                "ANGELCLAW_BIND_HOST": "0.0.0.0",  # noqa: S104
+            },
+            clear=False,
+        ):
             report = asyncio.get_event_loop().run_until_complete(run_self_audit(mock_db))
 
         assert report.clean is False

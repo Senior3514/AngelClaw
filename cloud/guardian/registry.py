@@ -116,7 +116,8 @@ class AgentRegistry:
     def healthy_wardens(self) -> list[SubAgent]:
         """Return wardens that are not stopped or errored."""
         return [
-            a for a in self.all_wardens()
+            a
+            for a in self.all_wardens()
             if a.status not in (AgentStatus.STOPPED, AgentStatus.ERROR)
         ]
 

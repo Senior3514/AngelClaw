@@ -140,9 +140,12 @@ def check_for_alerts(
     # V2.1 — Pattern 4: Privilege escalation cascade
     priv_keywords = {"sudo", "chmod", "setuid", "escalat", "root", "admin", "privilege"}
     priv_events = [
-        e for e in events
-        if any(k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
-               for k in priv_keywords)
+        e
+        for e in events
+        if any(
+            k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
+            for k in priv_keywords
+        )
         and e.severity in ("high", "critical")
     ]
     if len(priv_events) >= 3:
@@ -164,16 +167,17 @@ def check_for_alerts(
             related_agent_ids=priv_agents,
         )
         alerts.append(alert)
-        logger.warning(
-            "Guardian Alert [privilege_escalation_cascade]: %s", alert.title
-        )
+        logger.warning("Guardian Alert [privilege_escalation_cascade]: %s", alert.title)
 
     # V2.1 — Pattern 5: Lateral movement detection
     lateral_keywords = {"ssh", "rdp", "psexec", "wmi", "lateral", "pivot", "remote_exec"}
     lateral_events = [
-        e for e in events
-        if any(k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
-               for k in lateral_keywords)
+        e
+        for e in events
+        if any(
+            k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
+            for k in lateral_keywords
+        )
     ]
     lateral_agents = {e.agent_id for e in lateral_events}
     if len(lateral_agents) >= 2 and len(lateral_events) >= 3:
@@ -199,9 +203,9 @@ def check_for_alerts(
     # V2.1 — Pattern 6: Data staging (compress/encode before exfil)
     staging_keywords = {"base64", "gzip", "tar ", "zip ", "compress", "encode", "encrypt"}
     staging_events = [
-        e for e in events
-        if any(k in ((e.details or {}).get("command", "") or "").lower()
-               for k in staging_keywords)
+        e
+        for e in events
+        if any(k in ((e.details or {}).get("command", "") or "").lower() for k in staging_keywords)
     ]
     if len(staging_events) >= 2:
         staging_agents = list({e.agent_id for e in staging_events})
@@ -251,13 +255,24 @@ def check_for_alerts(
 
     # V2.2 — Pattern 8: C2 callback detection
     c2_keywords = {
-        "reverse shell", "bind shell", "meterpreter", "cobalt strike",
-        "beacon", "callback", "phone home", "c2", "empire", "sliver",
+        "reverse shell",
+        "bind shell",
+        "meterpreter",
+        "cobalt strike",
+        "beacon",
+        "callback",
+        "phone home",
+        "c2",
+        "empire",
+        "sliver",
     }
     c2_events = [
-        e for e in events
-        if any(k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
-               for k in c2_keywords)
+        e
+        for e in events
+        if any(
+            k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
+            for k in c2_keywords
+        )
     ]
     if c2_events:
         c2_agents = list({e.agent_id for e in c2_events})
@@ -279,13 +294,24 @@ def check_for_alerts(
 
     # V2.2 — Pattern 9: Ransomware indicators
     ransom_keywords = {
-        "encrypt", "ransom", ".locked", ".encrypted", "openssl enc",
-        "gpg --symmetric", "bitcoin", "monero", "pay", "decrypt",
+        "encrypt",
+        "ransom",
+        ".locked",
+        ".encrypted",
+        "openssl enc",
+        "gpg --symmetric",
+        "bitcoin",
+        "monero",
+        "pay",
+        "decrypt",
     }
     ransom_events = [
-        e for e in events
-        if any(k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
-               for k in ransom_keywords)
+        e
+        for e in events
+        if any(
+            k in ((e.details or {}).get("command", "") or (e.type or "")).lower()
+            for k in ransom_keywords
+        )
         and e.severity in ("high", "critical")
     ]
     if len(ransom_events) >= 2:
@@ -308,14 +334,22 @@ def check_for_alerts(
 
     # V2.2 — Pattern 10: Defense evasion
     evasion_keywords = {
-        "history -c", "unset histfile", "shred", "wevtutil cl",
-        "rm -f /var/log", "touch -t", "timestomp", "auditctl -D",
-        "setenforce 0", "apparmor_parser -R", "clear_log",
+        "history -c",
+        "unset histfile",
+        "shred",
+        "wevtutil cl",
+        "rm -f /var/log",
+        "touch -t",
+        "timestomp",
+        "auditctl -D",
+        "setenforce 0",
+        "apparmor_parser -R",
+        "clear_log",
     }
     evasion_events = [
-        e for e in events
-        if any(k in ((e.details or {}).get("command", "") or "").lower()
-               for k in evasion_keywords)
+        e
+        for e in events
+        if any(k in ((e.details or {}).get("command", "") or "").lower() for k in evasion_keywords)
     ]
     if evasion_events:
         evasion_agents = list({e.agent_id for e in evasion_events})
@@ -324,8 +358,7 @@ def check_for_alerts(
             tenant_id=tenant_id,
             alert_type="defense_evasion",
             title=(
-                f"Defense evasion: {len(evasion_events)} log-clearing or "
-                f"security-disabling events"
+                f"Defense evasion: {len(evasion_events)} log-clearing or security-disabling events"
             ),
             severity="critical",
             details={
@@ -340,13 +373,19 @@ def check_for_alerts(
 
     # V2.2 — Pattern 11: Cloud API abuse
     cloud_keywords = {
-        "aws ", "az ", "gcloud ", "kubectl ", "terraform ",
-        "s3api", "iam ", "cloudformation",
+        "aws ",
+        "az ",
+        "gcloud ",
+        "kubectl ",
+        "terraform ",
+        "s3api",
+        "iam ",
+        "cloudformation",
     }
     cloud_events = [
-        e for e in events
-        if any(k in ((e.details or {}).get("command", "") or "").lower()
-               for k in cloud_keywords)
+        e
+        for e in events
+        if any(k in ((e.details or {}).get("command", "") or "").lower() for k in cloud_keywords)
     ]
     per_agent_cloud: dict[str, int] = {}
     for e in cloud_events:
@@ -372,13 +411,24 @@ def check_for_alerts(
 
     # V2.4 — Pattern 12: Compliance violation
     compliance_keywords = {
-        "unencrypted", "plaintext", "pii", "gdpr", "retention_expired",
-        "hipaa", "sox", "pci", "compliance_fail", "audit_gap",
+        "unencrypted",
+        "plaintext",
+        "pii",
+        "gdpr",
+        "retention_expired",
+        "hipaa",
+        "sox",
+        "pci",
+        "compliance_fail",
+        "audit_gap",
     }
     compliance_events = [
-        e for e in events
-        if any(k in ((e.details or {}).get("description", "") or (e.type or "")).lower()
-               for k in compliance_keywords)
+        e
+        for e in events
+        if any(
+            k in ((e.details or {}).get("description", "") or (e.type or "")).lower()
+            for k in compliance_keywords
+        )
         or e.category == "compliance"
     ]
     if len(compliance_events) >= 2:
@@ -401,7 +451,8 @@ def check_for_alerts(
 
     # V2.4 — Pattern 13: API abuse cascade
     api_events = [
-        e for e in events
+        e
+        for e in events
         if e.category == "api_security"
         or (e.type and "api" in e.type.lower() and e.severity in ("high", "critical"))
     ]
@@ -411,8 +462,11 @@ def check_for_alerts(
         api_sources[src] = api_sources.get(src, 0) + 1
     for src, count in api_sources.items():
         if count >= 8:
-            src_events = [e for e in api_events
-                          if (e.details or {}).get("source_ip", e.source or "unknown") == src]
+            src_events = [
+                e
+                for e in api_events
+                if (e.details or {}).get("source_ip", e.source or "unknown") == src
+            ]
             alert = GuardianAlertRow(
                 id=str(uuid.uuid4()),
                 tenant_id=tenant_id,
@@ -428,9 +482,12 @@ def check_for_alerts(
 
     # V2.4 — Pattern 14: Quarantine breach
     quarantine_events = [
-        e for e in events
-        if any(k in str(e.details or {}).lower()
-               for k in ("quarantined", "isolated", "quarantine_breach"))
+        e
+        for e in events
+        if any(
+            k in str(e.details or {}).lower()
+            for k in ("quarantined", "isolated", "quarantine_breach")
+        )
     ]
     if quarantine_events:
         q_agents = list({e.agent_id for e in quarantine_events})
@@ -452,9 +509,12 @@ def check_for_alerts(
 
     # V2.4 — Pattern 15: Notification failure tracking
     notif_fail_events = [
-        e for e in events
-        if any(k in ((e.details or {}).get("error", "") or (e.type or "")).lower()
-               for k in ("notification_fail", "webhook_fail", "channel_error", "delivery_fail"))
+        e
+        for e in events
+        if any(
+            k in ((e.details or {}).get("error", "") or (e.type or "")).lower()
+            for k in ("notification_fail", "webhook_fail", "channel_error", "delivery_fail")
+        )
     ]
     if len(notif_fail_events) >= 3:
         alert = GuardianAlertRow(

@@ -57,12 +57,15 @@ class SecOpsWorkflowService:
     def create_workflow(self, tenant_id: str, workflow_data: dict) -> dict[str, Any]:
         """Create a security operations workflow."""
         wf_id = str(uuid.uuid4())
-        steps = workflow_data.get("steps", [
-            {"name": "Triage", "type": "auto", "action": "classify_alert"},
-            {"name": "Investigate", "type": "manual", "action": "investigate"},
-            {"name": "Approve", "type": "approval", "approver": "soc_lead"},
-            {"name": "Respond", "type": "auto", "action": "execute_response"},
-        ])
+        steps = workflow_data.get(
+            "steps",
+            [
+                {"name": "Triage", "type": "auto", "action": "classify_alert"},
+                {"name": "Investigate", "type": "manual", "action": "investigate"},
+                {"name": "Approve", "type": "approval", "approver": "soc_lead"},
+                {"name": "Respond", "type": "auto", "action": "execute_response"},
+            ],
+        )
         entry = {
             "id": wf_id,
             "tenant_id": tenant_id,
@@ -77,7 +80,9 @@ class SecOpsWorkflowService:
         self._workflows[tenant_id][wf_id] = entry
         return entry
 
-    def execute_workflow(self, tenant_id: str, workflow_id: str, context: dict | None = None) -> dict[str, Any]:
+    def execute_workflow(
+        self, tenant_id: str, workflow_id: str, context: dict | None = None
+    ) -> dict[str, Any]:
         """Execute a workflow instance."""
         exec_id = str(uuid.uuid4())
         wf = self._workflows.get(tenant_id, {}).get(workflow_id)
@@ -120,7 +125,12 @@ class SecOpsWorkflowService:
         """Get built-in workflow templates."""
         return [
             {"name": "Incident Response", "trigger": "alert", "steps": 4, "category": "incident"},
-            {"name": "Vulnerability Triage", "trigger": "scan_complete", "steps": 3, "category": "vulnerability"},
+            {
+                "name": "Vulnerability Triage",
+                "trigger": "scan_complete",
+                "steps": 3,
+                "category": "vulnerability",
+            },
             {"name": "Access Review", "trigger": "scheduled", "steps": 5, "category": "compliance"},
             {"name": "Threat Hunt", "trigger": "manual", "steps": 6, "category": "hunting"},
             {"name": "Data Breach", "trigger": "dlp_violation", "steps": 7, "category": "incident"},
@@ -133,7 +143,13 @@ class SecOpsWorkflowService:
             "version": "10.0.0",
             "tenant_id": tenant_id,
             "total_workflows": len(self._workflows.get(tenant_id, {})),
-            "active_executions": len([e for e in self._executions.get(tenant_id, {}).values() if e.get("status") == "running"]),
+            "active_executions": len(
+                [
+                    e
+                    for e in self._executions.get(tenant_id, {}).values()
+                    if e.get("status") == "running"
+                ]
+            ),
         }
 
 

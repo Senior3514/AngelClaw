@@ -118,7 +118,9 @@ class IOCMatchingEngine:
         if new_matches:
             logger.info(
                 "[IOC_ENGINE] %d IOC match(es) found in %d events for tenant %s",
-                len(new_matches), len(events), tenant_id,
+                len(new_matches),
+                len(events),
+                tenant_id,
             )
         return new_matches
 
@@ -159,9 +161,7 @@ class IOCMatchingEngine:
             "total_matches": len(tenant_matches),
             "unacknowledged": unack,
             "by_severity": dict(by_severity),
-            "top_iocs": sorted(
-                self._match_counts.items(), key=lambda x: x[1], reverse=True
-            )[:10],
+            "top_iocs": sorted(self._match_counts.items(), key=lambda x: x[1], reverse=True)[:10],
         }
 
 

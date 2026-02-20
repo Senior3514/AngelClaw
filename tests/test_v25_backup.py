@@ -30,14 +30,16 @@ class TestBackupService:
 
     def test_restore_backup(self, db, backup_svc):
         # Seed some data
-        db.add(EventRow(
-            id=str(uuid.uuid4()),
-            agent_id=str(uuid.uuid4()),
-            timestamp=datetime.now(timezone.utc),
-            category="shell",
-            type="shell.exec",
-            severity="low",
-        ))
+        db.add(
+            EventRow(
+                id=str(uuid.uuid4()),
+                agent_id=str(uuid.uuid4()),
+                timestamp=datetime.now(timezone.utc),
+                category="shell",
+                type="shell.exec",
+                severity="low",
+            )
+        )
         db.commit()
         backup = backup_svc.create_backup(db, "dev-tenant")
         result = backup_svc.restore_backup(db, backup["id"], "dev-tenant")

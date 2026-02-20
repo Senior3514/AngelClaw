@@ -19,16 +19,66 @@ logger = logging.getLogger("angelclaw.iac_scanner")
 
 # Built-in IaC security checks (pattern-based)
 _IAC_RULES = [
-    {"id": "IAC001", "title": "Wildcard IAM permissions", "severity": "critical", "pattern": r'"Action"\s*:\s*"\*"'},
-    {"id": "IAC002", "title": "Public S3 bucket", "severity": "critical", "pattern": r"acl\s*=\s*\"public"},
-    {"id": "IAC003", "title": "Unencrypted storage", "severity": "high", "pattern": r"encrypted\s*=\s*false"},
-    {"id": "IAC004", "title": "Open security group (0.0.0.0/0)", "severity": "high", "pattern": r"0\.0\.0\.0/0"},
-    {"id": "IAC005", "title": "Hardcoded secret in config", "severity": "critical", "pattern": r"(password|secret|api_key)\s*=\s*\"[^\"]{8,}\""},
-    {"id": "IAC006", "title": "Missing logging configuration", "severity": "medium", "pattern": r"logging\s*\{\s*\}"},
-    {"id": "IAC007", "title": "Privileged container in K8s", "severity": "critical", "pattern": r"privileged:\s*true"},
-    {"id": "IAC008", "title": "Root user in Dockerfile", "severity": "high", "pattern": r"USER\s+root"},
-    {"id": "IAC009", "title": "Latest tag in container image", "severity": "medium", "pattern": r":latest"},
-    {"id": "IAC010", "title": "Missing resource limits", "severity": "medium", "pattern": r"resources:\s*\{\s*\}"},
+    {
+        "id": "IAC001",
+        "title": "Wildcard IAM permissions",
+        "severity": "critical",
+        "pattern": r'"Action"\s*:\s*"\*"',
+    },
+    {
+        "id": "IAC002",
+        "title": "Public S3 bucket",
+        "severity": "critical",
+        "pattern": r"acl\s*=\s*\"public",
+    },
+    {
+        "id": "IAC003",
+        "title": "Unencrypted storage",
+        "severity": "high",
+        "pattern": r"encrypted\s*=\s*false",
+    },
+    {
+        "id": "IAC004",
+        "title": "Open security group (0.0.0.0/0)",
+        "severity": "high",
+        "pattern": r"0\.0\.0\.0/0",
+    },
+    {
+        "id": "IAC005",
+        "title": "Hardcoded secret in config",
+        "severity": "critical",
+        "pattern": r"(password|secret|api_key)\s*=\s*\"[^\"]{8,}\"",
+    },
+    {
+        "id": "IAC006",
+        "title": "Missing logging configuration",
+        "severity": "medium",
+        "pattern": r"logging\s*\{\s*\}",
+    },
+    {
+        "id": "IAC007",
+        "title": "Privileged container in K8s",
+        "severity": "critical",
+        "pattern": r"privileged:\s*true",
+    },
+    {
+        "id": "IAC008",
+        "title": "Root user in Dockerfile",
+        "severity": "high",
+        "pattern": r"USER\s+root",
+    },
+    {
+        "id": "IAC009",
+        "title": "Latest tag in container image",
+        "severity": "medium",
+        "pattern": r":latest",
+    },
+    {
+        "id": "IAC010",
+        "title": "Missing resource limits",
+        "severity": "medium",
+        "pattern": r"resources:\s*\{\s*\}",
+    },
 ]
 
 
@@ -66,12 +116,14 @@ class IaCScannerService:
         passed = 0
         for rule in _IAC_RULES:
             if re.search(rule["pattern"], content, re.IGNORECASE):
-                findings.append({
-                    "rule_id": rule["id"],
-                    "title": rule["title"],
-                    "severity": rule["severity"],
-                    "line_hint": self._find_line(content, rule["pattern"]),
-                })
+                findings.append(
+                    {
+                        "rule_id": rule["id"],
+                        "title": rule["title"],
+                        "severity": rule["severity"],
+                        "line_hint": self._find_line(content, rule["pattern"]),
+                    }
+                )
             else:
                 passed += 1
 
@@ -91,14 +143,18 @@ class IaCScannerService:
         )
         self._scans[result.id] = result
         self._tenant_scans[tenant_id].append(result.id)
-        logger.info("[IAC] Scanned %s (%s) — %d finding(s)", source_path, source_type, len(findings))
+        logger.info(
+            "[IAC] Scanned %s (%s) — %d finding(s)", source_path, source_type, len(findings)
+        )
         return result.model_dump(mode="json")
 
     def get_scan(self, scan_id: str) -> dict | None:
         s = self._scans.get(scan_id)
         return s.model_dump(mode="json") if s else None
 
-    def list_scans(self, tenant_id: str, source_type: str | None = None, limit: int = 100) -> list[dict]:
+    def list_scans(
+        self, tenant_id: str, source_type: str | None = None, limit: int = 100
+    ) -> list[dict]:
         results = []
         for sid in reversed(self._tenant_scans.get(tenant_id, [])):
             s = self._scans.get(sid)
@@ -119,8 +175,10 @@ class IaCScannerService:
             "critical": sum(s.critical_count for s in scans),
             "high": sum(s.high_count for s in scans),
             "pass_rate": round(
-                sum(s.passed_checks for s in scans) /
-                max(sum(s.passed_checks + s.failed_checks for s in scans), 1) * 100, 1
+                sum(s.passed_checks for s in scans)
+                / max(sum(s.passed_checks + s.failed_checks for s in scans), 1)
+                * 100,
+                1,
             ),
         }
 

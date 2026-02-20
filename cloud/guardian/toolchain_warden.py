@@ -35,7 +35,7 @@ _TOOL_TYPES = frozenset(
 )
 
 # Thresholds
-_TOOL_BURST_THRESHOLD = 20   # tool invocations per agent per batch
+_TOOL_BURST_THRESHOLD = 20  # tool invocations per agent per batch
 _VERSION_CHANGE_SEVERITY = "high"
 
 
@@ -68,7 +68,9 @@ class ToolchainWarden(SubAgent):
 
         # Filter to tool-relevant events
         tool_events = [
-            e for e in events_data if e.get("type", "") in _TOOL_TYPES
+            e
+            for e in events_data
+            if e.get("type", "") in _TOOL_TYPES
             or "ai_tool" in e.get("type", "").lower()
             or "tool" in e.get("type", "").lower()
         ]
@@ -123,9 +125,7 @@ def _detect_tool_burst(events: list[dict]) -> list[ThreatIndicator]:
     for agent_id, agent_events in per_agent.items():
         if not agent_id or len(agent_events) < _TOOL_BURST_THRESHOLD:
             continue
-        tools = Counter(
-            e.get("details", {}).get("tool_name", "unknown") for e in agent_events
-        )
+        tools = Counter(e.get("details", {}).get("tool_name", "unknown") for e in agent_events)
         indicators.append(
             ThreatIndicator(
                 indicator_type="toolchain_abuse",
@@ -236,9 +236,7 @@ def _detect_output_injection(events: list[dict]) -> list[ThreatIndicator]:
                         pattern_name="tool_output_injection",
                         severity="critical",
                         confidence=0.85,
-                        description=(
-                            f"Prompt injection in tool output on agent {agent_id[:8]}"
-                        ),
+                        description=(f"Prompt injection in tool output on agent {agent_id[:8]}"),
                         related_event_ids=[e.get("id", "")],
                         related_agent_ids=[agent_id] if agent_id else [],
                         suggested_playbook="quarantine_agent",
@@ -289,8 +287,17 @@ def _detect_unauthorized_tools(events: list[dict]) -> list[ThreatIndicator]:
     """V2.1 — Detect usage of unauthorized/unknown tools."""
     # Known safe tool families
     _KNOWN_TOOL_PREFIXES = {
-        "file_", "read_", "write_", "list_", "search_", "query_",
-        "analyze_", "report_", "scan_", "monitor_", "check_",
+        "file_",
+        "read_",
+        "write_",
+        "list_",
+        "search_",
+        "query_",
+        "analyze_",
+        "report_",
+        "scan_",
+        "monitor_",
+        "check_",
     }
     per_agent_unknown: dict[str, list[str]] = defaultdict(list)
     per_agent_events: dict[str, list[str]] = defaultdict(list)
@@ -319,8 +326,7 @@ def _detect_unauthorized_tools(events: list[dict]) -> list[ThreatIndicator]:
                     severity="high",
                     confidence=0.70,
                     description=(
-                        f"Unauthorized tools on agent {agent_id[:8]}: "
-                        f"{', '.join(unique_tools[:5])}"
+                        f"Unauthorized tools on agent {agent_id[:8]}: {', '.join(unique_tools[:5])}"
                     ),
                     related_event_ids=per_agent_events[agent_id][:20],
                     related_agent_ids=[agent_id],

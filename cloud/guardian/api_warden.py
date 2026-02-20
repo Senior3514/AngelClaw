@@ -26,18 +26,18 @@ _UNUSUAL_METHODS = frozenset({"TRACE", "CONNECT", "OPTIONS", "PATCH", "PROPFIND"
 _SENSITIVE_PATHS_RE = re.compile(
     r"(?i)(/admin|/api/v\d+/auth|\.env|/debug|/internal|/actuator|/swagger|/graphql)"
 )
-_ENUMERATION_RE = re.compile(
-    r"(?i)(404|not.found|endpoint.not|invalid.path|unknown.route)"
-)
+_ENUMERATION_RE = re.compile(r"(?i)(404|not.found|endpoint.not|invalid.path|unknown.route)")
 
-_API_TYPES = frozenset({
-    "api_security.auth_failure",
-    "api_security.rate_exceeded",
-    "api_security.payload_oversize",
-    "api_security.enumeration",
-    "api_security.method_abuse",
-    "api_security.injection_attempt",
-})
+_API_TYPES = frozenset(
+    {
+        "api_security.auth_failure",
+        "api_security.rate_exceeded",
+        "api_security.payload_oversize",
+        "api_security.enumeration",
+        "api_security.method_abuse",
+        "api_security.injection_attempt",
+    }
+)
 
 
 class ApiWarden(SubAgent):
@@ -64,7 +64,8 @@ class ApiWarden(SubAgent):
         indicators: list[ThreatIndicator] = []
 
         api_events = [
-            e for e in events
+            e
+            for e in events
             if e.get("category") == "api_security" or e.get("type", "") in _API_TYPES
         ]
 
@@ -81,31 +82,34 @@ class ApiWarden(SubAgent):
 
         for source, evts in source_404s.items():
             if len(evts) >= 5:
-                indicators.append(ThreatIndicator(
-                    indicator_type="api_abuse",
-                    pattern_name="endpoint_enumeration",
-                    severity="high" if len(evts) >= 10 else "medium",
-                    confidence=0.85,
-                    description=(
-                        f"Source {source} triggered {len(evts)} 404/not-found responses. "
-                        "This pattern indicates automated endpoint"
-                        " scanning or directory enumeration."
-                    ),
-                    related_event_ids=[e.get("id", "") for e in evts[:5]],
-                    metadata={
-                        "title": "Endpoint Enumeration Detected",
-                        "category": "api_security",
-                        "mitigations": [
-                            "Rate limit or block the source IP",
-                            "Enable WAF rules for path traversal",
-                            "Review API endpoint exposure",
-                        ],
-                    },
-                ))
+                indicators.append(
+                    ThreatIndicator(
+                        indicator_type="api_abuse",
+                        pattern_name="endpoint_enumeration",
+                        severity="high" if len(evts) >= 10 else "medium",
+                        confidence=0.85,
+                        description=(
+                            f"Source {source} triggered {len(evts)} 404/not-found responses. "
+                            "This pattern indicates automated endpoint"
+                            " scanning or directory enumeration."
+                        ),
+                        related_event_ids=[e.get("id", "") for e in evts[:5]],
+                        metadata={
+                            "title": "Endpoint Enumeration Detected",
+                            "category": "api_security",
+                            "mitigations": [
+                                "Rate limit or block the source IP",
+                                "Enable WAF rules for path traversal",
+                                "Review API endpoint exposure",
+                            ],
+                        },
+                    )
+                )
 
         # Pattern 2: Auth failure spikes
         auth_failures = [
-            e for e in events
+            e
+            for e in events
             if e.get("type", "").startswith("api_security.auth_fail")
             or (e.get("details") or {}).get("status_code") in (401, 403)
         ]
@@ -114,56 +118,61 @@ class ApiWarden(SubAgent):
                 (e.get("details") or {}).get("source_ip", "unknown") for e in auth_failures
             )
             top_source = source_counts.most_common(1)[0] if source_counts else ("unknown", 0)
-            indicators.append(ThreatIndicator(
-                indicator_type="api_abuse",
-                pattern_name="auth_failure_spike",
-                severity="high" if len(auth_failures) >= 10 else "medium",
-                confidence=0.80,
-                description=(
-                    f"Detected {len(auth_failures)} authentication failures. "
-                    f"Top source: {top_source[0]} ({top_source[1]} failures). "
-                    "May indicate brute-force or credential stuffing attack."
-                ),
-                related_event_ids=[e.get("id", "") for e in auth_failures[:5]],
-                metadata={
-                    "title": "API Authentication Failure Spike",
-                    "category": "api_security",
-                    "mitigations": [
-                        "Implement account lockout after N failures",
-                        "Enable CAPTCHA for repeated failures",
-                        "Block offending source IPs",
-                    ],
-                },
-            ))
+            indicators.append(
+                ThreatIndicator(
+                    indicator_type="api_abuse",
+                    pattern_name="auth_failure_spike",
+                    severity="high" if len(auth_failures) >= 10 else "medium",
+                    confidence=0.80,
+                    description=(
+                        f"Detected {len(auth_failures)} authentication failures. "
+                        f"Top source: {top_source[0]} ({top_source[1]} failures). "
+                        "May indicate brute-force or credential stuffing attack."
+                    ),
+                    related_event_ids=[e.get("id", "") for e in auth_failures[:5]],
+                    metadata={
+                        "title": "API Authentication Failure Spike",
+                        "category": "api_security",
+                        "mitigations": [
+                            "Implement account lockout after N failures",
+                            "Enable CAPTCHA for repeated failures",
+                            "Block offending source IPs",
+                        ],
+                    },
+                )
+            )
 
         # Pattern 3: Oversized payloads
         oversize = [
-            e for e in events
+            e
+            for e in events
             if e.get("type", "") == "api_security.payload_oversize"
             or (e.get("details") or {}).get("payload_size", 0) > 1_000_000
         ]
         if oversize:
-            indicators.append(ThreatIndicator(
-                indicator_type="api_abuse",
-                pattern_name="oversized_payload",
-                severity="medium",
-                confidence=0.75,
-                description=(
-                    f"Detected {len(oversize)} oversized payload(s). "
-                    "Large payloads may indicate DoS attempts, data exfiltration, "
-                    "or exploitation of deserialization vulnerabilities."
-                ),
-                related_event_ids=[e.get("id", "") for e in oversize[:5]],
-                metadata={
-                    "title": "Oversized API Payloads Detected",
-                    "category": "api_security",
-                    "mitigations": [
-                        "Enforce request body size limits",
-                        "Validate Content-Length headers",
-                        "Monitor for payload-based attacks",
-                    ],
-                },
-            ))
+            indicators.append(
+                ThreatIndicator(
+                    indicator_type="api_abuse",
+                    pattern_name="oversized_payload",
+                    severity="medium",
+                    confidence=0.75,
+                    description=(
+                        f"Detected {len(oversize)} oversized payload(s). "
+                        "Large payloads may indicate DoS attempts, data exfiltration, "
+                        "or exploitation of deserialization vulnerabilities."
+                    ),
+                    related_event_ids=[e.get("id", "") for e in oversize[:5]],
+                    metadata={
+                        "title": "Oversized API Payloads Detected",
+                        "category": "api_security",
+                        "mitigations": [
+                            "Enforce request body size limits",
+                            "Validate Content-Length headers",
+                            "Monitor for payload-based attacks",
+                        ],
+                    },
+                )
+            )
 
         # Pattern 4: Unusual HTTP methods
         unusual_method_events = []
@@ -173,27 +182,30 @@ class ApiWarden(SubAgent):
                 unusual_method_events.append(e)
 
         if len(unusual_method_events) >= 3:
-            indicators.append(ThreatIndicator(
-                indicator_type="api_abuse",
-                pattern_name="unusual_http_methods",
-                severity="medium",
-                confidence=0.70,
-                description=(
-                    f"Detected {len(unusual_method_events)} requests using unusual HTTP methods "
-                    "(TRACE, CONNECT, PROPFIND, etc.). This may indicate web server probing "
-                    "or cross-site tracing attacks."
-                ),
-                related_event_ids=[e.get("id", "") for e in unusual_method_events[:5]],
-                metadata={
-                    "title": "Unusual HTTP Methods Detected",
-                    "category": "api_security",
-                    "mitigations": [
-                        "Disable unnecessary HTTP methods",
-                        "Return 405 Method Not Allowed",
-                        "Enable WAF rules for method filtering",
-                    ],
-                },
-            ))
+            indicators.append(
+                ThreatIndicator(
+                    indicator_type="api_abuse",
+                    pattern_name="unusual_http_methods",
+                    severity="medium",
+                    confidence=0.70,
+                    description=(
+                        f"Detected {len(unusual_method_events)}"
+                        " requests using unusual HTTP methods "
+                        "(TRACE, CONNECT, PROPFIND, etc.). This may indicate web server probing "
+                        "or cross-site tracing attacks."
+                    ),
+                    related_event_ids=[e.get("id", "") for e in unusual_method_events[:5]],
+                    metadata={
+                        "title": "Unusual HTTP Methods Detected",
+                        "category": "api_security",
+                        "mitigations": [
+                            "Disable unnecessary HTTP methods",
+                            "Return 405 Method Not Allowed",
+                            "Enable WAF rules for method filtering",
+                        ],
+                    },
+                )
+            )
 
         # Pattern 5: Rate limit evasion (rotating IPs hitting same endpoint)
         endpoint_sources: dict[str, set] = defaultdict(set)
@@ -206,27 +218,29 @@ class ApiWarden(SubAgent):
 
         for endpoint, sources in endpoint_sources.items():
             if len(sources) >= 5 and _SENSITIVE_PATHS_RE.search(endpoint):
-                indicators.append(ThreatIndicator(
-                    indicator_type="api_abuse",
-                    pattern_name="rate_limit_evasion",
-                    severity="high",
-                    confidence=0.80,
-                    description=(
-                        f"Sensitive endpoint '{endpoint}' accessed from {len(sources)} "
-                        "distinct IPs. Distributed access to sensitive endpoints suggests "
-                        "coordinated rate limit evasion."
-                    ),
-                    related_event_ids=[],
-                    metadata={
-                        "title": "Rate Limit Evasion Pattern",
-                        "category": "api_security",
-                        "mitigations": [
-                            "Implement per-endpoint rate limits",
-                            "Enable behavioral analysis",
-                            "Monitor for distributed attack patterns",
-                        ],
-                    },
-                ))
+                indicators.append(
+                    ThreatIndicator(
+                        indicator_type="api_abuse",
+                        pattern_name="rate_limit_evasion",
+                        severity="high",
+                        confidence=0.80,
+                        description=(
+                            f"Sensitive endpoint '{endpoint}' accessed from {len(sources)} "
+                            "distinct IPs. Distributed access to sensitive endpoints suggests "
+                            "coordinated rate limit evasion."
+                        ),
+                        related_event_ids=[],
+                        metadata={
+                            "title": "Rate Limit Evasion Pattern",
+                            "category": "api_security",
+                            "mitigations": [
+                                "Implement per-endpoint rate limits",
+                                "Enable behavioral analysis",
+                                "Monitor for distributed attack patterns",
+                            ],
+                        },
+                    )
+                )
 
         return AgentResult(
             task_id=task.task_id,

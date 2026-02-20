@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
-from cloud.services.ueba import UEBAService
 from cloud.services.threat_scoring import ThreatScoringService
-
+from cloud.services.ueba import UEBAService
 
 TENANT = "test-tenant"
 
@@ -48,6 +45,7 @@ class TestUEBAService:
         assert result["service"] == "UEBAService"
         assert result["version"] == "7.1.0"
 
+
 class TestThreatScoringService:
     """ThreatScoringService tests."""
 
@@ -79,4 +77,3 @@ class TestThreatScoringService:
         assert result["tenant_id"] == TENANT
         assert result["service"] == "ThreatScoringService"
         assert result["version"] == "7.1.0"
-

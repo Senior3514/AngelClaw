@@ -5,11 +5,10 @@ from __future__ import annotations
 
 import pytest
 
-from cloud.services.threat_hunter import ThreatHunterService
-from cloud.services.mitre_mapper import MitreAttackMapper
 from cloud.services.adversary_sim import AdversarySimService
 from cloud.services.intel_correlation import IntelCorrelationService
-
+from cloud.services.mitre_mapper import MitreAttackMapper
+from cloud.services.threat_hunter import ThreatHunterService
 
 TENANT = "test-tenant"
 
@@ -34,14 +33,23 @@ class TestThreatHunterCreateHunt:
     def test_create_hunt_with_hypothesis(self):
         svc = ThreatHunterService()
         hunt = svc.create_hunt(
-            TENANT, "APT hunt",
+            TENANT,
+            "APT hunt",
             hypothesis="Adversary is using DNS tunneling for C2",
         )
         assert hunt["hypothesis"] == "Adversary is using DNS tunneling for C2"
 
-    @pytest.mark.parametrize("hunt_type", [
-        "hypothesis", "ioc_sweep", "behavioral", "anomaly", "network", "endpoint",
-    ])
+    @pytest.mark.parametrize(
+        "hunt_type",
+        [
+            "hypothesis",
+            "ioc_sweep",
+            "behavioral",
+            "anomaly",
+            "network",
+            "endpoint",
+        ],
+    )
     def test_create_hunt_valid_types(self, hunt_type):
         svc = ThreatHunterService()
         hunt = svc.create_hunt(TENANT, f"hunt-{hunt_type}", hunt_type=hunt_type)
@@ -131,12 +139,15 @@ class TestThreatHunterExecute:
         result = svc.execute_hunt(hunt["id"])
         assert result == {"error": "Hunt is already running"}
 
-    @pytest.mark.parametrize("hunt_type,expected_step", [
-        ("ioc_sweep", "ioc_sweep"),
-        ("behavioral", "behavioral_analysis"),
-        ("anomaly", "anomaly_detection"),
-        ("hypothesis", "hypothesis_test"),
-    ])
+    @pytest.mark.parametrize(
+        "hunt_type,expected_step",
+        [
+            ("ioc_sweep", "ioc_sweep"),
+            ("behavioral", "behavioral_analysis"),
+            ("anomaly", "anomaly_detection"),
+            ("hypothesis", "hypothesis_test"),
+        ],
+    )
     def test_execute_hunt_type_logic(self, hunt_type, expected_step):
         svc = ThreatHunterService()
         hunt = svc.create_hunt(TENANT, f"exec-{hunt_type}", hunt_type=hunt_type)
@@ -193,7 +204,8 @@ class TestThreatHunterPlaybook:
     def test_create_playbook(self):
         svc = ThreatHunterService()
         pb = svc.create_playbook(
-            TENANT, "Lateral movement hunt",
+            TENANT,
+            "Lateral movement hunt",
             steps=[{"action": "query_logs"}, {"action": "correlate"}],
             description="Detect lateral movement",
             hunt_type="behavioral",
@@ -279,7 +291,10 @@ class TestMitreAddTechnique:
     def test_add_technique_basic(self):
         svc = MitreAttackMapper()
         tech = svc.add_technique(
-            TENANT, "T1059", "execution", "Command and Scripting Interpreter",
+            TENANT,
+            "T1059",
+            "execution",
+            "Command and Scripting Interpreter",
         )
         assert tech["technique_id"] == "T1059"
         assert tech["tactic"] == "execution"
@@ -296,14 +311,21 @@ class TestMitreAddTechnique:
     def test_add_technique_custom_severity(self):
         svc = MitreAttackMapper()
         tech = svc.add_technique(
-            TENANT, "T1059", "execution", "CSI", severity="critical",
+            TENANT,
+            "T1059",
+            "execution",
+            "CSI",
+            severity="critical",
         )
         assert tech["severity"] == "critical"
 
     def test_add_technique_with_description(self):
         svc = MitreAttackMapper()
         tech = svc.add_technique(
-            TENANT, "T1078", "persistence", "Valid Accounts",
+            TENANT,
+            "T1078",
+            "persistence",
+            "Valid Accounts",
             description="Adversaries may steal credentials",
         )
         assert tech["description"] == "Adversaries may steal credentials"
@@ -363,7 +385,7 @@ class TestMitreMapEvent:
 
     def test_map_event_updates_observation_count(self):
         svc = MitreAttackMapper()
-        tech = svc.add_technique(TENANT, "T1059", "execution", "Command Scripting")
+        svc.add_technique(TENANT, "T1059", "execution", "Command Scripting")
         svc.map_event(TENANT, "command", indicators={"detail": "scripting"})
         updated = svc.list_techniques(TENANT)
         assert updated[0]["times_observed"] >= 1
@@ -378,7 +400,8 @@ class TestMitreMapEvent:
         svc = MitreAttackMapper()
         svc.add_technique(TENANT, "T1059", "execution", "CSI")
         result = svc.map_event(
-            TENANT, "alert",
+            TENANT,
+            "alert",
             indicators={"info": "execution related activity"},
         )
         # The tactic keyword "execution" appears in indicators -> confidence boost
@@ -448,11 +471,13 @@ class TestMitreKillChain:
         svc.add_technique(TENANT, "T1566", "initial_access", "Phishing")
         svc.add_technique(TENANT, "T1059", "execution", "Command Scripting")
         svc.map_event(
-            TENANT, "phishing",
+            TENANT,
+            "phishing",
             indicators={"incident_id": "inc-42", "detail": "phishing email"},
         )
         svc.map_event(
-            TENANT, "command",
+            TENANT,
+            "command",
             indicators={"incident_id": "inc-42", "detail": "scripting"},
         )
         chain = svc.get_kill_chain(TENANT, "inc-42")
@@ -464,11 +489,13 @@ class TestMitreKillChain:
         svc.add_technique(TENANT, "T1059", "execution", "Command Scripting")
         svc.add_technique(TENANT, "T1566", "initial_access", "Phishing")
         svc.map_event(
-            TENANT, "command",
+            TENANT,
+            "command",
             indicators={"incident_id": "inc-1", "detail": "scripting"},
         )
         svc.map_event(
-            TENANT, "phishing",
+            TENANT,
+            "phishing",
             indicators={"incident_id": "inc-1", "detail": "phishing email"},
         )
         chain = svc.get_kill_chain(TENANT, "inc-1")
@@ -517,11 +544,19 @@ class TestAdversarySimCreateScenario:
         assert sc["enabled"] is True
         assert sc["simulations_run"] == 0
 
-    @pytest.mark.parametrize("attack_type", [
-        "phishing", "ransomware", "lateral_movement",
-        "privilege_escalation", "data_exfiltration",
-        "credential_theft", "supply_chain", "insider_threat",
-    ])
+    @pytest.mark.parametrize(
+        "attack_type",
+        [
+            "phishing",
+            "ransomware",
+            "lateral_movement",
+            "privilege_escalation",
+            "data_exfiltration",
+            "credential_theft",
+            "supply_chain",
+            "insider_threat",
+        ],
+    )
     def test_create_scenario_valid_types(self, attack_type):
         svc = AdversarySimService()
         sc = svc.create_scenario(TENANT, f"sc-{attack_type}", attack_type=attack_type)
@@ -535,7 +570,8 @@ class TestAdversarySimCreateScenario:
     def test_create_scenario_with_techniques(self):
         svc = AdversarySimService()
         sc = svc.create_scenario(
-            TENANT, "APT sim",
+            TENANT,
+            "APT sim",
             mitre_techniques=["T1566.001", "T1059", "T1078"],
         )
         assert sc["mitre_techniques"] == ["T1566.001", "T1059", "T1078"]
@@ -549,7 +585,9 @@ class TestAdversarySimCreateScenario:
     def test_create_scenario_description(self):
         svc = AdversarySimService()
         sc = svc.create_scenario(
-            TENANT, "described", description="Test ransomware resilience",
+            TENANT,
+            "described",
+            description="Test ransomware resilience",
         )
         assert sc["description"] == "Test ransomware resilience"
 
@@ -592,7 +630,8 @@ class TestAdversarySimRunSimulation:
     def test_run_simulation_completes(self):
         svc = AdversarySimService()
         sc = svc.create_scenario(
-            TENANT, "run-test",
+            TENANT,
+            "run-test",
             mitre_techniques=["T1566.001", "T1059"],
         )
         result = svc.run_simulation(sc["id"])
@@ -629,7 +668,8 @@ class TestAdversarySimRunSimulation:
     def test_run_simulation_detection_rate(self):
         svc = AdversarySimService()
         sc = svc.create_scenario(
-            TENANT, "rates",
+            TENANT,
+            "rates",
             mitre_techniques=["T1566.001", "T1059", "T1078"],
         )
         result = svc.run_simulation(sc["id"])
@@ -641,10 +681,7 @@ class TestAdversarySimRunSimulation:
         techs = ["T1566.001", "T1059", "T1078", "T1021"]
         sc = svc.create_scenario(TENANT, "full", mitre_techniques=techs)
         result = svc.run_simulation(sc["id"])
-        total_categorized = (
-            len(result["techniques_detected"])
-            + len(result["techniques_missed"])
-        )
+        total_categorized = len(result["techniques_detected"]) + len(result["techniques_missed"])
         # Every technique should be either detected or missed
         # (blocked is a subset of detected)
         assert total_categorized == len(techs)
@@ -719,13 +756,16 @@ class TestAdversarySimValidateDefense:
         assert val["details"]["detection_source"] == "none"
         assert val["details"]["block_mechanism"] == "none"
 
-    @pytest.mark.parametrize("tech_id,expected_status", [
-        ("T1059", "blocked"),
-        ("T1566.001", "detected"),
-        ("T1021.002", "detected"),
-        ("X0001", "missed"),
-        ("CUSTOM", "missed"),
-    ])
+    @pytest.mark.parametrize(
+        "tech_id,expected_status",
+        [
+            ("T1059", "blocked"),
+            ("T1566.001", "detected"),
+            ("T1021.002", "detected"),
+            ("X0001", "missed"),
+            ("CUSTOM", "missed"),
+        ],
+    )
     def test_validate_defense_parametrized(self, tech_id, expected_status):
         svc = AdversarySimService()
         val = svc.validate_defense(TENANT, tech_id)
@@ -748,7 +788,8 @@ class TestAdversarySimStats:
     def test_stats_after_activity(self):
         svc = AdversarySimService()
         sc = svc.create_scenario(
-            TENANT, "stat-test",
+            TENANT,
+            "stat-test",
             attack_type="ransomware",
             mitre_techniques=["T1566.001", "T1059"],
         )
@@ -766,8 +807,10 @@ class TestAdversarySimStats:
         sc = svc.create_scenario(TENANT, "fail-test", mitre_techniques=["T1059"])
         # Inject a failure scenario by monkeypatching _execute_simulation
         original = svc._execute_simulation
+
         def _fail(scenario, result):
             raise RuntimeError("boom")
+
         svc._execute_simulation = _fail
         svc.run_simulation(sc["id"])
         svc._execute_simulation = original
@@ -803,9 +846,17 @@ class TestIntelCorrelateEvents:
         corr = svc.correlate_events(TENANT, many)
         assert corr["confidence"] <= 95.0
 
-    @pytest.mark.parametrize("ctype", [
-        "event", "ioc", "behavioral", "temporal", "network", "identity",
-    ])
+    @pytest.mark.parametrize(
+        "ctype",
+        [
+            "event",
+            "ioc",
+            "behavioral",
+            "temporal",
+            "network",
+            "identity",
+        ],
+    )
     def test_correlate_events_valid_types(self, ctype):
         svc = IntelCorrelationService()
         corr = svc.correlate_events(TENANT, ["e1"], correlation_type=ctype)
@@ -830,12 +881,15 @@ class TestIntelCorrelateEvents:
         c_beh = svc2.correlate_events(TENANT, ["e1", "e2"], correlation_type="behavioral")
         assert c_beh["confidence"] >= c_event["confidence"]
 
-    @pytest.mark.parametrize("count,expected_severity", [
-        (1, "low"),
-        (3, "medium"),
-        (5, "high"),
-        (6, "critical"),
-    ])
+    @pytest.mark.parametrize(
+        "count,expected_severity",
+        [
+            (1, "low"),
+            (3, "medium"),
+            (5, "high"),
+            (6, "critical"),
+        ],
+    )
     def test_correlate_events_severity(self, count, expected_severity):
         svc = IntelCorrelationService()
         events = [f"e{i}" for i in range(count)]

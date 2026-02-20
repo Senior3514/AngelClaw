@@ -32,9 +32,7 @@ def sample_policy(db: Session):
 
 class TestPolicySnapshots:
     def test_create_snapshot(self, db, policy_service, sample_policy):
-        result = policy_service.create_snapshot(
-            db, "dev-tenant", "test-snap"
-        )
+        result = policy_service.create_snapshot(db, "dev-tenant", "test-snap")
         assert result.name == "test-snap"
         assert result.id is not None
 
@@ -45,9 +43,7 @@ class TestPolicySnapshots:
         assert len(snapshots) >= 2
 
     def test_snapshot_contains_rules(self, db, policy_service, sample_policy):
-        result = policy_service.create_snapshot(
-            db, "dev-tenant", "rules-snap"
-        )
+        result = policy_service.create_snapshot(db, "dev-tenant", "rules-snap")
         snap = db.query(PolicySnapshotRow).filter_by(id=result.id).first()
         assert snap is not None
         assert snap.rules_json is not None
@@ -85,9 +81,7 @@ class TestPolicySnapshots:
         assert result.name == "described-snap"
 
     def test_snapshot_preserves_version_hash(self, db, policy_service, sample_policy):
-        result = policy_service.create_snapshot(
-            db, "dev-tenant", "hash-snap"
-        )
+        result = policy_service.create_snapshot(db, "dev-tenant", "hash-snap")
         snap = db.query(PolicySnapshotRow).filter_by(id=result.id).first()
         assert snap.version_hash is not None
         assert len(snap.version_hash) > 0

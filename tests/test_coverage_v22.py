@@ -17,23 +17,31 @@ from cloud.angelclaw.context import EnvironmentContext
 NOW = datetime.now(timezone.utc)
 TENANT = "test-tenant"
 
+
 def _uid():
     return str(uuid.uuid4())
+
 
 def _make_ctx(**overrides):
     """Build an EnvironmentContext with sensible defaults."""
     ctx = EnvironmentContext()
-    ctx.host = overrides.get("host", {
-        "hostname": "test-host",
-        "os": "Linux 6.x",
-        "angelclaw_version": "2.2.1",
-    })
-    ctx.agent_summary = overrides.get("agent_summary", {
-        "total": 3,
-        "active": 2,
-        "degraded": 1,
-        "offline": 0,
-    })
+    ctx.host = overrides.get(
+        "host",
+        {
+            "hostname": "test-host",
+            "os": "Linux 6.x",
+            "angelclaw_version": "2.2.1",
+        },
+    )
+    ctx.agent_summary = overrides.get(
+        "agent_summary",
+        {
+            "total": 3,
+            "active": 2,
+            "degraded": 1,
+            "offline": 0,
+        },
+    )
     ctx.agents = overrides.get("agents", [])
     ctx.recent_events = overrides.get("recent_events", [])
     ctx.recent_alerts = overrides.get("recent_alerts", [])
@@ -41,15 +49,21 @@ def _make_ctx(**overrides):
     ctx.recent_changes = overrides.get("recent_changes", [])
     ctx.recent_activity = overrides.get("recent_activity", [])
     ctx.event_summary = overrides.get("event_summary", {"total": 0})
-    ctx.preferences = overrides.get("preferences", {
-        "scan_frequency_minutes": 10,
-        "autonomy_level": "suggest_only",
-        "reporting_level": "normal"
-    })
-    ctx.orchestrator_status = overrides.get("orchestrator_status", {
-        "running": True,
-        "stats": {"events_processed": 100, "incidents_created": 2, "indicators_found": 5}
-    })
+    ctx.preferences = overrides.get(
+        "preferences",
+        {
+            "scan_frequency_minutes": 10,
+            "autonomy_level": "suggest_only",
+            "reporting_level": "normal",
+        },
+    )
+    ctx.orchestrator_status = overrides.get(
+        "orchestrator_status",
+        {
+            "running": True,
+            "stats": {"events_processed": 100, "incidents_created": 2, "indicators_found": 5},
+        },
+    )
     ctx.self_audit_summary = overrides.get("self_audit_summary", "")
     ctx.learning_summary = overrides.get("learning_summary", {})
     ctx.policy = overrides.get("policy", {})
@@ -60,12 +74,14 @@ def _make_ctx(**overrides):
 # Class 1: Brain handlers that only need EnvironmentContext
 # =========================================================================
 
+
 class TestBrainHandlersContext:
     """Test brain handlers that only require an EnvironmentContext."""
 
     @pytest.fixture(autouse=True)
     def _brain(self):
         from cloud.angelclaw.brain import brain
+
         self.brain = brain
 
     # -- _handle_alerts ---------------------------------------------------
@@ -227,20 +243,24 @@ class TestBrainHandlersContext:
     # -- _handle_backup_help ----------------------------------------------
 
     def test_backup_linux(self):
-        ctx = _make_ctx(host={
-            "hostname": "prod-1",
-            "os": "Linux 6.x",
-            "angelclaw_version": "2.2.1",
-        })
+        ctx = _make_ctx(
+            host={
+                "hostname": "prod-1",
+                "os": "Linux 6.x",
+                "angelclaw_version": "2.2.1",
+            }
+        )
         result = self.brain._handle_backup_help(ctx)
         assert "bash" in result["answer"]
 
     def test_backup_windows(self):
-        ctx = _make_ctx(host={
-            "hostname": "win-srv",
-            "os": "Windows 11",
-            "angelclaw_version": "2.2.1",
-        })
+        ctx = _make_ctx(
+            host={
+                "hostname": "win-srv",
+                "os": "Windows 11",
+                "angelclaw_version": "2.2.1",
+            }
+        )
         result = self.brain._handle_backup_help(ctx)
         assert "powershell" in result["answer"].lower() or "PowerShell" in result["answer"]
 
@@ -345,12 +365,14 @@ class TestBrainHandlersContext:
 # Class 2: Brain handlers needing mocked external services
 # =========================================================================
 
+
 class TestBrainHandlersMocked:
     """Test handlers that require mocked external services."""
 
     @pytest.fixture(autouse=True)
     def _brain(self):
         from cloud.angelclaw.brain import brain
+
         self.brain = brain
 
     # -- _handle_shield ---------------------------------------------------
@@ -410,12 +432,16 @@ class TestBrainHandlersMocked:
             "attack_stages": 6,
         }
 
-        ctx = _make_ctx(recent_events=[{
-            "category": "network",
-            "type": "http_post",
-            "details": {},
-            "severity": "medium",
-        }])
+        ctx = _make_ctx(
+            recent_events=[
+                {
+                    "category": "network",
+                    "type": "http_post",
+                    "details": {},
+                    "severity": "medium",
+                }
+            ]
+        )
         result = self.brain._handle_shield(MagicMock(), ctx)
 
         assert "HIGH" in result["answer"]
@@ -516,12 +542,14 @@ class TestBrainHandlersMocked:
 # Class 3: Brain handlers that create their own SessionLocal internally
 # =========================================================================
 
+
 class TestBrainHandlersDB:
     """Test handlers that create their own DB sessions internally."""
 
     @pytest.fixture(autouse=True)
     def _brain(self):
         from cloud.angelclaw.brain import brain
+
         self.brain = brain
 
     # -- _handle_incidents ------------------------------------------------
@@ -909,7 +937,7 @@ class TestBrainAsyncHandlers:
         result = await brain._handle_diagnostics(db, TENANT, ctx)
         assert "Deep System Diagnostics" in result["answer"]
         assert "100" in result["answer"]  # events_processed
-        assert "10" in result["answer"]   # legion total
+        assert "10" in result["answer"]  # legion total
 
     # --- _try_llm_enrich ---
 
@@ -1267,8 +1295,14 @@ class TestContextPromptFormat:
 class TestPatternDetectorsUncovered:
     """Test pattern detectors from cloud.guardian.detection.patterns."""
 
-    def _make_event(self, agent_id=None, command="", event_type="shell_exec",
-                    category="shell", severity="medium"):
+    def _make_event(
+        self,
+        agent_id=None,
+        command="",
+        event_type="shell_exec",
+        category="shell",
+        severity="medium",
+    ):
         """Create a mock event duck-typed to match EventRow interface."""
         ev = MagicMock()
         ev.id = _uid()
@@ -1322,8 +1356,7 @@ class TestPatternDetectorsUncovered:
         detector = PatternDetector()
         agent_id = _uid()
         events = [
-            self._make_event(agent_id=agent_id, command=f"aws s3 ls bucket-{i}")
-            for i in range(10)
+            self._make_event(agent_id=agent_id, command=f"aws s3 ls bucket-{i}") for i in range(10)
         ]
         indicators = detector._check_cloud_api_abuse(events, 300)
         assert len(indicators) >= 1
@@ -1507,7 +1540,5 @@ class TestGuardianRoutesUncovered:
         assert "Tightened default rules c11" in descs
 
     def test_recent_changes_bad_timestamp(self, client):
-        resp = client.get(
-            "/api/v1/guardian/changes?since=invalid-timestamp&tenantId=dev-tenant"
-        )
+        resp = client.get("/api/v1/guardian/changes?since=invalid-timestamp&tenantId=dev-tenant")
         assert resp.status_code == 400

@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
-
 from cloud.services.exposure_validation import ExposureValidationService
 from cloud.services.identity_governance import IdentityGovernanceService
 from cloud.services.secops_workflow import SecOpsWorkflowService
-
 
 TENANT = "test-tenant"
 
@@ -15,6 +12,7 @@ TENANT = "test-tenant"
 # ===========================================================================
 # ExposureValidationService
 # ===========================================================================
+
 
 class TestExposureValidationService:
     """ExposureValidationService tests."""
@@ -124,17 +122,21 @@ class TestExposureValidationService:
 # IdentityGovernanceService
 # ===========================================================================
 
+
 class TestIdentityGovernanceService:
     """IdentityGovernanceService tests."""
 
     def test_onboard_identity(self):
         svc = IdentityGovernanceService()
-        result = svc.onboard_identity(TENANT, {
-            "username": "jdoe",
-            "email": "jdoe@example.com",
-            "department": "engineering",
-            "roles": ["developer", "viewer"],
-        })
+        result = svc.onboard_identity(
+            TENANT,
+            {
+                "username": "jdoe",
+                "email": "jdoe@example.com",
+                "department": "engineering",
+                "roles": ["developer", "viewer"],
+            },
+        )
         assert "id" in result
         assert result["tenant_id"] == TENANT
         assert result["lifecycle_state"] == "active"
@@ -153,10 +155,13 @@ class TestIdentityGovernanceService:
 
     def test_offboard_identity(self):
         svc = IdentityGovernanceService()
-        created = svc.onboard_identity(TENANT, {
-            "username": "departing",
-            "roles": ["admin", "developer"],
-        })
+        created = svc.onboard_identity(
+            TENANT,
+            {
+                "username": "departing",
+                "roles": ["admin", "developer"],
+            },
+        )
         result = svc.offboard_identity(TENANT, created["id"])
         assert result["lifecycle_state"] == "deprovisioned"
         assert result["roles"] == []
@@ -182,7 +187,9 @@ class TestIdentityGovernanceService:
 
     def test_mine_roles(self):
         svc = IdentityGovernanceService()
-        svc.onboard_identity(TENANT, {"username": "u1", "roles": ["admin", "dev", "viewer", "deployer"]})
+        svc.onboard_identity(
+            TENANT, {"username": "u1", "roles": ["admin", "dev", "viewer", "deployer"]}
+        )
         svc.onboard_identity(TENANT, {"username": "u2", "roles": ["viewer"]})
         result = svc.mine_roles(TENANT)
         assert result["identities_analyzed"] >= 2
@@ -204,10 +211,13 @@ class TestIdentityGovernanceService:
 
     def test_check_sod_violations(self):
         svc = IdentityGovernanceService()
-        created = svc.onboard_identity(TENANT, {
-            "username": "risky",
-            "roles": ["admin", "auditor", "developer", "deployer"],
-        })
+        created = svc.onboard_identity(
+            TENANT,
+            {
+                "username": "risky",
+                "roles": ["admin", "auditor", "developer", "deployer"],
+            },
+        )
         result = svc.check_sod(TENANT, created["id"])
         assert result["compliant"] is False
         assert result["violation_count"] >= 2
@@ -247,6 +257,7 @@ class TestIdentityGovernanceService:
 # ===========================================================================
 # SecOpsWorkflowService
 # ===========================================================================
+
 
 class TestSecOpsWorkflowService:
     """SecOpsWorkflowService tests."""
@@ -368,6 +379,7 @@ class TestSecOpsWorkflowService:
 # API Route Integration Tests
 # ===========================================================================
 
+
 class TestTitanGridRoutes:
     """Titan Grid API route integration tests."""
 
@@ -403,7 +415,9 @@ class TestTitanGridRoutes:
         assert resp.json()["lifecycle_state"] == "active"
 
     def test_identity_offboard(self, client):
-        create = client.post("/api/v1/titan-grid/identity/onboard", json={"username": "offboard-api"})
+        create = client.post(
+            "/api/v1/titan-grid/identity/onboard", json={"username": "offboard-api"}
+        )
         identity_id = create.json()["id"]
         resp = client.post(f"/api/v1/titan-grid/identity/offboard/{identity_id}")
         assert resp.status_code == 200
@@ -419,10 +433,13 @@ class TestTitanGridRoutes:
         assert resp.status_code == 200
 
     def test_identity_sod(self, client):
-        create = client.post("/api/v1/titan-grid/identity/onboard", json={
-            "username": "sod-test",
-            "roles": ["admin", "auditor"],
-        })
+        create = client.post(
+            "/api/v1/titan-grid/identity/onboard",
+            json={
+                "username": "sod-test",
+                "roles": ["admin", "auditor"],
+            },
+        )
         identity_id = create.json()["id"]
         resp = client.get(f"/api/v1/titan-grid/identity/sod/{identity_id}")
         assert resp.status_code == 200

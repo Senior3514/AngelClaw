@@ -54,7 +54,9 @@ class SLATracker:
             "severity": self.severity,
             "sla_config_id": self.sla_config_id,
             "created_at": self.created_at.isoformat(),
-            "first_response_at": self.first_response_at.isoformat() if self.first_response_at else None,
+            "first_response_at": self.first_response_at.isoformat()
+            if self.first_response_at
+            else None,
             "resolved_at": self.resolved_at.isoformat() if self.resolved_at else None,
             "response_breached": self.response_breached,
             "resolution_breached": self.resolution_breached,
@@ -144,7 +146,9 @@ class SLATrackingService:
             if tracker.resolved_at:
                 continue  # Already resolved
 
-            config = self._configs.get(tracker.sla_config_id or "") if tracker.sla_config_id else None
+            config = (
+                self._configs.get(tracker.sla_config_id or "") if tracker.sla_config_id else None
+            )
             if not config:
                 continue
 
@@ -154,26 +158,32 @@ class SLATrackingService:
                 if now > deadline and not tracker.response_breached:
                     tracker.response_breached = True
                     config.breaches_total += 1
-                    breaches.append({
-                        "incident_id": tracker.incident_id,
-                        "breach_type": "response",
-                        "severity": tracker.severity,
-                        "deadline": deadline.isoformat(),
-                        "overdue_minutes": int((now - deadline).total_seconds() / 60),
-                    })
+                    breaches.append(
+                        {
+                            "incident_id": tracker.incident_id,
+                            "breach_type": "response",
+                            "severity": tracker.severity,
+                            "deadline": deadline.isoformat(),
+                            "overdue_minutes": int((now - deadline).total_seconds() / 60),
+                        }
+                    )
 
             # Check resolution SLA
-            resolution_deadline = tracker.created_at + timedelta(minutes=config.resolution_time_minutes)
+            resolution_deadline = tracker.created_at + timedelta(
+                minutes=config.resolution_time_minutes
+            )
             if now > resolution_deadline and not tracker.resolution_breached:
                 tracker.resolution_breached = True
                 config.breaches_total += 1
-                breaches.append({
-                    "incident_id": tracker.incident_id,
-                    "breach_type": "resolution",
-                    "severity": tracker.severity,
-                    "deadline": resolution_deadline.isoformat(),
-                    "overdue_minutes": int((now - resolution_deadline).total_seconds() / 60),
-                })
+                breaches.append(
+                    {
+                        "incident_id": tracker.incident_id,
+                        "breach_type": "resolution",
+                        "severity": tracker.severity,
+                        "deadline": resolution_deadline.isoformat(),
+                        "overdue_minutes": int((now - resolution_deadline).total_seconds() / 60),
+                    }
+                )
 
         if breaches:
             logger.warning("[SLA] %d breach(es) detected for %s", len(breaches), tenant_id)
@@ -188,7 +198,9 @@ class SLATrackingService:
             "total_incidents_tracked": total,
             "response_sla_compliance": round(response_ok / max(total, 1) * 100, 1),
             "resolution_sla_compliance": round(resolution_ok / max(total, 1) * 100, 1),
-            "total_breaches": sum(1 for t in trackers if t.response_breached or t.resolution_breached),
+            "total_breaches": sum(
+                1 for t in trackers if t.response_breached or t.resolution_breached
+            ),
             "active_trackers": sum(1 for t in trackers if not t.resolved_at),
         }
 

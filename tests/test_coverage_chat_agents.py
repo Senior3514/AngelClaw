@@ -456,9 +456,7 @@ class TestHandleExplain:
         db = _fresh_db()
         try:
             fake_id = "12345678-1234-1234-1234-123456789abc"
-            answer, actions, refs = _handle_explain(
-                db, f"explain event {fake_id}"
-            )
+            answer, actions, refs = _handle_explain(db, f"explain event {fake_id}")
             assert "couldn't find event" in answer.lower()
         finally:
             db.close()
@@ -480,9 +478,7 @@ class TestHandleExplain:
                 )
             )
             db.commit()
-            answer, actions, refs = _handle_explain(
-                db, f"explain event {eid}"
-            )
+            answer, actions, refs = _handle_explain(db, f"explain event {eid}")
             assert eid in answer
             assert "Category" in answer
             assert "Severity" in answer
@@ -681,9 +677,7 @@ class TestDispatchIntent:
     def test_routes_explain(self):
         db = _fresh_db()
         try:
-            ans, _, _ = _dispatch_intent(
-                db, "explain", TENANT, "explain something"
-            )
+            ans, _, _ = _dispatch_intent(db, "explain", TENANT, "explain something")
             assert "event ID" in ans
         finally:
             db.close()
@@ -758,9 +752,7 @@ class TestTryLlmEnrichment:
             False,
             create=True,
         ):
-            result = _run_async(
-                _try_llm_enrichment("hello", "context", "general")
-            )
+            result = _run_async(_try_llm_enrichment("hello", "context", "general"))
         assert result is None
 
     def test_import_error_returns_none(self):
@@ -768,9 +760,7 @@ class TestTryLlmEnrichment:
             "sys.modules",
             {"cloud.llm_proxy.config": None},
         ):
-            result = _run_async(
-                _try_llm_enrichment("hello", "ctx", "general")
-            )
+            result = _run_async(_try_llm_enrichment("hello", "ctx", "general"))
         assert result is None
 
 
@@ -842,9 +832,7 @@ class TestProposePolicyTightening:
     def test_no_agents_for_group(self):
         db = _fresh_db()
         try:
-            result = propose_policy_tightening(
-                db, "nonexistent-group", lookback_hours=24
-            )
+            result = propose_policy_tightening(db, "nonexistent-group", lookback_hours=24)
             assert "No agents found" in result.analysis_summary
             assert result.proposed_rules == []
         finally:
@@ -865,9 +853,7 @@ class TestProposePolicyTightening:
                 )
             )
             db.commit()
-            result = propose_policy_tightening(
-                db, "grp1", lookback_hours=24
-            )
+            result = propose_policy_tightening(db, "grp1", lookback_hours=24)
             assert "No high-severity events" in result.analysis_summary
         finally:
             db.close()
@@ -899,9 +885,7 @@ class TestProposePolicyTightening:
                     )
                 )
             db.commit()
-            result = propose_policy_tightening(
-                db, "grp2", lookback_hours=24
-            )
+            result = propose_policy_tightening(db, "grp2", lookback_hours=24)
             assert len(result.proposed_rules) >= 1
             rule = result.proposed_rules[0]
             assert "shell" in rule.description
@@ -937,9 +921,7 @@ class TestProposePolicyTightening:
                     )
                 )
             db.commit()
-            result = propose_policy_tightening(
-                db, "grp3", lookback_hours=24
-            )
+            result = propose_policy_tightening(db, "grp3", lookback_hours=24)
             assert len(result.proposed_rules) >= 1
             rule = result.proposed_rules[0]
             assert rule.action == "block"
@@ -1043,21 +1025,15 @@ class TestGenerateRecommendations:
         assert any("CRITICAL" in r for r in recs)
 
     def test_prompt_injection(self):
-        recs = _generate_recommendations(
-            Counter(prompt_injection=1), Counter()
-        )
+        recs = _generate_recommendations(Counter(prompt_injection=1), Counter())
         assert any("Prompt injection" in r for r in recs)
 
     def test_data_exfiltration(self):
-        recs = _generate_recommendations(
-            Counter(data_exfiltration=1), Counter()
-        )
+        recs = _generate_recommendations(Counter(data_exfiltration=1), Counter())
         assert any("exfiltration" in r.lower() for r in recs)
 
     def test_malicious_tool_use(self):
-        recs = _generate_recommendations(
-            Counter(malicious_tool_use=1), Counter()
-        )
+        recs = _generate_recommendations(Counter(malicious_tool_use=1), Counter())
         assert any("tool" in r.lower() for r in recs)
 
     def test_high_severity_many(self):
@@ -1185,9 +1161,7 @@ class TestWardenAgent:
                 {
                     "id": _uid(),
                     "agent_id": agent_id,
-                    "timestamp": (
-                        NOW + timedelta(seconds=i)
-                    ).isoformat(),
+                    "timestamp": (NOW + timedelta(seconds=i)).isoformat(),
                     "type": "secret_access",
                     "category": "secrets",
                     "severity": "critical",
@@ -1224,65 +1198,75 @@ class TestDeserializeEvents:
 
     def test_iso_timestamp(self):
         ts = "2025-06-15T12:00:00+00:00"
-        events = _mock_deserialize([
-            {
-                "id": "e1",
-                "agent_id": "a1",
-                "timestamp": ts,
-                "type": "test",
-                "severity": "low",
-            }
-        ])
+        events = _mock_deserialize(
+            [
+                {
+                    "id": "e1",
+                    "agent_id": "a1",
+                    "timestamp": ts,
+                    "type": "test",
+                    "severity": "low",
+                }
+            ]
+        )
         assert len(events) == 1
         assert events[0].id == "e1"
         assert isinstance(events[0].timestamp, datetime)
 
     def test_datetime_object(self):
-        events = _mock_deserialize([
-            {
-                "id": "e2",
-                "agent_id": "a2",
-                "timestamp": NOW,
-                "type": "test",
-                "severity": "low",
-            }
-        ])
+        events = _mock_deserialize(
+            [
+                {
+                    "id": "e2",
+                    "agent_id": "a2",
+                    "timestamp": NOW,
+                    "type": "test",
+                    "severity": "low",
+                }
+            ]
+        )
         assert events[0].timestamp == NOW
 
     def test_no_timestamp(self):
-        events = _mock_deserialize([
-            {
-                "id": "e3",
-                "agent_id": "a3",
-                "type": "test",
-                "severity": "low",
-            }
-        ])
+        events = _mock_deserialize(
+            [
+                {
+                    "id": "e3",
+                    "agent_id": "a3",
+                    "type": "test",
+                    "severity": "low",
+                }
+            ]
+        )
         assert isinstance(events[0].timestamp, datetime)
 
     def test_invalid_timestamp_string(self):
-        events = _mock_deserialize([
-            {
-                "id": "e4",
-                "agent_id": "a4",
-                "timestamp": "not-a-date",
-                "type": "test",
-                "severity": "low",
-            }
-        ])
+        events = _mock_deserialize(
+            [
+                {
+                    "id": "e4",
+                    "agent_id": "a4",
+                    "timestamp": "not-a-date",
+                    "type": "test",
+                    "severity": "low",
+                }
+            ]
+        )
         # Falls back to now()
         assert isinstance(events[0].timestamp, datetime)
 
     def test_numeric_timestamp(self):
-        events = _mock_deserialize([
-            {
-                "id": "e5",
-                "agent_id": "a5",
-                "timestamp": 1234567890,
-                "type": "test",
-                "severity": "low",
-            }
-        ])
+        events = _mock_deserialize(
+            [
+                {
+                    "id": "e5",
+                    "agent_id": "a5",
+                    "timestamp": 1234567890,
+                    "type": "test",
+                    "severity": "low",
+                }
+            ]
+        )
         # Numeric falls to else branch -> now()
         assert isinstance(events[0].timestamp, datetime)
 

@@ -16,7 +16,8 @@ def role_service():
 class TestCustomRoleService:
     def test_create_role(self, db, role_service):
         result = role_service.create_role(
-            db, "dev-tenant",
+            db,
+            "dev-tenant",
             name="security-analyst",
             description="Can view events and alerts",
             permissions=["read_events", "read_alerts"],
@@ -26,7 +27,9 @@ class TestCustomRoleService:
 
     def test_list_roles(self, db, role_service):
         role_service.create_role(
-            db, "dev-tenant", name="test-role",
+            db,
+            "dev-tenant",
+            name="test-role",
             permissions=["read_events"],
         )
         roles = role_service.list_roles(db, "dev-tenant")
@@ -34,7 +37,9 @@ class TestCustomRoleService:
 
     def test_get_role(self, db, role_service):
         role_service.create_role(
-            db, "dev-tenant", name="get-role",
+            db,
+            "dev-tenant",
+            name="get-role",
             permissions=["read_events"],
         )
         role = role_service.get_role(db, "dev-tenant", "get-role")
@@ -42,19 +47,25 @@ class TestCustomRoleService:
 
     def test_update_role(self, db, role_service):
         created = role_service.create_role(
-            db, "dev-tenant", name="update-role",
+            db,
+            "dev-tenant",
+            name="update-role",
             permissions=["read_events"],
         )
         role_id = created["id"]
         result = role_service.update_role(
-            db, "dev-tenant", role_id,
+            db,
+            "dev-tenant",
+            role_id,
             permissions=["read_events", "read_alerts", "read_agents"],
         )
         assert result is not None
 
     def test_delete_role(self, db, role_service):
         created = role_service.create_role(
-            db, "dev-tenant", name="delete-role",
+            db,
+            "dev-tenant",
+            name="delete-role",
             permissions=["read_events"],
         )
         role_id = created["id"]
@@ -63,7 +74,9 @@ class TestCustomRoleService:
 
     def test_role_db_record(self, db, role_service):
         role_service.create_role(
-            db, "dev-tenant", name="db-role",
+            db,
+            "dev-tenant",
+            name="db-role",
             permissions=["read_events"],
         )
         record = db.query(CustomRoleRow).filter_by(name="db-role").first()
@@ -72,7 +85,9 @@ class TestCustomRoleService:
 
     def test_role_permissions_stored(self, db, role_service):
         created = role_service.create_role(
-            db, "dev-tenant", name="perm-role",
+            db,
+            "dev-tenant",
+            name="perm-role",
             permissions=["read_events", "read_alerts"],
         )
         role_id = created.get("id")

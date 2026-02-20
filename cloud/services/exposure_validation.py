@@ -21,7 +21,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 logger = logging.getLogger("angelclaw.exposure_validation")
 
@@ -69,14 +69,16 @@ class ExposureValidationService:
             "controls_failed": failed,
             "effectiveness_pct": round((passed / config["controls"]) * 100, 1),
             "exposure_score": round(failed / config["controls"] * 100, 1),
-            "gaps": [f"Control gap #{i+1}" for i in range(failed)],
+            "gaps": [f"Control gap #{i + 1}" for i in range(failed)],
             "status": "completed",
             "completed_at": datetime.now(timezone.utc).isoformat(),
         }
         self._store[tenant_id][run_id] = result
         return result
 
-    def test_control(self, tenant_id: str, control_id: str, attack_type: str = "generic") -> dict[str, Any]:
+    def test_control(
+        self, tenant_id: str, control_id: str, attack_type: str = "generic"
+    ) -> dict[str, Any]:
         """Test a specific security control."""
         if tenant_id not in self._store:
             self._store[tenant_id] = {}

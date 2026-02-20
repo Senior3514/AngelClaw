@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
-from cloud.services.disaster_recovery import DisasterRecoveryService
 from cloud.services.chaos_testing import ChaosTestingService
-
+from cloud.services.disaster_recovery import DisasterRecoveryService
 
 TENANT = "test-tenant"
 
@@ -49,6 +46,7 @@ class TestDisasterRecoveryService:
         assert result["service"] == "DisasterRecoveryService"
         assert result["version"] == "7.6.0"
 
+
 class TestChaosTestingService:
     """ChaosTestingService tests."""
 
@@ -86,4 +84,3 @@ class TestChaosTestingService:
         assert result["tenant_id"] == TENANT
         assert result["service"] == "ChaosTestingService"
         assert result["version"] == "7.6.0"
-

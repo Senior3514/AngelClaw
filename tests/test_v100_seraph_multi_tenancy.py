@@ -16,14 +16,13 @@ import uuid
 from datetime import datetime, timezone
 
 import pytest
-from fastapi.testclient import TestClient
+from sqlalchemy.exc import IntegrityError
 
 from cloud.angelclaw.brain import AngelClawBrain, detect_intent
 from cloud.auth.models import AuthUser, UserRole
 from cloud.auth.service import authenticate_local, create_jwt, verify_jwt
 from cloud.db.models import (
     AgentNodeRow,
-    Base,
     OrganizationRow,
     TenantRow,
 )
@@ -79,7 +78,7 @@ class TestOrganizationRowModel:
         db.commit()
         org2 = OrganizationRow(id="org-u2", name="Two", slug="unique-slug")
         db.add(org2)
-        with pytest.raises(Exception):
+        with pytest.raises(IntegrityError):
             db.commit()
         db.rollback()
         db.delete(org1)
@@ -202,26 +201,30 @@ class TestAgentNodeTenantFK:
     def test_filter_agents_by_tenant(self, db):
         tid = "tenant-filter-test"
         for i in range(3):
-            db.add(AgentNodeRow(
+            db.add(
+                AgentNodeRow(
+                    id=str(uuid.uuid4()),
+                    tenant_id=tid,
+                    type="endpoint",
+                    os="linux",
+                    hostname=f"filter-node-{i}",
+                    status="active",
+                    version="10.0.0",
+                    registered_at=datetime.now(timezone.utc),
+                )
+            )
+        db.add(
+            AgentNodeRow(
                 id=str(uuid.uuid4()),
-                tenant_id=tid,
+                tenant_id="other-tenant",
                 type="endpoint",
                 os="linux",
-                hostname=f"filter-node-{i}",
+                hostname="other-node",
                 status="active",
                 version="10.0.0",
                 registered_at=datetime.now(timezone.utc),
-            ))
-        db.add(AgentNodeRow(
-            id=str(uuid.uuid4()),
-            tenant_id="other-tenant",
-            type="endpoint",
-            os="linux",
-            hostname="other-node",
-            status="active",
-            version="10.0.0",
-            registered_at=datetime.now(timezone.utc),
-        ))
+            )
+        )
         db.commit()
         agents = db.query(AgentNodeRow).filter_by(tenant_id=tid).all()
         assert len(agents) == 3
@@ -242,14 +245,24 @@ class TestAdminOrgRoutes:
     """Admin organization management API endpoints."""
 
     def _admin_headers(self):
-        user = AuthUser(username="admin", role=UserRole.ADMIN, tenant_id="dev-tenant", organization_id="default-org")
+        user = AuthUser(
+            username="admin",
+            role=UserRole.ADMIN,
+            tenant_id="dev-tenant",
+            organization_id="default-org",
+        )
         token = create_jwt(user)
         return {"Authorization": f"Bearer {token}"}
 
     def test_create_organization(self, client):
         resp = client.post(
             "/api/v1/admin/orgs",
-            json={"name": "Route Corp", "slug": "route-corp", "contact_email": "a@b.com", "tier": "enterprise"},
+            json={
+                "name": "Route Corp",
+                "slug": "route-corp",
+                "contact_email": "a@b.com",
+                "tier": "enterprise",
+            },
             headers=self._admin_headers(),
         )
         assert resp.status_code == 200
@@ -263,7 +276,11 @@ class TestAdminOrgRoutes:
         # Create one first
         client.post(
             "/api/v1/admin/orgs",
-            json={"name": "List Corp", "slug": f"list-corp-{uuid.uuid4().hex[:6]}", "tier": "standard"},
+            json={
+                "name": "List Corp",
+                "slug": f"list-corp-{uuid.uuid4().hex[:6]}",
+                "tier": "standard",
+            },
             headers=self._admin_headers(),
         )
         resp = client.get("/api/v1/admin/orgs", headers=self._admin_headers())
@@ -380,39 +397,42 @@ class TestAdminOrgRoutes:
 class TestBrainIntentDetection:
     """Verify detect_intent correctly identifies 9 new autonomous intents."""
 
-    @pytest.mark.parametrize("prompt,expected_intent", [
-        ("auto scan all agents", "autonomous_scan"),
-        ("start continuous scan", "autonomous_scan"),
-        ("background scan all nodes", "autonomous_scan"),
-        ("full auto scan", "autonomous_scan"),
-        ("run playbook isolate-host", "execute_playbook"),
-        ("execute playbook ransomware-response", "execute_playbook"),
-        ("trigger playbook incident-01", "execute_playbook"),
-        ("contain threat on agent-07", "contain_threat"),
-        ("isolate threat immediately", "contain_threat"),
-        ("block threat 192.168.1.50", "contain_threat"),
-        ("neutralize threat now", "contain_threat"),
-        ("deploy policy strict-lockdown", "deploy_policy"),
-        ("push policy to all agents", "deploy_policy"),
-        ("enforce policy zero-trust", "deploy_policy"),
-        ("rotate secrets now", "rotate_secrets"),
-        ("rotate key for tenant", "rotate_secrets"),
-        ("refresh key rotation", "rotate_secrets"),
-        ("kill session user-abc", "kill_session"),
-        ("terminate session admin", "kill_session"),
-        ("revoke session token-xyz", "kill_session"),
-        ("force logout admin", "kill_session"),
-        ("lock agent agent-07", "lock_agent"),
-        ("freeze agent compromised-node", "lock_agent"),
-        ("disable agent rogue-01", "lock_agent"),
-        ("unlock agent agent-07", "unlock_agent"),
-        ("unfreeze agent node-03", "unlock_agent"),
-        ("enable agent node-03", "unlock_agent"),
-        ("resume agent operations", "unlock_agent"),
-        ("escalate to critical", "escalate"),
-        ("raise severity to high", "escalate"),
-        ("code red situation", "escalate"),
-    ])
+    @pytest.mark.parametrize(
+        "prompt,expected_intent",
+        [
+            ("auto scan all agents", "autonomous_scan"),
+            ("start continuous scan", "autonomous_scan"),
+            ("background scan all nodes", "autonomous_scan"),
+            ("full auto scan", "autonomous_scan"),
+            ("run playbook isolate-host", "execute_playbook"),
+            ("execute playbook ransomware-response", "execute_playbook"),
+            ("trigger playbook incident-01", "execute_playbook"),
+            ("contain threat on agent-07", "contain_threat"),
+            ("isolate threat immediately", "contain_threat"),
+            ("block threat 192.168.1.50", "contain_threat"),
+            ("neutralize threat now", "contain_threat"),
+            ("deploy policy strict-lockdown", "deploy_policy"),
+            ("push policy to all agents", "deploy_policy"),
+            ("enforce policy zero-trust", "deploy_policy"),
+            ("rotate secrets now", "rotate_secrets"),
+            ("rotate key for tenant", "rotate_secrets"),
+            ("refresh key rotation", "rotate_secrets"),
+            ("kill session user-abc", "kill_session"),
+            ("terminate session admin", "kill_session"),
+            ("revoke session token-xyz", "kill_session"),
+            ("force logout admin", "kill_session"),
+            ("lock agent agent-07", "lock_agent"),
+            ("freeze agent compromised-node", "lock_agent"),
+            ("disable agent rogue-01", "lock_agent"),
+            ("unlock agent agent-07", "unlock_agent"),
+            ("unfreeze agent node-03", "unlock_agent"),
+            ("enable agent node-03", "unlock_agent"),
+            ("resume agent operations", "unlock_agent"),
+            ("escalate to critical", "escalate"),
+            ("raise severity to high", "escalate"),
+            ("code red situation", "escalate"),
+        ],
+    )
     def test_intent_detection(self, prompt, expected_intent):
         assert detect_intent(prompt) == expected_intent
 
@@ -450,7 +470,11 @@ class TestBrainHandlers:
         brain = AngelClawBrain()
         result = await brain.chat(db, TENANT, "start continuous scan")
         assert "answer" in result
-        assert "1" in result["answer"] or "scanning" in result["answer"].lower() or "Scanning" in result["answer"]
+        assert (
+            "1" in result["answer"]
+            or "scanning" in result["answer"].lower()
+            or "Scanning" in result["answer"]
+        )
         db.delete(agent)
         db.commit()
 
@@ -496,14 +520,22 @@ class TestBrainHandlers:
         result = await brain.chat(db, TENANT, "deploy policy strict-lockdown")
         assert "answer" in result
         # May succeed (if service exists) or show unavailable message — both are valid
-        assert "strict-lockdown" in result["answer"] or "deploy" in result["answer"].lower() or "polic" in result["answer"].lower()
+        assert (
+            "strict-lockdown" in result["answer"]
+            or "deploy" in result["answer"].lower()
+            or "polic" in result["answer"].lower()
+        )
 
     @pytest.mark.asyncio
     async def test_rotate_secrets(self, db):
         brain = AngelClawBrain()
         result = await brain.chat(db, TENANT, "rotate secrets now")
         assert "answer" in result
-        assert "Rotation" in result["answer"] or "rotation" in result["answer"].lower() or "rotated" in result["answer"].lower()
+        assert (
+            "Rotation" in result["answer"]
+            or "rotation" in result["answer"].lower()
+            or "rotated" in result["answer"].lower()
+        )
 
     @pytest.mark.asyncio
     async def test_kill_session_generic(self, db):
@@ -625,7 +657,9 @@ class TestAuthOrganizationId:
     """Verify organization_id flows through auth models, JWT, and local auth."""
 
     def test_auth_user_has_org_id(self):
-        user = AuthUser(username="test", role=UserRole.ADMIN, tenant_id="t1", organization_id="org-1")
+        user = AuthUser(
+            username="test", role=UserRole.ADMIN, tenant_id="t1", organization_id="org-1"
+        )
         assert user.organization_id == "org-1"
 
     def test_auth_user_default_org_id(self):
@@ -633,7 +667,9 @@ class TestAuthOrganizationId:
         assert user.organization_id == "default-org"
 
     def test_jwt_roundtrip_includes_org_id(self):
-        user = AuthUser(username="jwt-user", role=UserRole.SECOPS, tenant_id="t2", organization_id="org-jwt")
+        user = AuthUser(
+            username="jwt-user", role=UserRole.SECOPS, tenant_id="t2", organization_id="org-jwt"
+        )
         token = create_jwt(user)
         decoded = verify_jwt(token)
         assert decoded is not None
@@ -648,6 +684,7 @@ class TestAuthOrganizationId:
 
     def test_local_auth_admin_has_org_id(self):
         import os
+
         if not os.environ.get("ANGELCLAW_ADMIN_PASSWORD"):
             pytest.skip("Admin password not configured")
         user = authenticate_local("admin", os.environ["ANGELCLAW_ADMIN_PASSWORD"])
@@ -670,7 +707,9 @@ class TestThreeLayerHierarchy:
 
     def test_full_hierarchy_in_db(self, db):
         # Create org
-        org = OrganizationRow(id="org-full", name="Full Org", slug=f"full-org-{uuid.uuid4().hex[:6]}")
+        org = OrganizationRow(
+            id="org-full", name="Full Org", slug=f"full-org-{uuid.uuid4().hex[:6]}"
+        )
         db.add(org)
         db.commit()
 
@@ -682,18 +721,33 @@ class TestThreeLayerHierarchy:
 
         # Create agents under tenants
         a1 = AgentNodeRow(
-            id=str(uuid.uuid4()), tenant_id="ten-full-1", type="endpoint", os="linux",
-            hostname="hier-node-1", status="active", version="10.0.0",
+            id=str(uuid.uuid4()),
+            tenant_id="ten-full-1",
+            type="endpoint",
+            os="linux",
+            hostname="hier-node-1",
+            status="active",
+            version="10.0.0",
             registered_at=datetime.now(timezone.utc),
         )
         a2 = AgentNodeRow(
-            id=str(uuid.uuid4()), tenant_id="ten-full-1", type="server", os="windows",
-            hostname="hier-node-2", status="active", version="10.0.0",
+            id=str(uuid.uuid4()),
+            tenant_id="ten-full-1",
+            type="server",
+            os="windows",
+            hostname="hier-node-2",
+            status="active",
+            version="10.0.0",
             registered_at=datetime.now(timezone.utc),
         )
         a3 = AgentNodeRow(
-            id=str(uuid.uuid4()), tenant_id="ten-full-2", type="endpoint", os="macos",
-            hostname="hier-node-3", status="active", version="10.0.0",
+            id=str(uuid.uuid4()),
+            tenant_id="ten-full-2",
+            type="endpoint",
+            os="macos",
+            hostname="hier-node-3",
+            status="active",
+            version="10.0.0",
             registered_at=datetime.now(timezone.utc),
         )
         db.add_all([a1, a2, a3])
@@ -710,8 +764,7 @@ class TestThreeLayerHierarchy:
         assert len(t2_agents) == 1
 
         total_agents = sum(
-            db.query(AgentNodeRow).filter_by(tenant_id=t.id).count()
-            for t in tenants
+            db.query(AgentNodeRow).filter_by(tenant_id=t.id).count() for t in tenants
         )
         assert total_agents == 3
 
@@ -725,7 +778,9 @@ class TestThreeLayerHierarchy:
 
     def test_hierarchy_api_end_to_end(self, client):
         """Full end-to-end: create org → create tenant → verify hierarchy."""
-        headers = {"Authorization": f"Bearer {create_jwt(AuthUser(username='admin', role=UserRole.ADMIN))}"}
+        headers = {
+            "Authorization": f"Bearer {create_jwt(AuthUser(username='admin', role=UserRole.ADMIN))}"
+        }
         slug = f"e2e-{uuid.uuid4().hex[:6]}"
 
         # Create org
@@ -741,7 +796,10 @@ class TestThreeLayerHierarchy:
         for i in range(2):
             tenant_resp = client.post(
                 f"/api/v1/admin/orgs/{org_id}/tenants",
-                json={"tenant_id": f"e2e-ten-{i}-{uuid.uuid4().hex[:4]}", "name": f"E2E Tenant {i}"},
+                json={
+                    "tenant_id": f"e2e-ten-{i}-{uuid.uuid4().hex[:4]}",
+                    "name": f"E2E Tenant {i}",
+                },
                 headers=headers,
             )
             assert tenant_resp.status_code == 200
@@ -775,12 +833,16 @@ class TestEdgeCases:
         assert "cannot" in result["answer"].lower() or "will not" in result["answer"].lower()
 
     def test_org_create_missing_name(self, client):
-        headers = {"Authorization": f"Bearer {create_jwt(AuthUser(username='admin', role=UserRole.ADMIN))}"}
+        headers = {
+            "Authorization": f"Bearer {create_jwt(AuthUser(username='admin', role=UserRole.ADMIN))}"
+        }
         resp = client.post("/api/v1/admin/orgs", json={"slug": "no-name"}, headers=headers)
         assert resp.status_code == 422  # Validation error
 
     def test_org_create_missing_slug(self, client):
-        headers = {"Authorization": f"Bearer {create_jwt(AuthUser(username='admin', role=UserRole.ADMIN))}"}
+        headers = {
+            "Authorization": f"Bearer {create_jwt(AuthUser(username='admin', role=UserRole.ADMIN))}"
+        }
         resp = client.post("/api/v1/admin/orgs", json={"name": "No Slug"}, headers=headers)
         assert resp.status_code == 422  # Validation error
 

@@ -6,9 +6,8 @@ import pytest
 
 from cloud.services.agi_defense import AGIDefenseService
 from cloud.services.autonomous_response import AutonomousResponseService
-from cloud.services.threat_federation import ThreatFederationService
 from cloud.services.soc_autopilot import SOCAutopilotService
-
+from cloud.services.threat_federation import ThreatFederationService
 
 TENANT = "test-tenant"
 
@@ -16,6 +15,7 @@ TENANT = "test-tenant"
 # ---------------------------------------------------------------------------
 # Helper factories
 # ---------------------------------------------------------------------------
+
 
 def _make_events(n: int = 5, category: str = "malware", severity: str = "high") -> list[dict]:
     """Return a list of n fake threat events."""
@@ -38,8 +38,12 @@ def _analyze_and_generate(svc: AGIDefenseService, tenant: str = TENANT, events=N
     return analysis, rule
 
 
-def _trigger_response(svc: AutonomousResponseService, tenant: str = TENANT,
-                      incident_id: str = "INC-001", response_type: str = "full_auto"):
+def _trigger_response(
+    svc: AutonomousResponseService,
+    tenant: str = TENANT,
+    incident_id: str = "INC-001",
+    response_type: str = "full_auto",
+):
     """Shortcut: trigger a response and return its dict."""
     return svc.trigger_response(tenant, incident_id, response_type)
 
@@ -47,6 +51,7 @@ def _trigger_response(svc: AutonomousResponseService, tenant: str = TENANT,
 # ===========================================================================
 # AGIDefenseService
 # ===========================================================================
+
 
 class TestAGIDefenseAnalyze:
     """Threat pattern analysis tests."""
@@ -218,7 +223,7 @@ class TestAGIDefenseValidation:
     def test_confidence_updated_after_validation(self):
         svc = AGIDefenseService()
         _, rule = _analyze_and_generate(svc)
-        original_confidence = rule["confidence"]
+        _ = rule["confidence"]
         validated = svc.validate_rule(rule["id"])
         # Confidence is recalculated from F1 score
         assert validated["confidence"] == round(
@@ -230,7 +235,10 @@ class TestAGIDefenseDeployKill:
     """Auto-deploy and kill switch tests."""
 
     def _deploy_ready_rule(self, svc: AGIDefenseService):
-        """Create, validate with enough events to exceed auto-deploy threshold, and return a deployable rule."""
+        """Create, validate with enough events to exceed auto-deploy threshold.
+
+        Return a deployable rule.
+        """
         _, rule = _analyze_and_generate(svc)
         # Need enough test events so F1 score * 100 >= 85.0
         test_events = [{"type": "test"} for _ in range(20)]
@@ -344,6 +352,7 @@ class TestAGIDefenseRetrieval:
 # AutonomousResponseService
 # ===========================================================================
 
+
 class TestAutonomousResponseTrigger:
     """Response triggering tests."""
 
@@ -355,10 +364,17 @@ class TestAutonomousResponseTrigger:
         assert r["status"] == "initiated"
         assert r["response_type"] == "full_auto"
 
-    @pytest.mark.parametrize("rtype", [
-        "auto_contain", "auto_eradicate", "auto_recover",
-        "full_auto", "guided", "manual",
-    ])
+    @pytest.mark.parametrize(
+        "rtype",
+        [
+            "auto_contain",
+            "auto_eradicate",
+            "auto_recover",
+            "full_auto",
+            "guided",
+            "manual",
+        ],
+    )
     def test_all_valid_response_types(self, rtype):
         svc = AutonomousResponseService()
         r = svc.trigger_response(TENANT, "INC-X", rtype)
@@ -562,6 +578,7 @@ class TestAutonomousResponseStats:
 # ThreatFederationService
 # ===========================================================================
 
+
 class TestThreatFederationMembership:
     """Federation join and membership tests."""
 
@@ -580,10 +597,16 @@ class TestThreatFederationMembership:
         result = svc.join_federation(TENANT, "AcmeCorp Again")
         assert "error" in result
 
-    @pytest.mark.parametrize("level,score", [
-        ("public", 1), ("basic", 2), ("verified", 3),
-        ("trusted", 4), ("alliance", 5),
-    ])
+    @pytest.mark.parametrize(
+        "level,score",
+        [
+            ("public", 1),
+            ("basic", 2),
+            ("verified", 3),
+            ("trusted", 4),
+            ("alliance", 5),
+        ],
+    )
     def test_all_trust_levels(self, level, score):
         svc = ThreatFederationService()
         member = svc.join_federation(TENANT, "Org", trust_level=level)
@@ -738,7 +761,7 @@ class TestThreatFederationConsumption:
     def test_consume_trust_filter(self):
         svc = ThreatFederationService()
         svc.join_federation("org-a", "OrgA", trust_level="trusted")  # score 4
-        svc.join_federation("org-b", "OrgB", trust_level="public")   # score 1
+        svc.join_federation("org-b", "OrgB", trust_level="public")  # score 1
         svc.share_intelligence("org-a", "ip", "10.0.0.1")
         # Indicator min_trust_required = 4 (org-a's trust score)
         # org-b trust_score = 1, so cannot access trust-4 indicators
@@ -810,6 +833,7 @@ class TestThreatFederationStats:
 # SOCAutopilotService
 # ===========================================================================
 
+
 class TestSOCAutopilotTriage:
     """Alert triage tests."""
 
@@ -821,13 +845,16 @@ class TestSOCAutopilotTriage:
         assert result["auto_triaged"] is True
         assert result["triage_level"] == "p3_medium"  # default severity
 
-    @pytest.mark.parametrize("severity,expected_level", [
-        ("critical", "p1_critical"),
-        ("high", "p2_high"),
-        ("medium", "p3_medium"),
-        ("low", "p4_low"),
-        ("info", "p5_info"),
-    ])
+    @pytest.mark.parametrize(
+        "severity,expected_level",
+        [
+            ("critical", "p1_critical"),
+            ("high", "p2_high"),
+            ("medium", "p3_medium"),
+            ("low", "p4_low"),
+            ("info", "p5_info"),
+        ],
+    )
     def test_severity_mapping(self, severity, expected_level):
         svc = SOCAutopilotService()
         result = svc.triage_alert(TENANT, "A-1", {"severity": severity})
@@ -934,7 +961,7 @@ class TestSOCAutopilotInvestigation:
     def test_create_investigation_links_alerts(self):
         svc = SOCAutopilotService()
         svc.triage_alert(TENANT, "A-1")
-        inv = svc.create_investigation(TENANT, ["A-1"])
+        svc.create_investigation(TENANT, ["A-1"])
         # The triaged alert should be linked
         history = svc.get_stats(TENANT)
         # Investigation count should be 1

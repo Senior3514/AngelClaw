@@ -272,11 +272,7 @@ def rollback_to_snapshot(
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
-    rule_count = (
-        len(new_policy.rules_json)
-        if isinstance(new_policy.rules_json, list)
-        else 0
-    )
+    rule_count = len(new_policy.rules_json) if isinstance(new_policy.rules_json, list) else 0
 
     return RollbackResponse(
         policy_set_id=new_policy.id,

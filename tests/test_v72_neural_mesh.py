@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
-from cloud.services.traffic_analysis import TrafficAnalysisService
 from cloud.services.dns_security import DNSSecurityService
-
+from cloud.services.traffic_analysis import TrafficAnalysisService
 
 TENANT = "test-tenant"
 
@@ -42,6 +39,7 @@ class TestTrafficAnalysisService:
         assert result["service"] == "TrafficAnalysisService"
         assert result["version"] == "7.2.0"
 
+
 class TestDNSSecurityService:
     """DNSSecurityService tests."""
 
@@ -72,4 +70,3 @@ class TestDNSSecurityService:
         assert result["tenant_id"] == TENANT
         assert result["service"] == "DNSSecurityService"
         assert result["version"] == "7.2.0"
-

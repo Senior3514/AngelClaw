@@ -179,9 +179,7 @@ class RemediationEngine:
             return None
         return self._row_to_dict(row)
 
-    def update_workflow(
-        self, db: Any, workflow_id: str, **kwargs: Any
-    ) -> dict[str, Any] | None:
+    def update_workflow(self, db: Any, workflow_id: str, **kwargs: Any) -> dict[str, Any] | None:
         """Update mutable fields on an existing workflow.
 
         Accepted keyword arguments: name, description, trigger_conditions,
@@ -199,8 +197,12 @@ class RemediationEngine:
             return None
 
         allowed = {
-            "name", "description", "trigger_conditions",
-            "steps", "rollback_steps", "enabled",
+            "name",
+            "description",
+            "trigger_conditions",
+            "steps",
+            "rollback_steps",
+            "enabled",
         }
         for key, value in kwargs.items():
             if key in allowed and value is not None:
@@ -295,33 +297,39 @@ class RemediationEngine:
         for i, step in enumerate(steps):
             # Evaluate condition (CONDITIONAL type)
             if step.condition and not self._evaluate_condition(step.condition, ctx):
-                execution.results.append({
-                    "step_id": step.step_id,
-                    "step_type": step.step_type,
-                    "status": "skipped",
-                    "reason": "condition not met",
-                })
+                execution.results.append(
+                    {
+                        "step_id": step.step_id,
+                        "step_type": step.step_type,
+                        "status": "skipped",
+                        "reason": "condition not met",
+                    }
+                )
                 execution.steps_completed += 1
                 continue
 
             try:
                 result = await self._execute_step(step, ctx)
-                execution.results.append({
-                    "step_id": step.step_id,
-                    "step_type": step.step_type,
-                    "status": "success",
-                    "result": result,
-                })
+                execution.results.append(
+                    {
+                        "step_id": step.step_id,
+                        "step_type": step.step_type,
+                        "status": "success",
+                        "result": result,
+                    }
+                )
                 execution.steps_completed += 1
             except Exception as exc:
                 error_msg = f"Step {i} ({step.step_type}) failed: {exc}"
                 logger.error("[REMEDIATION] %s", error_msg)
-                execution.results.append({
-                    "step_id": step.step_id,
-                    "step_type": step.step_type,
-                    "status": "failed",
-                    "error": str(exc),
-                })
+                execution.results.append(
+                    {
+                        "step_id": step.step_id,
+                        "step_type": step.step_type,
+                        "status": "failed",
+                        "error": str(exc),
+                    }
+                )
 
                 if step.on_failure == "abort":
                     execution.status = "failed"
@@ -346,19 +354,23 @@ class RemediationEngine:
             for rb_step in rollback_steps:
                 try:
                     rb_result = await self._execute_step(rb_step, ctx)
-                    execution.results.append({
-                        "step_id": rb_step.step_id,
-                        "step_type": rb_step.step_type,
-                        "status": "rollback_success",
-                        "result": rb_result,
-                    })
+                    execution.results.append(
+                        {
+                            "step_id": rb_step.step_id,
+                            "step_type": rb_step.step_type,
+                            "status": "rollback_success",
+                            "result": rb_result,
+                        }
+                    )
                 except Exception as rb_exc:
-                    execution.results.append({
-                        "step_id": rb_step.step_id,
-                        "step_type": rb_step.step_type,
-                        "status": "rollback_failed",
-                        "error": str(rb_exc),
-                    })
+                    execution.results.append(
+                        {
+                            "step_id": rb_step.step_id,
+                            "step_type": rb_step.step_type,
+                            "status": "rollback_failed",
+                            "error": str(rb_exc),
+                        }
+                    )
             execution.status = "rolled_back"
             execution.completed_at = datetime.now(timezone.utc)
             self._update_workflow_stats(db, row)
@@ -382,9 +394,7 @@ class RemediationEngine:
     # Step dispatcher
     # ------------------------------------------------------------------
 
-    async def _execute_step(
-        self, step: WorkflowStep, context: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _execute_step(self, step: WorkflowStep, context: dict[str, Any]) -> dict[str, Any]:
         """Dispatch a single workflow step to the appropriate handler.
 
         Args:
@@ -566,9 +576,7 @@ class RemediationEngine:
             "triggered": True,
         }
 
-    async def _handle_wait(
-        self, params: dict[str, Any], context: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_wait(self, params: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         """Pause execution for a specified duration.
 
         Params:
@@ -584,9 +592,7 @@ class RemediationEngine:
             "waited_seconds": seconds,
         }
 
-    async def _handle_log(
-        self, params: dict[str, Any], context: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_log(self, params: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         """Log a message for audit trail purposes.
 
         Params:
@@ -641,9 +647,7 @@ class RemediationEngine:
     # Trigger matching
     # ------------------------------------------------------------------
 
-    def check_trigger(
-        self, db: Any, tenant_id: str, alert_type: str, severity: str
-    ) -> list[str]:
+    def check_trigger(self, db: Any, tenant_id: str, alert_type: str, severity: str) -> list[str]:
         """Return workflow IDs whose trigger_conditions match the alert.
 
         Matching logic:
@@ -712,9 +716,7 @@ class RemediationEngine:
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _evaluate_condition(
-        self, condition: dict[str, Any], context: dict[str, Any]
-    ) -> bool:
+    def _evaluate_condition(self, condition: dict[str, Any], context: dict[str, Any]) -> bool:
         """Evaluate a conditional step's condition against the context.
 
         Supports simple key-value equality checks.  The condition dict

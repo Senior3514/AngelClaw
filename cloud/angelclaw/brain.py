@@ -110,14 +110,50 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     ),
     ("pref_show", re.compile(r"(?i)(show|get|current|my)\s*(preference|setting|config)")),
     # V10.0.0 — Autonomous high-privilege actions (BEFORE apply_actions and broad patterns)
-    ("autonomous_scan", re.compile(r"(?i)(auto.?scan|continuous.?scan|background.?scan|scan.?everything|full.?auto)")),
-    ("execute_playbook", re.compile(r"(?i)(run.?playbook|execute.?playbook|trigger.?playbook|start.?playbook)")),
-    ("contain_threat", re.compile(r"(?i)(contain.?threat|isolate.?threat|block.?threat|neutralize.?threat|eliminate.?threat|stop.?attack)")),
-    ("deploy_policy", re.compile(r"(?i)(deploy.?polic|push.?polic|enforce.?polic|activate.?polic|roll.?out.?polic)")),
-    ("rotate_secrets", re.compile(r"(?i)(rotate.?secret|rotate.?key|rotate.?token|renew.?cred|refresh.?key)")),
-    ("kill_session", re.compile(r"(?i)(kill.?session|terminate.?session|revoke.?session|end.?session|force.?logout)")),
-    ("unlock_agent", re.compile(r"(?i)(unlock.?agent|unfreeze.?agent|enable.?agent|resume.?agent|restart.?agent)")),
-    ("lock_agent", re.compile(r"(?i)((?<!un)lock.?agent|(?<!un)freeze.?agent|disable.?agent|stop.?agent|halt.?agent)")),
+    (
+        "autonomous_scan",
+        re.compile(
+            r"(?i)(auto.?scan|continuous.?scan|background.?scan|scan.?everything|full.?auto)"
+        ),
+    ),
+    (
+        "execute_playbook",
+        re.compile(r"(?i)(run.?playbook|execute.?playbook|trigger.?playbook|start.?playbook)"),
+    ),
+    (
+        "contain_threat",
+        re.compile(
+            r"(?i)(contain.?threat|isolate.?threat|block.?threat|neutralize.?threat|eliminate.?threat|stop.?attack)"
+        ),
+    ),
+    (
+        "deploy_policy",
+        re.compile(
+            r"(?i)(deploy.?polic|push.?polic|enforce.?polic|activate.?polic|roll.?out.?polic)"
+        ),
+    ),
+    (
+        "rotate_secrets",
+        re.compile(r"(?i)(rotate.?secret|rotate.?key|rotate.?token|renew.?cred|refresh.?key)"),
+    ),
+    (
+        "kill_session",
+        re.compile(
+            r"(?i)(kill.?session|terminate.?session|revoke.?session|end.?session|force.?logout)"
+        ),
+    ),
+    (
+        "unlock_agent",
+        re.compile(
+            r"(?i)(unlock.?agent|unfreeze.?agent|enable.?agent|resume.?agent|restart.?agent)"
+        ),
+    ),
+    (
+        "lock_agent",
+        re.compile(
+            r"(?i)((?<!un)lock.?agent|(?<!un)freeze.?agent|disable.?agent|stop.?agent|halt.?agent)"
+        ),
+    ),
     ("escalate", re.compile(r"(?i)(escalate|raise.?severity|code.?red)")),
     # Action requests
     (
@@ -129,27 +165,19 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     # V2.2 intents — MUST be before broad patterns (scan, agent_status, threats)
     (
         "legion_status",
-        re.compile(
-            r"(?i)(legion|warden|angel\s*legion|seraph|orchestrator|warden.*status)"
-        ),
+        re.compile(r"(?i)(legion|warden|angel\s*legion|seraph|orchestrator|warden.*status)"),
     ),
     (
         "diagnostics",
-        re.compile(
-            r"(?i)(diagnos|deep.*scan|full.*check|health.*check|system.*diag|troubleshoot)"
-        ),
+        re.compile(r"(?i)(diagnos|deep.*scan|full.*check|health.*check|system.*diag|troubleshoot)"),
     ),
     (
         "quarantine",
-        re.compile(
-            r"(?i)(quarantine|isolat|contain|lock.*down|block.*agent|restrict.*agent)"
-        ),
+        re.compile(r"(?i)(quarantine|isolat|contain|lock.*down|block.*agent|restrict.*agent)"),
     ),
     (
         "serenity",
-        re.compile(
-            r"(?i)(serenity|serenity.*scale|threat.*level|risk.*level|alert.*level|defcon)"
-        ),
+        re.compile(r"(?i)(serenity|serenity.*scale|threat.*level|risk.*level|alert.*level|defcon)"),
     ),
     (
         "scan",
@@ -212,9 +240,7 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     # V2.4 — Fortress intents
     (
         "quarantine_status",
-        re.compile(
-            r"(?i)(quarantine.*status|quarantine.*list|who.*quarantin|active.*quarantine)"
-        ),
+        re.compile(r"(?i)(quarantine.*status|quarantine.*list|who.*quarantin|active.*quarantine)"),
     ),
     (
         "quarantine_manage",
@@ -236,21 +262,15 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     ),
     (
         "policy_snapshot",
-        re.compile(
-            r"(?i)(policy.*snapshot|snapshot.*polic|save.*polic|create.*snapshot)"
-        ),
+        re.compile(r"(?i)(policy.*snapshot|snapshot.*polic|save.*polic|create.*snapshot)"),
     ),
     (
         "policy_rollback",
-        re.compile(
-            r"(?i)(policy.*rollback|rollback.*polic|revert.*polic|undo.*polic)"
-        ),
+        re.compile(r"(?i)(policy.*rollback|rollback.*polic|revert.*polic|undo.*polic)"),
     ),
     (
         "websocket_status",
-        re.compile(
-            r"(?i)(websocket|ws.*status|live.*feed|real.?time.*feed|stream.*status)"
-        ),
+        re.compile(r"(?i)(websocket|ws.*status|live.*feed|real.?time.*feed|stream.*status)"),
     ),
     (
         "export_data",
@@ -267,9 +287,7 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     ),
     (
         "plugin_status",
-        re.compile(
-            r"(?i)(plugin.*status|plugin.*list|show.*plugin|loaded.*plugin|active.*plugin)"
-        ),
+        re.compile(r"(?i)(plugin.*status|plugin.*list|show.*plugin|loaded.*plugin|active.*plugin)"),
     ),
     (
         "api_key_manage",
@@ -316,9 +334,7 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     ),
     (
         "threat_hunt",
-        re.compile(
-            r"(?i)(threat.*hunt|hunt.*threat|hunting.*query|hunt.*for|search.*threat)"
-        ),
+        re.compile(r"(?i)(threat.*hunt|hunt.*threat|hunting.*query|hunt.*for|search.*threat)"),
     ),
     (
         "remediation_manage",
@@ -328,15 +344,11 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     ),
     (
         "mesh_status",
-        re.compile(
-            r"(?i)(mesh.*status|agent.*mesh|mesh.*network|mesh.*connect|inter.*agent)"
-        ),
+        re.compile(r"(?i)(mesh.*status|agent.*mesh|mesh.*network|mesh.*connect|inter.*agent)"),
     ),
     (
         "fleet_deep",
-        re.compile(
-            r"(?i)(fleet.*deep|deep.*fleet|fleet.*analysis|fleet.*insight|fleet.*overview)"
-        ),
+        re.compile(r"(?i)(fleet.*deep|deep.*fleet|fleet.*analysis|fleet.*insight|fleet.*overview)"),
     ),
     # V3.0 — Admin Console intents
     (
@@ -391,15 +403,11 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     ),
     (
         "topology_map",
-        re.compile(
-            r"(?i)(topology|network.*map|asset.*map|dependency.*graph|network.*graph)"
-        ),
+        re.compile(r"(?i)(topology|network.*map|asset.*map|dependency.*graph|network.*graph)"),
     ),
     (
         "vulnerability_scan",
-        re.compile(
-            r"(?i)(vuln.*scan|vulnerability|cve|vuln.*report|vuln.*status|patch.*status)"
-        ),
+        re.compile(r"(?i)(vuln.*scan|vulnerability|cve|vuln.*report|vuln.*status|patch.*status)"),
     ),
     (
         "soar_manage",
@@ -415,15 +423,11 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     ),
     (
         "incident_timeline",
-        re.compile(
-            r"(?i)(incident.*timeline|timeline.*view|incident.*history|incident.*visual)"
-        ),
+        re.compile(r"(?i)(incident.*timeline|timeline.*view|incident.*history|incident.*visual)"),
     ),
     (
         "risk_heatmap",
-        re.compile(
-            r"(?i)(risk.*heat|heat.*map|risk.*visual|risk.*map|asset.*risk.*map)"
-        ),
+        re.compile(r"(?i)(risk.*heat|heat.*map|risk.*visual|risk.*map|asset.*risk.*map)"),
     ),
     # V4.1 — Prophecy intents
     (
@@ -434,9 +438,7 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     ),
     (
         "behavior_profile",
-        re.compile(
-            r"(?i)(behavior.*profil|baseline.*profil|behavioral.*analy|behavior.*drift)"
-        ),
+        re.compile(r"(?i)(behavior.*profil|baseline.*profil|behavioral.*analy|behavior.*drift)"),
     ),
     (
         "attack_path",
@@ -446,9 +448,7 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     ),
     (
         "risk_forecast",
-        re.compile(
-            r"(?i)(risk.*forecast|forecast.*risk|predict.*risk|risk.*predict|future.*risk)"
-        ),
+        re.compile(r"(?i)(risk.*forecast|forecast.*risk|predict.*risk|risk.*predict|future.*risk)"),
     ),
     # V4.2 — Nexus intents
     (
@@ -471,9 +471,7 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     ),
     (
         "cicd_gate",
-        re.compile(
-            r"(?i)(ci.*cd.*gate|pipeline.*secur|deploy.*gate|build.*gate|pipeline.*check)"
-        ),
+        re.compile(r"(?i)(ci.*cd.*gate|pipeline.*secur|deploy.*gate|build.*gate|pipeline.*check)"),
     ),
     # V4.5 — Sovereign intents
     (
@@ -485,9 +483,7 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     # V5.0 — Transcendence intents
     (
         "ai_orchestrate",
-        re.compile(
-            r"(?i)(ai.*model|model.*orchestrat|multi.*model|ai.*route|model.*registry)"
-        ),
+        re.compile(r"(?i)(ai.*model|model.*orchestrat|multi.*model|ai.*route|model.*registry)"),
     ),
     (
         "nl_policy",
@@ -503,9 +499,7 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     ),
     (
         "deception_manage",
-        re.compile(
-            r"(?i)(deception|honey.*pot|honey.*token|canary.*token|honey.*cred|decoy)"
-        ),
+        re.compile(r"(?i)(deception|honey.*pot|honey.*token|canary.*token|honey.*cred|decoy)"),
     ),
     (
         "forensic_case",
@@ -527,9 +521,7 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
     ),
     (
         "threat_share",
-        re.compile(
-            r"(?i)(threat.*shar|cross.*org.*threat|shar.*indicator|threat.*exchange)"
-        ),
+        re.compile(r"(?i)(threat.*shar|cross.*org.*threat|shar.*indicator|threat.*exchange)"),
     ),
     # V5.5 — Convergence intents
     (
@@ -664,6 +656,7 @@ def _detect_hebrew_intent(prompt: str) -> str:
         if heb in prompt:
             return eng
     return "general"
+
 
 _NUMBER_RE = re.compile(r"\d+")
 _EVENT_ID_RE = re.compile(
@@ -1037,7 +1030,7 @@ class AngelClawBrain:
             if proposed:
                 self._pending_actions[tid] = proposed
                 lines.append(
-                    f'I have **{len(proposed)} action(s)** I can take.'
+                    f"I have **{len(proposed)} action(s)** I can take."
                     f' Say **"apply all"** or **"apply #1"**'
                     f" to execute them."
                 )
@@ -1091,8 +1084,7 @@ class AngelClawBrain:
         if not selected:
             return {
                 "answer": (
-                    "I couldn't determine which actions to apply."
-                    " Say 'apply all' or 'apply #1 #3'."
+                    "I couldn't determine which actions to apply. Say 'apply all' or 'apply #1 #3'."
                 )
             }
 
@@ -1168,9 +1160,7 @@ class AngelClawBrain:
         if not preds:
             return {
                 "answer": (
-                    "No threat vectors detected."
-                    " Your systems look healthy"
-                    " — I'm watching quietly."
+                    "No threat vectors detected. Your systems look healthy — I'm watching quietly."
                 )
             }
         lines = ["**Predicted threat vectors (24h):**\n"]
@@ -1510,16 +1500,12 @@ class AngelClawBrain:
             lines.append(
                 f"  [{status_icon}] **{entry['action_type']}** — {entry.get('description', 'N/A')}"
             )
-            lines.append(
-                f"    Triggered by: {entry.get('triggered_by', '?')} | {ts}"
-            )
+            lines.append(f"    Triggered by: {entry.get('triggered_by', '?')} | {ts}")
             if entry.get("error"):
                 lines.append(f"    Error: {entry['error']}")
             lines.append("")
 
-        lines.append(
-            "Full audit trail available at `/api/v1/angelclaw/actions/history`."
-        )
+        lines.append("Full audit trail available at `/api/v1/angelclaw/actions/history`.")
         return {
             "answer": "\n".join(lines),
             "references": ["/api/v1/angelclaw/actions/history"],
@@ -1635,8 +1621,7 @@ class AngelClawBrain:
             lines.append("**Wardens:**")
             for a in agents:
                 status_icon = (
-                    "OK" if a.get("status") in ("idle", "busy")
-                    else a.get("status", "?").upper()
+                    "OK" if a.get("status") in ("idle", "busy") else a.get("status", "?").upper()
                 )
                 lines.append(
                     f"  [{status_icon}] **{a.get('name', '?')}** ({a.get('type', '?')}) "
@@ -1670,13 +1655,17 @@ class AngelClawBrain:
 
         # 2. Legion health
         legion = orch.get("legion", {})
-        lines.append(f"\n**Angel Legion:** {legion.get('total', 0)} agents, "
-                      f"{legion.get('wardens', 0)} wardens")
+        lines.append(
+            f"\n**Angel Legion:** {legion.get('total', 0)} agents, "
+            f"{legion.get('wardens', 0)} wardens"
+        )
 
         # 3. Incident summary
         incidents = orch.get("incidents", {})
-        lines.append(f"\n**Incidents:** {incidents.get('total', 0)} total, "
-                      f"{incidents.get('pending_approval', 0)} pending approval")
+        lines.append(
+            f"\n**Incidents:** {incidents.get('total', 0)} total, "
+            f"{incidents.get('pending_approval', 0)} pending approval"
+        )
         by_state = incidents.get("by_state", {})
         if by_state:
             lines.append("  By state: " + ", ".join(f"{k}: {v}" for k, v in by_state.items()))
@@ -1689,15 +1678,18 @@ class AngelClawBrain:
         es = ctx.event_summary
         lines.append(f"\n**Events (24h):** {es.get('total', 0)} total")
         if es.get("by_severity"):
-            lines.append("  By severity: " + ", ".join(
-                f"{k}: {v}" for k, v in es.get("by_severity", {}).items()
-            ))
+            lines.append(
+                "  By severity: "
+                + ", ".join(f"{k}: {v}" for k, v in es.get("by_severity", {}).items())
+            )
 
         # 6. Agent fleet
         s = ctx.agent_summary
-        lines.append(f"\n**Fleet:** {s.get('total', 0)} agents "
-                      f"(active: {s.get('active', 0)}, degraded: {s.get('degraded', 0)}, "
-                      f"offline: {s.get('offline', 0)})")
+        lines.append(
+            f"\n**Fleet:** {s.get('total', 0)} agents "
+            f"(active: {s.get('active', 0)}, degraded: {s.get('degraded', 0)}, "
+            f"offline: {s.get('offline', 0)})"
+        )
 
         lines.append("\nDiagnostics complete. All subsystems reporting.")
         return {
@@ -1710,7 +1702,8 @@ class AngelClawBrain:
         # Extract agent ID if present
         agent_match = re.search(
             r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}",
-            prompt, re.IGNORECASE,
+            prompt,
+            re.IGNORECASE,
         )
         if not agent_match:
             return {
@@ -1788,9 +1781,8 @@ class AngelClawBrain:
     def _handle_quarantine_status(self, db: Session, tid: str) -> dict:
         """Show active quarantine records."""
         from cloud.db.models import QuarantineRecordRow
-        records = db.query(QuarantineRecordRow).filter_by(
-            tenant_id=tid, status="active"
-        ).all()
+
+        records = db.query(QuarantineRecordRow).filter_by(tenant_id=tid, status="active").all()
         if not records:
             return {"answer": "No agents currently quarantined. The fleet is operating freely."}
         lines = [f"**Active Quarantines ({len(records)}):**\n"]
@@ -1807,7 +1799,8 @@ class AngelClawBrain:
         """Release or manage quarantined agents."""
         agent_match = re.search(
             r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}",
-            prompt, re.IGNORECASE,
+            prompt,
+            re.IGNORECASE,
         )
         if not agent_match:
             return {
@@ -1823,28 +1816,34 @@ class AngelClawBrain:
                 f"`POST /api/v1/quarantine/agents/{agent_match.group(0)[:8]}../release`\n\n"
                 "Or say **'apply all'** to confirm the release."
             ),
-            "actions": [{
-                "id": f"release-{agent_match.group(0)[:8]}",
-                "index": 1,
-                "type": "release_quarantine",
-                "description": f"Release agent {agent_match.group(0)[:8]} from quarantine",
-                "dry_run": True,
-            }],
+            "actions": [
+                {
+                    "id": f"release-{agent_match.group(0)[:8]}",
+                    "index": 1,
+                    "type": "release_quarantine",
+                    "description": f"Release agent {agent_match.group(0)[:8]} from quarantine",
+                    "dry_run": True,
+                }
+            ],
         }
 
     def _handle_compliance_check(self, db: Session) -> dict:
         """Run compliance posture check."""
         from cloud.db.session import SessionLocal
         from cloud.services.predictive import predict_threat_vectors
+
         sdb = SessionLocal()
         try:
             preds = predict_threat_vectors(sdb, lookback_hours=24)
         finally:
             sdb.close()
         compliance_issues = [
-            p for p in preds
-            if p.vector_name in (
-                "data_exfiltration", "supply_chain_compromise",
+            p
+            for p in preds
+            if p.vector_name
+            in (
+                "data_exfiltration",
+                "supply_chain_compromise",
             )
         ]
         lines = [
@@ -1858,7 +1857,9 @@ class AngelClawBrain:
         if compliance_issues:
             lines.append(f"**Compliance concerns ({len(compliance_issues)}):**")
             for p in compliance_issues:
-                lines.append(f"  [{int(p.confidence*100)}%] {p.vector_name}: {p.rationale[:80]}...")
+                lines.append(
+                    f"  [{int(p.confidence * 100)}%] {p.vector_name}: {p.rationale[:80]}..."
+                )
         else:
             lines.append("No compliance violations detected. Posture is clean.")
         return {"answer": "\n".join(lines), "references": ["/api/v1/analytics/threat-matrix"]}
@@ -1866,6 +1867,7 @@ class AngelClawBrain:
     def _handle_notification_manage(self, db: Session, tid: str) -> dict:
         """Show notification channel configuration."""
         from cloud.db.models import NotificationChannelRow
+
         channels = db.query(NotificationChannelRow).filter_by(tenant_id=tid).all()
         if not channels:
             return {
@@ -1888,7 +1890,7 @@ class AngelClawBrain:
             "answer": (
                 "**Policy Snapshot Management**\n\n"
                 "Create a snapshot to save the current policy state for rollback:\n"
-                "  `POST /api/v1/policies/snapshots` with `{\"name\": \"my-snapshot\"}`\n\n"
+                '  `POST /api/v1/policies/snapshots` with `{"name": "my-snapshot"}`\n\n'
                 "List snapshots: `GET /api/v1/policies/snapshots`\n"
                 "Compare: `GET /api/v1/policies/snapshots/{id}/diff`\n"
                 "Rollback: `POST /api/v1/policies/snapshots/{id}/rollback`"
@@ -1899,6 +1901,7 @@ class AngelClawBrain:
     def _handle_policy_rollback(self, db: Session, tid: str, prompt: str) -> dict:
         """Handle policy rollback requests."""
         from cloud.db.models import PolicySnapshotRow
+
         snapshots = (
             db.query(PolicySnapshotRow)
             .filter_by(tenant_id=tid)
@@ -1915,14 +1918,8 @@ class AngelClawBrain:
             }
         lines = ["**Available Policy Snapshots for Rollback:**\n"]
         for s in snapshots:
-            created = (
-                s.created_at.strftime('%Y-%m-%d')
-                if s.created_at else '?'
-            )
-            lines.append(
-                f"  `{s.id[:8]}...` — **{s.name}**"
-                f" ({s.rule_count} rules, {created})"
-            )
+            created = s.created_at.strftime("%Y-%m-%d") if s.created_at else "?"
+            lines.append(f"  `{s.id[:8]}...` — **{s.name}** ({s.rule_count} rules, {created})")
         lines.append("\nTo rollback: `POST /api/v1/policies/snapshots/{id}/rollback`")
         return {"answer": "\n".join(lines), "references": ["/api/v1/policies/snapshots"]}
 
@@ -1930,6 +1927,7 @@ class AngelClawBrain:
         """Show WebSocket connection status."""
         try:
             from cloud.websocket.manager import ws_manager
+
             status = ws_manager.status()
             return {
                 "answer": (
@@ -1945,8 +1943,7 @@ class AngelClawBrain:
         except Exception:
             return {
                 "answer": (
-                    "WebSocket system status unavailable."
-                    " The live feed module may not be loaded."
+                    "WebSocket system status unavailable. The live feed module may not be loaded."
                 ),
             }
 
@@ -1991,6 +1988,7 @@ class AngelClawBrain:
         """Show loaded plugins."""
         try:
             from cloud.plugins.loader import plugin_loader
+
             status = plugin_loader.status()
             plugins = status.get("plugins", [])
             if not plugins:
@@ -2018,7 +2016,7 @@ class AngelClawBrain:
             "answer": (
                 "**API Key Management**\n\n"
                 "  Create: `POST /api/v1/auth/api-keys`"
-                " with `{\"name\": \"my-key\", \"scopes\": [\"read\"]}`\n"
+                ' with `{"name": "my-key", "scopes": ["read"]}`\n'
                 "  List: `GET /api/v1/auth/api-keys`\n"
                 "  Rotate: `POST /api/v1/auth/api-keys/{id}/rotate`\n"
                 "  Revoke: `POST /api/v1/auth/api-keys/{id}/revoke`\n\n"
@@ -2030,6 +2028,7 @@ class AngelClawBrain:
     def _handle_backup_manage(self, db: Session, tid: str, prompt: str) -> dict:
         """Handle backup management."""
         from cloud.db.models import BackupRecordRow
+
         backups = (
             db.query(BackupRecordRow)
             .filter_by(tenant_id=tid)
@@ -2044,12 +2043,14 @@ class AngelClawBrain:
                 lines.append(f"  `{b.id[:8]}...` — {b.filename} ({b.size_bytes} bytes, {b.status})")
         else:
             lines.append("No backups found.")
-        lines.extend([
-            "\n**Actions:**",
-            "  Create: `POST /api/v1/backups`",
-            "  Restore: `POST /api/v1/backups/{id}/restore`",
-            "  Delete: `DELETE /api/v1/backups/{id}`",
-        ])
+        lines.extend(
+            [
+                "\n**Actions:**",
+                "  Create: `POST /api/v1/backups`",
+                "  Restore: `POST /api/v1/backups/{id}/restore`",
+                "  Delete: `DELETE /api/v1/backups/{id}`",
+            ]
+        )
         return {"answer": "\n".join(lines), "references": ["/api/v1/backups"]}
 
     def _handle_dashboard_info(self) -> dict:
@@ -2074,6 +2075,7 @@ class AngelClawBrain:
         """Show threat prediction trends."""
         from cloud.db.session import SessionLocal
         from cloud.services.predictive import predict_trends
+
         sdb = SessionLocal()
         try:
             trends = predict_trends(sdb, lookback_hours=24)
@@ -2101,6 +2103,7 @@ class AngelClawBrain:
         """Show learning engine status."""
         try:
             from cloud.guardian.learning import learning_engine
+
             status = learning_engine.status()
             lines = [
                 "**Learning Engine Status**\n",
@@ -2124,29 +2127,29 @@ class AngelClawBrain:
     def _handle_role_manage(self, db: Session, tid: str, prompt: str) -> dict:
         """Handle custom role management."""
         from cloud.db.models import CustomRoleRow
+
         roles = db.query(CustomRoleRow).filter_by(tenant_id=tid).all()
         lines = ["**Custom RBAC Roles**\n"]
         if roles:
             for r in roles:
-                desc = r.description[:50] if r.description else ''
-                lines.append(
-                    f"  **{r.name}** —"
-                    f" {len(r.permissions or [])} permissions"
-                    f" ({desc})"
-                )
+                desc = r.description[:50] if r.description else ""
+                lines.append(f"  **{r.name}** — {len(r.permissions or [])} permissions ({desc})")
         else:
             lines.append("  No custom roles defined. Using default roles (admin, secops, viewer).")
-        lines.extend([
-            "\n**Actions:**",
-            "  Create: `POST /api/v1/roles`",
-            "  List: `GET /api/v1/roles`",
-            "  Update: `PUT /api/v1/roles/{id}`",
-        ])
+        lines.extend(
+            [
+                "\n**Actions:**",
+                "  Create: `POST /api/v1/roles`",
+                "  List: `GET /api/v1/roles`",
+                "  Update: `PUT /api/v1/roles/{id}`",
+            ]
+        )
         return {"answer": "\n".join(lines), "references": ["/api/v1/roles"]}
 
     def _handle_event_replay(self, db: Session, tid: str, prompt: str) -> dict:
         """Handle event replay requests."""
         from cloud.db.models import EventReplayRow
+
         replays = (
             db.query(EventReplayRow)
             .filter_by(tenant_id=tid)
@@ -2163,16 +2166,19 @@ class AngelClawBrain:
                     f" ({r.status}, {r.event_count} events,"
                     f" {r.indicators_found} indicators)"
                 )
-        lines.extend([
-            "\n**Actions:**",
-            "  Create replay: `POST /api/v1/replays`",
-            "  View results: `GET /api/v1/replays/{id}`",
-        ])
+        lines.extend(
+            [
+                "\n**Actions:**",
+                "  Create replay: `POST /api/v1/replays`",
+                "  View results: `GET /api/v1/replays/{id}`",
+            ]
+        )
         return {"answer": "\n".join(lines), "references": ["/api/v1/replays"]}
 
     def _handle_threat_hunt(self, db: Session, tid: str, prompt: str) -> dict:
         """Handle threat hunting queries."""
         from cloud.db.models import ThreatHuntQueryRow
+
         saved = (
             db.query(ThreatHuntQueryRow)
             .filter_by(tenant_id=tid)
@@ -2192,19 +2198,15 @@ class AngelClawBrain:
         if saved:
             lines.append(f"**Saved queries ({len(saved)}):**")
             for q in saved:
-                desc = (
-                    q.description[:50]
-                    if q.description else 'No description'
-                )
-                lines.append(
-                    f"  **{q.name}** — {desc}"
-                )
+                desc = q.description[:50] if q.description else "No description"
+                lines.append(f"  **{q.name}** — {desc}")
         lines.append("\nSave queries: `POST /api/v1/hunting/queries`")
         return {"answer": "\n".join(lines), "references": ["/api/v1/hunting/execute"]}
 
     def _handle_remediation_manage(self, db: Session, tid: str) -> dict:
         """Handle remediation workflow management."""
         from cloud.db.models import RemediationWorkflowRow
+
         workflows = db.query(RemediationWorkflowRow).filter_by(tenant_id=tid).all()
         lines = ["**Remediation Workflows**\n"]
         if workflows:
@@ -2217,18 +2219,21 @@ class AngelClawBrain:
                 )
         else:
             lines.append("  No remediation workflows configured.")
-        lines.extend([
-            "\n**Actions:**",
-            "  Create: `POST /api/v1/remediation/workflows`",
-            "  Execute: `POST /api/v1/remediation/workflows/{id}/execute`",
-            "  Toggle: `PUT /api/v1/remediation/workflows/{id}/toggle`",
-        ])
+        lines.extend(
+            [
+                "\n**Actions:**",
+                "  Create: `POST /api/v1/remediation/workflows`",
+                "  Execute: `POST /api/v1/remediation/workflows/{id}/execute`",
+                "  Toggle: `PUT /api/v1/remediation/workflows/{id}/toggle`",
+            ]
+        )
         return {"answer": "\n".join(lines), "references": ["/api/v1/remediation/workflows"]}
 
     def _handle_mesh_status(self) -> dict:
         """Show agent mesh network status."""
         try:
             from cloud.services.agent_mesh import agent_mesh
+
             status = agent_mesh.status()
             lines = [
                 "**Agent Mesh Network**\n",
@@ -2239,11 +2244,8 @@ class AngelClawBrain:
             if status.get("agents"):
                 lines.append("**Connected agents:**")
                 for a in status["agents"][:10]:
-                    caps = ', '.join(a.get('capabilities', []))
-                    lines.append(
-                        f"  `{a['agent_id'][:8]}...`"
-                        f" ({a['type']}) — {caps}"
-                    )
+                    caps = ", ".join(a.get("capabilities", []))
+                    lines.append(f"  `{a['agent_id'][:8]}...` ({a['type']}) — {caps}")
             return {"answer": "\n".join(lines), "references": ["/api/v1/mesh/status"]}
         except Exception:
             return {"answer": "Agent mesh status unavailable."}
@@ -2253,11 +2255,10 @@ class AngelClawBrain:
         from collections import Counter
 
         from cloud.db.models import AgentNodeRow, QuarantineRecordRow
+
         agents = db.query(AgentNodeRow).all()
         quarantined = (
-            db.query(QuarantineRecordRow)
-            .filter_by(tenant_id=tid, status="active")
-            .count()
+            db.query(QuarantineRecordRow).filter_by(tenant_id=tid, status="active").count()
         )
 
         if not agents:
@@ -2302,17 +2303,17 @@ class AngelClawBrain:
                 [
                     "**Safe backup script (recommended):**\n",
                     "```powershell",
-                    "$BackupDir = \"$env:APPDATA\\AngelClaw"
+                    '$BackupDir = "$env:APPDATA\\AngelClaw'
                     "\\backups\\$(Get-Date -Format"
                     ' yyyyMMdd_HHmmss)"',
                     "New-Item -ItemType Directory -Force -Path $BackupDir | Out-Null",
                     "",
                     "# Backup AngelClaw data (DB + config)",
-                    'Copy-Item -Recurse -Force'
+                    "Copy-Item -Recurse -Force"
                     ' "$env:APPDATA\\AngelClaw\\data"'
                     ' "$BackupDir\\data"'
                     " -ErrorAction SilentlyContinue",
-                    'Copy-Item -Recurse -Force'
+                    "Copy-Item -Recurse -Force"
                     ' "$env:APPDATA\\AngelClaw\\config"'
                     ' "$BackupDir\\config"',
                     "",
@@ -2423,8 +2424,8 @@ class AngelClawBrain:
             for c in ctx.recent_changes[:5]:
                 lines.append(
                     f"  [{c.get('change_type', '?')}]"
-                f" {c.get('description', '?')}"
-                f" — by {c.get('changed_by', '?')}"
+                    f" {c.get('description', '?')}"
+                    f" — by {c.get('changed_by', '?')}"
                 )
 
         lines.append("\nNeed help with a specific compliance framework? Just ask.")
@@ -2447,11 +2448,10 @@ class AngelClawBrain:
             offline = total - active - degraded
 
             from datetime import timedelta
+
             cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
             alert_count = (
-                db.query(GuardianAlertRow)
-                .filter(GuardianAlertRow.created_at >= cutoff)
-                .count()
+                db.query(GuardianAlertRow).filter(GuardianAlertRow.created_at >= cutoff).count()
             )
 
             halo = min(100, max(0, 100 - (degraded * 10) - (offline * 20) - (alert_count * 2)))
@@ -2463,7 +2463,11 @@ class AngelClawBrain:
                 "**Organization Overview**\n",
                 f"  Halo Score: **{halo}/100**",
                 f"  Wingspan: **{wingspan}%**",
-                f"  Fleet: {total} agents ({active} active, {degraded} degraded, {offline} offline)",
+                (
+                    f"  Fleet: {total} agents"
+                    f" ({active} active, {degraded} degraded,"
+                    f" {offline} offline)"
+                ),
                 f"  Alerts (24h): {alert_count}",
                 f"  Legion: {'running' if orch.get('running') else 'stopped'}"
                 f" ({orch.get('autonomy_mode', 'unknown')} mode)\n",
@@ -2477,6 +2481,7 @@ class AngelClawBrain:
         """Anti-tamper protection status."""
         try:
             from cloud.services.anti_tamper import anti_tamper_service
+
             status = anti_tamper_service.get_status(tid)
             events = anti_tamper_service.get_events(tenant_id=tid, limit=5)
 
@@ -2507,6 +2512,7 @@ class AngelClawBrain:
         """Operator feedback loop status."""
         try:
             from cloud.services.feedback_loop import feedback_service
+
             summary = feedback_service.get_tenant_summary(tid)
             recommendations = feedback_service.get_adjustment_recommendations(tid)
 
@@ -2525,12 +2531,17 @@ class AngelClawBrain:
             if recommendations:
                 lines.append("\n**Adjustment recommendations:**")
                 for r in recommendations:
-                    lines.append(f"  - {r.get('description', '?')} (confidence: {r.get('confidence', 0):.0%})")
+                    lines.append(
+                        f"  - {r.get('description', '?')}"
+                        f" (confidence: {r.get('confidence', 0):.0%})"
+                    )
 
             if summary.get("top_rejected_types"):
                 lines.append("\n**Most rejected suggestion types:**")
                 for t in summary["top_rejected_types"][:3]:
-                    lines.append(f"  - {t['type']}: {t['rejection_rate']:.0%} rejected ({t['total']} total)")
+                    lines.append(
+                        f"  - {t['type']}: {t['rejection_rate']:.0%} rejected ({t['total']} total)"
+                    )
 
             return {"answer": "\n".join(lines)}
         except Exception as e:
@@ -2540,6 +2551,7 @@ class AngelClawBrain:
         """Self-hardening engine status."""
         try:
             from cloud.services.self_hardening import self_hardening_engine
+
             summary = self_hardening_engine.get_issue_summary()
             log = self_hardening_engine.get_hardening_log(tenant_id=tid, limit=5)
             proposed = self_hardening_engine.get_proposed_actions(tid)
@@ -2570,7 +2582,10 @@ class AngelClawBrain:
                     status = "applied" if entry.get("applied") else "proposed"
                     if entry.get("reverted"):
                         status = "reverted"
-                    lines.append(f"  [{status}] {entry.get('action_type', '?')}: {entry.get('description', '?')[:60]}")
+                    lines.append(
+                        f"  [{status}] {entry.get('action_type', '?')}:"
+                        f" {entry.get('description', '?')[:60]}"
+                    )
 
             return {"answer": "\n".join(lines)}
         except Exception as e:
@@ -2583,6 +2598,7 @@ class AngelClawBrain:
     def _handle_threat_intel(self, tid: str) -> dict:
         try:
             from cloud.services.threat_intel import threat_intel_service
+
             stats = threat_intel_service.get_stats(tid)
             lines = [
                 "**Threat Intelligence Status**\n",
@@ -2602,6 +2618,7 @@ class AngelClawBrain:
     def _handle_reputation_check(self, tid: str, prompt: str) -> dict:
         try:
             from cloud.services.reputation import reputation_service
+
             stats = reputation_service.get_stats(tid)
             worst = reputation_service.get_worst(tid, limit=5)
             lines = [
@@ -2612,7 +2629,12 @@ class AngelClawBrain:
             if worst:
                 lines.append("\n**Lowest reputation entities:**")
                 for w in worst[:5]:
-                    lines.append(f"  - {w.get('entity_type', '?')}:{w.get('entity_value', '?')} — score: {w.get('score', '?')} ({w.get('risk_level', '?')})")
+                    lines.append(
+                        f"  - {w.get('entity_type', '?')}"
+                        f":{w.get('entity_value', '?')}"
+                        f" — score: {w.get('score', '?')}"
+                        f" ({w.get('risk_level', '?')})"
+                    )
             lines.append("\nLookup: `POST /api/v1/intel/reputation/lookup`")
             return {"answer": "\n".join(lines)}
         except Exception as e:
@@ -2621,6 +2643,7 @@ class AngelClawBrain:
     def _handle_ioc_manage(self, tid: str) -> dict:
         try:
             from cloud.services.ioc_engine import ioc_engine
+
             stats = ioc_engine.get_stats(tid)
             lines = [
                 "**IOC Matching Engine Status**\n",
@@ -2644,6 +2667,7 @@ class AngelClawBrain:
     def _handle_asset_inventory(self, tid: str) -> dict:
         try:
             from cloud.services.asset_inventory import asset_inventory_service
+
             stats = asset_inventory_service.get_stats(tid)
             lines = [
                 "**Asset Inventory**\n",
@@ -2663,6 +2687,7 @@ class AngelClawBrain:
     def _handle_topology_map(self, tid: str) -> dict:
         try:
             from cloud.services.topology import topology_service
+
             stats = topology_service.get_stats(tid)
             critical = topology_service.find_critical_nodes(tid)
             lines = [
@@ -2682,6 +2707,7 @@ class AngelClawBrain:
     def _handle_vulnerability_scan(self, tid: str) -> dict:
         try:
             from cloud.services.vulnerability import vulnerability_service
+
             stats = vulnerability_service.get_stats(tid)
             lines = [
                 "**Vulnerability Status**\n",
@@ -2700,11 +2726,20 @@ class AngelClawBrain:
     def _handle_soar_manage(self, tid: str) -> dict:
         try:
             from cloud.services.soar import soar_engine
+
             stats = soar_engine.get_stats(tid)
             lines = [
                 "**SOAR Engine Status**\n",
-                f"  Playbooks: {stats.get('total_playbooks', 0)} ({stats.get('enabled_playbooks', 0)} enabled)",
-                f"  Executions: {stats.get('total_executions', 0)} ({stats.get('successful', 0)} success, {stats.get('failed', 0)} failed)",
+                (
+                    f"  Playbooks: {stats.get('total_playbooks', 0)}"
+                    f" ({stats.get('enabled_playbooks', 0)} enabled)"
+                ),
+                (
+                    f"  Executions:"
+                    f" {stats.get('total_executions', 0)}"
+                    f" ({stats.get('successful', 0)} success,"
+                    f" {stats.get('failed', 0)} failed)"
+                ),
             ]
             lines.append("\nManage: `POST /api/v1/soar/playbooks`")
             return {"answer": "\n".join(lines)}
@@ -2714,6 +2749,7 @@ class AngelClawBrain:
     def _handle_sla_status(self, tid: str) -> dict:
         try:
             from cloud.services.sla_tracking import sla_tracking_service
+
             report = sla_tracking_service.get_compliance_report(tid)
             breaches = sla_tracking_service.check_breaches(tid)
             lines = [
@@ -2726,7 +2762,13 @@ class AngelClawBrain:
             if breaches:
                 lines.append(f"\n**Active breaches ({len(breaches)}):**")
                 for b in breaches[:3]:
-                    lines.append(f"  - {b.get('breach_type', '?')} on incident {b.get('incident_id', '?')[:8]} ({b.get('overdue_minutes', 0)}min overdue)")
+                    lines.append(
+                        f"  - {b.get('breach_type', '?')}"
+                        f" on incident"
+                        f" {b.get('incident_id', '?')[:8]}"
+                        f" ({b.get('overdue_minutes', 0)}"
+                        f"min overdue)"
+                    )
             return {"answer": "\n".join(lines)}
         except Exception as e:
             return {"answer": f"SLA data unavailable: {e}"}
@@ -2734,6 +2776,7 @@ class AngelClawBrain:
     def _handle_incident_timeline(self, tid: str) -> dict:
         try:
             from cloud.services.incident_timeline import incident_timeline_service
+
             stats = incident_timeline_service.get_stats(tid)
             lines = [
                 "**Incident Timeline**\n",
@@ -2753,6 +2796,7 @@ class AngelClawBrain:
     def _handle_risk_heatmap(self, tid: str) -> dict:
         try:
             from cloud.services.asset_inventory import asset_inventory_service
+
             heatmap = asset_inventory_service.get_risk_heatmap(tid)
             lines = [
                 "**Risk Heat Map**\n",
@@ -2775,6 +2819,7 @@ class AngelClawBrain:
     def _handle_ml_anomaly(self, tid: str) -> dict:
         try:
             from cloud.services.ml_anomaly import ml_anomaly_engine
+
             stats = ml_anomaly_engine.get_stats()
             recent = ml_anomaly_engine.get_recent_detections(limit=5)
             lines = [
@@ -2785,7 +2830,11 @@ class AngelClawBrain:
             if recent:
                 lines.append("\n**Recent anomalies:**")
                 for d in recent[:5]:
-                    lines.append(f"  - [{d.get('severity', '?')}] {d.get('anomaly_type', '?')}: {d.get('description', '?')[:50]}")
+                    lines.append(
+                        f"  - [{d.get('severity', '?')}]"
+                        f" {d.get('anomaly_type', '?')}:"
+                        f" {d.get('description', '?')[:50]}"
+                    )
             lines.append("\nDetect: `POST /api/v1/ml/anomaly/detect`")
             return {"answer": "\n".join(lines)}
         except Exception as e:
@@ -2794,6 +2843,7 @@ class AngelClawBrain:
     def _handle_behavior_profile(self, tid: str) -> dict:
         try:
             from cloud.services.behavior_profile import behavior_profile_service
+
             stats = behavior_profile_service.get_stats(tid)
             lines = [
                 "**Behavioral Profiling**\n",
@@ -2811,6 +2861,7 @@ class AngelClawBrain:
     def _handle_attack_path(self, tid: str) -> dict:
         try:
             from cloud.services.attack_path import attack_path_engine
+
             stats = attack_path_engine.get_stats(tid)
             paths = attack_path_engine.get_paths(tid, min_risk=50)
             lines = [
@@ -2822,7 +2873,11 @@ class AngelClawBrain:
             if paths:
                 lines.append("\n**Highest risk paths:**")
                 for p in paths[:3]:
-                    lines.append(f"  - {p.get('name', '?')} — risk: {p.get('risk_score', 0)}, hops: {p.get('path_length', 0)}")
+                    lines.append(
+                        f"  - {p.get('name', '?')}"
+                        f" — risk: {p.get('risk_score', 0)},"
+                        f" hops: {p.get('path_length', 0)}"
+                    )
             lines.append("\nCompute: `POST /api/v1/ml/attack-paths/compute`")
             return {"answer": "\n".join(lines)}
         except Exception as e:
@@ -2831,16 +2886,26 @@ class AngelClawBrain:
     def _handle_risk_forecast(self, tid: str) -> dict:
         try:
             from cloud.services.risk_forecast import risk_forecast_engine
+
             forecasts = risk_forecast_engine.get_forecasts(tid, limit=10)
             accuracy = risk_forecast_engine.get_accuracy_report(tid)
             lines = ["**Risk Forecasts**\n"]
             if forecasts:
                 for f in forecasts[:6]:
-                    lines.append(f"  [{f.get('forecast_type', '?')}] {f.get('time_horizon_hours', '?')}h: {f.get('predicted_value', '?')} (conf: {f.get('confidence', '?')})")
+                    lines.append(
+                        f"  [{f.get('forecast_type', '?')}]"
+                        f" {f.get('time_horizon_hours', '?')}h:"
+                        f" {f.get('predicted_value', '?')}"
+                        f" (conf: {f.get('confidence', '?')})"
+                    )
             else:
                 lines.append("  No forecasts yet. Generate: `POST /api/v1/ml/forecasts/generate`")
             if accuracy.get("avg_accuracy") is not None:
-                lines.append(f"\n  Accuracy: {accuracy['avg_accuracy']:.0%} ({accuracy.get('forecasts_evaluated', 0)} evaluated)")
+                lines.append(
+                    f"\n  Accuracy: {accuracy['avg_accuracy']:.0%}"
+                    f" ({accuracy.get('forecasts_evaluated', 0)}"
+                    f" evaluated)"
+                )
             return {"answer": "\n".join(lines)}
         except Exception as e:
             return {"answer": f"Risk forecasting unavailable: {e}"}
@@ -2852,6 +2917,7 @@ class AngelClawBrain:
     def _handle_siem_manage(self, tid: str) -> dict:
         try:
             from cloud.services.siem_connector import siem_connector_service
+
             stats = siem_connector_service.get_stats(tid)
             lines = [
                 "**SIEM Connectors**\n",
@@ -2872,6 +2938,7 @@ class AngelClawBrain:
     def _handle_container_security(self, tid: str) -> dict:
         try:
             from cloud.services.container_security import container_security_service
+
             stats = container_security_service.get_stats(tid)
             lines = [
                 "**Container Security**\n",
@@ -2887,6 +2954,7 @@ class AngelClawBrain:
     def _handle_iac_scan(self, tid: str) -> dict:
         try:
             from cloud.services.iac_scanner import iac_scanner_service
+
             stats = iac_scanner_service.get_stats(tid)
             lines = [
                 "**IaC Security Scanner**\n",
@@ -2903,11 +2971,16 @@ class AngelClawBrain:
     def _handle_cicd_gate(self, tid: str) -> dict:
         try:
             from cloud.services.cicd_gate import cicd_gate_service
+
             stats = cicd_gate_service.get_stats(tid)
             lines = [
                 "**CI/CD Security Gates**\n",
                 f"  Total evaluations: {stats.get('total_evaluations', 0)}",
-                f"  Passed: {stats.get('passed', 0)}, Warned: {stats.get('warned', 0)}, Failed: {stats.get('failed', 0)}",
+                (
+                    f"  Passed: {stats.get('passed', 0)},"
+                    f" Warned: {stats.get('warned', 0)},"
+                    f" Failed: {stats.get('failed', 0)}"
+                ),
                 f"  Pass rate: {stats.get('pass_rate', 0)}%",
             ]
             lines.append("\nEvaluate: `POST /api/v1/integrations/cicd/evaluate`")
@@ -2923,18 +2996,21 @@ class AngelClawBrain:
         lines = ["**Zero Trust Architecture Status**\n"]
         try:
             from cloud.services.microsegmentation import microsegmentation_engine
+
             seg = microsegmentation_engine.get_stats(tid)
             lines.append(f"  Microsegments: {seg.get('total_segments', 0)}")
         except Exception:
             lines.append("  Microsegments: unavailable")
         try:
             from cloud.services.device_trust import device_trust_service
+
             dev = device_trust_service.get_stats(tid)
             lines.append(f"  Devices tracked: {dev.get('total_devices', 0)}")
         except Exception:
             lines.append("  Device trust: unavailable")
         try:
             from cloud.services.session_risk import session_risk_service
+
             sess = session_risk_service.get_stats(tid)
             lines.append(f"  Active sessions: {sess.get('active_sessions', 0)}")
         except Exception:
@@ -2949,6 +3025,7 @@ class AngelClawBrain:
     def _handle_ai_orchestrate(self, tid: str) -> dict:
         try:
             from cloud.services.ai_orchestrator import ai_orchestrator_service
+
             stats = ai_orchestrator_service.get_stats(tid)
             lines = [
                 "**Multi-Model AI Orchestrator**\n",
@@ -2963,13 +3040,16 @@ class AngelClawBrain:
     def _handle_nl_policy(self, tid: str, prompt: str) -> dict:
         try:
             from cloud.services.nl_policy import nl_policy_service
+
             stats = nl_policy_service.get_stats(tid)
             lines = [
                 "**Natural Language Policy Engine**\n",
                 f"  Total policies: {stats.get('total_policies', 0)}",
                 f"  Active: {stats.get('active', 0)}, Draft: {stats.get('draft', 0)}",
             ]
-            lines.append("\nCreate policy in plain English: `POST /api/v1/transcendence/policies/nl`")
+            lines.append(
+                "\nCreate policy in plain English: `POST /api/v1/transcendence/policies/nl`"
+            )
             lines.append('Example: "Block all SSH from external IPs after business hours"')
             return {"answer": "\n".join(lines)}
         except Exception as e:
@@ -2978,6 +3058,7 @@ class AngelClawBrain:
     def _handle_incident_command(self, tid: str) -> dict:
         try:
             from cloud.services.incident_commander import incident_commander_service
+
             stats = incident_commander_service.get_stats(tid)
             lines = [
                 "**Autonomous Incident Commander**\n",
@@ -2992,6 +3073,7 @@ class AngelClawBrain:
     def _handle_deception_manage(self, tid: str) -> dict:
         try:
             from cloud.services.deception import deception_service
+
             stats = deception_service.get_stats(tid)
             lines = [
                 "**Deception Technology**\n",
@@ -3000,7 +3082,9 @@ class AngelClawBrain:
                 f"  Triggered: {stats.get('triggered', 0)}",
             ]
             lines.append("\nDeploy: `POST /api/v1/transcendence/deception/tokens`")
-            lines.append("Types: honey_credential, honey_file, honey_endpoint, honey_dns, canary_token")
+            lines.append(
+                "Types: honey_credential, honey_file, honey_endpoint, honey_dns, canary_token"
+            )
             return {"answer": "\n".join(lines)}
         except Exception as e:
             return {"answer": f"Deception service unavailable: {e}"}
@@ -3008,6 +3092,7 @@ class AngelClawBrain:
     def _handle_forensic_case(self, tid: str) -> dict:
         try:
             from cloud.services.forensics_auto import forensics_service
+
             stats = forensics_service.get_stats(tid)
             lines = [
                 "**Digital Forensics**\n",
@@ -3023,6 +3108,7 @@ class AngelClawBrain:
     def _handle_compliance_code(self, tid: str) -> dict:
         try:
             from cloud.services.compliance_code import compliance_code_service
+
             stats = compliance_code_service.get_stats(tid)
             lines = [
                 "**Compliance-as-Code Engine**\n",
@@ -3038,6 +3124,7 @@ class AngelClawBrain:
     def _handle_evolving_rules(self, tid: str) -> dict:
         try:
             from cloud.services.evolving_rules import evolving_rules_service
+
             stats = evolving_rules_service.get_stats(tid)
             lines = [
                 "**Self-Evolving Detection Rules**\n",
@@ -3053,6 +3140,7 @@ class AngelClawBrain:
     def _handle_threat_share(self, tid: str) -> dict:
         try:
             from cloud.services.threat_sharing import threat_sharing_service
+
             stats = threat_sharing_service.get_stats(tid)
             lines = [
                 "**Cross-Org Threat Sharing**\n",
@@ -3071,6 +3159,7 @@ class AngelClawBrain:
     def _handle_realtime_metrics(self, tid: str) -> dict:
         try:
             from cloud.services.realtime_engine import realtime_engine_service
+
             stats = realtime_engine_service.get_stats(tid)
             metrics = realtime_engine_service.get_live_metrics(tid)
             lines = [
@@ -3088,6 +3177,7 @@ class AngelClawBrain:
     def _handle_halo_score(self, tid: str) -> dict:
         try:
             from cloud.services.halo_engine import halo_score_engine
+
             current = halo_score_engine.get_current_score(tid)
             score = current.get("score", "N/A") if current else "Not computed"
             lines = [
@@ -3105,6 +3195,7 @@ class AngelClawBrain:
     def _handle_fleet_status(self, tid: str) -> dict:
         try:
             from cloud.services.fleet_orchestrator import fleet_orchestrator_service
+
             stats = fleet_orchestrator_service.get_stats(tid)
             lines = [
                 "**Fleet Orchestrator (Wingspan)**\n",
@@ -3121,6 +3212,7 @@ class AngelClawBrain:
     def _handle_command_center(self, tid: str) -> dict:
         try:
             from cloud.services.dashboard_aggregator import dashboard_aggregator_service
+
             data = dashboard_aggregator_service.get_command_center(tid)
             lines = [
                 "**Command Center Dashboard**\n",
@@ -3141,6 +3233,7 @@ class AngelClawBrain:
     def _handle_cloud_connector(self, tid: str) -> dict:
         try:
             from cloud.services.cloud_connector import cloud_connector_service
+
             stats = cloud_connector_service.get_stats(tid)
             lines = [
                 "**Multi-Cloud Connectors**\n",
@@ -3157,6 +3250,7 @@ class AngelClawBrain:
     def _handle_cspm_scan(self, tid: str) -> dict:
         try:
             from cloud.services.cspm import cspm_service
+
             stats = cspm_service.get_stats(tid)
             lines = [
                 "**Cloud Security Posture Management**\n",
@@ -3172,6 +3266,7 @@ class AngelClawBrain:
     def _handle_saas_shield(self, tid: str) -> dict:
         try:
             from cloud.services.saas_shield import saas_shield_service
+
             stats = saas_shield_service.get_stats(tid)
             lines = [
                 "**SaaS Shield — Application Protection**\n",
@@ -3187,6 +3282,7 @@ class AngelClawBrain:
     def _handle_hybrid_mesh(self, tid: str) -> dict:
         try:
             from cloud.services.hybrid_mesh import hybrid_mesh_service
+
             stats = hybrid_mesh_service.get_stats(tid)
             lines = [
                 "**Hybrid Mesh — Cross-Environment Fabric**\n",
@@ -3206,6 +3302,7 @@ class AngelClawBrain:
     def _handle_threat_hunting(self, tid: str) -> dict:
         try:
             from cloud.services.threat_hunter import threat_hunter_service
+
             stats = threat_hunter_service.get_stats(tid)
             lines = [
                 "**Autonomous Threat Hunter**\n",
@@ -3222,6 +3319,7 @@ class AngelClawBrain:
     def _handle_mitre_attack(self, tid: str) -> dict:
         try:
             from cloud.services.mitre_mapper import mitre_attack_mapper
+
             stats = mitre_attack_mapper.get_stats(tid)
             lines = [
                 "**MITRE ATT&CK Mapper**\n",
@@ -3238,6 +3336,7 @@ class AngelClawBrain:
     def _handle_adversary_sim(self, tid: str) -> dict:
         try:
             from cloud.services.adversary_sim import adversary_sim_service
+
             stats = adversary_sim_service.get_stats(tid)
             lines = [
                 "**Adversary Simulation (Purple Team)**\n",
@@ -3253,6 +3352,7 @@ class AngelClawBrain:
     def _handle_intel_correlate(self, tid: str) -> dict:
         try:
             from cloud.services.intel_correlation import intel_correlation_service
+
             stats = intel_correlation_service.get_stats(tid)
             lines = [
                 "**Intelligence Correlation Engine**\n",
@@ -3272,6 +3372,7 @@ class AngelClawBrain:
     def _handle_agi_defense(self, tid: str) -> dict:
         try:
             from cloud.services.agi_defense import agi_defense_service
+
             stats = agi_defense_service.get_stats(tid)
             lines = [
                 "**AGI Defense — Self-Programming Rules**\n",
@@ -3288,6 +3389,7 @@ class AngelClawBrain:
     def _handle_autonomous_response(self, tid: str) -> dict:
         try:
             from cloud.services.autonomous_response import autonomous_response_service
+
             stats = autonomous_response_service.get_stats(tid)
             lines = [
                 "**Autonomous Incident Response**\n",
@@ -3304,6 +3406,7 @@ class AngelClawBrain:
     def _handle_threat_federation(self, tid: str) -> dict:
         try:
             from cloud.services.threat_federation import threat_federation_service
+
             stats = threat_federation_service.get_stats(tid)
             lines = [
                 "**Cross-Org Threat Federation**\n",
@@ -3320,6 +3423,7 @@ class AngelClawBrain:
     def _handle_soc_autopilot(self, tid: str) -> dict:
         try:
             from cloud.services.soc_autopilot import soc_autopilot_service
+
             stats = soc_autopilot_service.get_stats(tid)
             lines = [
                 "**SOC Autopilot — AGI Operations Center**\n",
@@ -3345,28 +3449,39 @@ class AngelClawBrain:
                 "**Autonomous Continuous Scan — Initiated**\n",
                 f"  Tenant: `{tid}`",
                 f"  Agents in scope: {count}",
-                f"  Mode: background continuous",
+                "  Mode: background continuous",
                 f"  Status: {'scanning' if count > 0 else 'no agents to scan'}",
             ]
             if count > 0:
                 lines.append(f"\nScanning {count} agent(s) across all registered nodes.")
-                lines.append("Results will surface as Guardian alerts. Say **\"alerts\"** to check.")
+                lines.append('Results will surface as Guardian alerts. Say **"alerts"** to check.')
             else:
                 lines.append("\nNo agents registered for this tenant. Register agents first.")
-            return {"answer": "\n".join(lines), "effects": [{"type": "autonomous_scan", "agents": count}]}
+            return {
+                "answer": "\n".join(lines),
+                "effects": [{"type": "autonomous_scan", "agents": count}],
+            }
         except Exception as e:
             return {"answer": f"Autonomous scan unavailable: {e}"}
 
     def _handle_execute_playbook(self, db: Session, tid: str, prompt: str) -> dict:
         try:
             from cloud.services.remediation import remediation_service
+
             playbooks = remediation_service.list_playbooks(tid)
             # Try to extract playbook name from prompt
             name_match = re.search(r"playbook\s+['\"]?(\S+)['\"]?", prompt, re.IGNORECASE)
             playbook_name = name_match.group(1) if name_match else None
             if playbook_name:
                 result = remediation_service.execute(tid, playbook_name)
-                return {"answer": f"**Playbook `{playbook_name}` executed.**\n\nResult: {result.get('status', 'completed')}", "effects": [{"type": "playbook_executed", "playbook": playbook_name}]}
+                return {
+                    "answer": (
+                        f"**Playbook `{playbook_name}` executed.**"
+                        f"\n\nResult:"
+                        f" {result.get('status', 'completed')}"
+                    ),
+                    "effects": [{"type": "playbook_executed", "playbook": playbook_name}],
+                }
             lines = [
                 "**Available Playbooks:**\n",
                 *[f"  - `{p.get('name', p.get('id', 'unknown'))}`" for p in playbooks[:10]],
@@ -3375,21 +3490,39 @@ class AngelClawBrain:
             ]
             return {"answer": "\n".join(lines)}
         except Exception as e:
-            return {"answer": f"Playbook execution unavailable: {e}. Use `POST /api/v1/remediation/workflows` to configure playbooks."}
+            return {
+                "answer": (
+                    f"Playbook execution unavailable: {e}."
+                    " Use `POST /api/v1/remediation/workflows`"
+                    " to configure playbooks."
+                )
+            }
 
     def _handle_contain_threat(self, db: Session, tid: str, prompt: str) -> dict:
-        target_match = re.search(r"(?:contain|isolate|block|neutralize|stop)\s+(?:threat\s+)?(?:on\s+)?['\"]?(\S+)['\"]?", prompt, re.IGNORECASE)
+        target_match = re.search(
+            r"(?:contain|isolate|block|neutralize|stop)"
+            r"\s+(?:threat\s+)?(?:on\s+)?['\"]?(\S+)['\"]?",
+            prompt,
+            re.IGNORECASE,
+        )
         target = target_match.group(1) if target_match else None
         if target and target.lower() not in ("threat", "threats", "attack"):
             lines = [
                 f"**Threat Containment — Target: `{target}`**\n",
-                f"  Action: isolate + block lateral movement",
+                "  Action: isolate + block lateral movement",
                 f"  Tenant: `{tid}`",
-                f"  Status: containment initiated",
-                "\nThe target has been flagged for isolation. Guardian wardens are enforcing quarantine rules.",
+                "  Status: containment initiated",
+                (
+                    "\nThe target has been flagged for"
+                    " isolation. Guardian wardens are"
+                    " enforcing quarantine rules."
+                ),
                 'Check status: **"quarantine status"**',
             ]
-            return {"answer": "\n".join(lines), "effects": [{"type": "threat_contained", "target": target}]}
+            return {
+                "answer": "\n".join(lines),
+                "effects": [{"type": "threat_contained", "target": target}],
+            }
         lines = [
             "**Threat Containment**\n",
             "I can isolate threats by agent hostname, IP, or incident ID.",
@@ -3401,12 +3534,22 @@ class AngelClawBrain:
     def _handle_deploy_policy(self, db: Session, tid: str, prompt: str) -> dict:
         try:
             from cloud.services.policy_snapshots import policy_snapshot_service
+
             snapshots = policy_snapshot_service.list_snapshots(tid)
-            policy_match = re.search(r"(?:deploy|push|enforce|activate)\s+policy\s+['\"]?(\S+)['\"]?", prompt, re.IGNORECASE)
+            policy_match = re.search(
+                r"(?:deploy|push|enforce|activate)\s+policy\s+['\"]?(\S+)['\"]?",
+                prompt,
+                re.IGNORECASE,
+            )
             policy_name = policy_match.group(1) if policy_match else None
             if policy_name:
                 return {
-                    "answer": f"**Policy `{policy_name}` deployed to tenant `{tid}`.**\n\nAll agents will receive the updated policy on next heartbeat.",
+                    "answer": (
+                        f"**Policy `{policy_name}` deployed"
+                        f" to tenant `{tid}`.**\n\nAll agents"
+                        " will receive the updated policy"
+                        " on next heartbeat."
+                    ),
                     "effects": [{"type": "policy_deployed", "policy": policy_name, "tenant": tid}],
                 }
             lines = [
@@ -3417,7 +3560,13 @@ class AngelClawBrain:
             ]
             return {"answer": "\n".join(lines)}
         except Exception as e:
-            return {"answer": f"Policy deployment unavailable: {e}. Use `POST /api/v1/policies/snapshots` to create policies first."}
+            return {
+                "answer": (
+                    f"Policy deployment unavailable: {e}."
+                    " Use `POST /api/v1/policies/snapshots`"
+                    " to create policies first."
+                )
+            }
 
     def _handle_rotate_secrets(self, db: Session, tid: str) -> dict:
         lines = [
@@ -3432,16 +3581,26 @@ class AngelClawBrain:
         return {"answer": "\n".join(lines), "effects": [{"type": "secrets_rotated", "tenant": tid}]}
 
     def _handle_kill_session(self, db: Session, tid: str, prompt: str) -> dict:
-        session_match = re.search(r"(?:kill|terminate|revoke|end)\s+session\s+['\"]?(\S+)['\"]?", prompt, re.IGNORECASE)
+        session_match = re.search(
+            r"(?:kill|terminate|revoke|end)\s+session\s+['\"]?(\S+)['\"]?", prompt, re.IGNORECASE
+        )
         target = session_match.group(1) if session_match else None
         if target and target.lower() not in ("session", "sessions", "all"):
             lines = [
                 f"**Session Terminated: `{target}`**\n",
                 f"  Tenant: `{tid}`",
                 "  Status: revoked",
-                f"\nSession `{target}` has been forcefully terminated. The user will need to re-authenticate.",
+                (
+                    f"\nSession `{target}` has been"
+                    " forcefully terminated."
+                    " The user will need to"
+                    " re-authenticate."
+                ),
             ]
-            return {"answer": "\n".join(lines), "effects": [{"type": "session_killed", "target": target}]}
+            return {
+                "answer": "\n".join(lines),
+                "effects": [{"type": "session_killed", "target": target}],
+            }
         lines = [
             "**Session Management**\n",
             "I can terminate specific user sessions or force a global logout.",
@@ -3451,7 +3610,9 @@ class AngelClawBrain:
         return {"answer": "\n".join(lines)}
 
     def _handle_lock_agent(self, db: Session, tid: str, prompt: str) -> dict:
-        agent_match = re.search(r"(?:lock|freeze|disable|stop|halt)\s+agent\s+['\"]?(\S+)['\"]?", prompt, re.IGNORECASE)
+        agent_match = re.search(
+            r"(?:lock|freeze|disable|stop|halt)\s+agent\s+['\"]?(\S+)['\"]?", prompt, re.IGNORECASE
+        )
         target = agent_match.group(1) if agent_match else None
         if target and target.lower() not in ("agent", "agents"):
             agent = db.query(AgentNodeRow).filter(AgentNodeRow.id == target).first()
@@ -3459,23 +3620,44 @@ class AngelClawBrain:
                 agent.status = "locked"
                 db.commit()
                 return {
-                    "answer": f"**Agent `{target}` ({agent.hostname}) — LOCKED**\n\nThe agent is now frozen. No policy evaluations or telemetry will be processed until unlocked.",
+                    "answer": (
+                        f"**Agent `{target}`"
+                        f" ({agent.hostname}) — LOCKED**"
+                        "\n\nThe agent is now frozen."
+                        " No policy evaluations or"
+                        " telemetry will be processed"
+                        " until unlocked."
+                    ),
                     "effects": [{"type": "agent_locked", "agent_id": target}],
                 }
             return {
-                "answer": f"**Agent `{target}` — LOCKED (not found in DB)**\n\nLock command issued. If the agent connects, it will be held in quarantine.",
+                "answer": (
+                    f"**Agent `{target}`"
+                    " — LOCKED (not found in DB)**"
+                    "\n\nLock command issued."
+                    " If the agent connects, it will"
+                    " be held in quarantine."
+                ),
                 "effects": [{"type": "agent_locked", "agent_id": target}],
             }
         lines = [
             "**Agent Lock**\n",
-            "I can lock (freeze) any agent to prevent it from processing policies or sending telemetry.",
+            (
+                "I can lock (freeze) any agent to prevent"
+                " it from processing policies or"
+                " sending telemetry."
+            ),
             'Example: **"lock agent agent-07"**',
             "\nLocked agents remain registered but are suspended from all operations.",
         ]
         return {"answer": "\n".join(lines)}
 
     def _handle_unlock_agent(self, db: Session, tid: str, prompt: str) -> dict:
-        agent_match = re.search(r"(?:unlock|unfreeze|enable|resume|restart)\s+agent\s+['\"]?(\S+)['\"]?", prompt, re.IGNORECASE)
+        agent_match = re.search(
+            r"(?:unlock|unfreeze|enable|resume|restart)\s+agent\s+['\"]?(\S+)['\"]?",
+            prompt,
+            re.IGNORECASE,
+        )
         target = agent_match.group(1) if agent_match else None
         if target and target.lower() not in ("agent", "agents"):
             agent = db.query(AgentNodeRow).filter(AgentNodeRow.id == target).first()
@@ -3483,10 +3665,17 @@ class AngelClawBrain:
                 agent.status = "active"
                 db.commit()
                 return {
-                    "answer": f"**Agent `{target}` ({agent.hostname}) — UNLOCKED**\n\nThe agent is now active and will resume normal operations.",
+                    "answer": (
+                        f"**Agent `{target}`"
+                        f" ({agent.hostname}) — UNLOCKED**"
+                        "\n\nThe agent is now active and"
+                        " will resume normal operations."
+                    ),
                     "effects": [{"type": "agent_unlocked", "agent_id": target}],
                 }
-            return {"answer": f"Agent `{target}` not found. Check agent ID with **\"agent status\"**."}
+            return {
+                "answer": f'Agent `{target}` not found. Check agent ID with **"agent status"**.'
+            }
         lines = [
             "**Agent Unlock**\n",
             "I can unlock (resume) a previously locked agent.",
@@ -3506,7 +3695,10 @@ class AngelClawBrain:
             "\nAll on-call responders have been notified. Incident commander protocol activated.",
             "Guardian wardens are on heightened alert. Continuous monitoring enabled.",
         ]
-        return {"answer": "\n".join(lines), "effects": [{"type": "escalated", "severity": severity}]}
+        return {
+            "answer": "\n".join(lines),
+            "effects": [{"type": "escalated", "severity": severity}],
+        }
 
     # ------------------------------------------------------------------
     # General handler

@@ -55,7 +55,8 @@ class TestNotificationRouter:
         router = NotificationRouter()
         # Should not crash even with no channels
         result = router.route_alert(
-            db, "dev-tenant",
+            db,
+            "dev-tenant",
             alert_type="test",
             title="Test",
             severity="critical",
@@ -66,7 +67,8 @@ class TestNotificationRouter:
     def test_route_alert_no_rules(self, db):
         router = NotificationRouter()
         result = router.route_alert(
-            db, "dev-tenant",
+            db,
+            "dev-tenant",
             alert_type="test",
             title="Test Alert",
             severity="high",

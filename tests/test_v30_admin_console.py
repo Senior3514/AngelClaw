@@ -12,10 +12,8 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
 
 # ---------------------------------------------------------------------------
 # Conditional imports — these modules may not exist yet, so we create
@@ -23,7 +21,8 @@ from fastapi.testclient import TestClient
 # ---------------------------------------------------------------------------
 
 try:
-    from cloud.services.anti_tamper import AntiTamperMode, AntiTamperService, anti_tamper_service
+    from cloud.services.anti_tamper import AntiTamperMode, AntiTamperService
+
     _HAS_ANTI_TAMPER = True
 except ImportError:
     # Inline stub so anti-tamper tests work even when the module is not
@@ -100,33 +99,28 @@ except ImportError:
     _HAS_ANTI_TAMPER = True
 
 try:
-    from cloud.guardian.learning import LearningEngine, learning_engine
+    from cloud.guardian.learning import LearningEngine
+
     _HAS_LEARNING = True
 except ImportError:
     _HAS_LEARNING = False
 
 try:
-    from cloud.guardian.self_audit import run_self_audit, SelfAuditReport, AuditFinding
+    from cloud.guardian.self_audit import SelfAuditReport, run_self_audit
+
     _HAS_SELF_AUDIT = True
 except ImportError:
     _HAS_SELF_AUDIT = False
 
-try:
-    from cloud.guardian.orchestrator import angel_orchestrator
-    _HAS_ORCHESTRATOR = True
-except ImportError:
-    _HAS_ORCHESTRATOR = False
 
 try:
     from cloud.db.models import (
         AgentNodeRow,
         CustomRoleRow,
         EventReplayRow,
-        EventRow,
-        GuardianAlertRow,
         RemediationWorkflowRow,
-        ThreatHuntQueryRow,
     )
+
     _HAS_MODELS = True
 except ImportError:
     _HAS_MODELS = False
@@ -470,7 +464,10 @@ class TestFeedbackLoop:
         # Record 5 false positives for the same pattern to trigger suggestion
         for i in range(5):
             engine.record_detection_outcome(
-                f"fp-{i}", "noisy_rule", False, 0.6,
+                f"fp-{i}",
+                "noisy_rule",
+                False,
+                0.6,
             )
 
         suggestion = engine.suggest_threshold_adjustment("noisy_rule")
@@ -767,8 +764,18 @@ class TestAdminConsoleIntegration:
 
         # Escalating trend
         engine2 = LearningEngine()
-        for s in ["low", "low", "low", "low", "low",
-                   "high", "high", "critical", "critical", "critical"]:
+        for s in [
+            "low",
+            "low",
+            "low",
+            "low",
+            "low",
+            "high",
+            "high",
+            "critical",
+            "critical",
+            "critical",
+        ]:
             engine2.record_incident_severity(s)
         rate2 = engine2.get_escalation_rate()
         assert rate2["direction"] == "escalating"
@@ -851,12 +858,14 @@ class TestAdminConsoleIntegration:
         ]
         for name, perms in roles_to_create:
             role_id = str(uuid.uuid4())
-            db.add(CustomRoleRow(
-                id=role_id,
-                tenant_id="dev-tenant",
-                name=f"{name}-{role_id[:4]}",
-                permissions=perms,
-            ))
+            db.add(
+                CustomRoleRow(
+                    id=role_id,
+                    tenant_id="dev-tenant",
+                    name=f"{name}-{role_id[:4]}",
+                    permissions=perms,
+                )
+            )
         db.commit()
 
         all_roles = db.query(CustomRoleRow).filter_by(tenant_id="dev-tenant").all()

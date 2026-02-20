@@ -73,7 +73,9 @@ class AssetInventoryService:
         )
         self._assets[asset.id] = asset
         self._tenant_assets[tenant_id].append(asset.id)
-        logger.info("[ASSET_INVENTORY] Registered asset '%s' (%s) for %s", name, asset_type, tenant_id)
+        logger.info(
+            "[ASSET_INVENTORY] Registered asset '%s' (%s) for %s", name, asset_type, tenant_id
+        )
         return asset.model_dump(mode="json")
 
     def get_asset(self, asset_id: str) -> dict | None:
@@ -132,17 +134,21 @@ class AssetInventoryService:
 
     def get_risk_heatmap(self, tenant_id: str) -> dict:
         """Generate risk heatmap data for all assets."""
-        assets = [self._assets[a] for a in self._tenant_assets.get(tenant_id, []) if a in self._assets]
+        assets = [
+            self._assets[a] for a in self._tenant_assets.get(tenant_id, []) if a in self._assets
+        ]
         heatmap: dict[str, list[dict]] = defaultdict(list)
         for asset in assets:
             if asset.status != "active":
                 continue
-            heatmap[asset.classification].append({
-                "id": asset.id,
-                "name": asset.name,
-                "risk_score": asset.risk_score,
-                "type": asset.asset_type,
-            })
+            heatmap[asset.classification].append(
+                {
+                    "id": asset.id,
+                    "name": asset.name,
+                    "risk_score": asset.risk_score,
+                    "type": asset.asset_type,
+                }
+            )
         for classification in heatmap:
             heatmap[classification].sort(key=lambda a: a["risk_score"], reverse=True)
         return {
@@ -153,7 +159,9 @@ class AssetInventoryService:
         }
 
     def get_stats(self, tenant_id: str) -> dict:
-        assets = [self._assets[a] for a in self._tenant_assets.get(tenant_id, []) if a in self._assets]
+        assets = [
+            self._assets[a] for a in self._tenant_assets.get(tenant_id, []) if a in self._assets
+        ]
         by_type: dict[str, int] = defaultdict(int)
         by_class: dict[str, int] = defaultdict(int)
         by_status: dict[str, int] = defaultdict(int)

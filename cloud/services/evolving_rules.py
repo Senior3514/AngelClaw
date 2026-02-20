@@ -109,7 +109,10 @@ class EvolvingRulesService:
         self._tenant_rules[tenant_id].append(rule.id)
         logger.info(
             "[EVOLVING] Created rule '%s' gen=%d category=%s for %s",
-            name, generation, category, tenant_id,
+            name,
+            generation,
+            category,
+            tenant_id,
         )
         return rule.model_dump(mode="json")
 
@@ -213,7 +216,10 @@ class EvolvingRulesService:
 
         logger.info(
             "[EVOLVING] Outcome for rule '%s': %s (precision=%.3f, fitness=%.3f)",
-            rule.name, outcome, rule.precision, rule.fitness_score,
+            rule.name,
+            outcome,
+            rule.precision,
+            rule.fitness_score,
         )
         return record.model_dump(mode="json")
 
@@ -266,7 +272,10 @@ class EvolvingRulesService:
             evolved.append(child)
             logger.info(
                 "[EVOLVING] Evolved rule '%s' gen=%d -> gen=%d (FP rate %.1f%%)",
-                rule.name, rule.generation, rule.generation + 1, fp_rate * 100,
+                rule.name,
+                rule.generation,
+                rule.generation + 1,
+                fp_rate * 100,
             )
 
         return evolved
@@ -283,45 +292,47 @@ class EvolvingRulesService:
         for ancestor_id in rule.lineage:
             ancestor = self._rules.get(ancestor_id)
             if ancestor:
-                lineage_rules.append({
-                    "id": ancestor.id,
-                    "name": ancestor.name,
-                    "generation": ancestor.generation,
-                    "threshold": ancestor.threshold,
-                    "precision": ancestor.precision,
-                    "fitness_score": ancestor.fitness_score,
-                    "true_positives": ancestor.true_positives,
-                    "false_positives": ancestor.false_positives,
-                    "enabled": ancestor.enabled,
-                    "created_at": ancestor.created_at.isoformat(),
-                    "evolved_at": ancestor.evolved_at.isoformat() if ancestor.evolved_at else None,
-                })
+                lineage_rules.append(
+                    {
+                        "id": ancestor.id,
+                        "name": ancestor.name,
+                        "generation": ancestor.generation,
+                        "threshold": ancestor.threshold,
+                        "precision": ancestor.precision,
+                        "fitness_score": ancestor.fitness_score,
+                        "true_positives": ancestor.true_positives,
+                        "false_positives": ancestor.false_positives,
+                        "enabled": ancestor.enabled,
+                        "created_at": ancestor.created_at.isoformat(),
+                        "evolved_at": ancestor.evolved_at.isoformat()
+                        if ancestor.evolved_at
+                        else None,
+                    }
+                )
 
         # Add current rule
-        lineage_rules.append({
-            "id": rule.id,
-            "name": rule.name,
-            "generation": rule.generation,
-            "threshold": rule.threshold,
-            "precision": rule.precision,
-            "fitness_score": rule.fitness_score,
-            "true_positives": rule.true_positives,
-            "false_positives": rule.false_positives,
-            "enabled": rule.enabled,
-            "created_at": rule.created_at.isoformat(),
-            "evolved_at": rule.evolved_at.isoformat() if rule.evolved_at else None,
-        })
+        lineage_rules.append(
+            {
+                "id": rule.id,
+                "name": rule.name,
+                "generation": rule.generation,
+                "threshold": rule.threshold,
+                "precision": rule.precision,
+                "fitness_score": rule.fitness_score,
+                "true_positives": rule.true_positives,
+                "false_positives": rule.false_positives,
+                "enabled": rule.enabled,
+                "created_at": rule.created_at.isoformat(),
+                "evolved_at": rule.evolved_at.isoformat() if rule.evolved_at else None,
+            }
+        )
 
         return lineage_rules
 
     # -- Stats --
 
     def get_stats(self, tenant_id: str) -> dict:
-        rules = [
-            self._rules[r]
-            for r in self._tenant_rules.get(tenant_id, [])
-            if r in self._rules
-        ]
+        rules = [self._rules[r] for r in self._tenant_rules.get(tenant_id, []) if r in self._rules]
         by_category: dict[str, int] = defaultdict(int)
         by_generation: dict[int, int] = defaultdict(int)
         total_tp = 0
@@ -335,11 +346,13 @@ class EvolvingRulesService:
         active_rules = [r for r in rules if r.enabled]
         avg_fitness = (
             round(sum(r.fitness_score for r in active_rules) / len(active_rules), 3)
-            if active_rules else 0.0
+            if active_rules
+            else 0.0
         )
         avg_precision = (
             round(sum(r.precision for r in active_rules) / len(active_rules), 3)
-            if active_rules else 0.0
+            if active_rules
+            else 0.0
         )
 
         return {

@@ -6,9 +6,8 @@ import pytest
 
 from cloud.services.cloud_connector import CloudConnectorService
 from cloud.services.cspm import CSPMService
-from cloud.services.saas_shield import SaaSShieldService
 from cloud.services.hybrid_mesh import HybridMeshService
-
+from cloud.services.saas_shield import SaaSShieldService
 
 TENANT = "test-tenant"
 
@@ -518,7 +517,9 @@ class TestSaaSShieldRegister:
         assert result["app_type"] == "crm"
         assert result["auth_method"] == "saml"
 
-    @pytest.mark.parametrize("app_type", ["collaboration", "storage", "crm", "devops", "hr", "finance", "custom"])
+    @pytest.mark.parametrize(
+        "app_type", ["collaboration", "storage", "crm", "devops", "hr", "finance", "custom"]
+    )
     def test_register_all_app_types(self, app_type):
         svc = SaaSShieldService()
         result = svc.register_app(TENANT, f"app-{app_type}", app_type=app_type)
@@ -605,9 +606,7 @@ class TestSaaSShieldSessionMonitor:
     def test_anomaly_large_download(self):
         svc = SaaSShieldService()
         app = svc.register_app(TENANT, "Drive")
-        result = svc.monitor_session(
-            app["id"], "user-1", "data_download", context={"size_mb": 600}
-        )
+        result = svc.monitor_session(app["id"], "user-1", "data_download", context={"size_mb": 600})
         assert result["anomaly_detected"] is True
 
     def test_anomaly_new_geolocation(self):
@@ -629,9 +628,7 @@ class TestSaaSShieldSessionMonitor:
     def test_no_anomaly_normal_download(self):
         svc = SaaSShieldService()
         app = svc.register_app(TENANT, "Drive")
-        result = svc.monitor_session(
-            app["id"], "user-1", "data_download", context={"size_mb": 50}
-        )
+        result = svc.monitor_session(app["id"], "user-1", "data_download", context={"size_mb": 50})
         assert result["anomaly_detected"] is False
 
     def test_no_anomaly_normal_api_call(self):
@@ -805,9 +802,7 @@ class TestHybridMeshRegister:
 
     def test_register_with_config(self):
         svc = HybridMeshService()
-        result = svc.register_environment(
-            TENANT, "dc-east", "on_prem", config={"rack": "A3"}
-        )
+        result = svc.register_environment(TENANT, "dc-east", "on_prem", config={"rack": "A3"})
         assert result["config"]["rack"] == "A3"
 
     def test_register_unique_ids(self):

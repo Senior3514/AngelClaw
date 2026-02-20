@@ -84,9 +84,12 @@ class TestMeshRoutes:
         assert resp.status_code == 200
 
     def test_register_endpoint(self, client):
-        resp = client.post("/api/v1/mesh/register", json={
-            "agent_id": str(uuid.uuid4()),
-            "agent_type": "test",
-            "capabilities": ["scan"],
-        })
+        resp = client.post(
+            "/api/v1/mesh/register",
+            json={
+                "agent_id": str(uuid.uuid4()),
+                "agent_type": "test",
+                "capabilities": ["scan"],
+            },
+        )
         assert resp.status_code == 200

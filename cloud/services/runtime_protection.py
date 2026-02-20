@@ -104,9 +104,7 @@ class RuntimeProtectionService:
             "tenant_id": tenant_id,
             "total_events": len(items),
             "blocked_attacks": len(blocked),
-            "attack_types": list(set(
-                at for v in blocked for at in v.get("attacks_detected", [])
-            )),
+            "attack_types": list(set(at for v in blocked for at in v.get("attacks_detected", []))),
         }
 
     def status(self, tenant_id: str) -> dict[str, Any]:

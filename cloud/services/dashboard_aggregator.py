@@ -78,10 +78,12 @@ class DashboardAggregator:
 
     def push_event(self, tenant_id: str, event: dict) -> None:
         """Push a recent event for dashboard display."""
-        self._event_data[tenant_id].append({
-            **event,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
+        self._event_data[tenant_id].append(
+            {
+                **event,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
         # Keep only the most recent 200 events
         if len(self._event_data[tenant_id]) > 200:
             self._event_data[tenant_id] = self._event_data[tenant_id][-200:]
@@ -209,11 +211,16 @@ class DashboardAggregator:
     # ------------------------------------------------------------------
 
     def _record_snapshot(
-        self, tenant_id: str, section: str, data: dict,
+        self,
+        tenant_id: str,
+        section: str,
+        data: dict,
     ) -> None:
         """Record a dashboard snapshot for history."""
         snap = DashboardSnapshot(
-            tenant_id=tenant_id, section=section, data=data,
+            tenant_id=tenant_id,
+            section=section,
+            data=data,
         )
         self._snapshots[tenant_id].append(snap)
         # Cap snapshots per tenant
@@ -222,10 +229,9 @@ class DashboardAggregator:
 
     def _compute_score_trend(self, tenant_id: str) -> str:
         """Derive halo score trend from recent snapshots."""
-        recent = [
-            s for s in self._snapshots.get(tenant_id, [])
-            if s.section == "command_center"
-        ][-10:]
+        recent = [s for s in self._snapshots.get(tenant_id, []) if s.section == "command_center"][
+            -10:
+        ]
 
         if len(recent) < 2:
             return "stable"

@@ -330,7 +330,6 @@ class PatternDetector:
             )
         ]
 
-
     # ---------------------------------------------------------------
     # V2.1 — New pattern detections
     # ---------------------------------------------------------------
@@ -341,9 +340,23 @@ class PatternDetector:
         window_seconds: int,
     ) -> list[ThreatIndicator]:
         """Reconnaissance chain: system info gathering from same agent → high."""
-        recon_keywords = {"whoami", "id", "uname", "hostname", "ifconfig", "ip addr",
-                          "systeminfo", "ipconfig", "net user", "cat /etc/passwd",
-                          "nmap", "nslookup", "dig", "ls /", "find /"}
+        recon_keywords = {
+            "whoami",
+            "id",
+            "uname",
+            "hostname",
+            "ifconfig",
+            "ip addr",
+            "systeminfo",
+            "ipconfig",
+            "net user",
+            "cat /etc/passwd",
+            "nmap",
+            "nslookup",
+            "dig",
+            "ls /",
+            "find /",
+        }
         per_agent: dict[str, list[EventRow]] = defaultdict(list)
         for e in events:
             cmd = ((e.details or {}).get("command", "") or "").lower()
@@ -458,8 +471,16 @@ class PatternDetector:
         events: list[EventRow],
     ) -> list[ThreatIndicator]:
         """Resource exhaustion: fork bomb, infinite loop, or stress commands → critical."""
-        resource_keywords = {"fork", "while true", ":()", "stress", "stress-ng",
-                             "dd if=/dev/zero", "dd if=/dev/urandom", "/dev/null"}
+        resource_keywords = {
+            "fork",
+            "while true",
+            ":()",
+            "stress",
+            "stress-ng",
+            "dd if=/dev/zero",
+            "dd if=/dev/urandom",
+            "/dev/null",
+        }
         flagged = []
         for e in events:
             cmd = ((e.details or {}).get("command", "") or "").lower()
@@ -490,9 +511,16 @@ class PatternDetector:
         events: list[EventRow],
     ) -> list[ThreatIndicator]:
         """Persistence installation: crontab, systemd, registry modifications → high."""
-        persist_keywords = {"crontab", "systemctl enable", "/etc/init.d",
-                            "@reboot", "schtasks /create", "reg add",
-                            "launchctl load", "startup script"}
+        persist_keywords = {
+            "crontab",
+            "systemctl enable",
+            "/etc/init.d",
+            "@reboot",
+            "schtasks /create",
+            "reg add",
+            "launchctl load",
+            "startup script",
+        }
         flagged = []
         for e in events:
             cmd = ((e.details or {}).get("command", "") or "").lower()
@@ -517,7 +545,6 @@ class PatternDetector:
                 mitre_tactic=MitreTactic.PERSISTENCE.value,
             )
         ]
-
 
     # ---------------------------------------------------------------
     # V2.2 — Advanced pattern detections
@@ -563,9 +590,21 @@ class PatternDetector:
     ) -> list[ThreatIndicator]:
         """Living-off-the-land binary abuse: legitimate tools used maliciously → high."""
         lolbin_keywords = {
-            "certutil", "mshta", "regsvr32", "rundll32", "wscript", "cscript",
-            "msiexec", "bitsadmin", "xdg-open", "python -c", "perl -e",
-            "ruby -e", "awk '{system", "curl.*|.*sh", "wget.*|.*bash",
+            "certutil",
+            "mshta",
+            "regsvr32",
+            "rundll32",
+            "wscript",
+            "cscript",
+            "msiexec",
+            "bitsadmin",
+            "xdg-open",
+            "python -c",
+            "perl -e",
+            "ruby -e",
+            "awk '{system",
+            "curl.*|.*sh",
+            "wget.*|.*bash",
         }
         flagged = []
         for e in events:
@@ -598,10 +637,19 @@ class PatternDetector:
     ) -> list[ThreatIndicator]:
         """Fileless malware indicators: in-memory execution, reflective loading → critical."""
         fileless_keywords = {
-            "memfd_create", "/dev/shm/", "process_hollowing", "reflective",
-            "powershell -enc", "powershell.exe -enc", "-encodedcommand",
-            "iex(", "invoke-expression", "[system.convert]",
-            "frombase64string", "/proc/self/mem", "ld_preload",
+            "memfd_create",
+            "/dev/shm/",
+            "process_hollowing",
+            "reflective",
+            "powershell -enc",
+            "powershell.exe -enc",
+            "-encodedcommand",
+            "iex(",
+            "invoke-expression",
+            "[system.convert]",
+            "frombase64string",
+            "/proc/self/mem",
+            "ld_preload",
         }
         flagged = []
         for e in events:
@@ -653,8 +701,7 @@ class PatternDetector:
                         severity="critical",
                         confidence=0.90,
                         description=(
-                            f"Token replay attack: same credential used across "
-                            f"{len(agents)} agents"
+                            f"Token replay attack: same credential used across {len(agents)} agents"
                         ),
                         related_event_ids=token_evts[token][:10],
                         related_agent_ids=list(agents),
@@ -671,8 +718,17 @@ class PatternDetector:
     ) -> list[ThreatIndicator]:
         """Cloud API abuse: rapid cloud management API calls → high."""
         cloud_keywords = {
-            "aws ", "az ", "gcloud", "kubectl", "terraform", "pulumi",
-            "s3api", "ec2", "iam", "cloudformation", "lambda",
+            "aws ",
+            "az ",
+            "gcloud",
+            "kubectl",
+            "terraform",
+            "pulumi",
+            "s3api",
+            "ec2",
+            "iam",
+            "cloudformation",
+            "lambda",
         }
         per_agent: dict[str, list[EventRow]] = defaultdict(list)
         for e in events:
@@ -707,8 +763,14 @@ class PatternDetector:
     ) -> list[ThreatIndicator]:
         """Reverse proxy/tunneling abuse: ngrok, bore, cloudflare tunnel → high."""
         proxy_keywords = {
-            "ngrok", "bore", "cloudflared tunnel", "localtunnel",
-            "serveo", "pagekite", "teleconsole", "sshuttle",
+            "ngrok",
+            "bore",
+            "cloudflared tunnel",
+            "localtunnel",
+            "serveo",
+            "pagekite",
+            "teleconsole",
+            "sshuttle",
         }
         flagged = []
         for e in events:
@@ -741,9 +803,17 @@ class PatternDetector:
     ) -> list[ThreatIndicator]:
         """Defense evasion: log clearing, history tampering, timestamp modification → critical."""
         evasion_keywords = {
-            "history -c", "unset histfile", "shred", "clear_log",
-            "wevtutil cl", "rm -f /var/log", "touch -t", "timestomp",
-            "auditctl -D", "setenforce 0", "apparmor_parser -R",
+            "history -c",
+            "unset histfile",
+            "shred",
+            "clear_log",
+            "wevtutil cl",
+            "rm -f /var/log",
+            "touch -t",
+            "timestomp",
+            "auditctl -D",
+            "setenforce 0",
+            "apparmor_parser -R",
         }
         flagged = []
         for e in events:

@@ -20,7 +20,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 logger = logging.getLogger("angelclaw.dns_security")
 
@@ -42,7 +42,7 @@ class DNSSecurityService:
     def __init__(self) -> None:
         self._store: dict[str, dict] = defaultdict(dict)
 
-    def analyze_query(self, tenant_id: str, domain: str, query_type: str = 'A') -> dict[str, Any]:
+    def analyze_query(self, tenant_id: str, domain: str, query_type: str = "A") -> dict[str, Any]:
         """Analyze a DNS query for threats."""
         if tenant_id not in self._store:
             self._store[tenant_id] = {}

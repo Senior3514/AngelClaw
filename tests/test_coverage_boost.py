@@ -51,6 +51,7 @@ def _ensure_agent_node_agent_id():
     """
     if not hasattr(AgentNodeRow, "agent_id"):
         from sqlalchemy.orm import synonym
+
         AgentNodeRow.agent_id = synonym("id")
 
 
@@ -308,8 +309,9 @@ class TestDecisionLogger:
 class TestBuildAgentTimeline:
     """Tests for build_agent_timeline()."""
 
-    def _make_event(self, agent_id, category="shell", etype="exec",
-                    severity="low", minutes_ago=5, details=None):
+    def _make_event(
+        self, agent_id, category="shell", etype="exec", severity="low", minutes_ago=5, details=None
+    ):
         """Helper to create an EventRow."""
         return EventRow(
             id=str(uuid.uuid4()),
@@ -340,9 +342,7 @@ class TestBuildAgentTimeline:
         assert result.agent_id == "nonexistent"
         assert result.hours == 24
         assert result.total_events == 0
-        assert result.entries == [] or all(
-            e.entry_type == "policy_change" for e in result.entries
-        )
+        assert result.entries == [] or all(e.entry_type == "policy_change" for e in result.entries)
 
     def test_events_appear_in_timeline(self, db):
         from cloud.services.timeline import build_agent_timeline
@@ -362,8 +362,7 @@ class TestBuildAgentTimeline:
         from cloud.services.timeline import build_agent_timeline
 
         agent_id = f"agent-{uuid.uuid4().hex[:8]}"
-        ev = self._make_event(agent_id, category="ai_tool", etype="tool_call",
-                              minutes_ago=3)
+        ev = self._make_event(agent_id, category="ai_tool", etype="tool_call", minutes_ago=3)
         db.add(ev)
         db.flush()
 
@@ -453,15 +452,21 @@ class TestBuildAgentTimeline:
             id=str(uuid.uuid4()),
             agent_id=agent_id,
             timestamp=now - timedelta(minutes=10),
-            category="shell", type="exec", severity="low",
-            details={}, source="test",
+            category="shell",
+            type="exec",
+            severity="low",
+            details={},
+            source="test",
         )
         ev2 = EventRow(
             id=str(uuid.uuid4()),
             agent_id=agent_id,
             timestamp=now - timedelta(minutes=9),
-            category="shell", type="exec", severity="low",
-            details={}, source="test",
+            category="shell",
+            type="exec",
+            severity="low",
+            details={},
+            source="test",
         )
         db.add_all([ev1, ev2])
         db.flush()
@@ -559,9 +564,9 @@ class TestDaemonPureFunctions:
 
         _generate_report(db, "test-tenant")
         # It should have created a GuardianReportRow
-        report = db.query(GuardianReportRow).filter(
-            GuardianReportRow.tenant_id == "test-tenant"
-        ).first()
+        report = (
+            db.query(GuardianReportRow).filter(GuardianReportRow.tenant_id == "test-tenant").first()
+        )
         assert report is not None
         assert report.tenant_id == "test-tenant"
         assert report.agents_total >= 0
@@ -593,9 +598,11 @@ class TestDaemonPureFunctions:
         db.flush()
 
         _generate_report(db, "test-tenant-2")
-        report = db.query(GuardianReportRow).filter(
-            GuardianReportRow.tenant_id == "test-tenant-2"
-        ).first()
+        report = (
+            db.query(GuardianReportRow)
+            .filter(GuardianReportRow.tenant_id == "test-tenant-2")
+            .first()
+        )
         assert report is not None
         assert report.agents_total >= 1
         assert report.agents_active >= 1
@@ -637,7 +644,8 @@ class TestDaemonPureFunctions:
         # We test via direct attribute checking instead.
         agents = db.query(AgentNodeRow).filter(AgentNodeRow.status == "active").all()
         stale_found = [
-            a for a in agents
+            a
+            for a in agents
             if a.hostname == "stale-host-unique"
             and a.last_seen_at
             and a.last_seen_at < stale_cutoff_naive
@@ -929,8 +937,7 @@ class TestAnomalyDetector:
 
         # Build baseline with many normal events
         baseline_events = [
-            self._make_event_row("agent-a", etype="exec", severity="low")
-            for _ in range(24)
+            self._make_event_row("agent-a", etype="exec", severity="low") for _ in range(24)
         ]
         detector.build_baselines(baseline_events)
 
@@ -950,15 +957,13 @@ class TestAnomalyDetector:
 
         # Baseline: all low severity
         baseline_events = [
-            self._make_event_row("agent-a", etype="exec", severity="low")
-            for _ in range(20)
+            self._make_event_row("agent-a", etype="exec", severity="low") for _ in range(20)
         ]
         detector.build_baselines(baseline_events)
 
         # New: all critical severity
         new_events = [
-            self._make_event_row("agent-a", etype="exec", severity="critical")
-            for _ in range(5)
+            self._make_event_row("agent-a", etype="exec", severity="critical") for _ in range(5)
         ]
         scores = detector.score_events(new_events)
         assert len(scores) == 1
@@ -972,8 +977,7 @@ class TestAnomalyDetector:
 
         # Baseline: only "exec" events
         baseline_events = [
-            self._make_event_row("agent-a", etype="exec", severity="low")
-            for _ in range(20)
+            self._make_event_row("agent-a", etype="exec", severity="low") for _ in range(20)
         ]
         detector.build_baselines(baseline_events)
 
@@ -995,15 +999,13 @@ class TestAnomalyDetector:
 
         # Baseline: very few events (1 per hour)
         baseline_events = [
-            self._make_event_row("agent-a", etype="exec", severity="low")
-            for _ in range(2)
+            self._make_event_row("agent-a", etype="exec", severity="low") for _ in range(2)
         ]
         detector.build_baselines(baseline_events)
 
         # Score a huge batch (rate spike)
         new_events = [
-            self._make_event_row("agent-a", etype="exec", severity="low")
-            for _ in range(50)
+            self._make_event_row("agent-a", etype="exec", severity="low") for _ in range(50)
         ]
         scores = detector.score_events(new_events)
         assert len(scores) == 1
@@ -1032,9 +1034,7 @@ class TestAnomalyDetector:
     def test_distribution_divergence_baseline_empty(self):
         from cloud.guardian.detection.anomaly import AnomalyDetector
 
-        result = AnomalyDetector._distribution_divergence(
-            Counter(), Counter({"a": 5})
-        )
+        result = AnomalyDetector._distribution_divergence(Counter(), Counter({"a": 5}))
         assert result == 0.5
 
     def test_distribution_divergence_identical(self):
@@ -1107,10 +1107,12 @@ class TestAnomalyDetector:
         detector = AnomalyDetector()
         scores = [
             AnomalyScore(agent_id="low", score=0.2, current_event_rate=1.0),
-            AnomalyScore(agent_id="high", score=0.75, baseline_event_rate=5.0,
-                         current_event_rate=50.0),
-            AnomalyScore(agent_id="crit", score=0.92, baseline_event_rate=5.0,
-                         current_event_rate=200.0),
+            AnomalyScore(
+                agent_id="high", score=0.75, baseline_event_rate=5.0, current_event_rate=50.0
+            ),
+            AnomalyScore(
+                agent_id="crit", score=0.92, baseline_event_rate=5.0, current_event_rate=200.0
+            ),
         ]
         indicators = detector.scores_to_indicators(scores)
         assert len(indicators) == 2  # Only >= 0.7
@@ -1356,8 +1358,10 @@ class TestAuditAgent:
         cutoff = now - timedelta(minutes=60)
         discrepancies = agent._check_quarantine_compliance(db, events, cutoff)
         assert len(discrepancies) == 1
-        assert "quarantined" in discrepancies[0].description.lower() or \
-               "Quarantined" in discrepancies[0].description
+        assert (
+            "quarantined" in discrepancies[0].description.lower()
+            or "Quarantined" in discrepancies[0].description
+        )
 
     def test_handle_task_no_db(self):
         from cloud.guardian.audit_agent import AuditAgent
@@ -1729,33 +1733,25 @@ class TestForensicAgent:
     def test_generate_recommendations_credential_access(self):
         from cloud.guardian.forensic_agent import ForensicAgent
 
-        recs = ForensicAgent._generate_recommendations(
-            ["initial_access", "credential_access"], []
-        )
+        recs = ForensicAgent._generate_recommendations(["initial_access", "credential_access"], [])
         assert any("rotate" in r.lower() or "secret" in r.lower() for r in recs)
 
     def test_generate_recommendations_exfiltration(self):
         from cloud.guardian.forensic_agent import ForensicAgent
 
-        recs = ForensicAgent._generate_recommendations(
-            ["exfiltration"], []
-        )
+        recs = ForensicAgent._generate_recommendations(["exfiltration"], [])
         assert any("network" in r.lower() or "outbound" in r.lower() for r in recs)
 
     def test_generate_recommendations_privilege_escalation(self):
         from cloud.guardian.forensic_agent import ForensicAgent
 
-        recs = ForensicAgent._generate_recommendations(
-            ["privilege_escalation"], []
-        )
+        recs = ForensicAgent._generate_recommendations(["privilege_escalation"], [])
         assert any("permission" in r.lower() for r in recs)
 
     def test_generate_recommendations_persistence(self):
         from cloud.guardian.forensic_agent import ForensicAgent
 
-        recs = ForensicAgent._generate_recommendations(
-            ["persistence"], []
-        )
+        recs = ForensicAgent._generate_recommendations(["persistence"], [])
         assert any("file" in r.lower() or "backdoor" in r.lower() for r in recs)
 
     def test_generate_recommendations_with_secret_evidence(self):

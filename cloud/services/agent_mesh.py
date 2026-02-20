@@ -18,6 +18,7 @@ logger = logging.getLogger("angelgrid.cloud.agent_mesh")
 @dataclass
 class MeshMessage:
     """Message in the agent mesh."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     source_agent: str = ""
     target_agent: str = ""
@@ -38,7 +39,9 @@ class AgentMesh:
         self._inbox: dict[str, list[str]] = defaultdict(list)
         self._lock = asyncio.Lock()
 
-    async def register_agent(self, agent_id: str, agent_type: str, capabilities: list[str] | None = None) -> dict:
+    async def register_agent(
+        self, agent_id: str, agent_type: str, capabilities: list[str] | None = None
+    ) -> dict:
         """Register an agent in the mesh."""
         self._agents[agent_id] = {
             "agent_id": agent_id,
@@ -89,13 +92,15 @@ class AgentMesh:
         for mid in msg_ids:
             msg = self._messages.get(mid)
             if msg and not msg.responded:
-                messages.append({
-                    "id": msg.id,
-                    "source_agent": msg.source_agent,
-                    "message_type": msg.message_type,
-                    "payload": msg.payload,
-                    "timestamp": msg.timestamp,
-                })
+                messages.append(
+                    {
+                        "id": msg.id,
+                        "source_agent": msg.source_agent,
+                        "message_type": msg.message_type,
+                        "payload": msg.payload,
+                        "timestamp": msg.timestamp,
+                    }
+                )
         return messages
 
     async def respond(self, message_id: str, response: dict) -> bool:
@@ -116,11 +121,13 @@ class AgentMesh:
         return {
             "agents_registered": len(self._agents),
             "total_messages": len(self._messages),
-            "pending_messages": sum(
-                1 for m in self._messages.values() if not m.responded
-            ),
+            "pending_messages": sum(1 for m in self._messages.values() if not m.responded),
             "agents": [
-                {"agent_id": a["agent_id"], "type": a["agent_type"], "capabilities": a["capabilities"]}
+                {
+                    "agent_id": a["agent_id"],
+                    "type": a["agent_type"],
+                    "capabilities": a["capabilities"],
+                }
                 for a in self._agents.values()
             ],
         }

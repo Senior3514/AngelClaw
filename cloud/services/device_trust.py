@@ -53,7 +53,7 @@ class DeviceAssessment:
         self.device_name = device_name
         self.os_family = os_family
         self.os_version = os_version
-        self.patch_level = patch_level          # current | behind_1 | behind_2 | outdated
+        self.patch_level = patch_level  # current | behind_1 | behind_2 | outdated
         self.encryption_enabled = encryption_enabled
         self.antivirus_active = antivirus_active
         self.firewall_enabled = firewall_enabled
@@ -89,7 +89,7 @@ class DeviceTrustService:
     """Device trust assessment engine with deterministic scoring."""
 
     def __init__(self) -> None:
-        self._devices: dict[str, DeviceAssessment] = {}          # device_id -> assessment
+        self._devices: dict[str, DeviceAssessment] = {}  # device_id -> assessment
         self._tenant_devices: dict[str, list[str]] = defaultdict(list)
 
     # ------------------------------------------------------------------
@@ -130,7 +130,9 @@ class DeviceTrustService:
             existing.risk_level = self._risk_level(existing.trust_score)
             logger.info(
                 "[DEVICE_TRUST] Re-assessed device %s \u2014 score=%d (%s)",
-                device_id[:8], existing.trust_score, existing.risk_level,
+                device_id[:8],
+                existing.trust_score,
+                existing.risk_level,
             )
             return existing.to_dict()
 
@@ -154,7 +156,9 @@ class DeviceTrustService:
         self._tenant_devices[tenant_id].append(device_id)
         logger.info(
             "[DEVICE_TRUST] Assessed new device %s \u2014 score=%d (%s)",
-            device_id[:8], assessment.trust_score, assessment.risk_level,
+            device_id[:8],
+            assessment.trust_score,
+            assessment.risk_level,
         )
         return assessment.to_dict()
 
@@ -168,8 +172,13 @@ class DeviceTrustService:
         if not assessment:
             return None
         allowed_fields = {
-            "device_name", "os_family", "os_version", "patch_level",
-            "encryption_enabled", "antivirus_active", "firewall_enabled",
+            "device_name",
+            "os_family",
+            "os_version",
+            "patch_level",
+            "encryption_enabled",
+            "antivirus_active",
+            "firewall_enabled",
             "extra_factors",
         }
         for key, value in kwargs.items():
@@ -181,7 +190,9 @@ class DeviceTrustService:
         assessment.risk_level = self._risk_level(assessment.trust_score)
         logger.info(
             "[DEVICE_TRUST] Updated device %s \u2014 score=%d (%s)",
-            device_id[:8], assessment.trust_score, assessment.risk_level,
+            device_id[:8],
+            assessment.trust_score,
+            assessment.risk_level,
         )
         return assessment.to_dict()
 

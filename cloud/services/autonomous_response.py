@@ -25,8 +25,12 @@ from pydantic import BaseModel, Field
 logger = logging.getLogger("angelclaw.autonomous_response")
 
 _RESPONSE_TYPES = {
-    "auto_contain", "auto_eradicate", "auto_recover", "full_auto",
-    "guided", "manual",
+    "auto_contain",
+    "auto_eradicate",
+    "auto_recover",
+    "full_auto",
+    "guided",
+    "manual",
 }
 _RESPONSE_PHASES = ("containment", "eradication", "recovery")
 
@@ -36,7 +40,9 @@ class AutonomousResponse(BaseModel):
     tenant_id: str = "dev-tenant"
     incident_id: str
     response_type: str = "full_auto"
-    status: str = "initiated"  # initiated, containing, eradicating, recovering, completed, failed, overridden
+    status: str = (
+        "initiated"  # initiated, containing, eradicating, recovering, completed, failed, overridden
+    )
     containment_result: dict[str, Any] = {}
     eradication_result: dict[str, Any] = {}
     recovery_result: dict[str, Any] = {}
@@ -89,13 +95,13 @@ class AutonomousResponseService:
 
         # Cap response history
         if len(self._tenant_responses[tenant_id]) > 5000:
-            self._tenant_responses[tenant_id] = (
-                self._tenant_responses[tenant_id][-5000:]
-            )
+            self._tenant_responses[tenant_id] = self._tenant_responses[tenant_id][-5000:]
 
         logger.info(
             "[AUTO_RESP] Triggered %s response for incident %s (tenant=%s)",
-            rtype, incident_id, tenant_id,
+            rtype,
+            incident_id,
+            tenant_id,
         )
         return response.model_dump(mode="json")
 
@@ -141,7 +147,8 @@ class AutonomousResponseService:
 
         logger.info(
             "[AUTO_RESP] Containment completed for response %s (%d actions)",
-            response_id[:8], len(actions),
+            response_id[:8],
+            len(actions),
         )
         return {
             "response_id": response_id,
@@ -187,7 +194,8 @@ class AutonomousResponseService:
 
         logger.info(
             "[AUTO_RESP] Eradication completed for response %s (%d actions)",
-            response_id[:8], len(actions),
+            response_id[:8],
+            len(actions),
         )
         return {
             "response_id": response_id,
@@ -268,7 +276,9 @@ class AutonomousResponseService:
 
         logger.warning(
             "[AUTO_RESP] Response %s overridden by %s: %s",
-            response_id[:8], operator, reason,
+            response_id[:8],
+            operator,
+            reason,
         )
         return response.model_dump(mode="json")
 
@@ -296,10 +306,7 @@ class AutonomousResponseService:
         if not response:
             return None
 
-        actions = [
-            a.model_dump(mode="json")
-            for a in self._actions.get(response_id, [])
-        ]
+        actions = [a.model_dump(mode="json") for a in self._actions.get(response_id, [])]
 
         data = response.model_dump(mode="json")
         data["actions"] = actions
@@ -331,8 +338,7 @@ class AutonomousResponseService:
             "overridden": sum(1 for r in responses if r.overridden),
             "failed": sum(1 for r in responses if r.status == "failed"),
             "avg_actions_per_response": round(
-                sum(len(self._actions.get(r.id, [])) for r in responses)
-                / max(len(responses), 1),
+                sum(len(self._actions.get(r.id, [])) for r in responses) / max(len(responses), 1),
                 1,
             ),
         }

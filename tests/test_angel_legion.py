@@ -18,6 +18,7 @@ from cloud.guardian.models import (
 
 # ── helpers ──────────────────────────────────────────────────────────
 
+
 def _task(events, task_type="detect"):
     return AgentTask(task_type=task_type, payload={"events": events})
 
@@ -36,11 +37,13 @@ def _ts(offset_seconds=0):
 #  NetworkWarden
 # =====================================================================
 
+
 class TestNetworkWarden:
     """Net Warden tests."""
 
     def _make(self):
         from cloud.guardian.network_warden import NetworkWarden
+
         return NetworkWarden()
 
     def test_init(self):
@@ -129,10 +132,7 @@ class TestNetworkWarden:
             }
         ]
         result = _run(s.handle_task(_task(events)))
-        assert any(
-            i["pattern_name"] == "suspicious_dns"
-            for i in result.result_data["indicators"]
-        )
+        assert any(i["pattern_name"] == "suspicious_dns" for i in result.result_data["indicators"])
 
     def test_suspicious_dns_c2_pattern(self):
         s = self._make()
@@ -145,10 +145,7 @@ class TestNetworkWarden:
             }
         ]
         result = _run(s.handle_task(_task(events)))
-        assert any(
-            i["pattern_name"] == "suspicious_dns"
-            for i in result.result_data["indicators"]
-        )
+        assert any(i["pattern_name"] == "suspicious_dns" for i in result.result_data["indicators"])
 
     def test_suspicious_dns_long_subdomain(self):
         s = self._make()
@@ -162,10 +159,7 @@ class TestNetworkWarden:
             }
         ]
         result = _run(s.handle_task(_task(events)))
-        assert any(
-            i["pattern_name"] == "suspicious_dns"
-            for i in result.result_data["indicators"]
-        )
+        assert any(i["pattern_name"] == "suspicious_dns" for i in result.result_data["indicators"])
 
     def test_normal_dns_not_flagged(self):
         s = self._make()
@@ -179,8 +173,7 @@ class TestNetworkWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "suspicious_dns"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "suspicious_dns" for i in result.result_data["indicators"]
         )
 
     def test_port_scan_detection(self):
@@ -196,8 +189,7 @@ class TestNetworkWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "port_scan_detected"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "port_scan_detected" for i in result.result_data["indicators"]
         )
 
     def test_few_ports_no_scan(self):
@@ -213,8 +205,7 @@ class TestNetworkWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "port_scan_detected"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "port_scan_detected" for i in result.result_data["indicators"]
         )
 
     def test_non_network_events_filtered(self):
@@ -253,8 +244,7 @@ class TestNetworkWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "public_port_exposure"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "public_port_exposure" for i in result.result_data["indicators"]
         )
 
     def test_zero_address_not_flagged_as_public(self):
@@ -270,8 +260,7 @@ class TestNetworkWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "public_port_exposure"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "public_port_exposure" for i in result.result_data["indicators"]
         )
 
 
@@ -279,11 +268,13 @@ class TestNetworkWarden:
 #  BrowserWarden
 # =====================================================================
 
+
 class TestBrowserWarden:
     """Glass Eye tests."""
 
     def _make(self):
         from cloud.guardian.browser_warden import BrowserWarden
+
         return BrowserWarden()
 
     def test_init(self):
@@ -307,10 +298,7 @@ class TestBrowserWarden:
             }
         ]
         result = _run(s.handle_task(_task(events)))
-        assert any(
-            i["pattern_name"] == "suspicious_url"
-            for i in result.result_data["indicators"]
-        )
+        assert any(i["pattern_name"] == "suspicious_url" for i in result.result_data["indicators"])
 
     def test_suspicious_url_data_uri(self):
         s = self._make()
@@ -323,10 +311,7 @@ class TestBrowserWarden:
             }
         ]
         result = _run(s.handle_task(_task(events)))
-        assert any(
-            i["pattern_name"] == "suspicious_url"
-            for i in result.result_data["indicators"]
-        )
+        assert any(i["pattern_name"] == "suspicious_url" for i in result.result_data["indicators"])
 
     def test_suspicious_url_javascript(self):
         s = self._make()
@@ -339,10 +324,7 @@ class TestBrowserWarden:
             }
         ]
         result = _run(s.handle_task(_task(events)))
-        assert any(
-            i["pattern_name"] == "suspicious_url"
-            for i in result.result_data["indicators"]
-        )
+        assert any(i["pattern_name"] == "suspicious_url" for i in result.result_data["indicators"])
 
     def test_suspicious_url_onion(self):
         s = self._make()
@@ -355,10 +337,7 @@ class TestBrowserWarden:
             }
         ]
         result = _run(s.handle_task(_task(events)))
-        assert any(
-            i["pattern_name"] == "suspicious_url"
-            for i in result.result_data["indicators"]
-        )
+        assert any(i["pattern_name"] == "suspicious_url" for i in result.result_data["indicators"])
 
     def test_suspicious_url_risky_download(self):
         s = self._make()
@@ -371,10 +350,7 @@ class TestBrowserWarden:
             }
         ]
         result = _run(s.handle_task(_task(events)))
-        assert any(
-            i["pattern_name"] == "suspicious_url"
-            for i in result.result_data["indicators"]
-        )
+        assert any(i["pattern_name"] == "suspicious_url" for i in result.result_data["indicators"])
 
     def test_normal_url_not_flagged(self):
         s = self._make()
@@ -388,8 +364,7 @@ class TestBrowserWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "suspicious_url"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "suspicious_url" for i in result.result_data["indicators"]
         )
 
     def test_page_injection_iframe(self):
@@ -404,8 +379,7 @@ class TestBrowserWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "page_content_injection"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "page_content_injection" for i in result.result_data["indicators"]
         )
 
     def test_page_injection_eval(self):
@@ -420,8 +394,7 @@ class TestBrowserWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "page_content_injection"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "page_content_injection" for i in result.result_data["indicators"]
         )
 
     def test_page_injection_document_cookie(self):
@@ -436,8 +409,7 @@ class TestBrowserWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "page_content_injection"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "page_content_injection" for i in result.result_data["indicators"]
         )
 
     def test_extension_conflict(self):
@@ -452,8 +424,7 @@ class TestBrowserWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "extension_conflict"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "extension_conflict" for i in result.result_data["indicators"]
         )
 
     def test_extension_install(self):
@@ -468,8 +439,7 @@ class TestBrowserWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "extension_install"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "extension_install" for i in result.result_data["indicators"]
         )
 
     def test_excessive_data_access(self):
@@ -485,8 +455,7 @@ class TestBrowserWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "excessive_data_access"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "excessive_data_access" for i in result.result_data["indicators"]
         )
 
     def test_low_data_access_not_flagged(self):
@@ -502,8 +471,7 @@ class TestBrowserWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "excessive_data_access"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "excessive_data_access" for i in result.result_data["indicators"]
         )
 
     def test_storage_access_counted(self):
@@ -519,8 +487,7 @@ class TestBrowserWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "excessive_data_access"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "excessive_data_access" for i in result.result_data["indicators"]
         )
 
     def test_non_browser_events_filtered(self):
@@ -544,8 +511,7 @@ class TestBrowserWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "page_content_injection"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "page_content_injection" for i in result.result_data["indicators"]
         )
 
     def test_script_src_injection(self):
@@ -560,8 +526,7 @@ class TestBrowserWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "page_content_injection"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "page_content_injection" for i in result.result_data["indicators"]
         )
 
 
@@ -569,11 +534,13 @@ class TestBrowserWarden:
 #  ToolchainWarden
 # =====================================================================
 
+
 class TestToolchainWarden:
     """Tool Smith tests."""
 
     def _make(self):
         from cloud.guardian.toolchain_warden import ToolchainWarden
+
         return ToolchainWarden()
 
     def test_init(self):
@@ -599,8 +566,7 @@ class TestToolchainWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "tool_invocation_burst"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "tool_invocation_burst" for i in result.result_data["indicators"]
         )
 
     def test_burst_below_threshold(self):
@@ -616,8 +582,7 @@ class TestToolchainWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "tool_invocation_burst"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "tool_invocation_burst" for i in result.result_data["indicators"]
         )
 
     def test_version_change(self):
@@ -636,8 +601,7 @@ class TestToolchainWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "tool_version_drift"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "tool_version_drift" for i in result.result_data["indicators"]
         )
 
     def test_blocked_tool_retry(self):
@@ -658,8 +622,7 @@ class TestToolchainWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "blocked_tool_retry"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "blocked_tool_retry" for i in result.result_data["indicators"]
         )
 
     def test_blocked_no_retry_ok(self):
@@ -680,8 +643,7 @@ class TestToolchainWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "blocked_tool_retry"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "blocked_tool_retry" for i in result.result_data["indicators"]
         )
 
     def test_output_injection_ignore_instructions(self):
@@ -696,8 +658,7 @@ class TestToolchainWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "tool_output_injection"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "tool_output_injection" for i in result.result_data["indicators"]
         )
 
     def test_output_injection_you_are_now(self):
@@ -712,8 +673,7 @@ class TestToolchainWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "tool_output_injection"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "tool_output_injection" for i in result.result_data["indicators"]
         )
 
     def test_output_injection_system_prompt(self):
@@ -728,8 +688,7 @@ class TestToolchainWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "tool_output_injection"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "tool_output_injection" for i in result.result_data["indicators"]
         )
 
     def test_output_injection_script_tag(self):
@@ -744,8 +703,7 @@ class TestToolchainWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "tool_output_injection"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "tool_output_injection" for i in result.result_data["indicators"]
         )
 
     def test_clean_output_not_flagged(self):
@@ -760,8 +718,7 @@ class TestToolchainWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "tool_output_injection"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "tool_output_injection" for i in result.result_data["indicators"]
         )
 
     def test_non_tool_events_filtered(self):
@@ -788,11 +745,13 @@ class TestToolchainWarden:
 #  SecretsWarden
 # =====================================================================
 
+
 class TestSecretsWarden:
     """Vault Keeper tests."""
 
     def _make(self):
         from cloud.guardian.secrets_warden import SecretsWarden
+
         return SecretsWarden()
 
     def test_init(self):
@@ -818,8 +777,7 @@ class TestSecretsWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "secret_access_burst"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "secret_access_burst" for i in result.result_data["indicators"]
         )
 
     def test_access_below_threshold(self):
@@ -835,8 +793,7 @@ class TestSecretsWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "secret_access_burst"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "secret_access_burst" for i in result.result_data["indicators"]
         )
 
     def test_auth_brute_force(self):
@@ -852,8 +809,7 @@ class TestSecretsWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "auth_brute_force"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "auth_brute_force" for i in result.result_data["indicators"]
         )
 
     def test_few_failures_not_brute_force(self):
@@ -869,8 +825,7 @@ class TestSecretsWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "auth_brute_force"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "auth_brute_force" for i in result.result_data["indicators"]
         )
 
     def test_exfiltration_event(self):
@@ -885,8 +840,7 @@ class TestSecretsWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "secret_exfiltration"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "secret_exfiltration" for i in result.result_data["indicators"]
         )
 
     def test_secret_in_payload_import_fail(self):
@@ -904,8 +858,7 @@ class TestSecretsWarden:
         # so _detect_secret_in_payload returns []
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "secret_in_payload"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "secret_in_payload" for i in result.result_data["indicators"]
         )
 
     def test_stats_in_result(self):
@@ -938,11 +891,13 @@ class TestSecretsWarden:
 #  TimelineWarden
 # =====================================================================
 
+
 class TestTimelineWarden:
     """Chronicle tests."""
 
     def _make(self):
         from cloud.guardian.timeline_warden import TimelineWarden
+
         return TimelineWarden()
 
     def test_init(self):
@@ -959,44 +914,60 @@ class TestTimelineWarden:
         s = self._make()
         events = [
             {
-                "type": "recon.scan", "agent_id": "agentA",
-                "id": "e1", "timestamp": _ts(0), "details": {},
+                "type": "recon.scan",
+                "agent_id": "agentA",
+                "id": "e1",
+                "timestamp": _ts(0),
+                "details": {},
             },
             {
-                "type": "recon.scan", "agent_id": "agentB",
-                "id": "e2", "timestamp": _ts(10), "details": {},
+                "type": "recon.scan",
+                "agent_id": "agentB",
+                "id": "e2",
+                "timestamp": _ts(10),
+                "details": {},
             },
             {
-                "type": "recon.scan", "agent_id": "agentC",
-                "id": "e3", "timestamp": _ts(20), "details": {},
+                "type": "recon.scan",
+                "agent_id": "agentC",
+                "id": "e3",
+                "timestamp": _ts(20),
+                "details": {},
             },
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "coordinated_activity"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "coordinated_activity" for i in result.result_data["indicators"]
         )
 
     def test_no_coordination_single_agent(self):
         s = self._make()
         events = [
             {
-                "type": "recon.scan", "agent_id": "agentA",
-                "id": "e1", "timestamp": _ts(0), "details": {},
+                "type": "recon.scan",
+                "agent_id": "agentA",
+                "id": "e1",
+                "timestamp": _ts(0),
+                "details": {},
             },
             {
-                "type": "recon.scan", "agent_id": "agentA",
-                "id": "e2", "timestamp": _ts(10), "details": {},
+                "type": "recon.scan",
+                "agent_id": "agentA",
+                "id": "e2",
+                "timestamp": _ts(10),
+                "details": {},
             },
             {
-                "type": "recon.scan", "agent_id": "agentA",
-                "id": "e3", "timestamp": _ts(20), "details": {},
+                "type": "recon.scan",
+                "agent_id": "agentA",
+                "id": "e3",
+                "timestamp": _ts(20),
+                "details": {},
             },
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "coordinated_activity"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "coordinated_activity" for i in result.result_data["indicators"]
         )
 
     def test_rapid_succession(self):
@@ -1004,7 +975,7 @@ class TestTimelineWarden:
         events = [
             {
                 "type": "file.write",
-                "agent_id": f"agent{chr(65+i)}",
+                "agent_id": f"agent{chr(65 + i)}",
                 "id": f"e{i}",
                 "timestamp": _ts(i * 0.5),
                 "details": {},
@@ -1013,8 +984,7 @@ class TestTimelineWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "rapid_multi_agent_burst"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "rapid_multi_agent_burst" for i in result.result_data["indicators"]
         )
 
     def test_no_rapid_when_spread_out(self):
@@ -1022,7 +992,7 @@ class TestTimelineWarden:
         events = [
             {
                 "type": "file.write",
-                "agent_id": f"agent{chr(65+i)}",
+                "agent_id": f"agent{chr(65 + i)}",
                 "id": f"e{i}",
                 "timestamp": _ts(i * 60),
                 "details": {},
@@ -1031,8 +1001,7 @@ class TestTimelineWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "rapid_multi_agent_burst"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "rapid_multi_agent_burst" for i in result.result_data["indicators"]
         )
 
     def test_kill_chain_sequence(self):
@@ -1040,22 +1009,30 @@ class TestTimelineWarden:
         s = self._make()
         events = [
             {
-                "type": "recon.port_scan", "agent_id": "agent-kc",
-                "id": "e1", "timestamp": _ts(0), "details": {},
+                "type": "recon.port_scan",
+                "agent_id": "agent-kc",
+                "id": "e1",
+                "timestamp": _ts(0),
+                "details": {},
             },
             {
-                "type": "auth.login_attempt", "agent_id": "agent-kc",
-                "id": "e2", "timestamp": _ts(10), "details": {},
+                "type": "auth.login_attempt",
+                "agent_id": "agent-kc",
+                "id": "e2",
+                "timestamp": _ts(10),
+                "details": {},
             },
             {
-                "type": "shell.exec", "agent_id": "agent-kc",
-                "id": "e3", "timestamp": _ts(20), "details": {},
+                "type": "shell.exec",
+                "agent_id": "agent-kc",
+                "id": "e3",
+                "timestamp": _ts(20),
+                "details": {},
             },
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "kill_chain_sequence"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "kill_chain_sequence" for i in result.result_data["indicators"]
         )
 
     def test_exec_persist_exfil_chain(self):
@@ -1063,22 +1040,30 @@ class TestTimelineWarden:
         s = self._make()
         events = [
             {
-                "type": "shell.exec_cmd", "agent_id": "agent-cl",
-                "id": "e1", "timestamp": _ts(0), "details": {},
+                "type": "shell.exec_cmd",
+                "agent_id": "agent-cl",
+                "id": "e1",
+                "timestamp": _ts(0),
+                "details": {},
             },
             {
-                "type": "file.write_backdoor", "agent_id": "agent-cl",
-                "id": "e2", "timestamp": _ts(10), "details": {},
+                "type": "file.write_backdoor",
+                "agent_id": "agent-cl",
+                "id": "e2",
+                "timestamp": _ts(10),
+                "details": {},
             },
             {
-                "type": "network.upload_data", "agent_id": "agent-cl",
-                "id": "e3", "timestamp": _ts(20), "details": {},
+                "type": "network.upload_data",
+                "agent_id": "agent-cl",
+                "id": "e3",
+                "timestamp": _ts(20),
+                "details": {},
             },
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "kill_chain_sequence"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "kill_chain_sequence" for i in result.result_data["indicators"]
         )
 
     def test_time_clustering_burst(self):
@@ -1087,27 +1072,38 @@ class TestTimelineWarden:
         # 10 events in first 2 seconds, then 2 events at 100s (total span 100s, 20%=20s)
         events = []
         for i in range(10):
-            events.append({
-                "type": "file.write",
-                "agent_id": f"agent-tc{i % 3}",
-                "id": f"tc-{i}",
-                "timestamp": _ts(i * 0.1),
-                "details": {},
-            })
+            events.append(
+                {
+                    "type": "file.write",
+                    "agent_id": f"agent-tc{i % 3}",
+                    "id": f"tc-{i}",
+                    "timestamp": _ts(i * 0.1),
+                    "details": {},
+                }
+            )
         # Add sparse events to extend the span
-        events.append({
-            "type": "file.read", "agent_id": "agentX",
-            "id": "tc-late1", "timestamp": _ts(90), "details": {},
-        })
-        events.append({
-            "type": "file.read", "agent_id": "agentY",
-            "id": "tc-late2", "timestamp": _ts(100), "details": {},
-        })
+        events.append(
+            {
+                "type": "file.read",
+                "agent_id": "agentX",
+                "id": "tc-late1",
+                "timestamp": _ts(90),
+                "details": {},
+            }
+        )
+        events.append(
+            {
+                "type": "file.read",
+                "agent_id": "agentY",
+                "id": "tc-late2",
+                "timestamp": _ts(100),
+                "details": {},
+            }
+        )
 
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "burst_then_silence"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "burst_then_silence" for i in result.result_data["indicators"]
         )
 
     def test_no_clustering_even_distribution(self):
@@ -1124,29 +1120,32 @@ class TestTimelineWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "burst_then_silence"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "burst_then_silence" for i in result.result_data["indicators"]
         )
 
     def test_parse_timestamp_datetime_object(self):
         from cloud.guardian.timeline_warden import _parse_timestamp
+
         dt = datetime(2026, 1, 1, tzinfo=timezone.utc)
         assert _parse_timestamp(dt) == dt
 
     def test_parse_timestamp_string(self):
         from cloud.guardian.timeline_warden import _parse_timestamp
+
         result = _parse_timestamp("2026-01-15T12:00:00+00:00")
         assert result is not None
         assert result.year == 2026
 
     def test_parse_timestamp_invalid(self):
         from cloud.guardian.timeline_warden import _parse_timestamp
+
         assert _parse_timestamp("not-a-date") is None
         assert _parse_timestamp(None) is None
         assert _parse_timestamp(12345) is None
 
     def test_is_subsequence(self):
         from cloud.guardian.timeline_warden import _is_subsequence
+
         assert _is_subsequence(["a", "c"], ["a", "b", "c", "d"])
         assert not _is_subsequence(["c", "a"], ["a", "b", "c"])
         assert _is_subsequence([], ["a", "b"])
@@ -1164,11 +1163,13 @@ class TestTimelineWarden:
 #  BehaviorWarden
 # =====================================================================
 
+
 class TestBehaviorWarden:
     """Drift Watcher tests."""
 
     def _make(self):
         from cloud.guardian.behavior_warden import BehaviorWarden
+
         return BehaviorWarden()
 
     def test_init(self):
@@ -1188,27 +1189,30 @@ class TestBehaviorWarden:
         # Normal agents: 2 events each
         for i in range(3):
             for j in range(2):
-                events.append({
-                    "type": "file.read",
-                    "agent_id": f"normal-agent-{i}",
-                    "id": f"e-n{i}-{j}",
-                    "severity": "info",
-                    "details": {},
-                })
+                events.append(
+                    {
+                        "type": "file.read",
+                        "agent_id": f"normal-agent-{i}",
+                        "id": f"e-n{i}-{j}",
+                        "severity": "info",
+                        "details": {},
+                    }
+                )
         # Outlier agent: 30 events
         for j in range(30):
-            events.append({
-                "type": "file.read",
-                "agent_id": "outlier-agent-0",
-                "id": f"e-outlier-{j}",
-                "severity": "info",
-                "details": {},
-            })
+            events.append(
+                {
+                    "type": "file.read",
+                    "agent_id": "outlier-agent-0",
+                    "id": f"e-outlier-{j}",
+                    "severity": "info",
+                    "details": {},
+                }
+            )
 
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "peer_volume_deviation"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "peer_volume_deviation" for i in result.result_data["indicators"]
         )
 
     def test_peer_severity_deviation(self):
@@ -1218,27 +1222,30 @@ class TestBehaviorWarden:
         # Normal agents: info severity
         for i in range(3):
             for j in range(6):
-                events.append({
-                    "type": "file.read",
-                    "agent_id": f"normal-{i}aaaaaa",
-                    "id": f"e-ns{i}-{j}",
-                    "severity": "info",
-                    "details": {},
-                })
+                events.append(
+                    {
+                        "type": "file.read",
+                        "agent_id": f"normal-{i}aaaaaa",
+                        "id": f"e-ns{i}-{j}",
+                        "severity": "info",
+                        "details": {},
+                    }
+                )
         # Bad agent: high/critical severity
         for j in range(6):
-            events.append({
-                "type": "file.write",
-                "agent_id": "bad-agent0aaaa",
-                "id": f"e-bad-{j}",
-                "severity": "critical" if j % 2 == 0 else "high",
-                "details": {},
-            })
+            events.append(
+                {
+                    "type": "file.write",
+                    "agent_id": "bad-agent0aaaa",
+                    "id": f"e-bad-{j}",
+                    "severity": "critical" if j % 2 == 0 else "high",
+                    "details": {},
+                }
+            )
 
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "peer_severity_deviation"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "peer_severity_deviation" for i in result.result_data["indicators"]
         )
 
     def test_severity_escalation(self):
@@ -1248,27 +1255,30 @@ class TestBehaviorWarden:
         agent_id = "escalating-ag1"
         # First half: info
         for i in range(4):
-            events.append({
-                "type": "file.read",
-                "agent_id": agent_id,
-                "id": f"e-esc-{i}",
-                "severity": "info",
-                "details": {},
-            })
+            events.append(
+                {
+                    "type": "file.read",
+                    "agent_id": agent_id,
+                    "id": f"e-esc-{i}",
+                    "severity": "info",
+                    "details": {},
+                }
+            )
         # Second half: critical
         for i in range(4, 8):
-            events.append({
-                "type": "file.write",
-                "agent_id": agent_id,
-                "id": f"e-esc-{i}",
-                "severity": "critical",
-                "details": {},
-            })
+            events.append(
+                {
+                    "type": "file.write",
+                    "agent_id": agent_id,
+                    "id": f"e-esc-{i}",
+                    "severity": "critical",
+                    "details": {},
+                }
+            )
 
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "severity_escalation"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "severity_escalation" for i in result.result_data["indicators"]
         )
 
     def test_no_escalation_stable(self):
@@ -1285,8 +1295,7 @@ class TestBehaviorWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "severity_escalation"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "severity_escalation" for i in result.result_data["indicators"]
         )
 
     def test_broad_category_usage(self):
@@ -1305,8 +1314,7 @@ class TestBehaviorWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert any(
-            i["pattern_name"] == "broad_category_usage"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "broad_category_usage" for i in result.result_data["indicators"]
         )
 
     def test_narrow_category_ok(self):
@@ -1323,16 +1331,18 @@ class TestBehaviorWarden:
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "broad_category_usage"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "broad_category_usage" for i in result.result_data["indicators"]
         )
 
     def test_profiles_in_result(self):
         s = self._make()
         events = [
             {
-                "type": "file.read", "agent_id": "prof-agent-1",
-                "id": "e1", "severity": "info", "details": {},
+                "type": "file.read",
+                "agent_id": "prof-agent-1",
+                "id": "e1",
+                "severity": "info",
+                "details": {},
             },
         ]
         result = _run(s.handle_task(_task(events)))
@@ -1343,15 +1353,17 @@ class TestBehaviorWarden:
         s = self._make()
         events = [
             {
-                "type": "file.read", "agent_id": "solo-agent-1",
-                "id": f"e-{i}", "severity": "info", "details": {},
+                "type": "file.read",
+                "agent_id": "solo-agent-1",
+                "id": f"e-{i}",
+                "severity": "info",
+                "details": {},
             }
             for i in range(10)
         ]
         result = _run(s.handle_task(_task(events)))
         assert not any(
-            i["pattern_name"] == "peer_volume_deviation"
-            for i in result.result_data["indicators"]
+            i["pattern_name"] == "peer_volume_deviation" for i in result.result_data["indicators"]
         )
 
 
@@ -1359,23 +1371,28 @@ class TestBehaviorWarden:
 #  AgentRegistry
 # =====================================================================
 
+
 class TestAgentRegistry:
     """Registry tests."""
 
     def _make(self):
         from cloud.guardian.registry import AgentRegistry
+
         return AgentRegistry()
 
     def _warden(self):
         from cloud.guardian.warden_agent import WardenAgent
+
         return WardenAgent()
 
     def _network(self):
         from cloud.guardian.network_warden import NetworkWarden
+
         return NetworkWarden()
 
     def _browser(self):
         from cloud.guardian.browser_warden import BrowserWarden
+
         return BrowserWarden()
 
     def test_register_and_get(self):
@@ -1421,6 +1438,7 @@ class TestAgentRegistry:
     def test_all_wardens(self):
         reg = self._make()
         from cloud.guardian.response_agent import ResponseAgent
+
         s1 = self._warden()
         s2 = self._network()
         resp = ResponseAgent()
@@ -1494,11 +1512,13 @@ class TestAgentRegistry:
 #  Base agent execute() — timeout & error paths
 # =====================================================================
 
+
 class TestBaseAgentExecute:
     """Test the SubAgent.execute wrapper with new wardens."""
 
     def test_execute_success(self):
         from cloud.guardian.network_warden import NetworkWarden
+
         s = NetworkWarden()
         task = AgentTask(
             task_type="detect",
@@ -1512,6 +1532,7 @@ class TestBaseAgentExecute:
 
     def test_execute_permission_error(self):
         from cloud.guardian.network_warden import NetworkWarden
+
         s = NetworkWarden()
         s.permissions = set()  # remove all permissions
         task = AgentTask(task_type="detect", payload={"events": [{"type": "network.dns"}]})
@@ -1525,9 +1546,11 @@ class TestBaseAgentExecute:
 #  WARDEN_TYPES constant
 # =====================================================================
 
+
 class TestWardenTypesConstant:
     def test_all_warden_types_present(self):
         from cloud.guardian.registry import WARDEN_TYPES
+
         expected = {
             AgentType.WARDEN,
             AgentType.NETWORK,
@@ -1548,6 +1571,7 @@ class TestWardenTypesConstant:
 
     def test_response_not_warden(self):
         from cloud.guardian.registry import WARDEN_TYPES
+
         assert AgentType.RESPONSE not in WARDEN_TYPES
         assert AgentType.FORENSIC not in WARDEN_TYPES
         assert AgentType.AUDIT not in WARDEN_TYPES

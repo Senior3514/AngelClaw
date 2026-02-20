@@ -119,13 +119,15 @@ class IntelCorrelationService:
 
         # Cap correlation history
         if len(self._tenant_correlations[tenant_id]) > 5000:
-            self._tenant_correlations[tenant_id] = (
-                self._tenant_correlations[tenant_id][-5000:]
-            )
+            self._tenant_correlations[tenant_id] = self._tenant_correlations[tenant_id][-5000:]
 
         logger.info(
             "[INTEL_CORR] Correlated %d events (%s) — confidence=%.1f%% severity=%s for %s",
-            len(event_ids), ctype, base_confidence, severity, tenant_id,
+            len(event_ids),
+            ctype,
+            base_confidence,
+            severity,
+            tenant_id,
         )
         return correlation.model_dump(mode="json")
 
@@ -217,7 +219,9 @@ class IntelCorrelationService:
 
         logger.info(
             "[INTEL_CORR] Discovered %d patterns for %s (window=%dh)",
-            len(patterns), tenant_id, time_window_hours,
+            len(patterns),
+            tenant_id,
+            time_window_hours,
         )
         return {
             "tenant_id": tenant_id,
@@ -252,7 +256,9 @@ class IntelCorrelationService:
 
         logger.info(
             "[INTEL_CORR] Attributed campaign '%s' from %d indicators for %s",
-            campaign.campaign_name, len(indicator_ids), tenant_id,
+            campaign.campaign_name,
+            len(indicator_ids),
+            tenant_id,
         )
         return campaign.model_dump(mode="json")
 
@@ -287,8 +293,11 @@ class IntelCorrelationService:
             "by_type": dict(by_type),
             "by_severity": dict(by_severity),
             "avg_confidence": round(
-                sum(confidences) / max(len(confidences), 1), 1,
-            ) if confidences else 0.0,
+                sum(confidences) / max(len(confidences), 1),
+                1,
+            )
+            if confidences
+            else 0.0,
             "total_patterns": len(patterns),
             "total_campaigns": len(campaigns),
         }

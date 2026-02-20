@@ -48,7 +48,9 @@ class DarkWebMonitorService:
         result = list(items.values()) if isinstance(items, dict) else []
         return result
 
-    def add_watchlist(self, tenant_id: str, keywords: list[str], watch_type: str = 'brand') -> dict[str, Any]:
+    def add_watchlist(
+        self, tenant_id: str, keywords: list[str], watch_type: str = "brand"
+    ) -> dict[str, Any]:
         """Add keywords to dark web watchlist."""
         if tenant_id not in self._store:
             self._store[tenant_id] = {}

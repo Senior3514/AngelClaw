@@ -74,7 +74,8 @@ class PluginLoader:
 
     def __init__(self, plugins_dir: str | None = None) -> None:
         self.plugins_dir = Path(plugins_dir or _DEFAULT_PLUGINS_DIR)
-        # name -> {"manifest": PluginManifest, "agent": SubAgent, "info": PluginInfo, "module": module}
+        # name -> {"manifest": PluginManifest, "agent": SubAgent,
+        #          "info": PluginInfo, "module": module}
         self._plugins: dict[str, dict[str, Any]] = {}
 
     # ------------------------------------------------------------------

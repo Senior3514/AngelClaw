@@ -97,7 +97,9 @@ class RealTimeEngine:
 
         logger.debug(
             "[RT_ENGINE] Ingested event type=%s severity=%s for %s",
-            event_type, severity, tenant_id,
+            event_type,
+            severity,
+            tenant_id,
         )
         return event.model_dump(mode="json")
 
@@ -128,8 +130,7 @@ class RealTimeEngine:
             "by_type": dict(self._type_counts.get(tenant_id, {})),
             "by_severity": dict(self._severity_counts.get(tenant_id, {})),
             "subscriber_count": sum(
-                1 for s in self._subscribers.get(tenant_id, {}).values()
-                if s.active
+                1 for s in self._subscribers.get(tenant_id, {}).values() if s.active
             ),
             "computed_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -191,7 +192,8 @@ class RealTimeEngine:
         self._subscribers[tenant_id][subscriber_id] = sub
         logger.info(
             "[RT_ENGINE] Registered subscriber '%s' for %s",
-            subscriber_id, tenant_id,
+            subscriber_id,
+            tenant_id,
         )
         return sub.model_dump(mode="json")
 
@@ -202,7 +204,8 @@ class RealTimeEngine:
             del subs[subscriber_id]
             logger.info(
                 "[RT_ENGINE] Unregistered subscriber '%s' for %s",
-                subscriber_id, tenant_id,
+                subscriber_id,
+                tenant_id,
             )
             return True
         return False
@@ -224,10 +227,7 @@ class RealTimeEngine:
         events = list(self._events.get(tenant_id, []))
         now = time.time()
         last_min = [e for e in events if now - e.timestamp <= 60]
-        active_subs = sum(
-            1 for s in self._subscribers.get(tenant_id, {}).values()
-            if s.active
-        )
+        active_subs = sum(1 for s in self._subscribers.get(tenant_id, {}).values() if s.active)
 
         return {
             "total_events_ingested": self._total_counts[tenant_id],

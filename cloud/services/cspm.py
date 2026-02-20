@@ -86,12 +86,30 @@ class CSPMService:
 
         # Simulate findings generation
         simulated_rules = [
-            ("public-bucket", "bucket", "high", "Public storage bucket detected",
-             "Storage bucket is publicly accessible", "Disable public access on the bucket"),
-            ("open-sg", "security_group", "critical", "Unrestricted security group",
-             "Security group allows 0.0.0.0/0 on port 22", "Restrict SSH access to known IPs"),
-            ("unencrypted-disk", "disk", "medium", "Unencrypted disk volume",
-             "Disk volume does not use encryption at rest", "Enable encryption at rest"),
+            (
+                "public-bucket",
+                "bucket",
+                "high",
+                "Public storage bucket detected",
+                "Storage bucket is publicly accessible",
+                "Disable public access on the bucket",
+            ),
+            (
+                "open-sg",
+                "security_group",
+                "critical",
+                "Unrestricted security group",
+                "Security group allows 0.0.0.0/0 on port 22",
+                "Restrict SSH access to known IPs",
+            ),
+            (
+                "unencrypted-disk",
+                "disk",
+                "medium",
+                "Unencrypted disk volume",
+                "Disk volume does not use encryption at rest",
+                "Enable encryption at rest",
+            ),
         ]
 
         created = []
@@ -124,7 +142,9 @@ class CSPMService:
 
         logger.info(
             "[CSPM] Scan completed: %d findings for connector %s (%s)",
-            len(created), connector_id[:8], benchmark,
+            len(created),
+            connector_id[:8],
+            benchmark,
         )
         return scan_record
 
@@ -255,11 +275,11 @@ class CSPMService:
             "by_status": dict(by_status),
             "total_scans": len(self._scan_history.get(tenant_id, [])),
             "total_remediations": sum(
-                1 for r in self._remediations.values()
-                if r.tenant_id == tenant_id
+                1 for r in self._remediations.values() if r.tenant_id == tenant_id
             ),
             "auto_remediations_applied": sum(
-                1 for r in self._remediations.values()
+                1
+                for r in self._remediations.values()
                 if r.tenant_id == tenant_id and r.auto_fix and r.status == "applied"
             ),
         }

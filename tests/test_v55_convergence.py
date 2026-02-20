@@ -1,16 +1,16 @@
-"""Tests for V5.5 Convergence: RealTimeEngine, HaloScoreEngine, FleetOrchestrator, DashboardAggregator."""
+"""Tests for V5.5 Convergence.
+
+RealTimeEngine, HaloScoreEngine, FleetOrchestrator, DashboardAggregator.
+"""
 
 from __future__ import annotations
 
-import time
-
 import pytest
 
-from cloud.services.realtime_engine import RealTimeEngine
-from cloud.services.halo_engine import HaloScoreEngine
-from cloud.services.fleet_orchestrator import FleetOrchestrator
 from cloud.services.dashboard_aggregator import DashboardAggregator
-
+from cloud.services.fleet_orchestrator import FleetOrchestrator
+from cloud.services.halo_engine import HaloScoreEngine
+from cloud.services.realtime_engine import RealTimeEngine
 
 TENANT = "test-tenant"
 
@@ -39,8 +39,11 @@ class TestRealTimeEngineIngest:
     def test_ingest_with_source_and_details(self):
         svc = RealTimeEngine()
         evt = svc.ingest_event(
-            TENANT, event_type="threat", severity="critical",
-            source="firewall-01", details={"rule": "drop-all"},
+            TENANT,
+            event_type="threat",
+            severity="critical",
+            source="firewall-01",
+            details={"rule": "drop-all"},
         )
         assert evt["source"] == "firewall-01"
         assert evt["details"]["rule"] == "drop-all"
@@ -70,7 +73,9 @@ class TestRealTimeEngineIngest:
         assert stats["by_severity"]["high"] == 2
         assert stats["by_severity"]["low"] == 1
 
-    @pytest.mark.parametrize("etype", ["alert", "threat", "block", "auth", "anomaly", "scan", "policy"])
+    @pytest.mark.parametrize(
+        "etype", ["alert", "threat", "block", "auth", "anomaly", "scan", "policy"]
+    )
     def test_ingest_all_event_types(self, etype):
         svc = RealTimeEngine()
         evt = svc.ingest_event(TENANT, event_type=etype)
@@ -129,8 +134,17 @@ class TestRealTimeEngineLiveMetrics:
         svc = RealTimeEngine()
         svc.ingest_event(TENANT, event_type="alert")
         m = svc.get_live_metrics(TENANT)
-        for key in ("tenant_id", "events_per_sec", "active_threats", "blocked_per_sec",
-                     "total_events", "by_type", "by_severity", "subscriber_count", "computed_at"):
+        for key in (
+            "tenant_id",
+            "events_per_sec",
+            "active_threats",
+            "blocked_per_sec",
+            "total_events",
+            "by_type",
+            "by_severity",
+            "subscriber_count",
+            "computed_at",
+        ):
             assert key in m
 
     def test_metrics_subscriber_count_zero_when_none(self):
@@ -308,8 +322,17 @@ class TestHaloScoreCompute:
 
     def test_compute_all_dimensions_zero(self):
         svc = HaloScoreEngine()
-        dims = {k: 0 for k in ["threat_posture", "compliance", "vulnerability",
-                                 "incident_response", "endpoint_health", "policy_coverage"]}
+        dims = {
+            k: 0
+            for k in [
+                "threat_posture",
+                "compliance",
+                "vulnerability",
+                "incident_response",
+                "endpoint_health",
+                "policy_coverage",
+            ]
+        }
         result = svc.compute_score(TENANT, dims)
         assert result["overall_score"] == 0.0
         assert result["classification"] == "critical"
@@ -330,23 +353,35 @@ class TestHaloScoreCompute:
         result = svc.compute_score(TENANT, {"compliance": -50})
         assert result["dimensions"]["compliance"] == 0.0
 
-    @pytest.mark.parametrize("score,expected_class", [
-        (10, "critical"),
-        (30, "critical"),
-        (40, "poor"),
-        (50, "poor"),
-        (60, "fair"),
-        (70, "fair"),
-        (80, "good"),
-        (85, "good"),
-        (90, "excellent"),
-        (100, "excellent"),
-    ])
+    @pytest.mark.parametrize(
+        "score,expected_class",
+        [
+            (10, "critical"),
+            (30, "critical"),
+            (40, "poor"),
+            (50, "poor"),
+            (60, "fair"),
+            (70, "fair"),
+            (80, "good"),
+            (85, "good"),
+            (90, "excellent"),
+            (100, "excellent"),
+        ],
+    )
     def test_classification_thresholds(self, score, expected_class):
         svc = HaloScoreEngine()
         # Set all dimensions to the same value so overall = value
-        dims = {k: score for k in ["threat_posture", "compliance", "vulnerability",
-                                     "incident_response", "endpoint_health", "policy_coverage"]}
+        dims = {
+            k: score
+            for k in [
+                "threat_posture",
+                "compliance",
+                "vulnerability",
+                "incident_response",
+                "endpoint_health",
+                "policy_coverage",
+            ]
+        }
         result = svc.compute_score(TENANT, dims)
         assert result["classification"] == expected_class
 
@@ -434,14 +469,17 @@ class TestHaloScoreRetrieval:
 
     def test_dimension_breakdown_sorted_desc(self):
         svc = HaloScoreEngine()
-        svc.compute_score(TENANT, {
-            "threat_posture": 100,
-            "compliance": 10,
-            "vulnerability": 50,
-            "incident_response": 80,
-            "endpoint_health": 30,
-            "policy_coverage": 20,
-        })
+        svc.compute_score(
+            TENANT,
+            {
+                "threat_posture": 100,
+                "compliance": 10,
+                "vulnerability": 50,
+                "incident_response": 80,
+                "endpoint_health": 30,
+                "policy_coverage": 20,
+            },
+        )
         bd = svc.get_dimension_breakdown(TENANT)
         contributions = [d["weighted_contribution"] for d in bd["dimensions"]]
         assert contributions == sorted(contributions, reverse=True)
@@ -481,12 +519,34 @@ class TestHaloScoreStats:
     def test_stats_min_max(self):
         svc = HaloScoreEngine()
         # All dims = 40 => overall 40.0; All dims = 80 => overall 80.0
-        svc.compute_score(TENANT, {k: 40 for k in [
-            "threat_posture", "compliance", "vulnerability",
-            "incident_response", "endpoint_health", "policy_coverage"]})
-        svc.compute_score(TENANT, {k: 80 for k in [
-            "threat_posture", "compliance", "vulnerability",
-            "incident_response", "endpoint_health", "policy_coverage"]})
+        svc.compute_score(
+            TENANT,
+            {
+                k: 40
+                for k in [
+                    "threat_posture",
+                    "compliance",
+                    "vulnerability",
+                    "incident_response",
+                    "endpoint_health",
+                    "policy_coverage",
+                ]
+            },
+        )
+        svc.compute_score(
+            TENANT,
+            {
+                k: 80
+                for k in [
+                    "threat_posture",
+                    "compliance",
+                    "vulnerability",
+                    "incident_response",
+                    "endpoint_health",
+                    "policy_coverage",
+                ]
+            },
+        )
         s = svc.get_stats(TENANT)
         assert s["min_score"] == 40.0
         assert s["max_score"] == 80.0
@@ -606,21 +666,26 @@ class TestFleetOrchestratorHealth:
         svc = FleetOrchestrator()
         node = svc.register_node(TENANT, hostname="n", os_type="linux")
         updated = svc.update_node_health(
-            TENANT, node["id"], health_pct=85.0,
+            TENANT,
+            node["id"],
+            health_pct=85.0,
             metrics={"cpu": 45, "mem": 60},
         )
         assert updated["metrics"]["cpu"] == 45
         assert updated["metrics"]["mem"] == 60
 
-    @pytest.mark.parametrize("health,expected_status", [
-        (0, "critical"),
-        (24, "critical"),
-        (25, "degraded"),
-        (59, "degraded"),
-        (60, "online"),
-        (80, "online"),
-        (100, "online"),
-    ])
+    @pytest.mark.parametrize(
+        "health,expected_status",
+        [
+            (0, "critical"),
+            (24, "critical"),
+            (25, "degraded"),
+            (59, "degraded"),
+            (60, "online"),
+            (80, "online"),
+            (100, "online"),
+        ],
+    )
     def test_health_threshold_boundaries(self, health, expected_status):
         svc = FleetOrchestrator()
         node = svc.register_node(TENANT, hostname="n", os_type="linux")
@@ -712,7 +777,10 @@ class TestFleetOrchestratorDispatch:
         svc = FleetOrchestrator()
         node = svc.register_node(TENANT, hostname="n1", os_type="linux")
         cmd = svc.dispatch_command(
-            TENANT, [node["id"]], command="scan", params={"deep": True},
+            TENANT,
+            [node["id"]],
+            command="scan",
+            params={"deep": True},
         )
         assert cmd["params"]["deep"] is True
 
@@ -868,9 +936,18 @@ class TestDashboardAggregatorPayloads:
     def test_command_center_keys(self):
         svc = DashboardAggregator()
         cc = svc.get_command_center(TENANT)
-        for key in ("tenant_id", "halo_score", "wingspan", "threat_count",
-                     "alert_count", "active_wardens", "top_threats",
-                     "compliance_status", "recent_events", "generated_at"):
+        for key in (
+            "tenant_id",
+            "halo_score",
+            "wingspan",
+            "threat_count",
+            "alert_count",
+            "active_wardens",
+            "top_threats",
+            "compliance_status",
+            "recent_events",
+            "generated_at",
+        ):
             assert key in cc
 
     def test_command_center_recent_events_max_20(self):
@@ -888,11 +965,18 @@ class TestDashboardAggregatorPayloads:
 
     def test_wingspan_stats_populated(self):
         svc = DashboardAggregator()
-        svc.update_wingspan(TENANT, {
-            "total_nodes": 50, "online_nodes": 45, "offline_nodes": 3,
-            "degraded_nodes": 2, "coverage_pct": 90.0, "active_wardens": 5,
-            "os_distribution": {"linux": 30, "windows": 20},
-        })
+        svc.update_wingspan(
+            TENANT,
+            {
+                "total_nodes": 50,
+                "online_nodes": 45,
+                "offline_nodes": 3,
+                "degraded_nodes": 2,
+                "coverage_pct": 90.0,
+                "active_wardens": 5,
+                "os_distribution": {"linux": 30, "windows": 20},
+            },
+        )
         ws = svc.get_wingspan_stats(TENANT)
         assert ws["total_nodes"] == 50
         assert ws["online_nodes"] == 45
@@ -906,15 +990,19 @@ class TestDashboardAggregatorPayloads:
 
     def test_threat_landscape_populated(self):
         svc = DashboardAggregator()
-        svc.update_threat_data(TENANT, {
-            "total_threats": 12, "total_alerts": 100,
-            "by_severity": {"high": 3, "medium": 9},
-            "by_category": {"malware": 5, "phishing": 7},
-            "top_threats": [{"name": "ransomware"}, {"name": "apt"}],
-            "active_incidents": 2,
-            "mttd_minutes": 15,
-            "mttr_minutes": 45,
-        })
+        svc.update_threat_data(
+            TENANT,
+            {
+                "total_threats": 12,
+                "total_alerts": 100,
+                "by_severity": {"high": 3, "medium": 9},
+                "by_category": {"malware": 5, "phishing": 7},
+                "top_threats": [{"name": "ransomware"}, {"name": "apt"}],
+                "active_incidents": 2,
+                "mttd_minutes": 15,
+                "mttr_minutes": 45,
+            },
+        )
         tl = svc.get_threat_landscape(TENANT)
         assert tl["total_threats"] == 12
         assert tl["by_severity"]["high"] == 3
@@ -929,12 +1017,15 @@ class TestDashboardAggregatorPayloads:
 
     def test_predictive_stats_populated(self):
         svc = DashboardAggregator()
-        svc.update_threat_data(TENANT, {
-            "threat_trend": "increasing",
-            "risk_forecast": "high",
-            "predicted_incidents_24h": 7,
-            "recommended_actions": ["patch", "isolate"],
-        })
+        svc.update_threat_data(
+            TENANT,
+            {
+                "threat_trend": "increasing",
+                "risk_forecast": "high",
+                "predicted_incidents_24h": 7,
+                "recommended_actions": ["patch", "isolate"],
+            },
+        )
         ps = svc.get_predictive_stats(TENANT)
         assert ps["threat_trend"] == "increasing"
         assert ps["risk_forecast"] == "high"
@@ -1053,24 +1144,33 @@ class TestDashboardAggregatorEdgeCases:
 
     def test_top_threats_capped_at_5_in_command_center(self):
         svc = DashboardAggregator()
-        svc.update_threat_data(TENANT, {
-            "top_threats": [{"name": f"t{i}"} for i in range(10)],
-        })
+        svc.update_threat_data(
+            TENANT,
+            {
+                "top_threats": [{"name": f"t{i}"} for i in range(10)],
+            },
+        )
         cc = svc.get_command_center(TENANT)
         assert len(cc["top_threats"]) == 5
 
     def test_top_threats_capped_at_10_in_landscape(self):
         svc = DashboardAggregator()
-        svc.update_threat_data(TENANT, {
-            "top_threats": [{"name": f"t{i}"} for i in range(20)],
-        })
+        svc.update_threat_data(
+            TENANT,
+            {
+                "top_threats": [{"name": f"t{i}"} for i in range(20)],
+            },
+        )
         tl = svc.get_threat_landscape(TENANT)
         assert len(tl["top_threats"]) == 10
 
     def test_command_center_full_integration(self):
         svc = DashboardAggregator()
         svc.update_halo_score(TENANT, 88.0)
-        svc.update_wingspan(TENANT, {"total_nodes": 100, "online_nodes": 95, "coverage_pct": 95.0, "active_wardens": 3})
+        svc.update_wingspan(
+            TENANT,
+            {"total_nodes": 100, "online_nodes": 95, "coverage_pct": 95.0, "active_wardens": 3},
+        )
         svc.update_threat_data(TENANT, {"total_threats": 5, "total_alerts": 50})
         svc.update_compliance(TENANT, {"overall_pct": 97.0, "frameworks": ["SOC2"]})
         svc.push_event(TENANT, {"type": "alert", "msg": "test"})

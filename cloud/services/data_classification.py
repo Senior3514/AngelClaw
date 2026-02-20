@@ -19,7 +19,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 logger = logging.getLogger("angelclaw.data_classification")
 

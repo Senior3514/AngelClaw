@@ -89,7 +89,10 @@ class FeedbackService:
 
         logger.info(
             "[FEEDBACK] tenant=%s type=%s action=%s by=%s",
-            tenant_id, suggestion_type, action, operator,
+            tenant_id,
+            suggestion_type,
+            action,
+            operator,
         )
         return record
 
@@ -122,22 +125,21 @@ class FeedbackService:
             t = sum(actions.values())
             rejected = actions.get("rejected", 0) + actions.get("ignored", 0)
             rate = rejected / t if t > 0 else 0.0
-            type_rejection_rates.append({
-                "type": stype,
-                "rejection_rate": round(rate, 2),
-                "total": t,
-                "rejected": rejected,
-            })
+            type_rejection_rates.append(
+                {
+                    "type": stype,
+                    "rejection_rate": round(rate, 2),
+                    "total": t,
+                    "rejected": rejected,
+                }
+            )
         type_rejection_rates.sort(key=lambda x: x["rejection_rate"], reverse=True)
 
         return {
             "tenant_id": tenant_id,
             "total_feedback": total,
             "by_action": dict(action_counts),
-            "by_type": {
-                stype: dict(actions)
-                for stype, actions in type_actions.items()
-            },
+            "by_type": {stype: dict(actions) for stype, actions in type_actions.items()},
             "acceptance_rate": round(acceptance_rate, 3),
             "top_rejected_types": type_rejection_rates[:5],
         }
@@ -157,14 +159,16 @@ class FeedbackService:
             total = sum(actions.values())
             accepted = actions.get("accepted", 0) + actions.get("modified", 0)
             rate = accepted / total if total > 0 else 0.0
-            rankings.append({
-                "suggestion_type": stype,
-                "acceptance_rate": round(rate, 3),
-                "total_suggestions": total,
-                "accepted": accepted,
-                "rejected": actions.get("rejected", 0),
-                "ignored": actions.get("ignored", 0),
-            })
+            rankings.append(
+                {
+                    "suggestion_type": stype,
+                    "acceptance_rate": round(rate, 3),
+                    "total_suggestions": total,
+                    "accepted": accepted,
+                    "rejected": actions.get("rejected", 0),
+                    "ignored": actions.get("ignored", 0),
+                }
+            )
 
         rankings.sort(key=lambda x: x["acceptance_rate"], reverse=True)
         return rankings
@@ -179,41 +183,54 @@ class FeedbackService:
 
         # If most suggestions are rejected, suggest reducing verbosity
         if summary["acceptance_rate"] < 0.3:
-            recommendations.append(AdjustmentRecommendation(
-                category="verbosity",
-                description="Operators reject most suggestions — reduce suggestion frequency",
-                current_value="normal",
-                recommended_value="quiet",
-                confidence=0.7,
-                reason=f"Only {summary['acceptance_rate']:.0%} of suggestions accepted",
-            ))
+            recommendations.append(
+                AdjustmentRecommendation(
+                    category="verbosity",
+                    description="Operators reject most suggestions — reduce suggestion frequency",
+                    current_value="normal",
+                    recommended_value="quiet",
+                    confidence=0.7,
+                    reason=f"Only {summary['acceptance_rate']:.0%} of suggestions accepted",
+                )
+            )
 
         # If alert_threshold type is mostly rejected, suggest raising thresholds
         for rejected_type in summary.get("top_rejected_types", []):
             if rejected_type["rejection_rate"] > 0.6 and rejected_type["total"] >= 3:
                 stype = rejected_type["type"]
-                recommendations.append(AdjustmentRecommendation(
-                    category="alert_threshold",
-                    description=f"'{stype}' suggestions are often rejected — raise alert threshold",
-                    current_value="default",
-                    recommended_value="raised",
-                    confidence=min(0.9, 0.5 + rejected_type["rejection_rate"] * 0.3),
-                    reason=(
-                        f"{rejected_type['rejected']}/{rejected_type['total']} "
-                        f"'{stype}' suggestions rejected/ignored"
-                    ),
-                ))
+                recommendations.append(
+                    AdjustmentRecommendation(
+                        category="alert_threshold",
+                        description=(
+                            f"'{stype}' suggestions are often"
+                            " rejected — raise alert threshold"
+                        ),
+                        current_value="default",
+                        recommended_value="raised",
+                        confidence=min(0.9, 0.5 + rejected_type["rejection_rate"] * 0.3),
+                        reason=(
+                            f"{rejected_type['rejected']}/{rejected_type['total']} "
+                            f"'{stype}' suggestions rejected/ignored"
+                        ),
+                    )
+                )
 
         # If acceptance rate is high, suggest increasing autonomy
         if summary["acceptance_rate"] > 0.8 and summary["total_feedback"] >= 10:
-            recommendations.append(AdjustmentRecommendation(
-                category="suggestion_priority",
-                description="High acceptance rate — consider increasing autonomy level",
-                current_value="suggest",
-                recommended_value="assist",
-                confidence=0.6,
-                reason=f"{summary['acceptance_rate']:.0%} acceptance rate across {summary['total_feedback']} suggestions",
-            ))
+            recommendations.append(
+                AdjustmentRecommendation(
+                    category="suggestion_priority",
+                    description="High acceptance rate — consider increasing autonomy level",
+                    current_value="suggest",
+                    recommended_value="assist",
+                    confidence=0.6,
+                    reason=(
+                        f"{summary['acceptance_rate']:.0%}"
+                        " acceptance rate across"
+                        f" {summary['total_feedback']} suggestions"
+                    ),
+                )
+            )
 
         return [r.model_dump(mode="json") for r in recommendations]
 

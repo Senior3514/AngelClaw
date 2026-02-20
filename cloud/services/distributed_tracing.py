@@ -20,7 +20,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 logger = logging.getLogger("angelclaw.distributed_tracing")
 
@@ -43,7 +43,14 @@ class DistributedTracingService:
     def __init__(self) -> None:
         self._store: dict[str, dict] = defaultdict(dict)
 
-    def create_span(self, tenant_id: str, trace_id: str, service: str, operation: str, parent_span_id: str | None = None) -> dict[str, Any]:
+    def create_span(
+        self,
+        tenant_id: str,
+        trace_id: str,
+        service: str,
+        operation: str,
+        parent_span_id: str | None = None,
+    ) -> dict[str, Any]:
         """Create a new security tracing span."""
         if tenant_id not in self._store:
             self._store[tenant_id] = {}

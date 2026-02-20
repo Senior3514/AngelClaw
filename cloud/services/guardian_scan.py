@@ -126,8 +126,7 @@ async def run_guardian_scan(
             HardeningSuggestion(
                 action="review_secret_access",
                 description=(
-                    "Review secret access events and add targeted"
-                    " allowlist rules if needed."
+                    "Review secret access events and add targeted allowlist rules if needed."
                 ),
             )
         )
@@ -153,8 +152,7 @@ async def run_guardian_scan(
             HardeningSuggestion(
                 action="enable_auth",
                 description=(
-                    "Enable authentication: set"
-                    " ANGELCLAW_AUTH_ENABLED=true in your environment."
+                    "Enable authentication: set ANGELCLAW_AUTH_ENABLED=true in your environment."
                 ),
             )
         )
@@ -259,14 +257,12 @@ async def run_guardian_scan(
                     id="prompt-injection-risk",
                     title=f"{len(injection_events)} prompt injection indicator(s)",
                     description=(
-                        "Events flagged as potential prompt injection"
-                        " attempts in the last 24h."
+                        "Events flagged as potential prompt injection attempts in the last 24h."
                     ),
                     severity="high" if len(injection_events) >= 3 else "medium",
                     affected_agents=list({e.agent_id[:8] for e in injection_events}),
                     suggested_fix=(
-                        "Review flagged events. AngelClaw shield"
-                        " blocks injections automatically."
+                        "Review flagged events. AngelClaw shield blocks injections automatically."
                     ),
                 )
             )
@@ -291,8 +287,7 @@ async def run_guardian_scan(
                 severity="critical" if len(leakage_events) >= 3 else "high",
                 affected_agents=list({e.agent_id[:8] for e in leakage_events}),
                 suggested_fix=(
-                    "Review outbound network events. Consider"
-                    " restricting agent network access."
+                    "Review outbound network events. Consider restricting agent network access."
                 ),
             )
         )
@@ -318,8 +313,7 @@ async def run_guardian_scan(
                         ),
                         severity="high",
                         suggested_fix=(
-                            "Re-register skills after legitimate"
-                            " updates with 'shield verify'."
+                            "Re-register skills after legitimate updates with 'shield verify'."
                         ),
                     )
                 )

@@ -81,7 +81,12 @@ class CloudConnectorService:
         """Add a new cloud connector."""
         provider = cloud_provider.lower()
         if provider not in _SUPPORTED_PROVIDERS:
-            return {"error": f"Unsupported provider '{provider}'. Supported: {sorted(_SUPPORTED_PROVIDERS)}"}
+            return {
+                "error": (
+                    f"Unsupported provider '{provider}'."
+                    f" Supported: {sorted(_SUPPORTED_PROVIDERS)}"
+                )
+            }
 
         connector = CloudConnector(
             tenant_id=tenant_id,
@@ -95,7 +100,10 @@ class CloudConnectorService:
 
         logger.info(
             "[CLOUD_CONN] Added connector '%s' (%s) with %d regions for %s",
-            name, provider, len(connector.regions), tenant_id,
+            name,
+            provider,
+            len(connector.regions),
+            tenant_id,
         )
         return connector.model_dump(mode="json")
 
@@ -103,8 +111,7 @@ class CloudConnectorService:
         """List all connectors for a tenant."""
         cids = self._tenant_connectors.get(tenant_id, [])
         return [
-            self._connectors[cid].model_dump(mode="json")
-            for cid in cids if cid in self._connectors
+            self._connectors[cid].model_dump(mode="json") for cid in cids if cid in self._connectors
         ]
 
     def test_connector(self, connector_id: str) -> dict:
@@ -119,7 +126,9 @@ class CloudConnectorService:
 
         logger.info(
             "[CLOUD_CONN] Tested connector '%s' (%s): %s",
-            conn.name, conn.cloud_provider, conn.health_status,
+            conn.name,
+            conn.cloud_provider,
+            conn.health_status,
         )
         return {
             "connector_id": connector_id,
@@ -160,7 +169,8 @@ class CloudConnectorService:
 
         logger.info(
             "[CLOUD_CONN] Synced %d resources for connector '%s'",
-            discovered_count, conn.name,
+            discovered_count,
+            conn.name,
         )
         return {
             "connector_id": connector_id,
@@ -182,8 +192,7 @@ class CloudConnectorService:
 
         # Remove from tenant list
         self._tenant_connectors[conn.tenant_id] = [
-            cid for cid in self._tenant_connectors[conn.tenant_id]
-            if cid != connector_id
+            cid for cid in self._tenant_connectors[conn.tenant_id] if cid != connector_id
         ]
         del self._connectors[connector_id]
 

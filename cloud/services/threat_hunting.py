@@ -96,7 +96,12 @@ class ThreatHuntingService:
         }
 
     def save_query(
-        self, db: Session, tenant_id: str, name: str, description: str, query_dsl: dict,
+        self,
+        db: Session,
+        tenant_id: str,
+        name: str,
+        description: str,
+        query_dsl: dict,
         created_by: str = "system",
     ) -> dict:
         """Save a threat hunting query for reuse."""

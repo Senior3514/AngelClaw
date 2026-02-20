@@ -352,12 +352,9 @@ class CorrelationEngine:
                 if t and (not tactics or tactics[-1] != t):
                     tactics.append(t)
 
-            chains.append(
-                self._make_chain(sorted_events, list(agents), tactics)
-            )
+            chains.append(self._make_chain(sorted_events, list(agents), tactics))
 
         return chains
-
 
     # ------------------------------------------------------------------
     # V2.2 — Supply chain attack correlation
@@ -369,8 +366,13 @@ class CorrelationEngine:
     ) -> list[CorrelationChain]:
         """Detect supply chain attack patterns: package install → code execution → exfiltration."""
         supply_chain_keywords = {
-            "pip install", "npm install", "gem install", "cargo install",
-            "go get", "composer require", "nuget install",
+            "pip install",
+            "npm install",
+            "gem install",
+            "cargo install",
+            "go get",
+            "composer require",
+            "nuget install",
         }
         exec_keywords = {"exec", "shell", "spawn", "eval", "run"}
 
@@ -399,9 +401,7 @@ class CorrelationEngine:
             if has_install and has_exec:
                 all_evts = install_evts + exec_evts
                 tactics = [MitreTactic.PERSISTENCE.value, MitreTactic.EXECUTION.value]
-                chains.append(
-                    self._make_chain(all_evts, [agent_id], tactics)
-                )
+                chains.append(self._make_chain(all_evts, [agent_id], tactics))
 
         return chains
 

@@ -125,8 +125,7 @@ def _build_profiles(per_agent: dict[str, list[dict]]) -> dict[str, dict]:
             "type_distribution": dict(type_dist.most_common(10)),
             "severity_distribution": dict(sev_dist),
             "high_critical_ratio": (
-                (sev_dist.get("high", 0) + sev_dist.get("critical", 0))
-                / max(len(events), 1)
+                (sev_dist.get("high", 0) + sev_dist.get("critical", 0)) / max(len(events), 1)
             ),
         }
     return profiles
@@ -157,10 +156,7 @@ def _detect_peer_deviation(
                         f"Agent {agent_id[:8]} has {profile['event_count']} events "
                         f"({profile['event_count'] / avg_count:.1f}x peer average)"
                     ),
-                    related_event_ids=[
-                        e.get("id", "")
-                        for e in per_agent.get(agent_id, [])[:10]
-                    ],
+                    related_event_ids=[e.get("id", "") for e in per_agent.get(agent_id, [])[:10]],
                     related_agent_ids=[agent_id],
                     suggested_playbook="throttle_agent",
                 )
@@ -206,7 +202,7 @@ def _detect_sudden_change(events: list[dict]) -> list[ThreatIndicator]:
         severities = [sev_order.get(e.get("severity", "info"), 0) for e in agent_events]
         # Check if severity trend is sharply increasing
         first_half = severities[: len(severities) // 2]
-        second_half = severities[len(severities) // 2:]
+        second_half = severities[len(severities) // 2 :]
         avg_first = sum(first_half) / max(len(first_half), 1)
         avg_second = sum(second_half) / max(len(second_half), 1)
         if avg_second - avg_first >= 2.0:
@@ -236,11 +232,7 @@ def _detect_category_novelty(events: list[dict]) -> list[ThreatIndicator]:
     for e in events:
         agent_id = e.get("agent_id", "")
         if agent_id:
-            cat = (
-                e.get("type", "").split(".")[0]
-                if "." in e.get("type", "")
-                else e.get("type", "")
-            )
+            cat = e.get("type", "").split(".")[0] if "." in e.get("type", "") else e.get("type", "")
             per_agent[agent_id][cat] += 1
 
     for agent_id, cats in per_agent.items():
@@ -315,9 +307,7 @@ def _detect_dormant_agent_activation(events: list[dict]) -> list[ThreatIndicator
     indicators: list[ThreatIndicator] = []
     for agent_id, agent_events in per_agent.items():
         # Check if agent has high-severity events but was previously unknown
-        high_sev_count = sum(
-            1 for e in agent_events if e.get("severity") in ("high", "critical")
-        )
+        high_sev_count = sum(1 for e in agent_events if e.get("severity") in ("high", "critical"))
         if high_sev_count >= 3 and len(agent_events) <= high_sev_count + 2:
             indicators.append(
                 ThreatIndicator(

@@ -85,7 +85,12 @@ class TopologyService:
         self._adjacency[source_asset_id].add(target_asset_id)
         if direction == "bidirectional":
             self._adjacency[target_asset_id].add(source_asset_id)
-        logger.info("[TOPOLOGY] Added link %s -> %s (%s)", source_asset_id[:8], target_asset_id[:8], link_type)
+        logger.info(
+            "[TOPOLOGY] Added link %s -> %s (%s)",
+            source_asset_id[:8],
+            target_asset_id[:8],
+            link_type,
+        )
         return link.to_dict()
 
     def remove_link(self, link_id: str) -> bool:
@@ -119,13 +124,15 @@ class TopologyService:
                 continue
             nodes.add(link.source_asset_id)
             nodes.add(link.target_asset_id)
-            edges.append({
-                "source": link.source_asset_id,
-                "target": link.target_asset_id,
-                "type": link.link_type,
-                "protocol": link.protocol,
-                "port": link.port,
-            })
+            edges.append(
+                {
+                    "source": link.source_asset_id,
+                    "target": link.target_asset_id,
+                    "type": link.link_type,
+                    "protocol": link.protocol,
+                    "port": link.port,
+                }
+            )
         return {
             "nodes": list(nodes),
             "edges": edges,
@@ -164,14 +171,14 @@ class TopologyService:
         return [{"asset_id": nid, "connections": count} for nid, count in sorted_nodes[:20]]
 
     def get_stats(self, tenant_id: str) -> dict:
-        tenant_links = [l for l in self._links.values() if l.tenant_id == tenant_id]
+        tenant_links = [link for link in self._links.values() if link.tenant_id == tenant_id]
         by_type: dict[str, int] = defaultdict(int)
-        for l in tenant_links:
-            by_type[l.link_type] += 1
+        for link in tenant_links:
+            by_type[link.link_type] += 1
         nodes = set()
-        for l in tenant_links:
-            nodes.add(l.source_asset_id)
-            nodes.add(l.target_asset_id)
+        for link in tenant_links:
+            nodes.add(link.source_asset_id)
+            nodes.add(link.target_asset_id)
         return {
             "total_links": len(tenant_links),
             "total_nodes": len(nodes),

@@ -90,7 +90,10 @@ class FleetOrchestrator:
 
         logger.info(
             "[FLEET] Registered node '%s' (%s %s) for %s",
-            hostname, os_type, version, tenant_id,
+            hostname,
+            os_type,
+            version,
+            tenant_id,
         )
         return node.model_dump(mode="json")
 
@@ -121,7 +124,9 @@ class FleetOrchestrator:
 
         logger.debug(
             "[FLEET] Updated node '%s' health=%.0f%% status=%s",
-            node.hostname, health_pct, node.status,
+            node.hostname,
+            health_pct,
+            node.status,
         )
         return node.model_dump(mode="json")
 
@@ -238,7 +243,9 @@ class FleetOrchestrator:
 
         logger.info(
             "[FLEET] Dispatched command '%s' to %d nodes for %s",
-            command, len(valid_ids), tenant_id,
+            command,
+            len(valid_ids),
+            tenant_id,
         )
         return cmd.model_dump(mode="json")
 
@@ -266,7 +273,8 @@ class FleetOrchestrator:
             "by_os": dict(by_os),
             "by_status": dict(by_status),
             "avg_health_pct": round(
-                sum(n.health_pct for n in nodes) / max(len(nodes), 1), 1,
+                sum(n.health_pct for n in nodes) / max(len(nodes), 1),
+                1,
             ),
             "total_commands": len(commands),
             "commands_completed": sum(1 for c in commands if c.status == "completed"),
@@ -280,9 +288,7 @@ class FleetOrchestrator:
     def _get_tenant_nodes(self, tenant_id: str) -> list[FleetNode]:
         """Return all nodes belonging to a tenant."""
         return [
-            self._nodes[nid]
-            for nid in self._tenant_nodes.get(tenant_id, [])
-            if nid in self._nodes
+            self._nodes[nid] for nid in self._tenant_nodes.get(tenant_id, []) if nid in self._nodes
         ]
 
 

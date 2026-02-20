@@ -343,10 +343,26 @@ class TestToolGuard:
     def test_allowlist_tools(self):
         """Test that all default allowlist tools pass."""
         tg = ToolGuard()
-        for tool in ["search", "summarize", "analyze", "grep", "list_files",
-                      "get_status", "describe", "explain", "count", "stats",
-                      "view", "inspect", "diff", "help", "man", "info",
-                      "which", "type"]:
+        for tool in [
+            "search",
+            "summarize",
+            "analyze",
+            "grep",
+            "list_files",
+            "get_status",
+            "describe",
+            "explain",
+            "count",
+            "stats",
+            "view",
+            "inspect",
+            "diff",
+            "help",
+            "man",
+            "info",
+            "which",
+            "type",
+        ]:
             allowed, reason = tg.check_tool(tool)
             assert allowed is True, f"Tool '{tool}' should be allowed"
 
@@ -382,9 +398,7 @@ class TestAuditEntry:
             details="test details",
             prev_hash="0" * 64,
         )
-        expected_content = (
-            "2026-01-01T00:00:00Z|test_action|test_skill|test details|" + "0" * 64
-        )
+        expected_content = "2026-01-01T00:00:00Z|test_action|test_skill|test details|" + "0" * 64
         expected_hash = hashlib.sha256(expected_content.encode("utf-8")).hexdigest()
         assert entry.entry_hash == expected_hash
         assert entry._compute_hash() == expected_hash
@@ -518,9 +532,7 @@ class TestSkillIntegrity:
     @patch("cloud.angelclaw.security.verify_all_skills")
     @patch("cloud.angelclaw.security.verify_skill_integrity")
     def test_create_baseline_skips_no_hash(self, mock_verify, mock_verify_all):
-        mock_verify_all.return_value = {
-            "skills": {"no_hash_skill": {"verified": False}}
-        }
+        mock_verify_all.return_value = {"skills": {"no_hash_skill": {"verified": False}}}
         mock_record = MagicMock()
         mock_record.current_hash = ""
         mock_verify.return_value = mock_record
@@ -532,9 +544,7 @@ class TestSkillIntegrity:
     @patch("cloud.angelclaw.security.verify_all_skills")
     @patch("cloud.angelclaw.security.verify_skill_integrity")
     def test_create_baseline_null_record(self, mock_verify, mock_verify_all):
-        mock_verify_all.return_value = {
-            "skills": {"null_skill": {}}
-        }
+        mock_verify_all.return_value = {"skills": {"null_skill": {}}}
         mock_verify.return_value = None
 
         si = SkillIntegrity()
@@ -828,12 +838,12 @@ class TestWorkspaceIsolation:
         assert WorkspaceIsolation._path_matches("/home/test", "/etc/") is False
 
     def test_path_matches_with_glob(self):
-        assert WorkspaceIsolation._path_matches(
-            "/home/user/.ssh/id_rsa", "/home/*/.ssh/id_"
-        ) is True
-        assert WorkspaceIsolation._path_matches(
-            "/home/user/.aws/credentials", "/home/*/.aws/"
-        ) is True
+        assert (
+            WorkspaceIsolation._path_matches("/home/user/.ssh/id_rsa", "/home/*/.ssh/id_") is True
+        )
+        assert (
+            WorkspaceIsolation._path_matches("/home/user/.aws/credentials", "/home/*/.aws/") is True
+        )
 
 
 # ===========================================================================
@@ -1362,12 +1372,20 @@ class TestAdvisoryMonitor:
     def test_get_custom_rules(self):
         am = AdvisoryMonitor(include_builtins=False)
         rule1 = AdvisoryRule(
-            id="RULE-001", name="Rule 1", description="Test",
-            severity=AdvisorySeverity.HIGH, condition="cond1", category="cat1",
+            id="RULE-001",
+            name="Rule 1",
+            description="Test",
+            severity=AdvisorySeverity.HIGH,
+            condition="cond1",
+            category="cat1",
         )
         rule2 = AdvisoryRule(
-            id="RULE-002", name="Rule 2", description="Test",
-            severity=AdvisorySeverity.LOW, condition="cond2", category="cat2",
+            id="RULE-002",
+            name="Rule 2",
+            description="Test",
+            severity=AdvisorySeverity.LOW,
+            condition="cond2",
+            category="cat2",
         )
         am.add_custom_rule(rule1)
         am.add_custom_rule(rule2)
@@ -1493,8 +1511,12 @@ class TestAdvisoryMonitor:
     def test_get_stats_with_custom_rules(self):
         am = AdvisoryMonitor(include_builtins=False)
         rule = AdvisoryRule(
-            id="RULE-001", name="Rule", description="Test",
-            severity=AdvisorySeverity.LOW, condition="cond", category="cat",
+            id="RULE-001",
+            name="Rule",
+            description="Test",
+            severity=AdvisorySeverity.LOW,
+            condition="cond",
+            category="cat",
         )
         am.add_custom_rule(rule)
         stats = am.get_stats()
@@ -1557,6 +1579,7 @@ class TestModuleSingletons:
             tool_guard,
             workspace_isolation,
         )
+
         assert isinstance(prompt_defense, PromptDefense)
         assert isinstance(tool_guard, ToolGuard)
         assert isinstance(skill_integrity, SkillIntegrity)

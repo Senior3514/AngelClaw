@@ -53,7 +53,9 @@ class SOAREngine:
         self._playbooks: dict[str, SOARPlaybook] = {}
         self._executions: dict[str, SOARExecution] = {}
         self._tenant_playbooks: dict[str, list[str]] = defaultdict(list)
-        self._hourly_counts: dict[str, int] = defaultdict(int)  # playbook_id -> executions this hour
+        self._hourly_counts: dict[str, int] = defaultdict(
+            int
+        )  # playbook_id -> executions this hour
 
     def create_playbook(
         self,
@@ -141,19 +143,23 @@ class SOAREngine:
             action_type = action.get("type", "log")
             try:
                 result = self._execute_action(action_type, action, trigger_context or {})
-                execution.action_results.append({
-                    "step": i + 1,
-                    "type": action_type,
-                    "status": "completed",
-                    "result": result,
-                })
+                execution.action_results.append(
+                    {
+                        "step": i + 1,
+                        "type": action_type,
+                        "status": "completed",
+                        "result": result,
+                    }
+                )
             except Exception as exc:
-                execution.action_results.append({
-                    "step": i + 1,
-                    "type": action_type,
-                    "status": "failed",
-                    "error": str(exc),
-                })
+                execution.action_results.append(
+                    {
+                        "step": i + 1,
+                        "type": action_type,
+                        "status": "failed",
+                        "error": str(exc),
+                    }
+                )
                 if action.get("on_failure", "abort") == "abort":
                     execution.status = "failed"
                     execution.error = f"Step {i + 1} failed: {exc}"
@@ -197,7 +203,8 @@ class SOAREngine:
 
     def get_stats(self, tenant_id: str) -> dict:
         playbooks = [
-            self._playbooks[p] for p in self._tenant_playbooks.get(tenant_id, [])
+            self._playbooks[p]
+            for p in self._tenant_playbooks.get(tenant_id, [])
             if p in self._playbooks
         ]
         execs = [e for e in self._executions.values() if e.tenant_id == tenant_id]
@@ -216,7 +223,9 @@ class SOAREngine:
                 return False
             if tc.get("min_severity"):
                 sev_order = {"info": 1, "low": 2, "medium": 3, "high": 4, "critical": 5}
-                if sev_order.get(context.get("severity", "info"), 1) < sev_order.get(tc["min_severity"], 1):
+                if sev_order.get(context.get("severity", "info"), 1) < sev_order.get(
+                    tc["min_severity"], 1
+                ):
                     return False
             return True
         elif playbook.trigger_type == "ioc_match":
@@ -233,7 +242,10 @@ class SOAREngine:
         if action_type == "log":
             return {"message": action.get("message", "SOAR action logged")}
         elif action_type == "quarantine":
-            return {"agent_id": action.get("agent_id", context.get("agent_id")), "quarantined": True}
+            return {
+                "agent_id": action.get("agent_id", context.get("agent_id")),
+                "quarantined": True,
+            }
         elif action_type == "notify":
             return {"channel": action.get("channel", "default"), "notified": True}
         elif action_type == "block_ip":

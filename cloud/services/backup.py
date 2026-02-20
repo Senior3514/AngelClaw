@@ -47,9 +47,7 @@ class BackupService:
         self._backup_dir = backup_dir or _BACKUP_DIR
         self._backup_dir.mkdir(parents=True, exist_ok=True)
 
-    def create_backup(
-        self, db: Session, tenant_id: str, *, created_by: str = "system"
-    ) -> dict:
+    def create_backup(self, db: Session, tenant_id: str, *, created_by: str = "system") -> dict:
         """Create a JSON backup of all tables."""
         backup_id = str(uuid.uuid4())
         timestamp = datetime.now(timezone.utc)

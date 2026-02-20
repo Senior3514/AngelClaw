@@ -122,9 +122,7 @@ class LearningEngine:
                 self._effective_playbooks.get(playbook_name, 0) + 1
             )
             # V2.1 — track resolution times for trend analysis
-            self._resolution_times.setdefault(playbook_name, []).append(
-                resolution_time_seconds
-            )
+            self._resolution_times.setdefault(playbook_name, []).append(resolution_time_seconds)
             entry = ReflectionEntry(
                 incident_id=incident_id,
                 category="response_effectiveness",
@@ -368,11 +366,13 @@ class LearningEngine:
         results = []
         for (a, b), count in correlations.items():
             if count >= min_occurrences:
-                results.append({
-                    "pattern_a": a,
-                    "pattern_b": b,
-                    "co_occurrences": count,
-                })
+                results.append(
+                    {
+                        "pattern_a": a,
+                        "pattern_b": b,
+                        "co_occurrences": count,
+                    }
+                )
         results.sort(key=lambda r: r["co_occurrences"], reverse=True)
         return results
 
@@ -436,7 +436,6 @@ class LearningEngine:
 
         # Return the highest-success-rate playbook
         return viable[0]["playbook"]
-
 
     # ------------------------------------------------------------------
     # V3.0 — Prediction calibration for predictive engine

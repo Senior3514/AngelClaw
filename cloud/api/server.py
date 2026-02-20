@@ -66,8 +66,7 @@ async def lifespan(app: FastAPI):
 
     await start_daemon()
     logger.info(
-        "AngelClaw V10.0.0 Seraph started"
-        " — tables, heartbeat, orchestrator, Wazuh, shield, daemon"
+        "AngelClaw V10.0.0 Seraph started — tables, heartbeat, orchestrator, Wazuh, shield, daemon"
     )
     yield
     await stop_daemon()
@@ -310,6 +309,11 @@ from cloud.api.titan_grid_routes import router as titan_grid_router  # noqa: E40
 
 app.include_router(titan_grid_router)
 
+# AngelClaw Agent routes (defense-side mirror of OpenClaw)
+from cloud.api.angelclaw_agent_routes import router as angelclaw_agent_router  # noqa: E402
+
+app.include_router(angelclaw_agent_router)
+
 
 # ---------------------------------------------------------------------------
 # Auth middleware — protect /api/v1/* routes when auth is enabled
@@ -374,11 +378,13 @@ async def auth_middleware(request: Request, call_next):
             try:
                 from cloud.auth.api_keys import api_key_service
                 from cloud.db.session import SessionLocal
+
                 key_db = SessionLocal()
                 try:
                     key_info = api_key_service.validate_key(key_db, api_key)
                     if key_info:
                         from cloud.auth.models import AuthUser, UserRole
+
                         user = AuthUser(
                             username=f"apikey:{key_info['name']}",
                             role=UserRole.ADMIN,
@@ -465,8 +471,10 @@ def serve_mobile_file(filename: str):
         content_type = "application/javascript"
     elif filename.endswith(".html"):
         content_type = "text/html"
-    return JSONResponse(content=json.loads(content)) if filename.endswith(".json") else HTMLResponse(
-        content=content, media_type=content_type
+    return (
+        JSONResponse(content=json.loads(content))
+        if filename.endswith(".json")
+        else HTMLResponse(content=content, media_type=content_type)
     )
 
 

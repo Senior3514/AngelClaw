@@ -18,12 +18,8 @@ from sqlalchemy.orm import Session
 from cloud.db.models import (
     AgentNodeRow,
     AntiTamperConfigRow,
-    AntiTamperEventRow,
     EventRow,
-    FeedbackRecordRow,
     GuardianAlertRow,
-    GuardianReportRow,
-    SelfHardeningLogRow,
     TenantRow,
 )
 from cloud.db.session import get_db
@@ -65,9 +61,7 @@ def org_overview(
 
     event_count = db.query(EventRow).filter(EventRow.timestamp >= cutoff_24h).count()
     alert_count = (
-        db.query(GuardianAlertRow)
-        .filter(GuardianAlertRow.created_at >= cutoff_24h)
-        .count()
+        db.query(GuardianAlertRow).filter(GuardianAlertRow.created_at >= cutoff_24h).count()
     )
 
     # Compute org-wide halo score (average of tenant scores or basic formula)
@@ -83,6 +77,7 @@ def org_overview(
     # Orchestrator stats
     try:
         from cloud.guardian.orchestrator import angel_orchestrator
+
         orch = angel_orchestrator.status()
     except Exception:
         orch = {"running": False, "stats": {}}
@@ -123,35 +118,35 @@ def list_tenants(
     if not tenants:
         # Return default dev tenant if none exist
         agents = db.query(AgentNodeRow).all()
-        return [{
-            "id": "dev-tenant",
-            "name": "Development",
-            "status": "active",
-            "tier": "standard",
-            "agent_count": len(agents),
-            "halo_score": 85,
-            "wingspan": min(100, len(agents) * 10),
-        }]
+        return [
+            {
+                "id": "dev-tenant",
+                "name": "Development",
+                "status": "active",
+                "tier": "standard",
+                "agent_count": len(agents),
+                "halo_score": 85,
+                "wingspan": min(100, len(agents) * 10),
+            }
+        ]
 
     result = []
     for t in tenants:
-        agent_count = (
-            db.query(AgentNodeRow)
-            .filter(AgentNodeRow.tags.contains([t.id]))
-            .count()
+        agent_count = db.query(AgentNodeRow).filter(AgentNodeRow.tags.contains([t.id])).count()
+        result.append(
+            {
+                "id": t.id,
+                "name": t.name,
+                "description": t.description,
+                "status": t.status,
+                "tier": t.tier,
+                "agent_count": agent_count,
+                "halo_score": t.halo_score,
+                "wingspan": t.wingspan,
+                "contact_email": t.contact_email,
+                "created_at": t.created_at.isoformat() if t.created_at else None,
+            }
         )
-        result.append({
-            "id": t.id,
-            "name": t.name,
-            "description": t.description,
-            "status": t.status,
-            "tier": t.tier,
-            "agent_count": agent_count,
-            "halo_score": t.halo_score,
-            "wingspan": t.wingspan,
-            "contact_email": t.contact_email,
-            "created_at": t.created_at.isoformat() if t.created_at else None,
-        })
     return result
 
 
@@ -228,6 +223,7 @@ def agent_detail(
 
     # Anti-tamper status
     from cloud.services.anti_tamper import anti_tamper_service
+
     tamper_config = anti_tamper_service.get_config("dev-tenant", agent_id)
 
     return {
@@ -294,14 +290,14 @@ def configure_anti_tamper(
     enabled_by = user.username if user else "system"
 
     try:
-        config = anti_tamper_service.configure(
+        anti_tamper_service.configure(
             tenant_id=tenant_id,
             mode=mode,
             agent_id=agent_id,
             enabled_by=enabled_by,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
     # Persist to DB
     row = AntiTamperConfigRow(
@@ -340,6 +336,7 @@ def anti_tamper_status(
     _require_admin(request)
 
     from cloud.services.anti_tamper import anti_tamper_service
+
     return anti_tamper_service.get_status(tenant_id)
 
 
@@ -358,6 +355,7 @@ def anti_tamper_events(
     _require_admin(request)
 
     from cloud.services.anti_tamper import anti_tamper_service
+
     return anti_tamper_service.get_events(tenant_id=tenant_id, limit=limit)
 
 
@@ -373,6 +371,7 @@ def legion_status(request: Request):
 
     try:
         from cloud.guardian.orchestrator import angel_orchestrator
+
         status = angel_orchestrator.status()
         return {
             "running": status.get("running", False),
@@ -403,6 +402,7 @@ def analytics_trends(
 
     try:
         from cloud.services.predictive import predict_trends
+
         trends = predict_trends(db, lookback_hours=lookback_hours)
         if trends:
             return trends[0]
@@ -423,6 +423,7 @@ def analytics_risk_scores(request: Request):
 
     try:
         from cloud.guardian.learning import learning_engine
+
         summary = learning_engine.summary()
         return {
             "total_reflections": summary.get("total_reflections", 0),
@@ -488,6 +489,7 @@ def feedback_summary(
     _require_admin(request)
 
     from cloud.services.feedback_loop import feedback_service
+
     return feedback_service.get_tenant_summary(tenant_id)
 
 
@@ -521,7 +523,7 @@ def record_feedback(
         )
         return {"status": "recorded", "feedback_id": record.id}
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
 # ---------------------------------------------------------------------------
@@ -539,6 +541,7 @@ def hardening_log(
     _require_admin(request)
 
     from cloud.services.self_hardening import self_hardening_engine
+
     return self_hardening_engine.get_hardening_log(tenant_id=tenant_id, limit=limit)
 
 
@@ -602,11 +605,13 @@ def revert_hardening(
 # Organization Management (3-Layer Multi-Tenancy)
 # ---------------------------------------------------------------------------
 
+
 class CreateOrgRequest(BaseModel):
     name: str
     slug: str
     contact_email: str = ""
     tier: str = "standard"
+
 
 class CreateTenantRequest(BaseModel):
     tenant_id: str
@@ -615,52 +620,106 @@ class CreateTenantRequest(BaseModel):
     tier: str = "standard"
     max_agents: int = 100
 
+
 @router.post("/orgs")
 def create_organization(req: CreateOrgRequest, request: Request, db: Session = Depends(get_db)):
     _require_admin(request)
     from cloud.db.models import OrganizationRow
-    org = OrganizationRow(id=str(uuid.uuid4())[:12], name=req.name, slug=req.slug, contact_email=req.contact_email, tier=req.tier)
+
+    org = OrganizationRow(
+        id=str(uuid.uuid4())[:12],
+        name=req.name,
+        slug=req.slug,
+        contact_email=req.contact_email,
+        tier=req.tier,
+    )
     db.add(org)
     db.commit()
     return {"id": org.id, "name": org.name, "slug": org.slug, "status": "created"}
+
 
 @router.get("/orgs")
 def list_organizations(request: Request, db: Session = Depends(get_db)):
     _require_admin(request)
     from cloud.db.models import OrganizationRow
+
     orgs = db.query(OrganizationRow).all()
-    return [{"id": o.id, "name": o.name, "slug": o.slug, "tier": o.tier, "status": o.status, "max_tenants": o.max_tenants, "created_at": str(o.created_at)} for o in orgs]
+    return [
+        {
+            "id": o.id,
+            "name": o.name,
+            "slug": o.slug,
+            "tier": o.tier,
+            "status": o.status,
+            "max_tenants": o.max_tenants,
+            "created_at": str(o.created_at),
+        }
+        for o in orgs
+    ]
+
 
 @router.get("/orgs/{org_id}")
 def get_organization(org_id: str, request: Request, db: Session = Depends(get_db)):
     _require_admin(request)
     from cloud.db.models import OrganizationRow
+
     org = db.query(OrganizationRow).filter(OrganizationRow.id == org_id).first()
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
     tenants = db.query(TenantRow).filter(TenantRow.organization_id == org_id).all()
-    total_agents = sum(db.query(AgentNodeRow).filter(AgentNodeRow.tenant_id == t.id).count() for t in tenants)
-    return {"id": org.id, "name": org.name, "slug": org.slug, "tier": org.tier, "status": org.status, "tenants": len(tenants), "total_agents": total_agents}
+    total_agents = sum(
+        db.query(AgentNodeRow).filter(AgentNodeRow.tenant_id == t.id).count() for t in tenants
+    )
+    return {
+        "id": org.id,
+        "name": org.name,
+        "slug": org.slug,
+        "tier": org.tier,
+        "status": org.status,
+        "tenants": len(tenants),
+        "total_agents": total_agents,
+    }
+
 
 @router.get("/orgs/{org_id}/tenants")
 def list_org_tenants(org_id: str, request: Request, db: Session = Depends(get_db)):
     _require_admin(request)
     tenants = db.query(TenantRow).filter(TenantRow.organization_id == org_id).all()
-    return [{"id": t.id, "name": t.name, "tier": t.tier, "status": t.status, "organization_id": t.organization_id} for t in tenants]
+    return [
+        {
+            "id": t.id,
+            "name": t.name,
+            "tier": t.tier,
+            "status": t.status,
+            "organization_id": t.organization_id,
+        }
+        for t in tenants
+    ]
+
 
 @router.post("/orgs/{org_id}/tenants")
-def create_tenant_in_org(org_id: str, req: CreateTenantRequest, request: Request, db: Session = Depends(get_db)):
+def create_tenant_in_org(
+    org_id: str, req: CreateTenantRequest, request: Request, db: Session = Depends(get_db)
+):
     _require_admin(request)
-    tenant = TenantRow(id=req.tenant_id, name=req.name, organization_id=org_id, tier=req.tier, max_agents=req.max_agents)
+    tenant = TenantRow(
+        id=req.tenant_id,
+        name=req.name,
+        organization_id=org_id,
+        tier=req.tier,
+        max_agents=req.max_agents,
+    )
     db.add(tenant)
     db.commit()
     return {"id": tenant.id, "name": tenant.name, "organization_id": org_id, "status": "created"}
+
 
 @router.get("/hierarchy")
 def get_hierarchy(request: Request, db: Session = Depends(get_db)):
     """Full 3-layer hierarchy: Organization → Tenant → Agent."""
     _require_admin(request)
     from cloud.db.models import OrganizationRow
+
     orgs = db.query(OrganizationRow).all()
     hierarchy = []
     for org in orgs:
@@ -668,10 +727,43 @@ def get_hierarchy(request: Request, db: Session = Depends(get_db)):
         tenant_data = []
         for t in tenants:
             agents = db.query(AgentNodeRow).filter(AgentNodeRow.tenant_id == t.id).all()
-            tenant_data.append({"id": t.id, "name": t.name, "tier": t.tier, "status": t.status, "agents": [{"id": a.id, "hostname": a.hostname, "status": a.status} for a in agents]})
-        hierarchy.append({"id": org.id, "name": org.name, "slug": org.slug, "tier": org.tier, "tenants": tenant_data})
+            tenant_data.append(
+                {
+                    "id": t.id,
+                    "name": t.name,
+                    "tier": t.tier,
+                    "status": t.status,
+                    "agents": [
+                        {"id": a.id, "hostname": a.hostname, "status": a.status} for a in agents
+                    ],
+                }
+            )
+        hierarchy.append(
+            {
+                "id": org.id,
+                "name": org.name,
+                "slug": org.slug,
+                "tier": org.tier,
+                "tenants": tenant_data,
+            }
+        )
     # Include unaffiliated tenants
-    orphan_tenants = db.query(TenantRow).filter((TenantRow.organization_id == None) | (TenantRow.organization_id == "")).all()
+    orphan_tenants = (
+        db.query(TenantRow)
+        .filter((TenantRow.organization_id.is_(None)) | (TenantRow.organization_id == ""))
+        .all()
+    )
     if orphan_tenants:
-        hierarchy.append({"id": "unaffiliated", "name": "Unaffiliated", "slug": "unaffiliated", "tier": "default", "tenants": [{"id": t.id, "name": t.name, "tier": t.tier, "status": t.status, "agents": []} for t in orphan_tenants]})
+        hierarchy.append(
+            {
+                "id": "unaffiliated",
+                "name": "Unaffiliated",
+                "slug": "unaffiliated",
+                "tier": "default",
+                "tenants": [
+                    {"id": t.id, "name": t.name, "tier": t.tier, "status": t.status, "agents": []}
+                    for t in orphan_tenants
+                ],
+            }
+        )
     return hierarchy

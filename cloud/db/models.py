@@ -397,7 +397,9 @@ class AntiTamperEventRow(Base):
     id = Column(String(36), primary_key=True)
     tenant_id = Column(String(64), nullable=False, index=True)
     agent_id = Column(String(36), nullable=False, index=True)
-    event_type = Column(String(64), nullable=False)  # config_change, process_death, checksum_mismatch, heartbeat_miss, unauthorized_uninstall
+    event_type = Column(
+        String(64), nullable=False
+    )  # config_change, process_death, checksum_mismatch, heartbeat_miss, unauthorized_uninstall
     severity = Column(String(16), default="high")
     description = Column(Text, default="")
     details = Column(JSON, default=dict)
@@ -413,7 +415,9 @@ class FeedbackRecordRow(Base):
 
     id = Column(String(36), primary_key=True)
     tenant_id = Column(String(64), nullable=False, index=True)
-    suggestion_type = Column(String(64), nullable=False)  # policy_change, alert_threshold, scan_config, remediation
+    suggestion_type = Column(
+        String(64), nullable=False
+    )  # policy_change, alert_threshold, scan_config, remediation
     suggestion_id = Column(String(36), nullable=True)
     action = Column(String(16), nullable=False)  # accepted, rejected, ignored, modified
     operator = Column(String(128), nullable=False)
@@ -429,7 +433,9 @@ class SelfHardeningLogRow(Base):
 
     id = Column(String(36), primary_key=True)
     tenant_id = Column(String(64), nullable=False, index=True)
-    action_type = Column(String(64), nullable=False)  # tighten_allowlist, enable_logging, increase_scan_freq, block_source
+    action_type = Column(
+        String(64), nullable=False
+    )  # tighten_allowlist, enable_logging, increase_scan_freq, block_source
     description = Column(Text, default="")
     reason = Column(Text, default="")
     before_state = Column(JSON, default=dict)
@@ -476,7 +482,9 @@ class IOCEntryRow(Base):
     id = Column(String(36), primary_key=True)
     tenant_id = Column(String(64), nullable=False, index=True)
     feed_id = Column(String(36), nullable=False, index=True)
-    ioc_type = Column(String(32), nullable=False)  # ip, domain, hash_md5, hash_sha256, url, email, cve
+    ioc_type = Column(
+        String(32), nullable=False
+    )  # ip, domain, hash_md5, hash_sha256, url, email, cve
     value = Column(String(512), nullable=False, index=True)
     severity = Column(String(16), default="medium")
     confidence = Column(Integer, default=50)  # 0-100
@@ -533,13 +541,17 @@ class AssetRow(Base):
 
     id = Column(String(36), primary_key=True)
     tenant_id = Column(String(64), nullable=False, index=True)
-    asset_type = Column(String(32), nullable=False)  # server, workstation, container, cloud_instance, network_device, iot
+    asset_type = Column(
+        String(32), nullable=False
+    )  # server, workstation, container, cloud_instance, network_device, iot
     name = Column(String(256), nullable=False)
     hostname = Column(String(255), nullable=True)
     ip_address = Column(String(64), nullable=True)
     os = Column(String(64), nullable=True)
     agent_id = Column(String(36), nullable=True, index=True)
-    classification = Column(String(32), default="standard")  # critical, high_value, standard, low_value
+    classification = Column(
+        String(32), default="standard"
+    )  # critical, high_value, standard, low_value
     owner = Column(String(128), nullable=True)
     tags = Column(JSON, default=list)
     risk_score = Column(Integer, default=0)  # 0-100
@@ -597,7 +609,9 @@ class SOARPlaybookRow(Base):
     tenant_id = Column(String(64), nullable=False, index=True)
     name = Column(String(128), nullable=False)
     description = Column(Text, default="")
-    trigger_type = Column(String(64), nullable=False)  # alert, event_pattern, schedule, manual, ioc_match
+    trigger_type = Column(
+        String(64), nullable=False
+    )  # alert, event_pattern, schedule, manual, ioc_match
     trigger_config = Column(JSON, default=dict)
     actions = Column(JSON, default=list)  # ordered list of action steps
     enabled = Column(String(8), default="true")
@@ -634,7 +648,9 @@ class IncidentTimelineRow(Base):
     id = Column(String(36), primary_key=True)
     tenant_id = Column(String(64), nullable=False, index=True)
     incident_id = Column(String(36), nullable=False, index=True)
-    entry_type = Column(String(32), nullable=False)  # event, action, comment, escalation, resolution
+    entry_type = Column(
+        String(32), nullable=False
+    )  # event, action, comment, escalation, resolution
     timestamp = Column(DateTime, nullable=False, index=True)
     title = Column(String(256), nullable=False)
     description = Column(Text, default="")
@@ -675,7 +691,9 @@ class AnomalyDetectionRow(Base):
     tenant_id = Column(String(64), nullable=False, index=True)
     profile_id = Column(String(36), nullable=False, index=True)
     entity_id = Column(String(64), nullable=False)
-    anomaly_type = Column(String(64), nullable=False)  # volume_spike, category_shift, time_anomaly, behavior_drift
+    anomaly_type = Column(
+        String(64), nullable=False
+    )  # volume_spike, category_shift, time_anomaly, behavior_drift
     score = Column(String(8), nullable=False)  # 0.0-1.0 anomaly score
     severity = Column(String(16), default="medium")
     description = Column(Text, default="")
@@ -710,7 +728,9 @@ class RiskForecastRow(Base):
 
     id = Column(String(36), primary_key=True)
     tenant_id = Column(String(64), nullable=False, index=True)
-    forecast_type = Column(String(64), nullable=False)  # incident_volume, severity_trend, attack_likelihood
+    forecast_type = Column(
+        String(64), nullable=False
+    )  # incident_volume, severity_trend, attack_likelihood
     time_horizon_hours = Column(Integer, nullable=False)  # how far ahead
     predicted_value = Column(String(32), nullable=False)
     confidence = Column(String(8), nullable=False)  # 0.0-1.0
@@ -733,7 +753,9 @@ class SIEMConnectorRow(Base):
     id = Column(String(36), primary_key=True)
     tenant_id = Column(String(64), nullable=False, index=True)
     name = Column(String(128), nullable=False)
-    siem_type = Column(String(32), nullable=False)  # splunk, elastic, qradar, arcsight, sentinel, wazuh
+    siem_type = Column(
+        String(32), nullable=False
+    )  # splunk, elastic, qradar, arcsight, sentinel, wazuh
     connection_config = Column(JSON, nullable=False)  # host, port, credentials (encrypted ref)
     sync_direction = Column(String(16), default="push")  # push, pull, bidirectional
     event_filter = Column(JSON, default=dict)  # which events to sync
@@ -771,7 +793,9 @@ class IaCScanRow(Base):
 
     id = Column(String(36), primary_key=True)
     tenant_id = Column(String(64), nullable=False, index=True)
-    source_type = Column(String(32), nullable=False)  # terraform, cloudformation, kubernetes, ansible, dockerfile
+    source_type = Column(
+        String(32), nullable=False
+    )  # terraform, cloudformation, kubernetes, ansible, dockerfile
     source_path = Column(String(512), nullable=False)
     findings_count = Column(Integer, default=0)
     critical_count = Column(Integer, default=0)
@@ -941,7 +965,9 @@ class DeceptionTokenRow(Base):
 
     id = Column(String(36), primary_key=True)
     tenant_id = Column(String(64), nullable=False, index=True)
-    token_type = Column(String(32), nullable=False)  # honey_credential, honey_file, honey_endpoint, honey_dns, canary_token
+    token_type = Column(
+        String(32), nullable=False
+    )  # honey_credential, honey_file, honey_endpoint, honey_dns, canary_token
     name = Column(String(128), nullable=False)
     deployment_location = Column(String(256), nullable=False)
     token_value = Column(String(512), nullable=True)  # the bait value (not a real secret)
@@ -982,7 +1008,9 @@ class ComplianceRuleRow(Base):
 
     id = Column(String(36), primary_key=True)
     tenant_id = Column(String(64), nullable=False, index=True)
-    framework = Column(String(32), nullable=False)  # gdpr, hipaa, pci_dss, soc2, nist, iso27001, cis
+    framework = Column(
+        String(32), nullable=False
+    )  # gdpr, hipaa, pci_dss, soc2, nist, iso27001, cis
     control_id = Column(String(64), nullable=False)  # e.g. "GDPR-Art.32", "PCI-DSS-3.4"
     title = Column(String(256), nullable=False)
     description = Column(Text, default="")
@@ -1245,7 +1273,9 @@ class AutonomousResponseRow(Base):
     tenant_id = Column(String(64), nullable=False, index=True)
     incident_id = Column(String(36), nullable=False)
     response_type = Column(String(32), nullable=False)
-    status = Column(String(16), default="triggered")  # triggered, containing, eradicating, recovering, completed, overridden
+    status = Column(
+        String(16), default="triggered"
+    )  # triggered, containing, eradicating, recovering, completed, overridden
     containment_at = Column(DateTime, nullable=True)
     eradication_at = Column(DateTime, nullable=True)
     recovery_at = Column(DateTime, nullable=True)

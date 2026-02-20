@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-import pytest
-
-from cloud.services.ml_anomaly import MLAnomalyEngine
-from cloud.services.behavior_profile import BehaviorProfileService
 from cloud.services.attack_path import AttackPathEngine
+from cloud.services.behavior_profile import BehaviorProfileService
+from cloud.services.ml_anomaly import MLAnomalyEngine
 from cloud.services.risk_forecast import RiskForecastEngine
-
 
 # ---------------------------------------------------------------------------
 # MLAnomalyEngine
@@ -135,10 +132,12 @@ class TestMLAnomalyBatch:
         engine = MLAnomalyEngine()
         # Build up baselines with multiple batch calls
         for _ in range(6):
-            engine.batch_detect({
-                "e1": [{"category": "network", "severity": "info"}] * 2,
-                "e2": [{"category": "auth", "severity": "low"}] * 2,
-            })
+            engine.batch_detect(
+                {
+                    "e1": [{"category": "network", "severity": "info"}] * 2,
+                    "e2": [{"category": "auth", "severity": "low"}] * 2,
+                }
+            )
         stats = engine.get_stats()
         assert stats["total_baselines"] == 2
 
@@ -444,7 +443,12 @@ class TestAttackPathBFS:
     def test_bfs_bidirectional_links(self):
         engine = AttackPathEngine()
         links = [
-            {"source_asset_id": "A", "target_asset_id": "B", "protocol": "smb", "direction": "bidirectional"},
+            {
+                "source_asset_id": "A",
+                "target_asset_id": "B",
+                "protocol": "smb",
+                "direction": "bidirectional",
+            },
         ]
         paths = engine.compute_paths(
             tenant_id="t1",
@@ -459,7 +463,7 @@ class TestAttackPathBFS:
         engine = AttackPathEngine()
         # Build a long chain: n0 -> n1 -> n2 -> ... -> n7 (more than 6 hops)
         links = [
-            {"source_asset_id": f"n{i}", "target_asset_id": f"n{i+1}", "protocol": "tcp"}
+            {"source_asset_id": f"n{i}", "target_asset_id": f"n{i + 1}", "protocol": "tcp"}
             for i in range(8)
         ]
         paths = engine.compute_paths(
@@ -614,11 +618,14 @@ class TestRiskForecastBasic:
     def test_generate_forecasts_with_sufficient_data(self):
         engine = RiskForecastEngine()
         for i in range(5):
-            engine.record_observation("t1", {
-                "event_count": 10 + i,
-                "high_severity_ratio": 0.1,
-                "threat_indicators": 1,
-            })
+            engine.record_observation(
+                "t1",
+                {
+                    "event_count": 10 + i,
+                    "high_severity_ratio": 0.1,
+                    "threat_indicators": 1,
+                },
+            )
         forecasts = engine.generate_forecasts("t1")
         assert len(forecasts) > 0
         # Default horizons are [1, 6, 24], 3 forecast types each = 9 total
@@ -641,11 +648,14 @@ class TestRiskForecastAdvanced:
     def _seed_engine(self) -> RiskForecastEngine:
         engine = RiskForecastEngine()
         for i in range(10):
-            engine.record_observation("t1", {
-                "event_count": 10 + i,
-                "high_severity_ratio": 0.05 * (i % 3),
-                "threat_indicators": i % 4,
-            })
+            engine.record_observation(
+                "t1",
+                {
+                    "event_count": 10 + i,
+                    "high_severity_ratio": 0.05 * (i % 3),
+                    "threat_indicators": i % 4,
+                },
+            )
         return engine
 
     def test_forecast_types_present(self):
@@ -735,11 +745,14 @@ class TestRiskForecastStats:
         engine = RiskForecastEngine()
         # Recent observations have increasing high severity ratio
         for i in range(5):
-            engine.record_observation("t1", {
-                "event_count": 10,
-                "high_severity_ratio": 0.1 * (i + 1),
-                "threat_indicators": 0,
-            })
+            engine.record_observation(
+                "t1",
+                {
+                    "event_count": 10,
+                    "high_severity_ratio": 0.1 * (i + 1),
+                    "threat_indicators": 0,
+                },
+            )
         forecasts = engine.generate_forecasts("t1", horizons=[1])
         sev_forecasts = [f for f in forecasts if f["type"] == "severity_trend"]
         assert len(sev_forecasts) >= 1

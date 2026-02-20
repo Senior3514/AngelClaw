@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
-
+from cloud.services.breach_prevention import BreachPreventionService
 from cloud.services.ooda_loop import OODALoopService
 from cloud.services.self_healing import SelfHealingService
-from cloud.services.breach_prevention import BreachPreventionService
-
 
 TENANT = "test-tenant"
 
@@ -50,6 +47,7 @@ class TestOODALoopService:
         assert result["service"] == "OODALoopService"
         assert result["version"] == "8.0.0"
 
+
 class TestSelfHealingService:
     """SelfHealingService tests."""
 
@@ -81,6 +79,7 @@ class TestSelfHealingService:
         assert result["service"] == "SelfHealingService"
         assert result["version"] == "8.0.0"
 
+
 class TestBreachPreventionService:
     """BreachPreventionService tests."""
 
@@ -111,4 +110,3 @@ class TestBreachPreventionService:
         assert result["tenant_id"] == TENANT
         assert result["service"] == "BreachPreventionService"
         assert result["version"] == "8.0.0"
-

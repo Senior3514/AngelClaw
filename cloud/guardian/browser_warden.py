@@ -39,10 +39,10 @@ _BROWSER_TYPES = frozenset(
 # Suspicious URL patterns
 _SUSPICIOUS_URL_PATTERNS = [
     re.compile(r"(?i)https?://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}[:/]"),  # raw IP
-    re.compile(r"(?i)data:text/html"),                                       # data URI
-    re.compile(r"(?i)javascript:"),                                          # JS URI
-    re.compile(r"(?i)https?://.*\.(onion|bit|bazar)(\/|$)"),                # dark web
-    re.compile(r"(?i)https?://[^/]*\.ru/.*\.(exe|bat|cmd|ps1|sh)"),         # risky downloads
+    re.compile(r"(?i)data:text/html"),  # data URI
+    re.compile(r"(?i)javascript:"),  # JS URI
+    re.compile(r"(?i)https?://.*\.(onion|bit|bazar)(\/|$)"),  # dark web
+    re.compile(r"(?i)https?://[^/]*\.ru/.*\.(exe|bat|cmd|ps1|sh)"),  # risky downloads
 ]
 
 # Injection signatures in page content
@@ -84,8 +84,9 @@ class BrowserWarden(SubAgent):
 
         # Filter to browser-relevant events
         browser_events = [
-            e for e in events_data if e.get("type", "") in _BROWSER_TYPES
-            or "browser" in e.get("type", "").lower()
+            e
+            for e in events_data
+            if e.get("type", "") in _BROWSER_TYPES or "browser" in e.get("type", "").lower()
         ]
 
         indicators: list[ThreatIndicator] = []
@@ -175,8 +176,7 @@ def _detect_page_injection(events: list[dict]) -> list[ThreatIndicator]:
                         severity="critical",
                         confidence=0.85,
                         description=(
-                            f"Content injection detected in browser event "
-                            f"from agent {agent_id[:8]}"
+                            f"Content injection detected in browser event from agent {agent_id[:8]}"
                         ),
                         related_event_ids=[e.get("id", "")],
                         related_agent_ids=[agent_id] if agent_id else [],
@@ -203,10 +203,7 @@ def _detect_extension_threats(events: list[dict]) -> list[ThreatIndicator]:
                     pattern_name="extension_conflict",
                     severity="medium",
                     confidence=0.7,
-                    description=(
-                        f"Extension conflict: "
-                        f"{details.get('extension_name', 'unknown')}"
-                    ),
+                    description=(f"Extension conflict: {details.get('extension_name', 'unknown')}"),
                     related_event_ids=[e.get("id", "")],
                     related_agent_ids=[agent_id] if agent_id else [],
                     suggested_playbook="escalate_to_human",
@@ -222,9 +219,7 @@ def _detect_extension_threats(events: list[dict]) -> list[ThreatIndicator]:
                     pattern_name="extension_install",
                     severity="medium",
                     confidence=0.6,
-                    description=(
-                        f"New extension installed: {ext_name or ext_id}"
-                    ),
+                    description=(f"New extension installed: {ext_name or ext_id}"),
                     related_event_ids=[e.get("id", "")],
                     related_agent_ids=[agent_id] if agent_id else [],
                     suggested_playbook="escalate_to_human",
@@ -255,8 +250,7 @@ def _detect_data_access_abuse(events: list[dict]) -> list[ThreatIndicator]:
                 severity="high",
                 confidence=0.75,
                 description=(
-                    f"Excessive cookie/storage access: {count} events "
-                    f"from agent {agent_id[:8]}"
+                    f"Excessive cookie/storage access: {count} events from agent {agent_id[:8]}"
                 ),
                 related_event_ids=per_agent_ids[agent_id][:20],
                 related_agent_ids=[agent_id],

@@ -154,9 +154,7 @@ class SlackChannel(NotificationChannel):
             if resp.status_code < 300:
                 logger.info("[SLACK] Notification sent: %s (%s)", title, severity)
                 return True
-            logger.warning(
-                "[SLACK] Delivery failed: %d %s", resp.status_code, resp.text[:200]
-            )
+            logger.warning("[SLACK] Delivery failed: %d %s", resp.status_code, resp.text[:200])
             return False
         except Exception:
             logger.exception("[SLACK] Failed to send notification: %s", title)
@@ -214,9 +212,7 @@ class DiscordChannel(NotificationChannel):
             if resp.status_code < 300:
                 logger.info("[DISCORD] Notification sent: %s (%s)", title, severity)
                 return True
-            logger.warning(
-                "[DISCORD] Delivery failed: %d %s", resp.status_code, resp.text[:200]
-            )
+            logger.warning("[DISCORD] Delivery failed: %d %s", resp.status_code, resp.text[:200])
             return False
         except Exception:
             logger.exception("[DISCORD] Failed to send notification: %s", title)
@@ -268,9 +264,7 @@ class WebhookChannel(NotificationChannel):
             if resp.status_code < 300:
                 logger.info("[WEBHOOK] Notification sent: %s (%s)", title, severity)
                 return True
-            logger.warning(
-                "[WEBHOOK] Delivery failed: %d %s", resp.status_code, resp.text[:200]
-            )
+            logger.warning("[WEBHOOK] Delivery failed: %d %s", resp.status_code, resp.text[:200])
             return False
         except Exception:
             logger.exception("[WEBHOOK] Failed to send notification: %s", title)
@@ -309,9 +303,7 @@ class NotificationRouter:
     # Load channels and rules
     # ------------------------------------------------------------------
 
-    def load_channels(
-        self, db: Session, tenant_id: str
-    ) -> list[NotificationChannelRow]:
+    def load_channels(self, db: Session, tenant_id: str) -> list[NotificationChannelRow]:
         """Load all enabled notification channels for a tenant.
 
         Args:
@@ -367,16 +359,12 @@ class NotificationRouter:
         )
 
         if not rules:
-            logger.debug(
-                "[NOTIFY] No notification rules for tenant %s", tenant_id
-            )
+            logger.debug("[NOTIFY] No notification rules for tenant %s", tenant_id)
             return []
 
         # Build a lookup of channels by ID
         channels = self.load_channels(db, tenant_id)
-        channel_map: dict[str, NotificationChannelRow] = {
-            ch.id: ch for ch in channels
-        }
+        channel_map: dict[str, NotificationChannelRow] = {ch.id: ch for ch in channels}
 
         delivered: list[str] = []
         message = f"[{severity.upper()}] {title}"
@@ -446,9 +434,7 @@ class NotificationRouter:
             ValueError: If the channel is not found.
         """
         ch_row = (
-            db.query(NotificationChannelRow)
-            .filter(NotificationChannelRow.id == channel_id)
-            .first()
+            db.query(NotificationChannelRow).filter(NotificationChannelRow.id == channel_id).first()
         )
         if not ch_row:
             raise ValueError(f"Channel {channel_id} not found")

@@ -72,16 +72,18 @@ class AuditExportService:
         records = []
         for row in rows:
             details = redact_dict(row.details) if row.details else {}
-            records.append({
-                "id": row.id,
-                "agent_id": row.agent_id,
-                "timestamp": row.timestamp.isoformat() if row.timestamp else None,
-                "category": row.category,
-                "type": row.type,
-                "severity": row.severity,
-                "details": details,
-                "source": row.source,
-            })
+            records.append(
+                {
+                    "id": row.id,
+                    "agent_id": row.agent_id,
+                    "timestamp": row.timestamp.isoformat() if row.timestamp else None,
+                    "category": row.category,
+                    "type": row.type,
+                    "severity": row.severity,
+                    "details": details,
+                    "source": row.source,
+                }
+            )
 
         logger.info(
             "Exported %d events for tenant '%s' (format=%s)",
@@ -126,17 +128,19 @@ class AuditExportService:
         records = []
         for row in rows:
             details = redact_dict(row.details) if row.details else {}
-            records.append({
-                "id": row.id,
-                "tenant_id": row.tenant_id,
-                "alert_type": row.alert_type,
-                "title": row.title,
-                "severity": row.severity,
-                "details": details,
-                "related_event_ids": row.related_event_ids or [],
-                "related_agent_ids": row.related_agent_ids or [],
-                "created_at": row.created_at.isoformat() if row.created_at else None,
-            })
+            records.append(
+                {
+                    "id": row.id,
+                    "tenant_id": row.tenant_id,
+                    "alert_type": row.alert_type,
+                    "title": row.title,
+                    "severity": row.severity,
+                    "details": details,
+                    "related_event_ids": row.related_event_ids or [],
+                    "related_agent_ids": row.related_agent_ids or [],
+                    "created_at": row.created_at.isoformat() if row.created_at else None,
+                }
+            )
 
         logger.info(
             "Exported %d alerts for tenant '%s' (format=%s)",
@@ -167,14 +171,16 @@ class AuditExportService:
             rules = row.rules_json or []
             # Redact each rule dict individually
             redacted_rules = [redact_dict(r) if isinstance(r, dict) else r for r in rules]
-            records.append({
-                "id": row.id,
-                "name": row.name,
-                "description": row.description or "",
-                "rules_json": redacted_rules,
-                "version_hash": row.version_hash,
-                "created_at": row.created_at.isoformat() if row.created_at else None,
-            })
+            records.append(
+                {
+                    "id": row.id,
+                    "name": row.name,
+                    "description": row.description or "",
+                    "rules_json": redacted_rules,
+                    "version_hash": row.version_hash,
+                    "created_at": row.created_at.isoformat() if row.created_at else None,
+                }
+            )
 
         logger.info("Exported %d policy sets (format=%s)", len(records), format)
         return self._serialize(records, format)
@@ -215,21 +221,23 @@ class AuditExportService:
             before = redact_dict(row.before_state) if row.before_state else {}
             after = redact_dict(row.after_state) if row.after_state else {}
             params = redact_dict(row.params) if row.params else {}
-            records.append({
-                "id": row.id,
-                "tenant_id": row.tenant_id,
-                "action_type": row.action_type,
-                "description": row.description or "",
-                "params": params,
-                "triggered_by": row.triggered_by,
-                "trigger_context": row.trigger_context or "",
-                "status": row.status,
-                "before_state": before,
-                "after_state": after,
-                "error": row.error,
-                "created_at": row.created_at.isoformat() if row.created_at else None,
-                "applied_at": row.applied_at.isoformat() if row.applied_at else None,
-            })
+            records.append(
+                {
+                    "id": row.id,
+                    "tenant_id": row.tenant_id,
+                    "action_type": row.action_type,
+                    "description": row.description or "",
+                    "params": params,
+                    "triggered_by": row.triggered_by,
+                    "trigger_context": row.trigger_context or "",
+                    "status": row.status,
+                    "before_state": before,
+                    "after_state": after,
+                    "error": row.error,
+                    "created_at": row.created_at.isoformat() if row.created_at else None,
+                    "applied_at": row.applied_at.isoformat() if row.applied_at else None,
+                }
+            )
 
         logger.info(
             "Exported %d audit trail entries for tenant '%s' (format=%s)",

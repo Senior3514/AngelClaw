@@ -50,16 +50,24 @@ class VulnReportRequest(BaseModel):
 
 # -- Asset endpoints --
 
+
 @router.post("")
 def register_asset(
     req: AssetCreateRequest,
     tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"),
 ):
     return asset_inventory_service.register_asset(
-        tenant_id=tenant_id, asset_type=req.asset_type, name=req.name,
-        hostname=req.hostname, ip_address=req.ip_address, os=req.os,
-        agent_id=req.agent_id, classification=req.classification,
-        owner=req.owner, tags=req.tags, metadata=req.metadata,
+        tenant_id=tenant_id,
+        asset_type=req.asset_type,
+        name=req.name,
+        hostname=req.hostname,
+        ip_address=req.ip_address,
+        os=req.os,
+        agent_id=req.agent_id,
+        classification=req.classification,
+        owner=req.owner,
+        tags=req.tags,
+        metadata=req.metadata,
     )
 
 
@@ -108,14 +116,20 @@ def get_asset_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
 
 # -- Topology endpoints --
 
+
 @router.post("/topology/links")
 def add_topology_link(
     req: TopologyLinkRequest,
     tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"),
 ):
     return topology_service.add_link(
-        tenant_id, req.source_asset_id, req.target_asset_id,
-        req.link_type, req.protocol, req.port, req.direction,
+        tenant_id,
+        req.source_asset_id,
+        req.target_asset_id,
+        req.link_type,
+        req.protocol,
+        req.port,
+        req.direction,
     )
 
 
@@ -144,14 +158,21 @@ def remove_topology_link(link_id: str):
 
 # -- Vulnerability endpoints --
 
+
 @router.post("/vulnerabilities")
 def report_vulnerability(
     req: VulnReportRequest,
     tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"),
 ):
     return vulnerability_service.report_finding(
-        tenant_id, req.asset_id, req.title, req.severity,
-        req.cve_id, req.description, req.cvss_score, req.remediation,
+        tenant_id,
+        req.asset_id,
+        req.title,
+        req.severity,
+        req.cve_id,
+        req.description,
+        req.cvss_score,
+        req.remediation,
     )
 
 

@@ -45,9 +45,13 @@ class FleetCommandRequest(BaseModel):
 
 # -- Real-Time Engine --
 
+
 @router.post("/realtime/ingest")
-def realtime_ingest(req: EventIngestRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def realtime_ingest(
+    req: EventIngestRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.realtime_engine import realtime_engine_service
+
     return realtime_engine_service.ingest_event(
         tenant_id=tenant_id,
         event_type=req.event_type,
@@ -60,26 +64,33 @@ def realtime_ingest(req: EventIngestRequest, tenant_id: str = Header("dev-tenant
 @router.get("/realtime/metrics")
 def realtime_metrics(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.realtime_engine import realtime_engine_service
+
     return realtime_engine_service.get_live_metrics(tenant_id)
 
 
 @router.get("/realtime/window/{window}")
 def realtime_window(window: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.realtime_engine import realtime_engine_service
+
     return realtime_engine_service.get_sliding_window(tenant_id, window)
 
 
 @router.get("/realtime/stats")
 def realtime_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.realtime_engine import realtime_engine_service
+
     return realtime_engine_service.get_stats(tenant_id)
 
 
 # -- Halo Score Engine --
 
+
 @router.post("/halo/compute")
-def halo_compute(req: HaloScoreDimensions, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def halo_compute(
+    req: HaloScoreDimensions, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.halo_engine import halo_score_engine
+
     return halo_score_engine.compute_score(
         tenant_id=tenant_id,
         dimensions=req.model_dump(),
@@ -89,32 +100,40 @@ def halo_compute(req: HaloScoreDimensions, tenant_id: str = Header("dev-tenant",
 @router.get("/halo/current")
 def halo_current(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.halo_engine import halo_score_engine
+
     return halo_score_engine.get_current_score(tenant_id)
 
 
 @router.get("/halo/history")
 def halo_history(limit: int = 50, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.halo_engine import halo_score_engine
+
     return halo_score_engine.get_score_history(tenant_id, limit)
 
 
 @router.get("/halo/breakdown")
 def halo_breakdown(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.halo_engine import halo_score_engine
+
     return halo_score_engine.get_dimension_breakdown(tenant_id)
 
 
 @router.get("/halo/stats")
 def halo_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.halo_engine import halo_score_engine
+
     return halo_score_engine.get_stats(tenant_id)
 
 
 # -- Fleet Orchestrator --
 
+
 @router.post("/fleet/nodes")
-def fleet_register(req: FleetNodeRegisterRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def fleet_register(
+    req: FleetNodeRegisterRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.fleet_orchestrator import fleet_orchestrator_service
+
     return fleet_orchestrator_service.register_node(
         tenant_id=tenant_id,
         hostname=req.hostname,
@@ -127,12 +146,16 @@ def fleet_register(req: FleetNodeRegisterRequest, tenant_id: str = Header("dev-t
 @router.get("/fleet/nodes")
 def fleet_list(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.fleet_orchestrator import fleet_orchestrator_service
+
     return fleet_orchestrator_service.get_fleet_status(tenant_id)
 
 
 @router.put("/fleet/health")
-def fleet_health(req: FleetHealthUpdateRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def fleet_health(
+    req: FleetHealthUpdateRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.fleet_orchestrator import fleet_orchestrator_service
+
     return fleet_orchestrator_service.update_node_health(
         tenant_id=tenant_id,
         node_id=req.node_id,
@@ -144,12 +167,16 @@ def fleet_health(req: FleetHealthUpdateRequest, tenant_id: str = Header("dev-ten
 @router.get("/fleet/os-distribution")
 def fleet_os(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.fleet_orchestrator import fleet_orchestrator_service
+
     return fleet_orchestrator_service.get_os_distribution(tenant_id)
 
 
 @router.post("/fleet/dispatch")
-def fleet_dispatch(req: FleetCommandRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def fleet_dispatch(
+    req: FleetCommandRequest, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
+):
     from cloud.services.fleet_orchestrator import fleet_orchestrator_service
+
     return fleet_orchestrator_service.dispatch_command(
         tenant_id=tenant_id,
         node_ids=req.node_ids,
@@ -161,36 +188,43 @@ def fleet_dispatch(req: FleetCommandRequest, tenant_id: str = Header("dev-tenant
 @router.get("/fleet/stats")
 def fleet_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.fleet_orchestrator import fleet_orchestrator_service
+
     return fleet_orchestrator_service.get_stats(tenant_id)
 
 
 # -- Dashboard Aggregator --
 
+
 @router.get("/dashboard/command-center")
 def dashboard_command_center(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.dashboard_aggregator import dashboard_aggregator_service
+
     return dashboard_aggregator_service.get_command_center(tenant_id)
 
 
 @router.get("/dashboard/wingspan")
 def dashboard_wingspan(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.dashboard_aggregator import dashboard_aggregator_service
+
     return dashboard_aggregator_service.get_wingspan_stats(tenant_id)
 
 
 @router.get("/dashboard/threats")
 def dashboard_threats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.dashboard_aggregator import dashboard_aggregator_service
+
     return dashboard_aggregator_service.get_threat_landscape(tenant_id)
 
 
 @router.get("/dashboard/predictive")
 def dashboard_predictive(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.dashboard_aggregator import dashboard_aggregator_service
+
     return dashboard_aggregator_service.get_predictive_stats(tenant_id)
 
 
 # -- Combined Convergence Status --
+
 
 @router.get("/status")
 def convergence_status(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
@@ -198,6 +232,7 @@ def convergence_status(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"
     from cloud.services.fleet_orchestrator import fleet_orchestrator_service
     from cloud.services.halo_engine import halo_score_engine
     from cloud.services.realtime_engine import realtime_engine_service
+
     return {
         "realtime": realtime_engine_service.get_stats(tenant_id),
         "halo_score": halo_score_engine.get_stats(tenant_id),

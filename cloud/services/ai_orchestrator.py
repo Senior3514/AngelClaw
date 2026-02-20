@@ -113,7 +113,11 @@ class AIOrchestorService:
 
         logger.info(
             "[AI_ORCH] Registered model '%s' (%s/%s) with capabilities %s for %s",
-            name, model_type, provider, caps, tenant_id,
+            name,
+            model_type,
+            provider,
+            caps,
+            tenant_id,
         )
         return model.model_dump(mode="json")
 
@@ -267,13 +271,15 @@ class AIOrchestorService:
                 selected.enabled = False
                 logger.warning(
                     "[AI_ORCH] Auto-disabled model '%s' after %d consecutive failures",
-                    selected.name, selected.consecutive_failures,
+                    selected.name,
+                    selected.consecutive_failures,
                 )
 
         # Update average latency
         if selected.total_requests > 0:
             selected.avg_latency_ms = round(
-                selected.total_latency_ms / selected.total_requests, 2,
+                selected.total_latency_ms / selected.total_requests,
+                2,
             )
 
         result = RouteResult(
@@ -294,7 +300,11 @@ class AIOrchestorService:
 
         logger.info(
             "[AI_ORCH] Routed '%s' request to '%s' (%s) — %s in %.1fms",
-            capability, selected.name, selected.provider, status, latency,
+            capability,
+            selected.name,
+            selected.provider,
+            status,
+            latency,
         )
         return result.model_dump(mode="json")
 
@@ -342,11 +352,15 @@ class AIOrchestorService:
             "successful_requests": total_successful,
             "failed_requests": total_failed,
             "success_rate": round(
-                total_successful / max(total_requests, 1) * 100, 1,
+                total_successful / max(total_requests, 1) * 100,
+                1,
             ),
             "avg_latency_ms": round(
-                sum(latencies) / max(len(latencies), 1), 2,
-            ) if latencies else 0.0,
+                sum(latencies) / max(len(latencies), 1),
+                2,
+            )
+            if latencies
+            else 0.0,
         }
 
     def get_route_history(
@@ -406,8 +420,7 @@ class AIOrchestorService:
             "capability": capability,
             "result": "processed",
             "message": (
-                f"Request routed to '{model.name}' ({model.provider}) "
-                f"for capability '{capability}'"
+                f"Request routed to '{model.name}' ({model.provider}) for capability '{capability}'"
             ),
             "payload_keys": list(payload.keys()),
         }

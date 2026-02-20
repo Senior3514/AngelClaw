@@ -16,8 +16,15 @@ logger = logging.getLogger("angelclaw.reputation")
 
 # Known-bad indicators (built-in baseline)
 _KNOWN_MALICIOUS_PATTERNS = [
-    "tor-exit", "proxy", "vpn-exit", "botnet", "c2",
-    "malware", "phishing", "spam", "brute-force",
+    "tor-exit",
+    "proxy",
+    "vpn-exit",
+    "botnet",
+    "c2",
+    "malware",
+    "phishing",
+    "spam",
+    "brute-force",
 ]
 
 
@@ -149,9 +156,7 @@ class ReputationService:
 
     def get_worst(self, tenant_id: str, limit: int = 20) -> list[dict]:
         """Get entities with worst reputation scores."""
-        tenant_entries = [
-            e for e in self._entries.values() if e.tenant_id == tenant_id
-        ]
+        tenant_entries = [e for e in self._entries.values() if e.tenant_id == tenant_id]
         tenant_entries.sort(key=lambda e: e.score)
         return [e.to_dict() for e in tenant_entries[:limit]]
 

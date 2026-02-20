@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import uuid
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Any
 
 logger = logging.getLogger("angelclaw.risk_forecast")
@@ -106,7 +106,9 @@ class RiskForecastEngine:
         logger.info("[FORECAST] Generated %d forecasts for %s", len(forecasts), tenant_id)
         return forecasts
 
-    def get_forecasts(self, tenant_id: str, forecast_type: str | None = None, limit: int = 50) -> list[dict]:
+    def get_forecasts(
+        self, tenant_id: str, forecast_type: str | None = None, limit: int = 50
+    ) -> list[dict]:
         results = [f for f in self._forecasts if f.tenant_id == tenant_id]
         if forecast_type:
             results = [f for f in results if f.forecast_type == forecast_type]
@@ -131,7 +133,9 @@ class RiskForecastEngine:
         return None
 
     def get_accuracy_report(self, tenant_id: str) -> dict:
-        evaluated = [f for f in self._forecasts if f.tenant_id == tenant_id and f.accuracy is not None]
+        evaluated = [
+            f for f in self._forecasts if f.tenant_id == tenant_id and f.accuracy is not None
+        ]
         if not evaluated:
             return {"forecasts_evaluated": 0, "avg_accuracy": None}
         avg_acc = sum(f.accuracy for f in evaluated) / len(evaluated)
@@ -157,11 +161,14 @@ class RiskForecastEngine:
         }
 
     def _forecast_severity_trend(self, history: list[dict], horizon: int) -> dict:
-        high_ratios = [
-            h.get("high_severity_ratio", 0) for h in history[-24:]
-        ]
+        high_ratios = [h.get("high_severity_ratio", 0) for h in history[-24:]]
         if not high_ratios:
-            return {"type": "severity_trend", "horizon": horizon, "value": "stable", "confidence": 0.1}
+            return {
+                "type": "severity_trend",
+                "horizon": horizon,
+                "value": "stable",
+                "confidence": 0.1,
+            }
         avg = sum(high_ratios) / len(high_ratios)
         recent = sum(high_ratios[-3:]) / max(len(high_ratios[-3:]), 1)
         if recent > avg * 1.5:
@@ -181,7 +188,12 @@ class RiskForecastEngine:
     def _forecast_attack_likelihood(self, history: list[dict], horizon: int) -> dict:
         indicators = [h.get("threat_indicators", 0) for h in history[-24:]]
         if not indicators:
-            return {"type": "attack_likelihood", "horizon": horizon, "value": "low", "confidence": 0.2}
+            return {
+                "type": "attack_likelihood",
+                "horizon": horizon,
+                "value": "low",
+                "confidence": 0.2,
+            }
         avg = sum(indicators) / len(indicators)
         if avg > 5:
             level = "critical"

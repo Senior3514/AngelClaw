@@ -79,9 +79,7 @@ async def enable_plugin(name: str) -> PluginInfo:
     # Reload to clear error / disabled state
     reloaded = plugin_loader.reload_plugin(name)
     if reloaded is None:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to enable plugin '{name}'"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to enable plugin '{name}'")
     logger.info("Plugin '%s' enabled via API", name)
     return reloaded
 

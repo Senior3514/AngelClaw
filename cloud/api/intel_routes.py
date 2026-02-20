@@ -52,6 +52,7 @@ class ReputationUpdateRequest(BaseModel):
 
 # -- Feed endpoints --
 
+
 @router.post("/feeds")
 def create_feed(
     req: FeedCreateRequest,
@@ -96,6 +97,7 @@ def delete_feed(feed_id: str):
 
 # -- IOC endpoints --
 
+
 @router.post("/iocs/ingest")
 def ingest_iocs(
     req: IOCIngestRequest,
@@ -135,6 +137,7 @@ def acknowledge_match(match_id: str):
 
 # -- Reputation endpoints --
 
+
 @router.post("/reputation/lookup")
 def reputation_lookup(
     req: ReputationLookupRequest,
@@ -157,8 +160,12 @@ def reputation_update(
     tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"),
 ):
     return reputation_service.update_score(
-        tenant_id, req.entity_type, req.entity_value,
-        req.score_delta, req.source, req.category,
+        tenant_id,
+        req.entity_type,
+        req.entity_value,
+        req.score_delta,
+        req.source,
+        req.category,
     )
 
 
@@ -171,6 +178,7 @@ def reputation_worst(
 
 
 # -- Stats --
+
 
 @router.get("/stats")
 def intel_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):

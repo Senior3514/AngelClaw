@@ -93,7 +93,9 @@ class ThreatFederationService:
 
         logger.info(
             "[THREAT_FED] '%s' joined federation with trust_level=%s for %s",
-            org_name, tlevel, tenant_id,
+            org_name,
+            tlevel,
+            tenant_id,
         )
         return member.model_dump(mode="json")
 
@@ -168,7 +170,9 @@ class ThreatFederationService:
 
         logger.info(
             "[THREAT_FED] Shared %s indicator (anonymized=%s) from %s",
-            indicator_type, anonymize, tenant_id,
+            indicator_type,
+            anonymize,
+            tenant_id,
         )
         return indicator.model_dump(mode="json")
 
@@ -229,7 +233,9 @@ class ThreatFederationService:
 
         logger.info(
             "[THREAT_FED] %s consumed %d indicators (min_trust=%d)",
-            tenant_id, len(results), min_trust,
+            tenant_id,
+            len(results),
+            min_trust,
         )
         return results
 
@@ -313,9 +319,7 @@ class ThreatFederationService:
             "trust_level": member.trust_level if member else None,
             "indicators_shared": member.indicators_shared if member else 0,
             "indicators_consumed": member.indicators_consumed if member else 0,
-            "total_federation_members": sum(
-                1 for m in self._members.values() if m.active
-            ),
+            "total_federation_members": sum(1 for m in self._members.values() if m.active),
             "total_indicators_in_federation": len(all_indicators),
             "indicators_by_type": dict(by_type),
         }

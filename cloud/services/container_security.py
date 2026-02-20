@@ -18,14 +18,54 @@ logger = logging.getLogger("angelclaw.container_security")
 
 # Built-in container policy checks
 _CONTAINER_CHECKS = [
-    {"id": "CS001", "title": "Running as root", "severity": "high", "check": lambda c: c.get("user") == "root"},
-    {"id": "CS002", "title": "Privileged mode enabled", "severity": "critical", "check": lambda c: c.get("privileged", False)},
-    {"id": "CS003", "title": "Host network mode", "severity": "high", "check": lambda c: c.get("network_mode") == "host"},
-    {"id": "CS004", "title": "No resource limits", "severity": "medium", "check": lambda c: not c.get("resource_limits")},
-    {"id": "CS005", "title": "Writable root filesystem", "severity": "medium", "check": lambda c: not c.get("read_only_rootfs", False)},
-    {"id": "CS006", "title": "No health check", "severity": "low", "check": lambda c: not c.get("healthcheck")},
-    {"id": "CS007", "title": "Host PID namespace", "severity": "high", "check": lambda c: c.get("pid_mode") == "host"},
-    {"id": "CS008", "title": "Sensitive mount detected", "severity": "critical", "check": lambda c: any("/etc" in m or "/var/run/docker" in m for m in c.get("mounts", []))},
+    {
+        "id": "CS001",
+        "title": "Running as root",
+        "severity": "high",
+        "check": lambda c: c.get("user") == "root",
+    },
+    {
+        "id": "CS002",
+        "title": "Privileged mode enabled",
+        "severity": "critical",
+        "check": lambda c: c.get("privileged", False),
+    },
+    {
+        "id": "CS003",
+        "title": "Host network mode",
+        "severity": "high",
+        "check": lambda c: c.get("network_mode") == "host",
+    },
+    {
+        "id": "CS004",
+        "title": "No resource limits",
+        "severity": "medium",
+        "check": lambda c: not c.get("resource_limits"),
+    },
+    {
+        "id": "CS005",
+        "title": "Writable root filesystem",
+        "severity": "medium",
+        "check": lambda c: not c.get("read_only_rootfs", False),
+    },
+    {
+        "id": "CS006",
+        "title": "No health check",
+        "severity": "low",
+        "check": lambda c: not c.get("healthcheck"),
+    },
+    {
+        "id": "CS007",
+        "title": "Host PID namespace",
+        "severity": "high",
+        "check": lambda c: c.get("pid_mode") == "host",
+    },
+    {
+        "id": "CS008",
+        "title": "Sensitive mount detected",
+        "severity": "critical",
+        "check": lambda c: any("/etc" in m or "/var/run/docker" in m for m in c.get("mounts", [])),
+    },
 ]
 
 
@@ -64,11 +104,13 @@ class ContainerSecurityService:
         violations = []
         for check in _CONTAINER_CHECKS:
             if check["check"](config):
-                violations.append({
-                    "check_id": check["id"],
-                    "title": check["title"],
-                    "severity": check["severity"],
-                })
+                violations.append(
+                    {
+                        "check_id": check["id"],
+                        "title": check["title"],
+                        "severity": check["severity"],
+                    }
+                )
 
         critical = sum(1 for v in violations if v["severity"] == "critical")
         high = sum(1 for v in violations if v["severity"] == "high")
@@ -86,7 +128,12 @@ class ContainerSecurityService:
         )
         self._scans[scan.id] = scan
         self._tenant_scans[tenant_id].append(scan.id)
-        logger.info("[CONTAINER] Scanned %s:%s — %d violation(s)", image_name, image_tag or "latest", len(violations))
+        logger.info(
+            "[CONTAINER] Scanned %s:%s — %d violation(s)",
+            image_name,
+            image_tag or "latest",
+            len(violations),
+        )
         return scan.model_dump(mode="json")
 
     def scan_runtime(
@@ -99,11 +146,13 @@ class ContainerSecurityService:
         violations = []
         for check in _CONTAINER_CHECKS:
             if check["check"](runtime_config):
-                violations.append({
-                    "check_id": check["id"],
-                    "title": check["title"],
-                    "severity": check["severity"],
-                })
+                violations.append(
+                    {
+                        "check_id": check["id"],
+                        "title": check["title"],
+                        "severity": check["severity"],
+                    }
+                )
 
         scan = ContainerScan(
             tenant_id=tenant_id,
@@ -122,7 +171,9 @@ class ContainerSecurityService:
         s = self._scans.get(scan_id)
         return s.model_dump(mode="json") if s else None
 
-    def list_scans(self, tenant_id: str, scan_type: str | None = None, limit: int = 100) -> list[dict]:
+    def list_scans(
+        self, tenant_id: str, scan_type: str | None = None, limit: int = 100
+    ) -> list[dict]:
         results = []
         for sid in reversed(self._tenant_scans.get(tenant_id, [])):
             s = self._scans.get(sid)

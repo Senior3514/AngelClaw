@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
-from cloud.services.dlp_engine import DLPService
 from cloud.services.data_classification import DataClassificationService
-
+from cloud.services.dlp_engine import DLPService
 
 TENANT = "test-tenant"
 
@@ -50,6 +47,7 @@ class TestDLPService:
         assert result["service"] == "DLPService"
         assert result["version"] == "7.5.0"
 
+
 class TestDataClassificationService:
     """DataClassificationService tests."""
 
@@ -80,4 +78,3 @@ class TestDataClassificationService:
         assert result["tenant_id"] == TENANT
         assert result["service"] == "DataClassificationService"
         assert result["version"] == "7.5.0"
-

@@ -1,15 +1,15 @@
-"""Tests for V4.5 Sovereign: Microsegmentation, Identity Policy, Device Trust, Session Risk, Adaptive Auth."""
+"""Tests for V4.5 Sovereign.
+
+Microsegmentation, Identity Policy, Device Trust, Session Risk, Adaptive Auth.
+"""
 
 from __future__ import annotations
 
-import pytest
-
-from cloud.services.microsegmentation import MicrosegmentationEngine
-from cloud.services.identity_policy import IdentityPolicyService
-from cloud.services.device_trust import DeviceTrustService
-from cloud.services.session_risk import SessionRiskService
 from cloud.services.adaptive_auth import AdaptiveAuthService
-
+from cloud.services.device_trust import DeviceTrustService
+from cloud.services.identity_policy import IdentityPolicyService
+from cloud.services.microsegmentation import MicrosegmentationEngine
+from cloud.services.session_risk import SessionRiskService
 
 TENANT = "test-tenant"
 
@@ -17,6 +17,7 @@ TENANT = "test-tenant"
 # ---------------------------------------------------------------------------
 # MicrosegmentationEngine
 # ---------------------------------------------------------------------------
+
 
 class TestMicrosegmentationBasic:
     """Create, list, and delete segment operations."""
@@ -166,6 +167,7 @@ class TestMicrosegmentationStats:
 # IdentityPolicyService
 # ---------------------------------------------------------------------------
 
+
 class TestIdentityPolicyBasic:
     """Create and list identity policies."""
 
@@ -296,6 +298,7 @@ class TestIdentityPolicyStats:
 # DeviceTrustService
 # ---------------------------------------------------------------------------
 
+
 class TestDeviceTrustBasic:
     """Assess device trust with different posture configurations."""
 
@@ -374,9 +377,14 @@ class TestDeviceTrustCRUD:
     def test_update_assessment(self):
         svc = DeviceTrustService()
         svc.assess_device(
-            TENANT, "dev-z",
-            os_family="windows", os_version="11", patch_level="current",
-            encryption_enabled=True, antivirus_active=True, firewall_enabled=True,
+            TENANT,
+            "dev-z",
+            os_family="windows",
+            os_version="11",
+            patch_level="current",
+            encryption_enabled=True,
+            antivirus_active=True,
+            firewall_enabled=True,
         )
         result = svc.update_assessment("dev-z", encryption_enabled=False)
         assert result is not None
@@ -390,13 +398,21 @@ class TestDeviceTrustStats:
     def test_get_stats(self):
         svc = DeviceTrustService()
         svc.assess_device(
-            TENANT, "dev-1",
-            os_family="windows", os_version="11", patch_level="current",
-            encryption_enabled=True, antivirus_active=True, firewall_enabled=True,
+            TENANT,
+            "dev-1",
+            os_family="windows",
+            os_version="11",
+            patch_level="current",
+            encryption_enabled=True,
+            antivirus_active=True,
+            firewall_enabled=True,
         )
         svc.assess_device(
-            TENANT, "dev-2",
-            os_family="unknown", os_version="unknown", patch_level="outdated",
+            TENANT,
+            "dev-2",
+            os_family="unknown",
+            os_version="unknown",
+            patch_level="outdated",
         )
         stats = svc.get_stats(TENANT)
         assert stats["total_devices"] == 2
@@ -407,6 +423,7 @@ class TestDeviceTrustStats:
 # ---------------------------------------------------------------------------
 # SessionRiskService
 # ---------------------------------------------------------------------------
+
 
 class TestSessionRiskBasic:
     """Assess sessions with different geo signals."""
@@ -489,6 +506,7 @@ class TestSessionRiskStats:
 # AdaptiveAuthService
 # ---------------------------------------------------------------------------
 
+
 class TestAdaptiveAuthBasic:
     """Evaluate auth requirements and list decisions."""
 
@@ -503,7 +521,10 @@ class TestAdaptiveAuthBasic:
         )
         assert "required_auth_level" in result
         assert result["required_auth_level"] in {
-            "password", "mfa", "biometric", "impossible_travel_block",
+            "password",
+            "mfa",
+            "biometric",
+            "impossible_travel_block",
         }
         assert "risk_score" in result
         assert result["tenant_id"] == TENANT

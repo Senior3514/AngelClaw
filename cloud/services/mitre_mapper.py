@@ -26,11 +26,20 @@ logger = logging.getLogger("angelclaw.mitre_mapper")
 
 # MITRE ATT&CK tactics in kill chain order
 _TACTICS_ORDER = [
-    "reconnaissance", "resource_development", "initial_access",
-    "execution", "persistence", "privilege_escalation",
-    "defense_evasion", "credential_access", "discovery",
-    "lateral_movement", "collection", "command_and_control",
-    "exfiltration", "impact",
+    "reconnaissance",
+    "resource_development",
+    "initial_access",
+    "execution",
+    "persistence",
+    "privilege_escalation",
+    "defense_evasion",
+    "credential_access",
+    "discovery",
+    "lateral_movement",
+    "collection",
+    "command_and_control",
+    "exfiltration",
+    "impact",
 ]
 
 
@@ -97,7 +106,10 @@ class MitreAttackMapper:
 
         logger.info(
             "[MITRE] Added technique %s (%s) — tactic=%s for %s",
-            technique_id, name, tactic, tenant_id,
+            technique_id,
+            name,
+            tactic,
+            tenant_id,
         )
         return tech.model_dump(mode="json")
 
@@ -162,7 +174,9 @@ class MitreAttackMapper:
 
         logger.info(
             "[MITRE] Mapped event '%s' to %d techniques for %s",
-            event_type, len(mappings_created), tenant_id,
+            event_type,
+            len(mappings_created),
+            tenant_id,
         )
         return {
             "event_type": event_type,
@@ -184,19 +198,20 @@ class MitreAttackMapper:
 
         by_tactic: dict[str, list[dict]] = defaultdict(list)
         for tech in techniques:
-            by_tactic[tech.tactic].append({
-                "technique_id": tech.technique_id,
-                "name": tech.name,
-                "detection_coverage": tech.detection_coverage,
-                "times_observed": tech.times_observed,
-            })
+            by_tactic[tech.tactic].append(
+                {
+                    "technique_id": tech.technique_id,
+                    "name": tech.name,
+                    "detection_coverage": tech.detection_coverage,
+                    "times_observed": tech.times_observed,
+                }
+            )
 
         tactic_coverage = {}
         for tactic in _TACTICS_ORDER:
             techs = by_tactic.get(tactic, [])
             avg_coverage = (
-                round(sum(t["detection_coverage"] for t in techs) / len(techs), 1)
-                if techs else 0.0
+                round(sum(t["detection_coverage"] for t in techs) / len(techs), 1) if techs else 0.0
             )
             tactic_coverage[tactic] = {
                 "techniques_count": len(techs),
@@ -209,16 +224,15 @@ class MitreAttackMapper:
                 sum(t.detection_coverage for t in techniques) / max(len(techniques), 1),
                 1,
             )
-            if techniques else 0.0
+            if techniques
+            else 0.0
         )
 
         return {
             "tenant_id": tenant_id,
             "total_techniques": len(techniques),
             "total_coverage_pct": total_coverage,
-            "tactics_covered": sum(
-                1 for t in _TACTICS_ORDER if by_tactic.get(t)
-            ),
+            "tactics_covered": sum(1 for t in _TACTICS_ORDER if by_tactic.get(t)),
             "total_tactics": len(_TACTICS_ORDER),
             "by_tactic": tactic_coverage,
         }
@@ -261,7 +275,8 @@ class MitreAttackMapper:
             "low_coverage_techniques": low_coverage,
             "never_observed_techniques": never_observed,
             "gap_score": round(
-                (len(missing_tactics) / max(len(_TACTICS_ORDER), 1)) * 100, 1,
+                (len(missing_tactics) / max(len(_TACTICS_ORDER), 1)) * 100,
+                1,
             ),
         }
 
@@ -274,10 +289,7 @@ class MitreAttackMapper:
         mappings = self._mappings.get(tenant_id, [])
 
         # Filter mappings related to the incident (via indicators)
-        incident_mappings = [
-            m for m in mappings
-            if m.indicators.get("incident_id") == incident_id
-        ]
+        incident_mappings = [m for m in mappings if m.indicators.get("incident_id") == incident_id]
 
         # Order by tactic position in kill chain
         tactic_order = {t: i for i, t in enumerate(_TACTICS_ORDER)}
@@ -287,14 +299,16 @@ class MitreAttackMapper:
 
         chain = []
         for m in incident_mappings:
-            chain.append({
-                "tactic": m.tactic,
-                "tactic_position": tactic_order.get(m.tactic, 99),
-                "technique_id": m.technique_id,
-                "event_type": m.event_type,
-                "confidence": m.confidence,
-                "mapped_at": m.mapped_at.isoformat(),
-            })
+            chain.append(
+                {
+                    "tactic": m.tactic,
+                    "tactic_position": tactic_order.get(m.tactic, 99),
+                    "technique_id": m.technique_id,
+                    "event_type": m.event_type,
+                    "confidence": m.confidence,
+                    "mapped_at": m.mapped_at.isoformat(),
+                }
+            )
 
         return {
             "incident_id": incident_id,

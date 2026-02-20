@@ -117,8 +117,17 @@ class MLAnomalyEngine:
                     anomaly_type=anomaly_type,
                     score=score,
                     severity=severity,
-                    description=f"Anomalous {key}: {value:.1f} (baseline: {mean:.1f}, z-score: {z_score:.1f})",
-                    features={"metric": key, "value": value, "mean": round(mean, 2), "z_score": round(z_score, 2)},
+                    description=(
+                        f"Anomalous {key}: {value:.1f}"
+                        f" (baseline: {mean:.1f},"
+                        f" z-score: {z_score:.1f})"
+                    ),
+                    features={
+                        "metric": key,
+                        "value": value,
+                        "mean": round(mean, 2),
+                        "z_score": round(z_score, 2),
+                    },
                 )
                 self._detections.append(result)
                 self._detection_count += 1
@@ -153,7 +162,19 @@ class MLAnomalyEngine:
             "entity_id": entity_id,
             "observations": baseline["observations"],
             "metrics": {
-                k: {"mean": round(v, 2), "std": round(math.sqrt(max(baseline["variances"].get(k, 0) / max(baseline["observations"] - 1, 1), 0)), 2)}
+                k: {
+                    "mean": round(v, 2),
+                    "std": round(
+                        math.sqrt(
+                            max(
+                                baseline["variances"].get(k, 0)
+                                / max(baseline["observations"] - 1, 1),
+                                0,
+                            )
+                        ),
+                        2,
+                    ),
+                }
                 for k, v in baseline["means"].items()
             },
         }
@@ -189,8 +210,8 @@ class MLAnomalyEngine:
             severities[e.get("severity", "info")] += 1
         metrics["unique_categories"] = float(len(categories))
         metrics["high_severity_ratio"] = (
-            (severities.get("high", 0) + severities.get("critical", 0)) / max(len(events), 1)
-        )
+            severities.get("high", 0) + severities.get("critical", 0)
+        ) / max(len(events), 1)
         return metrics
 
 

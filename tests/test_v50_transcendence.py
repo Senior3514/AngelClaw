@@ -6,14 +6,13 @@ from __future__ import annotations
 import hashlib
 
 from cloud.services.ai_orchestrator import AIOrchestorService
-from cloud.services.nl_policy import NLPolicyService
-from cloud.services.incident_commander import IncidentCommanderService
-from cloud.services.threat_sharing import ThreatSharingService
-from cloud.services.deception import DeceptionService
-from cloud.services.forensics_auto import ForensicsService
 from cloud.services.compliance_code import ComplianceCodeService
+from cloud.services.deception import DeceptionService
 from cloud.services.evolving_rules import EvolvingRulesService
-
+from cloud.services.forensics_auto import ForensicsService
+from cloud.services.incident_commander import IncidentCommanderService
+from cloud.services.nl_policy import NLPolicyService
+from cloud.services.threat_sharing import ThreatSharingService
 
 TENANT = "test-tenant"
 
@@ -21,6 +20,7 @@ TENANT = "test-tenant"
 # ---------------------------------------------------------------------------
 # AIOrchestorService
 # ---------------------------------------------------------------------------
+
 
 class TestAIOrchestorRegistration:
     """Register, list, update, and remove AI models."""
@@ -122,7 +122,10 @@ class TestAIOrchestorRouting:
     def test_route_request_success(self):
         svc = AIOrchestorService()
         svc.register_model(
-            TENANT, "router-model", "llm", "openai",
+            TENANT,
+            "router-model",
+            "llm",
+            "openai",
             capabilities=["text-generation"],
         )
         result = svc.route_request(TENANT, "text-generation", {"prompt": "hello"})
@@ -144,7 +147,9 @@ class TestAIOrchestorRouting:
 
     def test_route_request_skips_disabled_models(self):
         svc = AIOrchestorService()
-        m = svc.register_model(TENANT, "disabled-m", "llm", "local", capabilities=["gen"], priority=1)
+        m = svc.register_model(
+            TENANT, "disabled-m", "llm", "local", capabilities=["gen"], priority=1
+        )
         svc.update_model(m["id"], enabled=False)
         svc.register_model(TENANT, "enabled-m", "llm", "local", capabilities=["gen"], priority=5)
         result = svc.route_request(TENANT, "gen")
@@ -196,6 +201,7 @@ class TestAIOrchestorStats:
 # ---------------------------------------------------------------------------
 # NLPolicyService
 # ---------------------------------------------------------------------------
+
 
 class TestNLPolicyBasic:
     """Create, list, approve, and reject NL policies."""
@@ -309,6 +315,7 @@ class TestNLPolicyStats:
 # IncidentCommanderService
 # ---------------------------------------------------------------------------
 
+
 class TestIncidentCommanderBasic:
     """Declare incidents, add updates, and list."""
 
@@ -404,6 +411,7 @@ class TestIncidentCommanderStats:
 # ThreatSharingService
 # ---------------------------------------------------------------------------
 
+
 class TestThreatSharingBasic:
     """Share, consume, and list indicators."""
 
@@ -493,13 +501,16 @@ class TestThreatSharingStats:
 # DeceptionService
 # ---------------------------------------------------------------------------
 
+
 class TestDeceptionBasic:
     """Deploy, list, get, activate, and deactivate tokens."""
 
     def test_deploy_token(self):
         svc = DeceptionService()
         token = svc.deploy_token(
-            TENANT, "db-creds", "honey_credential",
+            TENANT,
+            "db-creds",
+            "honey_credential",
             decoy_value="admin:P@ssw0rd",
             placement="/etc/db.conf",
         )
@@ -624,6 +635,7 @@ class TestDeceptionStats:
 # ---------------------------------------------------------------------------
 # ForensicsService
 # ---------------------------------------------------------------------------
+
 
 class TestForensicsCaseBasic:
     """Create, get, list, update, and close cases."""
@@ -798,6 +810,7 @@ class TestForensicsStats:
 # ComplianceCodeService
 # ---------------------------------------------------------------------------
 
+
 class TestComplianceRuleBasic:
     """Create, list, get, and toggle compliance rules."""
 
@@ -857,7 +870,10 @@ class TestComplianceChecks:
     def test_run_check_policy_pass(self):
         svc = ComplianceCodeService()
         rule = svc.create_rule(
-            TENANT, "HIPAA", "164.312", "MFA Required",
+            TENANT,
+            "HIPAA",
+            "164.312",
+            "MFA Required",
             check_type="policy",
             check_config={"required_field": "mfa_enabled", "expected_value": "True"},
         )
@@ -867,7 +883,10 @@ class TestComplianceChecks:
     def test_run_check_policy_fail(self):
         svc = ComplianceCodeService()
         rule = svc.create_rule(
-            TENANT, "HIPAA", "164.312", "MFA Required",
+            TENANT,
+            "HIPAA",
+            "164.312",
+            "MFA Required",
             check_type="policy",
             check_config={"required_field": "mfa_enabled", "expected_value": "True"},
         )
@@ -877,19 +896,29 @@ class TestComplianceChecks:
     def test_run_check_encryption_pass(self):
         svc = ComplianceCodeService()
         rule = svc.create_rule(
-            TENANT, "PCI-DSS", "3.4", "Encryption at rest",
+            TENANT,
+            "PCI-DSS",
+            "3.4",
+            "Encryption at rest",
             check_type="encryption",
             check_config={"require_at_rest": True, "require_in_transit": True},
         )
-        result = svc.run_check(rule["id"], system_state={
-            "encryption_at_rest": True, "encryption_in_transit": True,
-        })
+        result = svc.run_check(
+            rule["id"],
+            system_state={
+                "encryption_at_rest": True,
+                "encryption_in_transit": True,
+            },
+        )
         assert result["result"] == "pass"
 
     def test_run_check_encryption_fail(self):
         svc = ComplianceCodeService()
         rule = svc.create_rule(
-            TENANT, "PCI-DSS", "3.4", "Encryption at rest",
+            TENANT,
+            "PCI-DSS",
+            "3.4",
+            "Encryption at rest",
             check_type="encryption",
             check_config={"require_at_rest": True},
         )
@@ -899,7 +928,10 @@ class TestComplianceChecks:
     def test_run_check_network_pass(self):
         svc = ComplianceCodeService()
         rule = svc.create_rule(
-            TENANT, "CIS", "9.1", "Block Telnet",
+            TENANT,
+            "CIS",
+            "9.1",
+            "Block Telnet",
             check_type="network",
             check_config={"blocked_ports": [23, 21]},
         )
@@ -909,7 +941,10 @@ class TestComplianceChecks:
     def test_run_check_network_fail(self):
         svc = ComplianceCodeService()
         rule = svc.create_rule(
-            TENANT, "CIS", "9.1", "Block Telnet",
+            TENANT,
+            "CIS",
+            "9.1",
+            "Block Telnet",
             check_type="network",
             check_config={"blocked_ports": [23]},
         )
@@ -931,17 +966,24 @@ class TestComplianceChecks:
     def test_run_framework_audit(self):
         svc = ComplianceCodeService()
         svc.create_rule(
-            TENANT, "GDPR", "Art5", "Minimization",
+            TENANT,
+            "GDPR",
+            "Art5",
+            "Minimization",
             check_type="policy",
             check_config={"required_field": "data_minimized", "expected_value": "yes"},
         )
         svc.create_rule(
-            TENANT, "GDPR", "Art32", "Encryption",
+            TENANT,
+            "GDPR",
+            "Art32",
+            "Encryption",
             check_type="encryption",
             check_config={"require_at_rest": True},
         )
         audit = svc.run_framework_audit(
-            TENANT, "GDPR",
+            TENANT,
+            "GDPR",
             system_state={"data_minimized": "yes", "encryption_at_rest": True},
         )
         assert audit["framework"] == "GDPR"
@@ -957,7 +999,10 @@ class TestComplianceChecks:
     def test_compliance_report(self):
         svc = ComplianceCodeService()
         rule = svc.create_rule(
-            TENANT, "SOC2", "CC6.1", "Access Control",
+            TENANT,
+            "SOC2",
+            "CC6.1",
+            "Access Control",
             check_type="access",
             check_config={"require_mfa": True},
         )
@@ -972,8 +1017,14 @@ class TestComplianceStats:
 
     def test_get_stats(self):
         svc = ComplianceCodeService()
-        rule = svc.create_rule(TENANT, "HIPAA", "164", "Test", check_type="policy",
-                               check_config={"required_field": "x", "expected_value": "y"})
+        rule = svc.create_rule(
+            TENANT,
+            "HIPAA",
+            "164",
+            "Test",
+            check_type="policy",
+            check_config={"required_field": "x", "expected_value": "y"},
+        )
         svc.create_rule(TENANT, "GDPR", "Art5", "Test2")
         svc.run_check(rule["id"], system_state={"x": "y"})
         stats = svc.get_stats(TENANT)
@@ -988,6 +1039,7 @@ class TestComplianceStats:
 # ---------------------------------------------------------------------------
 # EvolvingRulesService
 # ---------------------------------------------------------------------------
+
 
 class TestEvolvingRulesBasic:
     """Create, list, get, and toggle detection rules."""
@@ -1054,7 +1106,8 @@ class TestEvolvingRulesEvaluation:
     def test_evaluate_rule_match(self):
         svc = EvolvingRulesService()
         rule = svc.create_rule(
-            TENANT, "High Traffic",
+            TENANT,
+            "High Traffic",
             conditions={"bytes": {"operator": "gt", "value": 1000}},
             threshold=0.5,
         )
@@ -1065,7 +1118,8 @@ class TestEvolvingRulesEvaluation:
     def test_evaluate_rule_no_match(self):
         svc = EvolvingRulesService()
         rule = svc.create_rule(
-            TENANT, "High Traffic",
+            TENANT,
+            "High Traffic",
             conditions={"bytes": {"operator": "gt", "value": 1000}},
             threshold=0.5,
         )
@@ -1088,7 +1142,8 @@ class TestEvolvingRulesEvaluation:
     def test_evaluate_multiple_conditions(self):
         svc = EvolvingRulesService()
         rule = svc.create_rule(
-            TENANT, "Multi",
+            TENANT,
+            "Multi",
             conditions={
                 "src_port": {"operator": "eq", "value": "22"},
                 "action": {"operator": "eq", "value": "block"},
@@ -1102,7 +1157,8 @@ class TestEvolvingRulesEvaluation:
     def test_evaluate_contains_operator(self):
         svc = EvolvingRulesService()
         rule = svc.create_rule(
-            TENANT, "Path Check",
+            TENANT,
+            "Path Check",
             conditions={"path": {"operator": "contains", "value": "admin"}},
             threshold=0.5,
         )
@@ -1157,7 +1213,8 @@ class TestEvolvingRulesEvolution:
     def test_evolve_creates_child(self):
         svc = EvolvingRulesService()
         rule = svc.create_rule(
-            TENANT, "Evolve Me",
+            TENANT,
+            "Evolve Me",
             conditions={"x": {"operator": "gt", "value": 10}},
             threshold=0.5,
         )
