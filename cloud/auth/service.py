@@ -67,13 +67,13 @@ def _verify_password(password: str, stored: str) -> bool:
 def authenticate_local(username: str, password: str) -> AuthUser | None:
     """Authenticate against configured local credentials."""
     if username == ADMIN_USER and ADMIN_PASSWORD and password == ADMIN_PASSWORD:
-        return AuthUser(username=username, role=UserRole.ADMIN, tenant_id="dev-tenant")
+        return AuthUser(username=username, role=UserRole.ADMIN, tenant_id="dev-tenant", organization_id="default-org")
 
     if username == SECOPS_USER and SECOPS_PASSWORD and password == SECOPS_PASSWORD:
-        return AuthUser(username=username, role=UserRole.SECOPS, tenant_id="dev-tenant")
+        return AuthUser(username=username, role=UserRole.SECOPS, tenant_id="dev-tenant", organization_id="default-org")
 
     if username == VIEWER_USER and VIEWER_PASSWORD and password == VIEWER_PASSWORD:
-        return AuthUser(username=username, role=UserRole.VIEWER, tenant_id="dev-tenant")
+        return AuthUser(username=username, role=UserRole.VIEWER, tenant_id="dev-tenant", organization_id="default-org")
 
     # Backward compat: operator role for admin user
     return None
@@ -133,6 +133,7 @@ def create_jwt(user: AuthUser) -> str:
         "sub": user.username,
         "role": user.role.value,
         "tenant_id": user.tenant_id,
+        "organization_id": user.organization_id,
         "exp": int(time.time()) + (JWT_EXPIRE_HOURS * 3600),
         "iat": int(time.time()),
     }
@@ -170,6 +171,7 @@ def verify_jwt(token: str) -> AuthUser | None:
             username=payload["sub"],
             role=UserRole(payload["role"]),
             tenant_id=payload.get("tenant_id", "dev-tenant"),
+            organization_id=payload.get("organization_id", "default-org"),
         )
     except Exception:
         logger.debug("JWT verification failed", exc_info=True)
@@ -192,6 +194,7 @@ def verify_bearer(token: str) -> AuthUser | None:
                 username="bearer-user",
                 role=UserRole.OPERATOR,
                 tenant_id="dev-tenant",
+                organization_id="default-org",
             )
 
     return None

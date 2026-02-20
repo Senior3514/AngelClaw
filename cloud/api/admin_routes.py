@@ -12,6 +12,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from cloud.db.models import (
@@ -595,3 +596,82 @@ def revert_hardening(
     if not result:
         raise HTTPException(status_code=404, detail="Action not found")
     return result
+
+
+# ---------------------------------------------------------------------------
+# Organization Management (3-Layer Multi-Tenancy)
+# ---------------------------------------------------------------------------
+
+class CreateOrgRequest(BaseModel):
+    name: str
+    slug: str
+    contact_email: str = ""
+    tier: str = "standard"
+
+class CreateTenantRequest(BaseModel):
+    tenant_id: str
+    name: str
+    organization_id: str = "default-org"
+    tier: str = "standard"
+    max_agents: int = 100
+
+@router.post("/orgs")
+def create_organization(req: CreateOrgRequest, request: Request, db: Session = Depends(get_db)):
+    _require_admin(request)
+    from cloud.db.models import OrganizationRow
+    org = OrganizationRow(id=str(uuid.uuid4())[:12], name=req.name, slug=req.slug, contact_email=req.contact_email, tier=req.tier)
+    db.add(org)
+    db.commit()
+    return {"id": org.id, "name": org.name, "slug": org.slug, "status": "created"}
+
+@router.get("/orgs")
+def list_organizations(request: Request, db: Session = Depends(get_db)):
+    _require_admin(request)
+    from cloud.db.models import OrganizationRow
+    orgs = db.query(OrganizationRow).all()
+    return [{"id": o.id, "name": o.name, "slug": o.slug, "tier": o.tier, "status": o.status, "max_tenants": o.max_tenants, "created_at": str(o.created_at)} for o in orgs]
+
+@router.get("/orgs/{org_id}")
+def get_organization(org_id: str, request: Request, db: Session = Depends(get_db)):
+    _require_admin(request)
+    from cloud.db.models import OrganizationRow
+    org = db.query(OrganizationRow).filter(OrganizationRow.id == org_id).first()
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    tenants = db.query(TenantRow).filter(TenantRow.organization_id == org_id).all()
+    total_agents = sum(db.query(AgentNodeRow).filter(AgentNodeRow.tenant_id == t.id).count() for t in tenants)
+    return {"id": org.id, "name": org.name, "slug": org.slug, "tier": org.tier, "status": org.status, "tenants": len(tenants), "total_agents": total_agents}
+
+@router.get("/orgs/{org_id}/tenants")
+def list_org_tenants(org_id: str, request: Request, db: Session = Depends(get_db)):
+    _require_admin(request)
+    tenants = db.query(TenantRow).filter(TenantRow.organization_id == org_id).all()
+    return [{"id": t.id, "name": t.name, "tier": t.tier, "status": t.status, "organization_id": t.organization_id} for t in tenants]
+
+@router.post("/orgs/{org_id}/tenants")
+def create_tenant_in_org(org_id: str, req: CreateTenantRequest, request: Request, db: Session = Depends(get_db)):
+    _require_admin(request)
+    tenant = TenantRow(id=req.tenant_id, name=req.name, organization_id=org_id, tier=req.tier, max_agents=req.max_agents)
+    db.add(tenant)
+    db.commit()
+    return {"id": tenant.id, "name": tenant.name, "organization_id": org_id, "status": "created"}
+
+@router.get("/hierarchy")
+def get_hierarchy(request: Request, db: Session = Depends(get_db)):
+    """Full 3-layer hierarchy: Organization → Tenant → Agent."""
+    _require_admin(request)
+    from cloud.db.models import OrganizationRow
+    orgs = db.query(OrganizationRow).all()
+    hierarchy = []
+    for org in orgs:
+        tenants = db.query(TenantRow).filter(TenantRow.organization_id == org.id).all()
+        tenant_data = []
+        for t in tenants:
+            agents = db.query(AgentNodeRow).filter(AgentNodeRow.tenant_id == t.id).all()
+            tenant_data.append({"id": t.id, "name": t.name, "tier": t.tier, "status": t.status, "agents": [{"id": a.id, "hostname": a.hostname, "status": a.status} for a in agents]})
+        hierarchy.append({"id": org.id, "name": org.name, "slug": org.slug, "tier": org.tier, "tenants": tenant_data})
+    # Include unaffiliated tenants
+    orphan_tenants = db.query(TenantRow).filter((TenantRow.organization_id == None) | (TenantRow.organization_id == "")).all()
+    if orphan_tenants:
+        hierarchy.append({"id": "unaffiliated", "name": "Unaffiliated", "slug": "unaffiliated", "tier": "default", "tenants": [{"id": t.id, "name": t.name, "tier": t.tier, "status": t.status, "agents": []} for t in orphan_tenants]})
+    return hierarchy

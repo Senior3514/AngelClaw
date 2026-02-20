@@ -32,6 +32,7 @@ from cloud.db.models import (  # noqa: F401
     GuardianReportRow,
     NotificationChannelRow,
     NotificationRuleRow,
+    OrganizationRow,
     PluginRegistrationRow,
     PolicySnapshotRow,
     QuarantineRecordRow,

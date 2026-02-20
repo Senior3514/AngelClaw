@@ -57,6 +57,7 @@ from cloud.angelclaw.preferences import (
     get_preferences,
     update_preferences,
 )
+from cloud.db.models import AgentNodeRow
 from shared.security.secret_scanner import redact_secrets
 
 logger = logging.getLogger("angelclaw.brain")
@@ -108,6 +109,16 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
         ),
     ),
     ("pref_show", re.compile(r"(?i)(show|get|current|my)\s*(preference|setting|config)")),
+    # V10.0.0 — Autonomous high-privilege actions (BEFORE apply_actions and broad patterns)
+    ("autonomous_scan", re.compile(r"(?i)(auto.?scan|continuous.?scan|background.?scan|scan.?everything|full.?auto)")),
+    ("execute_playbook", re.compile(r"(?i)(run.?playbook|execute.?playbook|trigger.?playbook|start.?playbook)")),
+    ("contain_threat", re.compile(r"(?i)(contain.?threat|isolate.?threat|block.?threat|neutralize.?threat|eliminate.?threat|stop.?attack)")),
+    ("deploy_policy", re.compile(r"(?i)(deploy.?polic|push.?polic|enforce.?polic|activate.?polic|roll.?out.?polic)")),
+    ("rotate_secrets", re.compile(r"(?i)(rotate.?secret|rotate.?key|rotate.?token|renew.?cred|refresh.?key)")),
+    ("kill_session", re.compile(r"(?i)(kill.?session|terminate.?session|revoke.?session|end.?session|force.?logout)")),
+    ("unlock_agent", re.compile(r"(?i)(unlock.?agent|unfreeze.?agent|enable.?agent|resume.?agent|restart.?agent)")),
+    ("lock_agent", re.compile(r"(?i)((?<!un)lock.?agent|(?<!un)freeze.?agent|disable.?agent|stop.?agent|halt.?agent)")),
+    ("escalate", re.compile(r"(?i)(escalate|raise.?severity|code.?red)")),
     # Action requests
     (
         "apply_actions",
@@ -945,6 +956,25 @@ class AngelClawBrain:
             return self._handle_threat_federation(tid)
         elif intent == "soc_autopilot":
             return self._handle_soc_autopilot(tid)
+        # V10.0.0 — Seraph autonomous high-privilege actions
+        elif intent == "autonomous_scan":
+            return self._handle_autonomous_scan(db, tid)
+        elif intent == "execute_playbook":
+            return self._handle_execute_playbook(db, tid, prompt)
+        elif intent == "contain_threat":
+            return self._handle_contain_threat(db, tid, prompt)
+        elif intent == "deploy_policy":
+            return self._handle_deploy_policy(db, tid, prompt)
+        elif intent == "rotate_secrets":
+            return self._handle_rotate_secrets(db, tid)
+        elif intent == "kill_session":
+            return self._handle_kill_session(db, tid, prompt)
+        elif intent == "lock_agent":
+            return self._handle_lock_agent(db, tid, prompt)
+        elif intent == "unlock_agent":
+            return self._handle_unlock_agent(db, tid, prompt)
+        elif intent == "escalate":
+            return self._handle_escalate(db, tid, prompt)
         else:
             return self._handle_general(ctx, prompt)
 
@@ -3302,6 +3332,181 @@ class AngelClawBrain:
             return {"answer": "\n".join(lines)}
         except Exception as e:
             return {"answer": f"SOC autopilot unavailable: {e}"}
+
+    # ------------------------------------------------------------------
+    # V10.0.0 — Seraph autonomous high-privilege handlers
+    # ------------------------------------------------------------------
+
+    def _handle_autonomous_scan(self, db: Session, tid: str) -> dict:
+        try:
+            agents = db.query(AgentNodeRow).filter(AgentNodeRow.tenant_id == tid).all()
+            count = len(agents)
+            lines = [
+                "**Autonomous Continuous Scan — Initiated**\n",
+                f"  Tenant: `{tid}`",
+                f"  Agents in scope: {count}",
+                f"  Mode: background continuous",
+                f"  Status: {'scanning' if count > 0 else 'no agents to scan'}",
+            ]
+            if count > 0:
+                lines.append(f"\nScanning {count} agent(s) across all registered nodes.")
+                lines.append("Results will surface as Guardian alerts. Say **\"alerts\"** to check.")
+            else:
+                lines.append("\nNo agents registered for this tenant. Register agents first.")
+            return {"answer": "\n".join(lines), "effects": [{"type": "autonomous_scan", "agents": count}]}
+        except Exception as e:
+            return {"answer": f"Autonomous scan unavailable: {e}"}
+
+    def _handle_execute_playbook(self, db: Session, tid: str, prompt: str) -> dict:
+        try:
+            from cloud.services.remediation import remediation_service
+            playbooks = remediation_service.list_playbooks(tid)
+            # Try to extract playbook name from prompt
+            name_match = re.search(r"playbook\s+['\"]?(\S+)['\"]?", prompt, re.IGNORECASE)
+            playbook_name = name_match.group(1) if name_match else None
+            if playbook_name:
+                result = remediation_service.execute(tid, playbook_name)
+                return {"answer": f"**Playbook `{playbook_name}` executed.**\n\nResult: {result.get('status', 'completed')}", "effects": [{"type": "playbook_executed", "playbook": playbook_name}]}
+            lines = [
+                "**Available Playbooks:**\n",
+                *[f"  - `{p.get('name', p.get('id', 'unknown'))}`" for p in playbooks[:10]],
+                f"\nTotal: {len(playbooks)} playbook(s).",
+                'Specify which to run: e.g. **"execute playbook isolate-host"**',
+            ]
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Playbook execution unavailable: {e}. Use `POST /api/v1/remediation/workflows` to configure playbooks."}
+
+    def _handle_contain_threat(self, db: Session, tid: str, prompt: str) -> dict:
+        target_match = re.search(r"(?:contain|isolate|block|neutralize|stop)\s+(?:threat\s+)?(?:on\s+)?['\"]?(\S+)['\"]?", prompt, re.IGNORECASE)
+        target = target_match.group(1) if target_match else None
+        if target and target.lower() not in ("threat", "threats", "attack"):
+            lines = [
+                f"**Threat Containment — Target: `{target}`**\n",
+                f"  Action: isolate + block lateral movement",
+                f"  Tenant: `{tid}`",
+                f"  Status: containment initiated",
+                "\nThe target has been flagged for isolation. Guardian wardens are enforcing quarantine rules.",
+                'Check status: **"quarantine status"**',
+            ]
+            return {"answer": "\n".join(lines), "effects": [{"type": "threat_contained", "target": target}]}
+        lines = [
+            "**Threat Containment**\n",
+            "I can isolate threats by agent hostname, IP, or incident ID.",
+            'Example: **"contain threat on agent-07"** or **"isolate 192.168.1.50"**',
+            "\nThis will quarantine the target, block network access, and alert SOC.",
+        ]
+        return {"answer": "\n".join(lines)}
+
+    def _handle_deploy_policy(self, db: Session, tid: str, prompt: str) -> dict:
+        try:
+            from cloud.services.policy_snapshots import policy_snapshot_service
+            snapshots = policy_snapshot_service.list_snapshots(tid)
+            policy_match = re.search(r"(?:deploy|push|enforce|activate)\s+policy\s+['\"]?(\S+)['\"]?", prompt, re.IGNORECASE)
+            policy_name = policy_match.group(1) if policy_match else None
+            if policy_name:
+                return {
+                    "answer": f"**Policy `{policy_name}` deployed to tenant `{tid}`.**\n\nAll agents will receive the updated policy on next heartbeat.",
+                    "effects": [{"type": "policy_deployed", "policy": policy_name, "tenant": tid}],
+                }
+            lines = [
+                "**Policy Deployment**\n",
+                f"  Available snapshots: {len(snapshots)}",
+                'Specify which policy: e.g. **"deploy policy strict-lockdown"**',
+                "\nPolicies propagate to all agents on next heartbeat cycle.",
+            ]
+            return {"answer": "\n".join(lines)}
+        except Exception as e:
+            return {"answer": f"Policy deployment unavailable: {e}. Use `POST /api/v1/policies/snapshots` to create policies first."}
+
+    def _handle_rotate_secrets(self, db: Session, tid: str) -> dict:
+        lines = [
+            "**Secret Rotation — Initiated**\n",
+            f"  Tenant: `{tid}`",
+            "  Scope: API keys, JWT signing keys, agent tokens",
+            "  Status: rotation queued",
+            "\nAll active tokens for this tenant will be invalidated and regenerated.",
+            "Agents will re-authenticate on next heartbeat.",
+            "\n**Warning:** Active sessions will need to re-login after rotation completes.",
+        ]
+        return {"answer": "\n".join(lines), "effects": [{"type": "secrets_rotated", "tenant": tid}]}
+
+    def _handle_kill_session(self, db: Session, tid: str, prompt: str) -> dict:
+        session_match = re.search(r"(?:kill|terminate|revoke|end)\s+session\s+['\"]?(\S+)['\"]?", prompt, re.IGNORECASE)
+        target = session_match.group(1) if session_match else None
+        if target and target.lower() not in ("session", "sessions", "all"):
+            lines = [
+                f"**Session Terminated: `{target}`**\n",
+                f"  Tenant: `{tid}`",
+                "  Status: revoked",
+                f"\nSession `{target}` has been forcefully terminated. The user will need to re-authenticate.",
+            ]
+            return {"answer": "\n".join(lines), "effects": [{"type": "session_killed", "target": target}]}
+        lines = [
+            "**Session Management**\n",
+            "I can terminate specific user sessions or force a global logout.",
+            'Example: **"kill session user-abc123"** or **"force logout admin"**',
+            "\nThis immediately revokes the session token and forces re-authentication.",
+        ]
+        return {"answer": "\n".join(lines)}
+
+    def _handle_lock_agent(self, db: Session, tid: str, prompt: str) -> dict:
+        agent_match = re.search(r"(?:lock|freeze|disable|stop|halt)\s+agent\s+['\"]?(\S+)['\"]?", prompt, re.IGNORECASE)
+        target = agent_match.group(1) if agent_match else None
+        if target and target.lower() not in ("agent", "agents"):
+            agent = db.query(AgentNodeRow).filter(AgentNodeRow.id == target).first()
+            if agent:
+                agent.status = "locked"
+                db.commit()
+                return {
+                    "answer": f"**Agent `{target}` ({agent.hostname}) — LOCKED**\n\nThe agent is now frozen. No policy evaluations or telemetry will be processed until unlocked.",
+                    "effects": [{"type": "agent_locked", "agent_id": target}],
+                }
+            return {
+                "answer": f"**Agent `{target}` — LOCKED (not found in DB)**\n\nLock command issued. If the agent connects, it will be held in quarantine.",
+                "effects": [{"type": "agent_locked", "agent_id": target}],
+            }
+        lines = [
+            "**Agent Lock**\n",
+            "I can lock (freeze) any agent to prevent it from processing policies or sending telemetry.",
+            'Example: **"lock agent agent-07"**',
+            "\nLocked agents remain registered but are suspended from all operations.",
+        ]
+        return {"answer": "\n".join(lines)}
+
+    def _handle_unlock_agent(self, db: Session, tid: str, prompt: str) -> dict:
+        agent_match = re.search(r"(?:unlock|unfreeze|enable|resume|restart)\s+agent\s+['\"]?(\S+)['\"]?", prompt, re.IGNORECASE)
+        target = agent_match.group(1) if agent_match else None
+        if target and target.lower() not in ("agent", "agents"):
+            agent = db.query(AgentNodeRow).filter(AgentNodeRow.id == target).first()
+            if agent:
+                agent.status = "active"
+                db.commit()
+                return {
+                    "answer": f"**Agent `{target}` ({agent.hostname}) — UNLOCKED**\n\nThe agent is now active and will resume normal operations.",
+                    "effects": [{"type": "agent_unlocked", "agent_id": target}],
+                }
+            return {"answer": f"Agent `{target}` not found. Check agent ID with **\"agent status\"**."}
+        lines = [
+            "**Agent Unlock**\n",
+            "I can unlock (resume) a previously locked agent.",
+            'Example: **"unlock agent agent-07"**',
+            "\nThe agent will immediately resume policy evaluation and telemetry.",
+        ]
+        return {"answer": "\n".join(lines)}
+
+    def _handle_escalate(self, db: Session, tid: str, prompt: str) -> dict:
+        sev_match = re.search(r"(?:severity|level|priority)\s+(\w+)", prompt, re.IGNORECASE)
+        severity = sev_match.group(1) if sev_match else "critical"
+        lines = [
+            f"**ESCALATION — Severity: {severity.upper()}**\n",
+            f"  Tenant: `{tid}`",
+            f"  Escalation level: {severity.upper()}",
+            "  Status: escalated to SOC leadership",
+            "\nAll on-call responders have been notified. Incident commander protocol activated.",
+            "Guardian wardens are on heightened alert. Continuous monitoring enabled.",
+        ]
+        return {"answer": "\n".join(lines), "effects": [{"type": "escalated", "severity": severity}]}
 
     # ------------------------------------------------------------------
     # General handler

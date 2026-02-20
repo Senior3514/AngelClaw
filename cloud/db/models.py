@@ -17,12 +17,30 @@ class Base(DeclarativeBase):
     pass
 
 
+class OrganizationRow(Base):
+    """Top-level organization in the 3-layer hierarchy: Organization → Tenant → Agent."""
+
+    __tablename__ = "organizations"
+
+    id = Column(String(64), primary_key=True)
+    name = Column(String(256), nullable=False)
+    slug = Column(String(128), nullable=False, unique=True, index=True)
+    contact_email = Column(String(256), nullable=True)
+    tier = Column(String(32), default="standard")  # free, standard, enterprise
+    max_tenants = Column(Integer, default=10)
+    status = Column(String(32), default="active")  # active, suspended, archived
+    settings = Column(JSON, default=dict)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
 class AgentNodeRow(Base):
     """Persisted ANGELNODE registration."""
 
     __tablename__ = "agent_nodes"
 
     id = Column(String(36), primary_key=True)
+    tenant_id = Column(String(64), nullable=True, index=True)  # FK to tenants
     type = Column(String(32), nullable=False)
     os = Column(String(32), nullable=False)
     hostname = Column(String(255), nullable=False)
@@ -338,6 +356,7 @@ class TenantRow(Base):
     __tablename__ = "tenants"
 
     id = Column(String(64), primary_key=True)
+    organization_id = Column(String(64), nullable=True, index=True)  # FK to organizations
     name = Column(String(256), nullable=False)
     description = Column(Text, default="")
     contact_email = Column(String(256), nullable=True)

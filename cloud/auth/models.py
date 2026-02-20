@@ -32,6 +32,7 @@ class AuthUser(BaseModel):
     username: str
     role: UserRole
     tenant_id: str = "dev-tenant"
+    organization_id: str = "default-org"
 
 
 class LoginRequest(BaseModel):
