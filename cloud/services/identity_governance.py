@@ -1,4 +1,4 @@
-"""AngelClaw V8.2 — Titan Grid: Identity Governance & Administration (IGA).
+"""AngelClaw V10.0.0 — Identity Governance & Administration (IGA).
 
 Comprehensive identity governance engine managing user lifecycle,
 access certifications, role mining, segregation of duties (SoD),
@@ -51,7 +51,7 @@ class AccessCertification(BaseModel):
 
 
 class IdentityGovernanceService:
-    """In-memory IdentityGovernanceService — V8.2 Titan Grid."""
+    """In-memory IdentityGovernanceService — V10.0.0."""
 
     def __init__(self) -> None:
         self._identities: dict[str, dict] = defaultdict(dict)

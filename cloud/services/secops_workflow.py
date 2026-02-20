@@ -1,4 +1,4 @@
-"""AngelClaw V8.2 — Titan Grid: SecOps Workflow Automation.
+"""AngelClaw V10.0.0 — SecOps Workflow Automation.
 
 Security operations workflow engine automating complex multi-step
 security processes with conditional branching, approvals, and
@@ -48,7 +48,7 @@ class WorkflowExecution(BaseModel):
 
 
 class SecOpsWorkflowService:
-    """In-memory SecOpsWorkflowService — V8.2 Titan Grid."""
+    """In-memory SecOpsWorkflowService — V10.0.0."""
 
     def __init__(self) -> None:
         self._workflows: dict[str, dict] = defaultdict(dict)

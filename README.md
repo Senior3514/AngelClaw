@@ -43,7 +43,7 @@ uvicorn cloud.api.server:app --host 127.0.0.1 --port 8500
 
 ## What It Does
 
-AngelClaw runs a continuous 25-step autonomous defense cycle across your entire infrastructure:
+AngelClaw runs a continuous autonomous defense cycle across your entire infrastructure:
 
 - **Threat Detection** — Pattern analysis, anomaly detection, kill chain correlation
 - **AI Agent Protection** — Prompt injection blocking, output sanitization, behavioral boundaries
@@ -51,6 +51,23 @@ AngelClaw runs a continuous 25-step autonomous defense cycle across your entire 
 - **Self-Healing** — Autonomous incident response, golden image restoration, patch management
 - **Self-Learning** — Tracks operator feedback, auto-adjusts thresholds, evolves detection rules
 - **Compliance** — Continuous SOC2/HIPAA/PCI-DSS/GDPR/NIST auditing
+
+### Dashboard — 10 Real-Time Pages
+
+Every value is live from real API endpoints. Zero mock data.
+
+| Page | What You See |
+|------|-------------|
+| **Dashboard** | Halo Score gauge, threat landscape chart, fleet OS distribution, guardian activity feed |
+| **Fleet** | Mesh topology, agent table with health, micro-segmentation zones |
+| **Alerts** | Real-time alert feed with severity badges, SOAR stats, WebSocket auto-refresh |
+| **Angel Legion** | 12 warden status cards, threat matrix, orchestrator health |
+| **Threat Intel** | Live feeds, IOC matches, MITRE ATT&CK coverage map |
+| **Analytics** | 7-day threat matrix, ML anomaly stats, learning feedback loop |
+| **AI Engine** | Seraph Brain health gauge, model registry, AGI defense status |
+| **Zero Trust** | Trust score distribution, session stats, device assessment |
+| **Policies** | Policy snapshots, natural language policy builder, playbooks |
+| **Settings** | Org overview, tenant management, RBAC configuration |
 
 ---
 

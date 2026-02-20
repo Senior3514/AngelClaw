@@ -305,7 +305,7 @@ from cloud.api.nexus_prime_routes import router as nexus_prime_router  # noqa: E
 
 app.include_router(nexus_prime_router)
 
-# V8.2 — Titan Grid routes (Exposure Validation, Identity Governance, SecOps Workflow)
+# Titan Grid routes (Exposure Validation, Identity Governance, SecOps Workflow)
 from cloud.api.titan_grid_routes import router as titan_grid_router  # noqa: E402
 
 app.include_router(titan_grid_router)

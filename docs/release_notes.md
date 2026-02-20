@@ -1,8 +1,13 @@
 # AngelClaw AGI Guardian — Release Notes
 
-## V10.0.0 — Titan Grid (2026-02-20)
-### Major Version Milestone
-- Version bump to V10.0.0 marking a major platform milestone across all components, installers, and extensions.
+## V10.0.0 — Seraph (2026-02-20)
+### Streamlined Platform, Zero Mock Data, Real-Time Dashboard
+- Complete UI rewrite: consolidated 20 pages to 10 focused pages
+- Removed all mock/fallback data — every UI value from real API endpoints
+- Dashboard: real-time Halo Score, threat landscape, fleet distribution, guardian activity
+- Enhanced glassmorphic design: gradient login, float animations, loading spinners
+- README rewritten: focused, professional, no bloat
+- Version bumped across all 25+ project files (backend, installers, extensions, docs)
 
 ## V8.2.0 — Titan Grid (2026-02-20)
 ### Continuous Exposure Validation, Identity Governance & SecOps Workflow Automation

@@ -1,4 +1,4 @@
-"""AngelClaw V8.2 — Titan Grid: Continuous Exposure Validation.
+"""AngelClaw V10.0.0 — Continuous Exposure Validation.
 
 Continuous security validation engine that proactively tests
 defenses against real-world attack techniques, measuring actual
@@ -39,7 +39,7 @@ class ValidationRun(BaseModel):
 
 
 class ExposureValidationService:
-    """In-memory ExposureValidationService — V8.2 Titan Grid."""
+    """In-memory ExposureValidationService — V10.0.0."""
 
     def __init__(self) -> None:
         self._store: dict[str, dict] = defaultdict(dict)

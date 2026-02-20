@@ -1,4 +1,4 @@
-"""AngelClaw V8.2 — Titan Grid: Exposure Validation, Identity Governance, SecOps Workflow API routes."""
+"""AngelClaw V10.0.0 — Titan Grid: Exposure Validation, Identity Governance, SecOps Workflow API routes."""
 
 from __future__ import annotations
 

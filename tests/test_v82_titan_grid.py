@@ -116,7 +116,7 @@ class TestExposureValidationService:
         svc = ExposureValidationService()
         result = svc.status(TENANT)
         assert result["service"] == "ExposureValidationService"
-        assert result["version"] == "8.2.0"
+        assert result["version"] == "10.0.0"
         assert result["tenant_id"] == TENANT
 
 
@@ -240,7 +240,7 @@ class TestIdentityGovernanceService:
         svc = IdentityGovernanceService()
         result = svc.status(TENANT)
         assert result["service"] == "IdentityGovernanceService"
-        assert result["version"] == "8.2.0"
+        assert result["version"] == "10.0.0"
         assert result["tenant_id"] == TENANT
 
 
@@ -360,7 +360,7 @@ class TestSecOpsWorkflowService:
         svc = SecOpsWorkflowService()
         result = svc.status(TENANT)
         assert result["service"] == "SecOpsWorkflowService"
-        assert result["version"] == "8.2.0"
+        assert result["version"] == "10.0.0"
         assert result["tenant_id"] == TENANT
 
 
@@ -483,7 +483,7 @@ class TestTitanGridRoutes:
         resp = client.get("/api/v1/titan-grid/status")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["version"] == "8.2.0"
+        assert data["version"] == "10.0.0"
         assert data["codename"] == "Titan Grid"
         assert "exposure_validation" in data
         assert "identity_governance" in data
