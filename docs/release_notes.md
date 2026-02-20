@@ -1,5 +1,12 @@
 # AngelClaw AGI Guardian — Release Notes
 
+## V7.7.0 — Mind Link (2026-02-20)
+### Collaborative Intelligence & Reporting
+- Intel Marketplace: new service module
+- Report Generator: new service module
+- Brain V7.7: 2 new intents — total 109+ intents
+
+
 ## V7.6.0 — Storm Watch (2026-02-20)
 ### Incident Resilience & Disaster Recovery
 - Disaster Recovery: new service module
