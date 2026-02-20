@@ -1,5 +1,5 @@
 // AngelClaw AGI Guardian — Service Worker (PWA offline support)
-const CACHE_NAME = 'angelclaw-v3';
+const CACHE_NAME = 'angelclaw-v4';
 const CACHED_URLS = ['/ui', '/mobile/manifest.json'];
 
 self.addEventListener('install', event => {
