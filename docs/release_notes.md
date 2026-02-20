@@ -1,12 +1,12 @@
 # AngelClaw Release Notes
 
-## V7.0.0 — Singularity (2026-02-19)
+## V7.0.0 — Empyrion (2026-02-19)
 
 **Status**: Full AGI Autonomous Defense Fabric — protecting every endpoint, AI agent, and autonomous system across SaaS, Hybrid & On-Prem.
 
 This is the **ultimate release** — ten upgrade stages (V3.5 through V7.0) transforming AngelClaw from an enterprise security platform into the world's first full AGI autonomous defense fabric. Self-programming defense rules, autonomous incident response, cross-org threat federation, and AGI-driven SOC operations. The platform now autonomously detects, responds, hunts, evolves, federates, and defends with zero human intervention across every cloud, every endpoint, and every AI agent.
 
-### V7.0 — Singularity (Full AGI Autonomous Defense)
+### V7.0 — Empyrion (Full AGI Autonomous Defense)
 
 - **AGI Defense Engine** — Self-programming defense rules: AGI analyzes threat patterns, auto-generates detection logic, validates through simulation, and deploys with kill-switch safety. The platform writes its own rules.
 - **Autonomous Incident Response** — Full containment/eradication/recovery lifecycle with decision tree execution, automated response orchestration, and human override capability for every stage
@@ -39,7 +39,7 @@ This is the **ultimate release** — ten upgrade stages (V3.5 through V7.0) tran
 
 ## V5.0.0 — Transcendence (2026-02-19)
 
-**Status**: AGI Singularity — the ultimate autonomous security platform with self-evolving intelligence.
+**Status**: AGI Empyrion — the ultimate autonomous security platform with self-evolving intelligence.
 
 This was the **milestone release** — six upgrade stages (V3.5 through V5.0) laying the foundation for full AGI defense: self-evolving rules, AI-orchestrated incident response, natural language policy creation, deception technology, automated forensics, and compliance-as-code.
 
@@ -82,7 +82,7 @@ This was the **milestone release** — six upgrade stages (V3.5 through V5.0) la
 - **Adaptive Authentication** — Risk-based authentication level selection: low risk → password, medium → MFA, high → biometric, critical → impossible_travel_block, integrating session risk + device trust context for unified auth decisions
 - **Daemon V4.5** — Continuous zero-trust session reassessment cycle — all active sessions re-evaluated every daemon cycle
 
-### V5.0 — Transcendence (AGI Singularity)
+### V5.0 — Transcendence (AGI Empyrion)
 
 - **AI Model Orchestration** — Multi-model registry with capability-based routing (detection, classification, generation, analysis), priority scheduling, health monitoring (active/degraded/offline), request counting, error tracking, and average latency computation
 - **Natural Language Policy Engine** — NL-to-rule parsing with keyword extraction (block, allow, deny, require, if, when, from, to), confidence scoring, approval workflow (draft → pending_review → approved/rejected), and human-in-the-loop governance

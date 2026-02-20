@@ -225,7 +225,7 @@ from cloud.api.zerotrust_routes import router as zerotrust_router  # noqa: E402
 
 app.include_router(zerotrust_router)
 
-# V5.0 — Transcendence routes (AGI Singularity)
+# V5.0 — Transcendence routes (AGI Empyrion)
 from cloud.api.transcendence_routes import router as transcendence_router  # noqa: E402
 
 app.include_router(transcendence_router)
@@ -245,10 +245,10 @@ from cloud.api.prometheus_routes import router as prometheus_router  # noqa: E40
 
 app.include_router(prometheus_router)
 
-# V7.0 — Singularity routes (Full AGI Autonomous Defense)
-from cloud.api.singularity_routes import router as singularity_router  # noqa: E402
+# V7.0 — Empyrion routes (Full AGI Autonomous Defense)
+from cloud.api.singularity_routes import router as empyrion_router  # noqa: E402
 
-app.include_router(singularity_router)
+app.include_router(empyrion_router)
 
 
 # ---------------------------------------------------------------------------

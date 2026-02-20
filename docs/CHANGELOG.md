@@ -1,6 +1,6 @@
 # AngelClaw AGI Guardian — Changelog
 
-## V7.0.0 — Singularity (2026-02-19)
+## V7.0.0 — Empyrion (2026-02-19)
 ### Full AGI Autonomous Defense
 - AGI Defense Engine: self-programming defense rules, threat pattern analysis, auto-generation and validation, kill-switch deployment
 - Autonomous Incident Response: full containment/eradication/recovery lifecycle, human override capability, decision tree execution
@@ -38,7 +38,7 @@
 - Brain V5.5: 4 new intents (realtime_metrics, halo_score, fleet_status, command_center) — total 83+ intents
 
 ## V5.0.0 — Transcendence (2026-02-19)
-### AGI Singularity Platform
+### AGI Empyrion Platform
 - AI Model Orchestration: multi-model registry, capability-based routing, priority scheduling, health monitoring
 - Natural Language Policies: NL-to-rule parsing, confidence scoring, approval workflow, keyword extraction
 - AI Incident Commander: automated incident declaration, AI-assigned commander, timeline tracking, MTTR computation

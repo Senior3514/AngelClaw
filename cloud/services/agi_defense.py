@@ -1,4 +1,4 @@
-"""AngelClaw V7.0 — Singularity: AGI Defense Service.
+"""AngelClaw V7.0 — Empyrion: AGI Defense Service.
 
 Self-programming defense rule engine where AGI analyses threat patterns,
 auto-generates detection logic, validates new rules through simulation,

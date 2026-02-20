@@ -63,7 +63,7 @@ trap cleanup EXIT
 echo ""
 echo -e "${B}${C}================================================${N}"
 echo -e "${B}${C}  AngelClaw AGI Guardian -- macOS Installer${N}"
-echo -e "${B}${C}  V7.0.0 -- Singularity${N}"
+echo -e "${B}${C}  V7.0.0 -- Empyrion${N}"
 echo -e "${B}${C}================================================${N}"
 echo ""
 
@@ -325,5 +325,5 @@ if [ "$LLM" = "true" ]; then
   echo ""
 fi
 
-echo -e "  ${C}AngelClaw V7.0.0 -- Singularity -- guardian angel, not gatekeeper.${N}"
+echo -e "  ${C}AngelClaw V7.0.0 -- Empyrion -- guardian angel, not gatekeeper.${N}"
 echo ""

@@ -595,7 +595,7 @@ _INTENTS: list[tuple[str, re.Pattern]] = [
             r"(?i)(intel.*correlat|event.*correlat|pattern.*discover|campaign.*attribut|cross.*source)"
         ),
     ),
-    # V7.0 — Singularity intents
+    # V7.0 — Empyrion intents
     (
         "agi_defense",
         re.compile(
@@ -936,7 +936,7 @@ class AngelClawBrain:
             return self._handle_adversary_sim(tid)
         elif intent == "intel_correlate":
             return self._handle_intel_correlate(tid)
-        # V7.0 — Singularity dispatch
+        # V7.0 — Empyrion dispatch
         elif intent == "agi_defense":
             return self._handle_agi_defense(tid)
         elif intent == "autonomous_response":
@@ -1392,7 +1392,7 @@ class AngelClawBrain:
     def _handle_about(self) -> dict:
         return {
             "answer": (
-                "I'm **AngelClaw AGI Guardian v7.0.0 — Singularity**.\n\n"
+                "I'm **AngelClaw AGI Guardian v7.0.0 — Empyrion**.\n\n"
                 "I'm your autonomous AGI guardian angel "
                 "with full-spectrum autonomous defense.\n\n"
                 "I live on this machine, watching over your AI agents,"
@@ -1411,7 +1411,7 @@ class AngelClawBrain:
     def _handle_help(self) -> dict:
         return {
             "answer": (
-                "**AngelClaw AGI Guardian v7.0.0 — Singularity**\n\n"
+                "**AngelClaw AGI Guardian v7.0.0 — Empyrion**\n\n"
                 "Just talk to me naturally — I understand what you need.\n\n"
                 "Here are some things you can ask me:\n\n"
                 '  **Security scan** — "Scan the system", '
@@ -3236,7 +3236,7 @@ class AngelClawBrain:
             return {"answer": f"Intel correlation unavailable: {e}"}
 
     # ------------------------------------------------------------------
-    # V7.0 — Singularity handlers
+    # V7.0 — Empyrion handlers
     # ------------------------------------------------------------------
 
     def _handle_agi_defense(self, tid: str) -> dict:
@@ -3250,7 +3250,7 @@ class AngelClawBrain:
                 f"  Analyses: {stats.get('total_analyses', 0)}",
                 f"  Avg confidence: {stats.get('avg_confidence', 0)}",
             ]
-            lines.append("\nAnalyze: `POST /api/v1/singularity/agi/analyze`")
+            lines.append("\nAnalyze: `POST /api/v1/empyrion/agi/analyze`")
             return {"answer": "\n".join(lines)}
         except Exception as e:
             return {"answer": f"AGI defense unavailable: {e}"}
@@ -3266,7 +3266,7 @@ class AngelClawBrain:
                 f"  Overridden: {stats.get('overridden', 0)}",
                 f"  Avg response time: {stats.get('avg_response_time', 'N/A')}",
             ]
-            lines.append("\nTrigger: `POST /api/v1/singularity/response/trigger`")
+            lines.append("\nTrigger: `POST /api/v1/empyrion/response/trigger`")
             return {"answer": "\n".join(lines)}
         except Exception as e:
             return {"answer": f"Autonomous response unavailable: {e}"}
@@ -3282,7 +3282,7 @@ class AngelClawBrain:
                 f"  Intel consumed: {stats.get('intel_consumed', 0)}",
                 f"  Collective score: {stats.get('collective_score', 'N/A')}",
             ]
-            lines.append("\nJoin: `POST /api/v1/singularity/federation/join`")
+            lines.append("\nJoin: `POST /api/v1/empyrion/federation/join`")
             return {"answer": "\n".join(lines)}
         except Exception as e:
             return {"answer": f"Threat federation unavailable: {e}"}
@@ -3298,7 +3298,7 @@ class AngelClawBrain:
                 f"  Auto-resolved: {stats.get('auto_resolved', 0)}",
                 f"  Analysts active: {stats.get('active_analysts', 0)}",
             ]
-            lines.append("\nTriage: `POST /api/v1/singularity/soc/triage`")
+            lines.append("\nTriage: `POST /api/v1/empyrion/soc/triage`")
             return {"answer": "\n".join(lines)}
         except Exception as e:
             return {"answer": f"SOC autopilot unavailable: {e}"}

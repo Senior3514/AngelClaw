@@ -1,11 +1,11 @@
-"""AngelClaw V7.0 — Singularity: Full AGI Autonomous Defense API routes."""
+"""AngelClaw V7.0 — Empyrion: Full AGI Autonomous Defense API routes."""
 
 from __future__ import annotations
 
 from fastapi import APIRouter, Header
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/api/v1/singularity", tags=["Singularity"])
+router = APIRouter(prefix="/api/v1/empyrion", tags=["Empyrion"])
 
 
 class ThreatAnalysisRequest(BaseModel):
@@ -232,10 +232,10 @@ def soc_stats(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     return soc_autopilot_service.get_stats(tenant_id)
 
 
-# -- Combined Singularity Status --
+# -- Combined Empyrion Status --
 
 @router.get("/status")
-def singularity_status(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def empyrion_status(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.agi_defense import agi_defense_service
     from cloud.services.autonomous_response import autonomous_response_service
     from cloud.services.soc_autopilot import soc_autopilot_service

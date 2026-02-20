@@ -1,4 +1,4 @@
-"""Tests for V7.0 Singularity: AGI Defense, Autonomous Response, Threat Federation, SOC Autopilot."""
+"""Tests for V7.0 Empyrion: AGI Defense, Autonomous Response, Threat Federation, SOC Autopilot."""
 
 from __future__ import annotations
 

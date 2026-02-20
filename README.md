@@ -1,4 +1,4 @@
-# AngelClaw V7.0.0 -- Singularity: Full AGI Autonomous Defense
+# AngelClaw V7.0.0 -- Empyrion: Full AGI Autonomous Defense
 
 **Guardian angel, not gatekeeper.**
 
@@ -18,7 +18,7 @@ analysis, reading, summarizing, reasoning, creating -- flows freely.
 
 | Version | Codename | Highlights |
 |---------|----------|------------|
-| **V7.0.0** | **Singularity** | AGI Defense Engine, Autonomous Response, Cross-Org Threat Federation, SOC Autopilot |
+| **V7.0.0** | **Empyrion** | AGI Defense Engine, Autonomous Response, Cross-Org Threat Federation, SOC Autopilot |
 | V6.5.0 | Prometheus | Threat Hunter, MITRE ATT&CK Mapper, Adversary Simulation, Intel Correlation |
 | V6.0.0 | Omniguard | Multi-Cloud Defense (AWS/Azure/GCP/OCI/Alibaba), CSPM, SaaS Shield, Hybrid Mesh |
 | V5.5.0 | Convergence | Real-Time Engine, Halo Score, Fleet Orchestrator, Dashboard Aggregator |
@@ -255,7 +255,7 @@ Dashboard: **http://127.0.0.1:8500/ui** -- Default login: `admin` / `fzMiSbDRGyl
 
 ---
 
-## What's New in V7.0.0 -- Singularity
+## What's New in V7.0.0 -- Empyrion
 
 ### AGI Defense Engine (V7.0)
 - **Self-programming defense rules**: threat pattern analysis, auto-generation, validation, kill-switch deployment
@@ -281,7 +281,7 @@ Dashboard: **http://127.0.0.1:8500/ui** -- Default login: `admin` / `fzMiSbDRGyl
 - **Fleet Orchestrator**: fleet node management, OS distribution, batch command dispatch
 - **Dashboard Aggregator**: unified command center, wingspan stats, threat landscape
 
-### AGI Singularity Platform (V5.0)
+### AGI Empyrion Platform (V5.0)
 - AI Model Orchestration, Natural Language Policies, Incident Commander
 - Deception Technology (honey tokens), Automated Digital Forensics
 - Compliance-as-Code (SOC2/HIPAA/PCI-DSS/GDPR/NIST), Self-Evolving Detection Rules
@@ -329,7 +329,7 @@ Dashboard: **http://127.0.0.1:8500/ui** -- Default login: `admin` / `fzMiSbDRGyl
 | Convergence | `/api/v1/convergence` | Real-time engine, Halo Score, fleet |
 | Omniguard | `/api/v1/omniguard` | Cloud connectors, CSPM, SaaS, hybrid mesh |
 | Prometheus | `/api/v1/prometheus` | Threat hunting, MITRE, adversary sim |
-| Singularity | `/api/v1/singularity` | AGI defense, autonomous response, SOC |
+| Empyrion | `/api/v1/empyrion` | AGI defense, autonomous response, SOC |
 
 **100+ REST API endpoints** across 27 route modules.
 
@@ -543,5 +543,5 @@ See [LICENSE](LICENSE).
 
 ---
 
-*AngelClaw V7.0.0 -- Singularity: Full AGI Autonomous Defense.*
+*AngelClaw V7.0.0 -- Empyrion: Full AGI Autonomous Defense.*
 *Guardian angel, not gatekeeper.*

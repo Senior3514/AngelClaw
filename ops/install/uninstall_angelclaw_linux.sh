@@ -36,7 +36,7 @@ err()  { echo -e "  ${R}[X]${N} $1"; }
 echo ""
 echo -e "${B}${R}================================================${N}"
 echo -e "${B}${R}  AngelClaw AGI Guardian -- Linux Uninstaller${N}"
-echo -e "${B}${R}  V7.0.0 -- Singularity${N}"
+echo -e "${B}${R}  V7.0.0 -- Empyrion${N}"
 echo -e "${B}${R}================================================${N}"
 echo ""
 

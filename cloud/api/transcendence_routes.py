@@ -1,4 +1,4 @@
-"""AngelClaw V5.0 — Transcendence: AGI Singularity API routes."""
+"""AngelClaw V5.0 — Transcendence: AGI Empyrion API routes."""
 
 from __future__ import annotations
 

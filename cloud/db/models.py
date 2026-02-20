@@ -870,7 +870,7 @@ class SessionRiskRow(Base):
 
 
 # ---------------------------------------------------------------------------
-# V5.0 — Transcendence models (AGI Singularity)
+# V5.0 — Transcendence models (AGI Empyrion)
 # ---------------------------------------------------------------------------
 
 
@@ -1196,7 +1196,7 @@ class IntelCorrelationRow(Base):
 
 
 # ---------------------------------------------------------------------------
-# V7.0 — Singularity (Full AGI Autonomous Defense)
+# V7.0 — Empyrion (Full AGI Autonomous Defense)
 # ---------------------------------------------------------------------------
 
 

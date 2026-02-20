@@ -1,4 +1,4 @@
-"""AngelClaw V7.0 — Singularity: SOC Autopilot Service.
+"""AngelClaw V7.0 — Empyrion: SOC Autopilot Service.
 
 AGI-driven Security Operations Center automation with autonomous triage,
 investigation orchestration, analyst augmentation, shift handoff

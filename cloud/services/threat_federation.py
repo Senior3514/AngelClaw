@@ -1,4 +1,4 @@
-"""AngelClaw V7.0 — Singularity: Threat Federation Service.
+"""AngelClaw V7.0 — Empyrion: Threat Federation Service.
 
 Cross-organisation threat intelligence federation with trust-based
 sharing, anonymous indicator exchange, collective defense scoring,

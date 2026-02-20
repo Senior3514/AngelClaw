@@ -17,7 +17,7 @@ set "STEP=0"
 echo.
 echo ================================================
 echo    AngelClaw AGI Guardian -- Windows Installer
-echo    V7.0.0 -- Singularity (Native Python Agent)
+echo    V7.0.0 -- Empyrion (Native Python Agent)
 echo ================================================
 echo.
 echo    No Docker required. Lightweight agent.
@@ -333,7 +333,7 @@ echo    "Anti-tamper status"
 echo    "Org overview"
 echo    "Quarantine agent-001"
 echo.
-echo  AngelClaw V7.0.0 -- Singularity
+echo  AngelClaw V7.0.0 -- Empyrion
 echo  Guardian angel, not gatekeeper.
 echo.
 pause

@@ -416,7 +416,7 @@
       <div class="nav-item" onclick="navigate('prometheus')" data-page="prometheus">
         <span class="nav-icon">&#127919;</span> Threat Hunting
       </div>
-      <div class="nav-item" onclick="navigate('singularity')" data-page="singularity">
+      <div class="nav-item" onclick="navigate('empyrion')" data-page="empyrion">
         <span class="nav-icon">&#9889;</span> AGI Defense
       </div>
     </div>
@@ -475,7 +475,7 @@
 </div>
 
 <script>
-/* ===== ANGELCLAW V7.0.0 ADMIN CONSOLE ===== */
+/* ===== ANGELCLAW V7.0.0 "EMPYRION" ADMIN CONSOLE ===== */
 const BASE = window.location.origin;
 const chatHistory = [];
 let authToken = localStorage.getItem('angelclaw_token') || '';
@@ -560,7 +560,7 @@ async function renderPage() {
     case 'convergence': return renderConvergence(mc);
     case 'omniguard': return renderOmniguard(mc);
     case 'prometheus': return renderPrometheus(mc);
-    case 'singularity': return renderSingularity(mc);
+    case 'empyrion': return renderEmpyrion(mc);
     case 'policies': return renderPolicies(mc);
     case 'settings': return renderSettings(mc);
     default: mc.innerHTML='<div class="empty">Page not found</div>';
@@ -1032,14 +1032,14 @@ async function renderPrometheus(mc) {
   mc.innerHTML = html;
 }
 
-/* === SINGULARITY (V7.0) === */
-async function renderSingularity(mc) {
-  const status = await fetchJSON('/api/v1/singularity/status');
+/* === EMPYRION (V7.0) === */
+async function renderEmpyrion(mc) {
+  const status = await fetchJSON('/api/v1/empyrion/status');
   const agi = status?status.agi_defense:null;
   const resp = status?status.autonomous_response:null;
   const fed = status?status.threat_federation:null;
   const soc = status?status.soc_autopilot:null;
-  let html = `<div class="page-title">&#9889; AGI Defense &mdash; Singularity</div><div class="page-subtitle">Self-programming defense, autonomous response, threat federation, SOC autopilot</div>`;
+  let html = `<div class="page-title">&#9889; AGI Defense &mdash; Empyrion</div><div class="page-subtitle">Self-programming defense, autonomous response, threat federation, SOC autopilot</div>`;
   html += '<div class="stats">';
   html += '<div class="stat-card"><div class="stat-value" style="color:var(--angel-gold)">'+(agi?agi.total_rules||0:0)+'</div><div class="stat-label">AGI Rules</div></div>';
   html += '<div class="stat-card"><div class="stat-value" style="color:var(--red)">'+(resp?resp.total_responses||0:0)+'</div><div class="stat-label">Auto Responses</div></div>';
@@ -1055,7 +1055,7 @@ async function renderSingularity(mc) {
   html += '</div></div>';
   html += '<div class="two-col">';
   html += '<div class="card"><div class="card-header"><span class="card-title">Threat Federation</span></div>';
-  if(fed) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Members:</span><span>${fed.total_members||0}</span></div><div class="pref-row"><span class="pref-label">Shared:</span><span>${fed.total_indicators_shared||0} indicators</span></div><div class="pref-row"><span class="pref-label">Consumed:</span><span>${fed.total_indicators_consumed||0}</span></div><div class="pref-row"><span class="pref-label">Collective:</span><span style="color:var(--angel-gold)">${fed.collective_score||'--'}/100</span></div></div>`; } else html += '<div class="empty">Not joined. Use /api/v1/singularity/federation/join</div>';
+  if(fed) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Members:</span><span>${fed.total_members||0}</span></div><div class="pref-row"><span class="pref-label">Shared:</span><span>${fed.total_indicators_shared||0} indicators</span></div><div class="pref-row"><span class="pref-label">Consumed:</span><span>${fed.total_indicators_consumed||0}</span></div><div class="pref-row"><span class="pref-label">Collective:</span><span style="color:var(--angel-gold)">${fed.collective_score||'--'}/100</span></div></div>`; } else html += '<div class="empty">Not joined. Use /api/v1/empyrion/federation/join</div>';
   html += '</div>';
   html += '<div class="card"><div class="card-header"><span class="card-title">SOC Autopilot</span></div>';
   if(soc) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Triaged:</span><span>${soc.total_triaged||0} alerts</span></div><div class="pref-row"><span class="pref-label">Analysts:</span><span>${soc.total_analysts||0}</span></div><div class="pref-row"><span class="pref-label">Investigations:</span><span>${soc.active_investigations||0}</span></div><div class="pref-row"><span class="pref-label">Avg MTTR:</span><span>${soc.avg_mttr||'--'}</span></div></div>`; } else html += '<div class="empty">SOC Autopilot initializing...</div>';

@@ -1,4 +1,4 @@
-"""AngelClaw V7.0 — Singularity: Autonomous Response Service.
+"""AngelClaw V7.0 — Empyrion: Autonomous Response Service.
 
 Full autonomous incident response engine with decision tree execution,
 automated containment/eradication/recovery phases, human override
