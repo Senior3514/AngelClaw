@@ -1,4 +1,4 @@
-# AngelClaw V7.1.0 -- Quantum Shield: Advanced Behavioral Analytics
+# AngelClaw V7.2.0 -- Neural Mesh: AI-Enhanced Network Intelligence
 
 **Guardian angel, not gatekeeper.**
 
@@ -18,7 +18,8 @@ analysis, reading, summarizing, reasoning, creating -- flows freely.
 
 | Version | Codename | Highlights |
 |---------|----------|------------|
-| **V7.1.0** | **Quantum Shield** | AGI Defense Engine, Autonomous Response, Cross-Org Threat Federation, SOC Autopilot |
+| **V7.2.0** | **Neural Mesh** | AGI Defense Engine, Autonomous Response, Cross-Org Threat Federation, SOC Autopilot |
+| V7.1.0 | Quantum Shield | Traffic Analysis, Dns Security |
 | V7.0.0 | Empyrion | Ueba, Threat Scoring |
 | V6.5.0 | Prometheus | Threat Hunter, MITRE ATT&CK Mapper, Adversary Simulation, Intel Correlation |
 | V6.0.0 | Omniguard | Multi-Cloud Defense (AWS/Azure/GCP/OCI/Alibaba), CSPM, SaaS Shield, Hybrid Mesh |

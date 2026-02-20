@@ -1,5 +1,12 @@
 # AngelClaw AGI Guardian — Changelog
 
+## V7.2.0 — Neural Mesh (2026-02-20)
+### AI-Enhanced Network Intelligence
+- Traffic Analysis: new service module
+- Dns Security: new service module
+- Brain V7.2: 2 new intents — total 99+ intents
+
+
 ## V7.1.0 — Quantum Shield (2026-02-20)
 ### Advanced Behavioral Analytics
 - Ueba: new service module
