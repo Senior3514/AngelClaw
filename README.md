@@ -1,4 +1,4 @@
-# AngelClaw V7.9.0 -- Apex Predator: Automated Offensive Security # AngelClaw V7.8.0 -- Ghost Protocol: Stealth Defense # AngelClaw V7.7.0 -- Mind Link: Collaborative Intelligence # AngelClaw V7.6.0 -- Storm Watch: Incident Resilience # AngelClaw V7.5.0 -- Iron Vault: Data Protection # AngelClaw V7.4.0 -- Dark Web Radar: Extended Threat Intelligence # AngelClaw V7.3.0 -- Sentinel Eye: Advanced Observability # AngelClaw V7.2.0 -- Neural Mesh: AI-Enhanced Network Intelligence Log Intelligence Dark Web Monitoring Privacy Disaster Recovery Reporting Active Deception Validation
+# AngelClaw V8.0.0 -- Ascendant: Next-Gen Autonomous Defense Platform
 
 **Guardian angel, not gatekeeper.**
 
@@ -18,7 +18,8 @@ analysis, reading, summarizing, reasoning, creating -- flows freely.
 
 | Version | Codename | Highlights |
 |---------|----------|------------|
-| **V7.9.0** | **Apex Predator** | AGI Defense Engine, Autonomous Response, Cross-Org Threat Federation, SOC Autopilot |
+| **V8.0.0** | **Ascendant** | AGI Defense Engine, Autonomous Response, Cross-Org Threat Federation, SOC Autopilot |
+| V7.9.0 | Apex Predator | Ooda Loop, Self Healing, Breach Prevention |
 | V7.8.0 | Ghost Protocol | Pentest Auto, Red Team |
 | V7.7.0 | Mind Link | Deception Depth, Moving Target |
 | V7.6.0 | Storm Watch | Intel Marketplace, Report Generator |

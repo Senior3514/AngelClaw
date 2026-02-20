@@ -1,5 +1,13 @@
 # AngelClaw AGI Guardian — Release Notes
 
+## V8.0.0 — Ascendant (2026-02-20)
+### Next-Gen Autonomous Defense Platform
+- Ooda Loop: new service module
+- Self Healing: new service module
+- Breach Prevention: new service module
+- Brain V8.0: 3 new intents — total 116+ intents
+
+
 ## V7.9.0 — Apex Predator (2026-02-20)
 ### Automated Offensive Security & Validation
 - Pentest Auto: new service module
