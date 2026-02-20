@@ -1,5 +1,12 @@
 # AngelClaw AGI Guardian — Changelog
 
+## V7.9.0 — Apex Predator (2026-02-20)
+### Automated Offensive Security & Validation
+- Pentest Auto: new service module
+- Red Team: new service module
+- Brain V7.9: 2 new intents — total 113+ intents
+
+
 ## V7.8.0 — Ghost Protocol (2026-02-20)
 ### Stealth Defense & Active Deception
 - Deception Depth: new service module
