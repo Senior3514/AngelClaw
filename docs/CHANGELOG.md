@@ -1,5 +1,12 @@
 # AngelClaw AGI Guardian — Changelog
 
+## V7.8.0 — Ghost Protocol (2026-02-20)
+### Stealth Defense & Active Deception
+- Deception Depth: new service module
+- Moving Target: new service module
+- Brain V7.8: 2 new intents — total 111+ intents
+
+
 ## V7.7.0 — Mind Link (2026-02-20)
 ### Collaborative Intelligence & Reporting
 - Intel Marketplace: new service module
