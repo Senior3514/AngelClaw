@@ -1,5 +1,14 @@
 # AngelClaw AGI Guardian — Changelog
 
+## V8.2.0 — Titan Grid (2026-02-20)
+### Continuous Exposure Validation, Identity Governance & SecOps Workflow Automation
+- Exposure Validation (BAS): breach and attack simulation across 5 scenarios (full-spectrum, ransomware, data exfil, lateral movement, phishing), control effectiveness testing, exposure trending, remediation verification
+- Identity Governance & Administration (IGA): user lifecycle management (joiner/mover/leaver), access certification campaigns, role mining and optimization, segregation of duties enforcement (SoD), privileged access management
+- SecOps Workflow Automation: visual workflow builder with conditional branching, approval gates with escalation, 5 built-in templates (IR, vuln triage, access review, threat hunt, data breach), SLA enforcement, execution tracking
+- New API routes: 22 endpoints under `/api/v1/titan-grid/`
+- Fixed parameter ordering bugs in 9 existing route files
+
+
 ## V8.1.0 — Nexus Prime (2026-02-20)
 ### Quantum Crypto, Attack Surface Management & Runtime Protection
 - Quantum-Resistant Cryptography: post-quantum key exchange (Kyber/CRYSTALS), hash-based signatures (SPHINCS+), crypto-agility assessment, certificate scanning, PQC migration planning

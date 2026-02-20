@@ -1039,7 +1039,7 @@ class FleetNodeRow(Base):
     tenant_id = Column(String(64), nullable=False, index=True)
     hostname = Column(String(256), nullable=False)
     os_type = Column(String(32), nullable=False)
-    version = Column(String(16), default="7.0.0")
+    version = Column(String(16), default="8.2.0")
     health_pct = Column(Integer, default=100)
     status = Column(String(16), default="active")  # active, degraded, offline
     tags = Column(JSON, default=list)

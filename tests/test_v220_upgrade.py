@@ -906,7 +906,7 @@ class TestBrainV22:
     def test_about_v22_version(self):
         from cloud.angelclaw.brain import brain
         result = brain._handle_about()
-        assert "7.0.0" in result["answer"]
+        assert "8.2.0" in result["answer"]
 
     def test_help_includes_v22_commands(self):
         from cloud.angelclaw.brain import brain
@@ -947,10 +947,10 @@ class TestVersion:
 
     def test_brain_version(self):
         from cloud.angelclaw.brain import _SYSTEM_IDENTITY
-        assert "v7.0.0" in _SYSTEM_IDENTITY
+        assert "v8.2.0" in _SYSTEM_IDENTITY
 
     def test_pyproject_version(self):
         import tomllib
         with open("pyproject.toml", "rb") as f:
             data = tomllib.load(f)
-        assert data["project"]["version"] == "7.0.0"
+        assert data["project"]["version"] == "8.2.0"

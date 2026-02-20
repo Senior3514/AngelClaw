@@ -18,7 +18,7 @@ def sentinel_eye_detect_anomalies(tenant_id: str = Header("dev-tenant", alias="X
     return logAnalyticsService_service.detect_anomalies(tenant_id, time_window_minutes)
 
 @router.post("/search-logs")
-def sentinel_eye_search_logs(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), query: str, limit: int = 50):
+def sentinel_eye_search_logs(query: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), limit: int = 50):
     from cloud.services.log_analytics import logAnalyticsService_service
     return logAnalyticsService_service.search_logs(tenant_id, query, limit)
 
@@ -33,17 +33,17 @@ def sentinel_eye_status(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID
     return logAnalyticsService_service.status(tenant_id)
 
 @router.post("/create-span")
-def sentinel_eye_create_span(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), trace_id: str, service: str, operation: str, parent_span_id: str | None = None):
+def sentinel_eye_create_span(trace_id: str, service: str, operation: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), parent_span_id: str | None = None):
     from cloud.services.distributed_tracing import distributedTracingService_service
     return distributedTracingService_service.create_span(tenant_id, trace_id, service, operation, parent_span_id)
 
 @router.get("/get-trace")
-def sentinel_eye_get_trace(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), trace_id: str):
+def sentinel_eye_get_trace(trace_id: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.distributed_tracing import distributedTracingService_service
     return distributedTracingService_service.get_trace(tenant_id, trace_id)
 
 @router.post("/correlate-events")
-def sentinel_eye_correlate_events(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), event_ids: list[str]):
+def sentinel_eye_correlate_events(event_ids: list[str], tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.distributed_tracing import distributedTracingService_service
     return distributedTracingService_service.correlate_events(tenant_id, event_ids)
 
@@ -53,6 +53,6 @@ def sentinel_eye_get_service_map(tenant_id: str = Header("dev-tenant", alias="X-
     return distributedTracingService_service.get_service_map(tenant_id)
 
 @router.get("/status")
-def sentinel_eye_status(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def sentinel_eye_status_2(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.distributed_tracing import distributedTracingService_service
     return distributedTracingService_service.status(tenant_id)

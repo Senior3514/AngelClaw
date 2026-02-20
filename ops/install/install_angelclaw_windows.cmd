@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 :: ============================================================================
-:: AngelClaw AGI Guardian -- Windows Client Installer (V7.0.0)
+:: AngelClaw AGI Guardian -- Windows Client Installer (V8.2.0)
 :: Native Python ANGELNODE agent. No Docker required.
 ::
 :: INSTALL (CMD as Administrator):
@@ -17,7 +17,7 @@ set "STEP=0"
 echo.
 echo ================================================
 echo    AngelClaw AGI Guardian -- Windows Installer
-echo    V7.0.0 -- Empyrion (Native Python Agent)
+echo    V8.2.0 -- Titan Grid (Native Python Agent)
 echo ================================================
 echo.
 echo    No Docker required. Lightweight agent.
@@ -333,7 +333,7 @@ echo    "Anti-tamper status"
 echo    "Org overview"
 echo    "Quarantine agent-001"
 echo.
-echo  AngelClaw V7.0.0 -- Empyrion
+echo  AngelClaw V8.2.0 -- Titan Grid
 echo  Guardian angel, not gatekeeper.
 echo.
 pause

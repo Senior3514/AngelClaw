@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AngelClaw AGI Guardian -- Linux Server Installer (V7.0.0)
+# AngelClaw AGI Guardian -- Linux Server Installer (V8.2.0)
 #
 # Installs the full AngelClaw stack (ANGELNODE + Cloud + Ollama) on a Linux
 # server using Docker Compose + systemd. All dependencies are auto-installed.
@@ -62,7 +62,7 @@ trap cleanup EXIT
 echo ""
 echo -e "${B}${C}================================================${N}"
 echo -e "${B}${C}  AngelClaw AGI Guardian -- Linux Server Installer${N}"
-echo -e "${B}${C}  V7.0.0 -- Empyrion${N}"
+echo -e "${B}${C}  V8.2.0 -- Titan Grid${N}"
 echo -e "${B}${C}================================================${N}"
 echo ""
 
@@ -363,5 +363,5 @@ if [ "$LLM" = "true" ]; then
   echo ""
 fi
 
-echo -e "  ${C}AngelClaw V7.0.0 -- Empyrion -- guardian angel, not gatekeeper.${N}"
+echo -e "  ${C}AngelClaw V8.2.0 -- Titan Grid -- guardian angel, not gatekeeper.${N}"
 echo ""

@@ -13,7 +13,7 @@ def storm_create_plan(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
     return disasterRecoveryService_service.create_plan(tenant_id, req)
 
 @router.post("/execute-drill")
-def storm_execute_drill(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), plan_id: str):
+def storm_execute_drill(plan_id: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.disaster_recovery import disasterRecoveryService_service
     return disasterRecoveryService_service.execute_drill(tenant_id, plan_id)
 
@@ -38,12 +38,12 @@ def storm_create_experiment(tenant_id: str = Header("dev-tenant", alias="X-TENAN
     return chaosTestingService_service.create_experiment(tenant_id, req)
 
 @router.post("/run-experiment")
-def storm_run_experiment(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), experiment_id: str):
+def storm_run_experiment(experiment_id: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.chaos_testing import chaosTestingService_service
     return chaosTestingService_service.run_experiment(tenant_id, experiment_id)
 
 @router.get("/get-results")
-def storm_get_results(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), experiment_id: str):
+def storm_get_results(experiment_id: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.chaos_testing import chaosTestingService_service
     return chaosTestingService_service.get_results(tenant_id, experiment_id)
 
@@ -53,6 +53,6 @@ def storm_list_experiments(tenant_id: str = Header("dev-tenant", alias="X-TENANT
     return chaosTestingService_service.list_experiments(tenant_id)
 
 @router.get("/status")
-def storm_status(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def storm_status_2(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.chaos_testing import chaosTestingService_service
     return chaosTestingService_service.status(tenant_id)

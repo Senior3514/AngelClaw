@@ -147,4 +147,4 @@ class TestV30BrainHandlers:
         brain = AngelClawBrain()
         result = await brain.chat(db, "dev-tenant", "who are you?")
         assert "answer" in result
-        assert "7.0.0" in result["answer"] or "Empyrion" in result["answer"] or "AngelClaw" in result["answer"]
+        assert "8.2.0" in result["answer"] or "Titan Grid" in result["answer"] or "AngelClaw" in result["answer"]

@@ -13,7 +13,7 @@ def ghost_deploy_honeypot(tenant_id: str = Header("dev-tenant", alias="X-TENANT-
     return deceptionDepthService_service.deploy_honeypot(tenant_id, req)
 
 @router.get("/get-interactions")
-def ghost_get_interactions(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), honeypot_id: str):
+def ghost_get_interactions(honeypot_id: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.deception_depth import deceptionDepthService_service
     return deceptionDepthService_service.get_interactions(tenant_id, honeypot_id)
 
@@ -38,7 +38,7 @@ def ghost_create_policy(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID
     return movingTargetService_service.create_policy(tenant_id, req)
 
 @router.post("/execute-mutation")
-def ghost_execute_mutation(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), policy_id: str):
+def ghost_execute_mutation(policy_id: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.moving_target import movingTargetService_service
     return movingTargetService_service.execute_mutation(tenant_id, policy_id)
 
@@ -53,6 +53,6 @@ def ghost_list_policies(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID
     return movingTargetService_service.list_policies(tenant_id)
 
 @router.get("/status")
-def ghost_status(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def ghost_status_2(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.moving_target import movingTargetService_service
     return movingTargetService_service.status(tenant_id)

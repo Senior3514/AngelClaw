@@ -66,7 +66,7 @@ async def lifespan(app: FastAPI):
 
     await start_daemon()
     logger.info(
-        "AngelClaw AGI Guardian 8.1.0 started"
+        "AngelClaw AGI Guardian 8.2.0 started"
         " — tables, heartbeat, orchestrator, Wazuh, shield, daemon"
     )
     yield
@@ -78,7 +78,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="AngelClaw AGI Guardian API",
-    version="8.1.0",
+    version="8.2.0",
     lifespan=lifespan,
 )
 
@@ -305,6 +305,11 @@ from cloud.api.nexus_prime_routes import router as nexus_prime_router  # noqa: E
 
 app.include_router(nexus_prime_router)
 
+# V8.2 — Titan Grid routes (Exposure Validation, Identity Governance, SecOps Workflow)
+from cloud.api.titan_grid_routes import router as titan_grid_router  # noqa: E402
+
+app.include_router(titan_grid_router)
+
 
 # ---------------------------------------------------------------------------
 # Auth middleware — protect /api/v1/* routes when auth is enabled
@@ -419,7 +424,7 @@ def health_check():
     orch = angel_orchestrator.status()
     return {
         "status": "ok",
-        "version": "8.1.0",
+        "version": "8.2.0",
         "orchestrator": orch["running"],
         "agents": {name: info["status"] for name, info in orch.get("agents", {}).items()},
     }

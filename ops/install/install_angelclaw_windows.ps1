@@ -1,5 +1,5 @@
 # ============================================================================
-# AngelClaw AGI Guardian -- Windows Client Installer (V7.0.0)
+# AngelClaw AGI Guardian -- Windows Client Installer (V8.2.0)
 #
 # Installs ANGELNODE (lightweight agent) natively with Python.
 # NO Docker required. Connects to your AngelClaw Cloud server.
@@ -59,7 +59,7 @@ function Refresh-Path {
 Write-Host ""
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host "   AngelClaw AGI Guardian -- Windows Installer"   -ForegroundColor Cyan
-Write-Host "   V7.0.0 -- Empyrion (Native Python Agent)"          -ForegroundColor Cyan
+Write-Host "   V8.2.0 -- Titan Grid (Native Python Agent)"          -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  No Docker required. Lightweight ANGELNODE agent." -ForegroundColor Gray
@@ -418,6 +418,6 @@ Write-Host ""
 Write-Host "  Uninstall:"
 Write-Host "    & `"$InstallDir\ops\install\uninstall_angelclaw_windows.ps1`""
 Write-Host ""
-Write-Host "  AngelClaw V7.0.0 -- Empyrion" -ForegroundColor Cyan
+Write-Host "  AngelClaw V8.2.0 -- Titan Grid" -ForegroundColor Cyan
 Write-Host "  Guardian angel, not gatekeeper." -ForegroundColor Cyan
 Write-Host ""

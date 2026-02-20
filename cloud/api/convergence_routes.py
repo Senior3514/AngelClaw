@@ -27,7 +27,7 @@ class HaloScoreDimensions(BaseModel):
 class FleetNodeRegisterRequest(BaseModel):
     hostname: str
     os_type: str
-    version: str = "7.0.0"
+    version: str = "8.2.0"
     tags: list[str] = []
 
 

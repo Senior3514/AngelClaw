@@ -398,7 +398,7 @@
     <h1>
       <span class="angel-icon">&#128737;</span>
       <span class="brand-text"><span class="brand-name">AngelClaw</span><span class="brand-sub">AGI Guardian</span></span>
-      <span class="version-pill">V8.1.0</span>
+      <span class="version-pill">V8.2.0</span>
     </h1>
   </div>
   <div class="header-right">
@@ -486,6 +486,10 @@
       <div class="nav-item" onclick="navigate('empyrion')" data-page="empyrion">
         <span class="nav-icon">&#9889;</span> AGI Defense
       </div>
+      <div class="nav-item" onclick="navigate('titan-grid')" data-page="titan-grid">
+        <span class="nav-icon">&#128737;</span> Titan Grid
+        <span class="nav-badge green">NEW</span>
+      </div>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-title">System</div>
@@ -542,7 +546,7 @@
 </div>
 
 <script>
-/* ===== ANGELCLAW V8.1.0 "EMPYRION" ADMIN CONSOLE ===== */
+/* ===== ANGELCLAW V8.2.0 "EMPYRION" ADMIN CONSOLE ===== */
 const BASE = window.location.origin;
 const chatHistory = [];
 let authToken = localStorage.getItem('angelclaw_token') || '';
@@ -641,6 +645,7 @@ async function renderPage() {
     case 'omniguard': return renderOmniguard(mc);
     case 'prometheus': return renderPrometheus(mc);
     case 'empyrion': return renderEmpyrion(mc);
+    case 'titan-grid': return renderTitanGrid(mc);
     case 'policies': return renderPolicies(mc);
     case 'settings': return renderSettings(mc);
     default: mc.innerHTML='<div class="empty">Page not found</div>';
@@ -907,7 +912,7 @@ async function renderSettings(mc) {
   let html = `<div class="page-title">&#9881; Settings</div><div class="page-subtitle">Guardian configuration and preferences</div>`;
   html += '<div class="two-col">';
   // Preferences
-  html += '<div class="card"><div class="card-header"><span class="card-title">Guardian Preferences</span><span class="card-badge gold">V8.1.0</span></div><div style="display:flex;flex-direction:column;gap:8px">';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Guardian Preferences</span><span class="card-badge gold">V8.2.0</span></div><div style="display:flex;flex-direction:column;gap:8px">';
   const autonomy=prefs?prefs.autonomy_level:'suggest_only', scanFreq=prefs?prefs.scan_frequency_minutes:10, reporting=prefs?prefs.reporting_level:'normal';
   html += `<div class="pref-row"><label class="pref-label">Autonomy:</label><select class="pref-select" id="pref-autonomy" onchange="updatePref('autonomy_level',this.value)"><option value="observe_only" ${autonomy==='observe_only'?'selected':''}>Observe Only</option><option value="suggest_only" ${autonomy==='suggest_only'?'selected':''}>Suggest Only</option><option value="assist" ${autonomy==='assist'?'selected':''}>Assist</option><option value="autonomous_apply" ${autonomy==='autonomous_apply'?'selected':''}>Autonomous</option></select></div>`;
   html += `<div class="pref-row"><label class="pref-label">Scan (min):</label><select class="pref-select" id="pref-scan" onchange="updatePref('scan_frequency_minutes',parseInt(this.value))"><option value="1" ${scanFreq==1?'selected':''}>1</option><option value="5" ${scanFreq==5?'selected':''}>5</option><option value="10" ${scanFreq==10?'selected':''}>10</option><option value="30" ${scanFreq==30?'selected':''}>30</option><option value="60" ${scanFreq==60?'selected':''}>60</option></select></div>`;
@@ -1141,6 +1146,120 @@ async function renderEmpyrion(mc) {
   if(soc) { html += `<div style="font-size:11px"><div class="pref-row"><span class="pref-label">Triaged:</span><span>${soc.total_triaged||0} alerts</span></div><div class="pref-row"><span class="pref-label">Analysts:</span><span>${soc.total_analysts||0}</span></div><div class="pref-row"><span class="pref-label">Investigations:</span><span>${soc.active_investigations||0}</span></div><div class="pref-row"><span class="pref-label">Avg MTTR:</span><span>${soc.avg_mttr||'--'}</span></div></div>`; } else html += '<div class="empty">SOC Autopilot initializing...</div>';
   html += '</div></div>';
   mc.innerHTML = html;
+}
+
+async function renderTitanGrid(mc) {
+  const status = await fetchJSON('/api/v1/titan-grid/status');
+  const expo = status?status.exposure_validation:null;
+  const iga = status?status.identity_governance:null;
+  const wf = status?status.secops_workflow:null;
+  const templates = await fetchJSON('/api/v1/titan-grid/workflow/templates');
+  let html = `<div class="page-title">&#128737; Titan Grid</div><div class="page-subtitle">Exposure Validation &bull; Identity Governance &bull; SecOps Workflow &mdash; V8.2.0</div>`;
+  html += '<div class="stats">';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--angel-gold)">'+(expo?expo.total_items||0:0)+'</div><div class="stat-label">Validation Runs</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--accent)">'+(iga?iga.total_identities||0:0)+'</div><div class="stat-label">Identities</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--green)">'+(iga?iga.active_campaigns||0:0)+'</div><div class="stat-label">Cert Campaigns</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--red)">'+(wf?wf.total_workflows||0:0)+'</div><div class="stat-label">Workflows</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--purple)">'+(wf?wf.active_executions||0:0)+'</div><div class="stat-label">Active Executions</div></div>';
+  html += '</div>';
+
+  // Row 1: Exposure Validation + Identity Governance
+  html += '<div class="two-col">';
+
+  // Exposure Validation Card
+  html += '<div class="card glow" style="background:var(--angel-halo)"><div class="card-header"><span class="card-title"><span class="icon">&#127919;</span> Exposure Validation (BAS)</span><span class="card-badge gold">V8.2</span></div>';
+  html += '<p style="color:var(--text-dim);font-size:11px;margin:0 0 12px">Breach &amp; Attack Simulation — test defenses against real-world attack techniques</p>';
+  html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
+  const scenarios = ['full_spectrum','ransomware','data_exfil','lateral_movement','phishing'];
+  scenarios.forEach(s=>{
+    html += `<button class="btn btn-sm" onclick="runBAS('${s}')" style="font-size:10px;padding:4px 10px;border-radius:6px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--border);cursor:pointer">${s.replace(/_/g,' ')}</button>`;
+  });
+  html += '</div>';
+  html += '<div id="bas-result" style="font-size:11px;color:var(--text-dim)">Select a scenario to run simulation</div>';
+  html += '</div>';
+
+  // Identity Governance Card
+  html += '<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#128100;</span> Identity Governance (IGA)</span><span class="card-badge gold">V8.2</span></div>';
+  html += '<p style="color:var(--text-dim);font-size:11px;margin:0 0 12px">Lifecycle management, access certification, role mining, SoD enforcement</p>';
+  html += '<div style="display:flex;gap:6px;margin-bottom:12px">';
+  html += '<button class="btn btn-sm" onclick="igaAction(\'onboard\')" style="font-size:10px;padding:4px 10px;border-radius:6px;background:var(--green-dim);color:var(--green);border:1px solid var(--border);cursor:pointer">Onboard User</button>';
+  html += '<button class="btn btn-sm" onclick="igaAction(\'certify\')" style="font-size:10px;padding:4px 10px;border-radius:6px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--border);cursor:pointer">Start Certification</button>';
+  html += '<button class="btn btn-sm" onclick="igaAction(\'mine\')" style="font-size:10px;padding:4px 10px;border-radius:6px;background:var(--angel-gold-dim,rgba(240,200,80,0.1));color:var(--angel-gold);border:1px solid var(--border);cursor:pointer">Mine Roles</button>';
+  html += '</div>';
+  html += '<div id="iga-result" style="font-size:11px;color:var(--text-dim)">Manage identity lifecycle and access governance</div>';
+  html += '</div></div>';
+
+  // Row 2: SecOps Workflow + Templates
+  html += '<div class="two-col">';
+
+  // SecOps Workflow Card
+  html += '<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#9881;</span> SecOps Workflow Engine</span><span class="card-badge gold">V8.2</span></div>';
+  html += '<p style="color:var(--text-dim);font-size:11px;margin:0 0 12px">Multi-step security playbooks with approval gates and SLA tracking</p>';
+  html += '<button class="btn btn-sm" onclick="createWorkflow()" style="font-size:10px;padding:4px 10px;border-radius:6px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--border);cursor:pointer;margin-bottom:10px">+ Create Workflow</button>';
+  html += '<div id="wf-result" style="font-size:11px;color:var(--text-dim)">Create and execute security operations workflows</div>';
+  html += '</div>';
+
+  // Templates Card
+  html += '<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#128196;</span> Workflow Templates</span></div>';
+  if(templates&&templates.length){
+    html += '<div style="display:flex;flex-direction:column;gap:6px">';
+    templates.forEach(t=>{
+      const catColors = {incident:'var(--red)',vulnerability:'var(--angel-gold)',compliance:'var(--accent)',hunting:'var(--green)'};
+      const color = catColors[t.category]||'var(--text-dim)';
+      html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--card-hover);border-radius:6px;border:1px solid var(--border)">`;
+      html += `<div><span style="font-weight:600;font-size:12px;color:var(--text)">${t.name}</span><span style="font-size:10px;color:var(--text-dim);margin-left:8px">${t.steps} steps</span></div>`;
+      html += `<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:${color}22;color:${color};font-weight:700;text-transform:uppercase">${t.category}</span>`;
+      html += '</div>';
+    });
+    html += '</div>';
+  } else {
+    html += '<div class="empty">No templates available</div>';
+  }
+  html += '</div></div>';
+
+  mc.innerHTML = html;
+}
+
+async function runBAS(scenario) {
+  const el=document.getElementById('bas-result');
+  el.innerHTML='<span style="color:var(--accent)">Running '+scenario.replace(/_/g,' ')+' simulation...</span>';
+  const r=await fetch(BASE+'/api/v1/titan-grid/exposure/simulate?scenario='+scenario,{method:'POST',headers:authHeaders()}).then(r=>r.json()).catch(()=>null);
+  if(r&&!r.error){
+    const pct=r.effectiveness_pct||0;const color=pct>=80?'var(--green)':pct>=60?'var(--angel-gold)':'var(--red)';
+    el.innerHTML=`<div style="margin-bottom:8px"><span style="font-weight:700;color:${color};font-size:16px">${pct}%</span> <span style="color:var(--text-dim)">effectiveness</span></div>`+
+      `<div style="display:flex;gap:12px;flex-wrap:wrap"><span>&#9989; Passed: <b>${r.controls_passed}</b></span><span>&#10060; Failed: <b>${r.controls_failed}</b></span><span>&#127919; Attacks: <b>${r.attacks_simulated}</b></span><span>Exposure: <b style="color:var(--red)">${r.exposure_score}%</b></span></div>`+
+      (r.gaps&&r.gaps.length?`<div style="margin-top:8px;color:var(--red);font-size:10px">${r.gaps.join(' &bull; ')}</div>`:'');
+  } else el.innerHTML='<span style="color:var(--red)">Simulation failed</span>';
+}
+
+async function igaAction(action) {
+  const el=document.getElementById('iga-result');
+  el.innerHTML='<span style="color:var(--accent)">Processing...</span>';
+  let r;
+  if(action==='onboard'){
+    r=await fetch(BASE+'/api/v1/titan-grid/identity/onboard',{method:'POST',headers:authHeaders(),body:JSON.stringify({username:'user-'+Date.now(),roles:['viewer'],department:'security'})}).then(r=>r.json()).catch(()=>null);
+    if(r&&r.id) el.innerHTML=`<span style="color:var(--green)">&#9989; Onboarded:</span> ${r.username||r.id} <span style="color:var(--text-dim)">(${r.lifecycle_state})</span>`;
+    else el.innerHTML='<span style="color:var(--red)">Failed</span>';
+  } else if(action==='certify'){
+    r=await fetch(BASE+'/api/v1/titan-grid/identity/certification',{method:'POST',headers:authHeaders(),body:JSON.stringify({name:'Review '+new Date().toLocaleDateString()})}).then(r=>r.json()).catch(()=>null);
+    if(r&&r.id) el.innerHTML=`<span style="color:var(--green)">&#9989; Campaign started:</span> ${r.name} <span style="color:var(--text-dim)">(${r.identities_to_review} to review)</span>`;
+    else el.innerHTML='<span style="color:var(--red)">Failed</span>';
+  } else if(action==='mine'){
+    r=await fetchJSON('/api/v1/titan-grid/identity/mine-roles');
+    if(r) el.innerHTML=`<span style="color:var(--accent)">&#128270; Role Mining:</span> ${r.identities_analyzed} users, ${r.unique_roles} roles, <b style="color:var(--red)">${r.over_privileged_users}</b> over-privileged, ${r.suggested_consolidations} consolidation suggestions`;
+    else el.innerHTML='<span style="color:var(--red)">Failed</span>';
+  }
+}
+
+async function createWorkflow() {
+  const el=document.getElementById('wf-result');
+  el.innerHTML='<span style="color:var(--accent)">Creating workflow...</span>';
+  const r=await fetch(BASE+'/api/v1/titan-grid/workflow/create',{method:'POST',headers:authHeaders(),body:JSON.stringify({name:'IR Playbook',trigger:'alert'})}).then(r=>r.json()).catch(()=>null);
+  if(r&&r.id){
+    el.innerHTML=`<span style="color:var(--green)">&#9989; Created:</span> ${r.name} <span style="color:var(--text-dim)">(${r.step_count} steps, trigger: ${r.trigger})</span>`;
+    const exec=await fetch(BASE+'/api/v1/titan-grid/workflow/execute/'+r.id,{method:'POST',headers:authHeaders()}).then(r=>r.json()).catch(()=>null);
+    if(exec&&exec.id) el.innerHTML+=`<br><span style="color:var(--accent)">&#9654; Execution started:</span> step ${exec.current_step+1}/${exec.total_steps} <span style="color:var(--text-dim)">(${exec.status})</span>`;
+  } else el.innerHTML='<span style="color:var(--red)">Failed</span>';
 }
 
 async function updatePref(key, value) {

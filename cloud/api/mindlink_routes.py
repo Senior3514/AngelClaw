@@ -13,12 +13,12 @@ def mindlink_publish_intel(tenant_id: str = Header("dev-tenant", alias="X-TENANT
     return intelMarketplaceService_service.publish_intel(tenant_id, req)
 
 @router.post("/search-intel")
-def mindlink_search_intel(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), query: str, intel_type: str | None = None):
+def mindlink_search_intel(query: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), intel_type: str | None = None):
     from cloud.services.intel_marketplace import intelMarketplaceService_service
     return intelMarketplaceService_service.search_intel(tenant_id, query, intel_type)
 
 @router.post("/download-intel")
-def mindlink_download_intel(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), listing_id: str):
+def mindlink_download_intel(listing_id: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.intel_marketplace import intelMarketplaceService_service
     return intelMarketplaceService_service.download_intel(tenant_id, listing_id)
 
@@ -38,7 +38,7 @@ def mindlink_generate_executive(tenant_id: str = Header("dev-tenant", alias="X-T
     return reportGeneratorService_service.generate_executive(tenant_id, time_range_hours)
 
 @router.post("/generate-technical")
-def mindlink_generate_technical(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), incident_id: str):
+def mindlink_generate_technical(incident_id: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.report_generator import reportGeneratorService_service
     return reportGeneratorService_service.generate_technical(tenant_id, incident_id)
 
@@ -53,6 +53,6 @@ def mindlink_list_reports(tenant_id: str = Header("dev-tenant", alias="X-TENANT-
     return reportGeneratorService_service.list_reports(tenant_id)
 
 @router.get("/status")
-def mindlink_status(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def mindlink_status_2(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.report_generator import reportGeneratorService_service
     return reportGeneratorService_service.status(tenant_id)

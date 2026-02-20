@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-:: AngelClaw AGI Guardian -- Windows Uninstaller (V7.0.0)
+:: AngelClaw AGI Guardian -- Windows Uninstaller (V8.2.0)
 
 set "INSTALL_DIR=C:\AngelClaw"
 

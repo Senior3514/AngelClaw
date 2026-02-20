@@ -33,12 +33,12 @@ def neural_status(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     return trafficAnalysisService_service.status(tenant_id)
 
 @router.post("/analyze-query")
-def neural_analyze_query(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), domain: str, query_type: str = 'A'):
+def neural_analyze_query(domain: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), query_type: str = 'A'):
     from cloud.services.dns_security import dNSSecurityService_service
     return dNSSecurityService_service.analyze_query(tenant_id, domain, query_type)
 
 @router.post("/detect-dga")
-def neural_detect_dga(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), domains: list[str]):
+def neural_detect_dga(domains: list[str], tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.dns_security import dNSSecurityService_service
     return dNSSecurityService_service.detect_dga(tenant_id, domains)
 
@@ -53,6 +53,6 @@ def neural_get_sinkhole_list(tenant_id: str = Header("dev-tenant", alias="X-TENA
     return dNSSecurityService_service.get_sinkhole_list(tenant_id)
 
 @router.get("/status")
-def neural_status(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def neural_status_2(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.dns_security import dNSSecurityService_service
     return dNSSecurityService_service.status(tenant_id)

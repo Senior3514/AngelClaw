@@ -8,17 +8,17 @@ router = APIRouter(prefix="/api/v1/apex", tags=["Apex Predator"])
 
 
 @router.post("/start-pentest")
-def apex_start_pentest(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), target: str, scope: str = 'internal'):
+def apex_start_pentest(target: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), scope: str = 'internal'):
     from cloud.services.pentest_auto import pentestAutoService_service
     return pentestAutoService_service.start_pentest(tenant_id, target, scope)
 
 @router.get("/get-findings")
-def apex_get_findings(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), run_id: str):
+def apex_get_findings(run_id: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.pentest_auto import pentestAutoService_service
     return pentestAutoService_service.get_findings(tenant_id, run_id)
 
 @router.post("/verify-remediation")
-def apex_verify_remediation(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), finding_id: str):
+def apex_verify_remediation(finding_id: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.pentest_auto import pentestAutoService_service
     return pentestAutoService_service.verify_remediation(tenant_id, finding_id)
 
@@ -38,12 +38,12 @@ def apex_create_campaign(tenant_id: str = Header("dev-tenant", alias="X-TENANT-I
     return redTeamService_service.create_campaign(tenant_id, req)
 
 @router.post("/execute-phase")
-def apex_execute_phase(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), campaign_id: str, phase: int = 0):
+def apex_execute_phase(campaign_id: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), phase: int = 0):
     from cloud.services.red_team import redTeamService_service
     return redTeamService_service.execute_phase(tenant_id, campaign_id, phase)
 
 @router.get("/get-gaps")
-def apex_get_gaps(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID"), campaign_id: str):
+def apex_get_gaps(campaign_id: str, tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.red_team import redTeamService_service
     return redTeamService_service.get_gaps(tenant_id, campaign_id)
 
@@ -53,6 +53,6 @@ def apex_list_campaigns(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID
     return redTeamService_service.list_campaigns(tenant_id)
 
 @router.get("/status")
-def apex_status(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
+def apex_status_2(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")):
     from cloud.services.red_team import redTeamService_service
     return redTeamService_service.status(tenant_id)

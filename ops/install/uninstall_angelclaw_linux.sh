@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AngelClaw AGI Guardian -- Linux Uninstaller (V7.0.0)
+# AngelClaw AGI Guardian -- Linux Uninstaller (V8.2.0)
 #
 # Stops all AngelClaw containers, removes systemd service, Docker images,
 # volumes, and optionally deletes the install directory.
@@ -36,7 +36,7 @@ err()  { echo -e "  ${R}[X]${N} $1"; }
 echo ""
 echo -e "${B}${R}================================================${N}"
 echo -e "${B}${R}  AngelClaw AGI Guardian -- Linux Uninstaller${N}"
-echo -e "${B}${R}  V7.0.0 -- Empyrion${N}"
+echo -e "${B}${R}  V8.2.0 -- Titan Grid${N}"
 echo -e "${B}${R}================================================${N}"
 echo ""
 

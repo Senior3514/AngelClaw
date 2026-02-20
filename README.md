@@ -1,4 +1,4 @@
-# AngelClaw V8.1.0 -- Nexus Prime: Quantum Crypto, Attack Surface, Runtime Protection
+# AngelClaw V8.2.0 -- Titan Grid: Exposure Validation, Identity Governance, SecOps Workflow
 
 **Guardian angel, not gatekeeper.**
 
@@ -18,7 +18,8 @@ analysis, reading, summarizing, reasoning, creating -- flows freely.
 
 | Version | Codename | Highlights |
 |---------|----------|------------|
-| **V8.1.0** | **Nexus Prime** | AGI Defense Engine, Autonomous Response, Cross-Org Threat Federation, SOC Autopilot |
+| **V8.2.0** | **Titan Grid** | Exposure Validation (BAS), Identity Governance (IGA), SecOps Workflow Automation |
+| V8.1.0 | Nexus Prime | Quantum Crypto, Attack Surface Management, Runtime Protection |
 | V7.9.0 | Apex Predator | Ooda Loop, Self Healing, Breach Prevention |
 | V7.8.0 | Ghost Protocol | Pentest Auto, Red Team |
 | V7.7.0 | Mind Link | Deception Depth, Moving Target |
@@ -255,23 +256,42 @@ Set `ANGELCLAW_KEEP_DATA=true` (Linux/macOS) or `-KeepData` (Windows) to preserv
 
 ```bash
 curl http://127.0.0.1:8500/health
-# {"status":"ok","version":"7.0.0",...}
+# {"status":"ok","version":"8.2.0",...}
 
 python3 -m pytest tests/ -q
-# 931+ passed
+# 2988+ passed
 ```
 
 Dashboard: **http://127.0.0.1:8500/ui** -- Default login: `admin` / `fzMiSbDRGylsWrsaljMv7UxzrwdXCdTe` (change immediately!)
 
 ---
 
-## What's New in V7.0.0 -- Empyrion
+## What's New in V8.2.0 -- Titan Grid
 
-### AGI Defense Engine (V7.0)
-- **Self-programming defense rules**: threat pattern analysis, auto-generation, validation, kill-switch deployment
-- **Autonomous Incident Response**: full containment/eradication/recovery lifecycle with human override
-- **Cross-Org Threat Federation**: organization trust network, anonymous indicator sharing, collective defense scoring
-- **SOC Autopilot**: AGI-driven triage, investigation orchestration, analyst assignment, shift handoff, workload balancing
+### Continuous Exposure Validation (V8.2)
+- **Breach and Attack Simulation (BAS)**: full-spectrum, ransomware, data exfiltration, lateral movement, and phishing scenarios
+- **Control Effectiveness Testing**: individual security control validation against specific attack types
+- **Exposure Trending**: historical exposure score tracking, drift detection, remediation verification loops
+
+### Identity Governance & Administration (V8.2)
+- **User Lifecycle Management**: automated joiner/mover/leaver processes with role provisioning
+- **Access Certification Campaigns**: periodic entitlement reviews with completion tracking
+- **Role Mining & Optimization**: over-privileged user detection, role consolidation recommendations
+- **Segregation of Duties (SoD)**: automated conflict detection across admin/auditor, developer/deployer, approver/requester pairs
+
+### SecOps Workflow Automation (V8.2)
+- **Visual Workflow Builder**: multi-step security playbooks with conditional branching
+- **Approval Gates**: configurable approval requirements with escalation policies
+- **Built-in Templates**: Incident Response, Vulnerability Triage, Access Review, Threat Hunt, Data Breach workflows
+- **SLA Enforcement**: execution tracking with step-level progress and completion metrics
+
+### Previous Highlights
+
+#### Nexus Prime (V8.1)
+- Quantum-Resistant Cryptography, Attack Surface Management, Runtime Application Self-Protection
+
+#### AGI Defense Engine (V7.0)
+- Self-programming defense rules, Autonomous Incident Response, Cross-Org Threat Federation, SOC Autopilot
 
 ### Autonomous Threat Hunting (V6.5)
 - **Threat Hunter**: hypothesis-driven hunting, IOC correlation, hunt playbooks
@@ -340,8 +360,10 @@ Dashboard: **http://127.0.0.1:8500/ui** -- Default login: `admin` / `fzMiSbDRGyl
 | Omniguard | `/api/v1/omniguard` | Cloud connectors, CSPM, SaaS, hybrid mesh |
 | Prometheus | `/api/v1/prometheus` | Threat hunting, MITRE, adversary sim |
 | Empyrion | `/api/v1/empyrion` | AGI defense, autonomous response, SOC |
+| Nexus Prime | `/api/v1/nexus-prime` | Quantum crypto, attack surface, RASP |
+| Titan Grid | `/api/v1/titan-grid` | Exposure validation, identity governance, SecOps workflow |
 
-**100+ REST API endpoints** across 27 route modules.
+**120+ REST API endpoints** across 29 route modules.
 
 ---
 
@@ -377,8 +399,8 @@ AngelClaw/
 ├── cloud/                 # SaaS backend (orchestration, port 8500)
 │   ├── angelclaw/         #   Brain (95+ intents), Shield, Daemon (25 cycles), Actions
 │   ├── guardian/          #   Angel Legion: 12 wardens + orchestrator
-│   ├── api/               #   27 route modules, 100+ REST endpoints
-│   ├── services/          #   50+ services (AI, ML, SOAR, SIEM, zero-trust, etc.)
+│   ├── api/               #   29 route modules, 120+ REST endpoints
+│   ├── services/          #   96+ services (AI, ML, SOAR, SIEM, zero-trust, etc.)
 │   ├── auth/              #   JWT, API keys, custom RBAC
 │   ├── middleware/        #   Rate limiter, CORS, security headers
 │   ├── websocket/         #   Real-time event/alert feeds
@@ -390,7 +412,7 @@ AngelClaw/
 ├── extensions/            # Chrome/DuckDuckGo browser extensions
 ├── plugins/               # Plugin examples
 ├── ops/                   # Installers, Docker, systemd, CLI
-├── tests/                 # 931+ tests (8 test suites)
+├── tests/                 # 2988+ tests (70 test suites)
 └── docs/                  # Architecture, changelog, install guides
 ```
 
@@ -411,7 +433,7 @@ AngelClaw/
 | **Deep Quill** | Forensic | Evidence collection and forensic investigation |
 | **Scroll Keeper** | Audit | Action verification and compliance auditing |
 
-### Seraph Brain -- 95+ NLP Intents
+### Seraph Brain -- 119+ NLP Intents
 
 Natural language security operations in English and Hebrew:
 
@@ -458,15 +480,15 @@ The daemon runs continuously in the background, executing a 25-step cycle:
 
 | Metric | Value |
 |--------|-------|
-| Tests | **931+ passing** (0 failures) |
-| NLP Intents | **95+** |
-| API Endpoints | **100+** |
-| Route Modules | **27** |
-| Services | **50+** |
+| Tests | **2988+ passing** (0 failures) |
+| NLP Intents | **119+** |
+| API Endpoints | **120+** |
+| Route Modules | **29** |
+| Services | **96+** |
 | DB Tables | **30+** |
 | Daemon Cycles | **25** |
 | Wardens | **12** |
-| Version | **7.0.0** |
+| Version | **8.2.0** |
 
 ---
 
@@ -536,7 +558,7 @@ AngelClaw **absolutely refuses to leak secrets**.
 
 | Document | Description |
 |----------|-------------|
-| [docs/CHANGELOG.md](docs/CHANGELOG.md) | Version progression V1.0.0 -> V7.0.0 |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | Version progression V1.0.0 -> V8.2.0 |
 | [docs/release_notes.md](docs/release_notes.md) | Detailed release notes for every version |
 | [docs/install_uninstall_by_os.md](docs/install_uninstall_by_os.md) | Install/uninstall for every OS |
 | [docs/angelclaw_lexicon.md](docs/angelclaw_lexicon.md) | Angel Legion terminology reference |
@@ -553,5 +575,5 @@ See [LICENSE](LICENSE).
 
 ---
 
-*AngelClaw V7.0.0 -- Empyrion: Full AGI Autonomous Defense.*
+*AngelClaw V8.2.0 -- Titan Grid: Exposure Validation, Identity Governance, SecOps Workflow.*
 *Guardian angel, not gatekeeper.*
