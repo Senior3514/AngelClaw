@@ -1,5 +1,12 @@
 # AngelClaw AGI Guardian — Changelog
 
+## V7.4.0 — Dark Web Radar (2026-02-20)
+### Extended Threat Intelligence & Dark Web Monitoring
+- Darkweb Monitor: new service module
+- Supply Chain: new service module
+- Brain V7.4: 2 new intents — total 103+ intents
+
+
 ## V7.3.0 — Sentinel Eye (2026-02-20)
 ### Advanced Observability & Log Intelligence
 - Log Analytics: new service module
