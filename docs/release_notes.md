@@ -1,5 +1,12 @@
 # AngelClaw AGI Guardian — Release Notes
 
+## V8.1.0 — Nexus Prime (2026-02-20)
+### Quantum Crypto, Attack Surface Management & Runtime Protection
+- **Quantum-Resistant Cryptography** — Post-quantum key exchange (Kyber/CRYSTALS-Kyber), hash-based signatures (SPHINCS+), crypto-agility assessment, certificate inventory scanning, PQC keypair generation, migration planning and tracking
+- **Attack Surface Management** — Continuous external asset discovery, shadow IT detection, exposure scoring, SSL/TLS certificate monitoring, API endpoint discovery, attack surface change tracking
+- **Runtime Application Self-Protection** — Real-time request payload analysis, SQL injection prevention (UNION/DROP/OR 1=1), XSS attack blocking (<script>/onerror), path traversal detection (../), deserialization attack detection, custom RASP rule engine
+
+
 ## V8.0.0 — Ascendant (2026-02-20)
 ### Next-Gen Autonomous Defense Platform
 - Ooda Loop: new service module

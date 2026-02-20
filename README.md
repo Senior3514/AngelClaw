@@ -1,4 +1,4 @@
-# AngelClaw V8.0.0 -- Ascendant: Next-Gen Autonomous Defense Platform
+# AngelClaw V8.1.0 -- Nexus Prime: Quantum Crypto, Attack Surface, Runtime Protection
 
 **Guardian angel, not gatekeeper.**
 
@@ -18,7 +18,7 @@ analysis, reading, summarizing, reasoning, creating -- flows freely.
 
 | Version | Codename | Highlights |
 |---------|----------|------------|
-| **V8.0.0** | **Ascendant** | AGI Defense Engine, Autonomous Response, Cross-Org Threat Federation, SOC Autopilot |
+| **V8.1.0** | **Nexus Prime** | AGI Defense Engine, Autonomous Response, Cross-Org Threat Federation, SOC Autopilot |
 | V7.9.0 | Apex Predator | Ooda Loop, Self Healing, Breach Prevention |
 | V7.8.0 | Ghost Protocol | Pentest Auto, Red Team |
 | V7.7.0 | Mind Link | Deception Depth, Moving Target |

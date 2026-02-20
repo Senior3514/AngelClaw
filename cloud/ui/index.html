@@ -398,7 +398,7 @@
     <h1>
       <span class="angel-icon">&#128737;</span>
       <span class="brand-text"><span class="brand-name">AngelClaw</span><span class="brand-sub">AGI Guardian</span></span>
-      <span class="version-pill">V8.0.0</span>
+      <span class="version-pill">V8.1.0</span>
     </h1>
   </div>
   <div class="header-right">
@@ -542,7 +542,7 @@
 </div>
 
 <script>
-/* ===== ANGELCLAW V8.0.0 "EMPYRION" ADMIN CONSOLE ===== */
+/* ===== ANGELCLAW V8.1.0 "EMPYRION" ADMIN CONSOLE ===== */
 const BASE = window.location.origin;
 const chatHistory = [];
 let authToken = localStorage.getItem('angelclaw_token') || '';
@@ -907,7 +907,7 @@ async function renderSettings(mc) {
   let html = `<div class="page-title">&#9881; Settings</div><div class="page-subtitle">Guardian configuration and preferences</div>`;
   html += '<div class="two-col">';
   // Preferences
-  html += '<div class="card"><div class="card-header"><span class="card-title">Guardian Preferences</span><span class="card-badge gold">V8.0.0</span></div><div style="display:flex;flex-direction:column;gap:8px">';
+  html += '<div class="card"><div class="card-header"><span class="card-title">Guardian Preferences</span><span class="card-badge gold">V8.1.0</span></div><div style="display:flex;flex-direction:column;gap:8px">';
   const autonomy=prefs?prefs.autonomy_level:'suggest_only', scanFreq=prefs?prefs.scan_frequency_minutes:10, reporting=prefs?prefs.reporting_level:'normal';
   html += `<div class="pref-row"><label class="pref-label">Autonomy:</label><select class="pref-select" id="pref-autonomy" onchange="updatePref('autonomy_level',this.value)"><option value="observe_only" ${autonomy==='observe_only'?'selected':''}>Observe Only</option><option value="suggest_only" ${autonomy==='suggest_only'?'selected':''}>Suggest Only</option><option value="assist" ${autonomy==='assist'?'selected':''}>Assist</option><option value="autonomous_apply" ${autonomy==='autonomous_apply'?'selected':''}>Autonomous</option></select></div>`;
   html += `<div class="pref-row"><label class="pref-label">Scan (min):</label><select class="pref-select" id="pref-scan" onchange="updatePref('scan_frequency_minutes',parseInt(this.value))"><option value="1" ${scanFreq==1?'selected':''}>1</option><option value="5" ${scanFreq==5?'selected':''}>5</option><option value="10" ${scanFreq==10?'selected':''}>10</option><option value="30" ${scanFreq==30?'selected':''}>30</option><option value="60" ${scanFreq==60?'selected':''}>60</option></select></div>`;
