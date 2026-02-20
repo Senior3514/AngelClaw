@@ -1,5 +1,12 @@
 # AngelClaw AGI Guardian — Release Notes
 
+## V7.3.0 — Sentinel Eye (2026-02-20)
+### Advanced Observability & Log Intelligence
+- Log Analytics: new service module
+- Distributed Tracing: new service module
+- Brain V7.3: 2 new intents — total 101+ intents
+
+
 ## V7.2.0 — Neural Mesh (2026-02-20)
 ### AI-Enhanced Network Intelligence
 - Traffic Analysis: new service module
