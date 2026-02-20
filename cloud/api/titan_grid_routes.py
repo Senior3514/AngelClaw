@@ -141,7 +141,7 @@ def titan_grid_status(tenant_id: str = Header("dev-tenant", alias="X-TENANT-ID")
     from cloud.services.identity_governance import identity_governance_service
     from cloud.services.secops_workflow import secops_workflow_service
     return {
-        "version": "8.2.0",
+        "version": "10.0.0",
         "codename": "Titan Grid",
         "exposure_validation": exposure_validation_service.status(tenant_id),
         "identity_governance": identity_governance_service.status(tenant_id),

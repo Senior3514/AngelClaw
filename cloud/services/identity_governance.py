@@ -149,7 +149,7 @@ class IdentityGovernanceService:
         """Get identity governance status."""
         return {
             "service": "IdentityGovernanceService",
-            "version": "8.2.0",
+            "version": "10.0.0",
             "tenant_id": tenant_id,
             "total_identities": len(self._identities.get(tenant_id, {})),
             "active_campaigns": len(self._campaigns.get(tenant_id, {})),

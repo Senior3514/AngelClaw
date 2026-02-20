@@ -32,7 +32,7 @@
   --cyan:hsl(185 80% 55%);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;overflow:hidden;height:100vh}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;overflow:hidden;height:100vh;background-image:radial-gradient(ellipse at 10% 90%,hsl(var(--aegis-cyan) / 0.02) 0%,transparent 40%),radial-gradient(ellipse at 90% 10%,hsl(var(--aegis-purple) / 0.02) 0%,transparent 40%)}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:hsl(var(--border));border-radius:4px}
 a{color:hsl(var(--primary));text-decoration:none}
 input,select,textarea{font-family:var(--font);font-size:13px;background:var(--surface);border:1px solid hsl(var(--border));border-radius:var(--radius-xs);color:var(--text);padding:8px 12px;outline:none;transition:border-color .2s}
@@ -117,12 +117,14 @@ button{font-family:var(--font);cursor:pointer;border:none;font-size:13px}
 .alert-row.unresolved{background:hsl(0 72% 51% / 0.04);border-color:hsl(0 72% 51% / 0.15)}
 
 .tbl{width:100%;border-collapse:collapse;font-size:12px}
-.tbl th{text-align:left;padding:7px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);border-bottom:1px solid hsl(var(--border))}
-.tbl td{padding:7px 10px;border-bottom:1px solid hsl(var(--border) / 0.2)}
-.tbl tr:hover td{background:var(--primary-dim)}
+.tbl th{text-align:left;padding:7px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);border-bottom:1px solid hsl(var(--border));background:hsl(var(--card) / 0.3)}
+.tbl td{padding:7px 10px;border-bottom:1px solid hsl(var(--border) / 0.15);transition:background 0.15s}
+.tbl tr:hover td{background:hsl(var(--primary) / 0.06)}
 
 .loading{text-align:center;padding:40px;color:var(--text-muted);font-size:12px}
-.empty{text-align:center;padding:18px;color:var(--text-muted);font-size:11px}
+.loading::before{content:'';display:block;width:24px;height:24px;border:2px solid hsl(var(--border));border-top-color:hsl(var(--primary));border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:18px;color:var(--text-muted);font-size:11px;font-style:italic}
 
 .chat-panel{width:300px;min-width:300px;border-left:1px solid hsl(var(--border) / 0.3);display:flex;flex-direction:column;background:hsl(228 62% 3.5% / 0.97)}
 .chat-header{padding:10px 14px;border-bottom:1px solid hsl(var(--border) / 0.3);font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
@@ -139,12 +141,15 @@ button{font-family:var(--font);cursor:pointer;border:none;font-size:13px}
 .chat-send{background:hsl(var(--primary));color:#000;font-weight:700;padding:7px 12px;border-radius:var(--radius-xs);font-size:11px}
 .chat-toggle{display:none;position:fixed;bottom:16px;right:16px;width:44px;height:44px;border-radius:50%;background:hsl(var(--primary));color:#000;font-size:18px;z-index:200;box-shadow:0 4px 20px hsl(var(--aegis-cyan) / 0.3)}
 
-.login-page{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:999}
-.login-box{background:var(--surface);border:1px solid hsl(var(--border));border-radius:var(--radius);padding:32px;width:340px;text-align:center;backdrop-filter:blur(16px)}
-.login-box h2{font-size:20px;font-weight:800;color:hsl(var(--primary));margin-bottom:4px}
-.login-sub{font-size:11px;color:var(--text-muted);margin-bottom:18px}
-.login-box input{width:100%;margin-bottom:8px;padding:9px 12px}
-.login-box button{width:100%;padding:9px;background:hsl(var(--primary));color:#000;font-weight:700;border-radius:var(--radius-xs);font-size:13px;margin-top:4px}
+.login-page{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:999;background-image:radial-gradient(ellipse at 20% 50%,hsl(var(--aegis-cyan) / 0.04) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,hsl(var(--aegis-purple) / 0.04) 0%,transparent 50%)}
+.login-box{background:hsl(var(--card) / 0.7);border:1px solid hsl(var(--border) / 0.5);border-radius:var(--radius);padding:36px 32px;width:360px;text-align:center;backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);box-shadow:0 0 60px hsl(var(--aegis-cyan) / 0.06),0 24px 48px rgba(0,0,0,0.3);animation:fadeIn 0.6s ease-out}
+.login-logo{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,hsl(var(--aegis-cyan)),hsl(var(--aegis-purple)));display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;margin:0 auto 16px;box-shadow:0 0 30px hsl(var(--aegis-cyan) / 0.2);animation:float 4s ease-in-out infinite}
+.login-box h2{font-size:22px;font-weight:900;margin-bottom:3px}
+.login-sub{font-size:10px;color:var(--text-muted);margin-bottom:20px;letter-spacing:0.5px}
+.login-box input{width:100%;margin-bottom:8px;padding:10px 14px;background:hsl(var(--card) / 0.5);border:1px solid hsl(var(--border) / 0.4);transition:all .2s}
+.login-box input:focus{border-color:hsl(var(--primary));box-shadow:0 0 12px hsl(var(--aegis-cyan) / 0.1)}
+.login-box button{width:100%;padding:10px;background:linear-gradient(135deg,hsl(var(--aegis-cyan)),hsl(185 80% 45%));color:#000;font-weight:700;border-radius:var(--radius-xs);font-size:13px;margin-top:6px;transition:all .2s;box-shadow:0 4px 16px hsl(var(--aegis-cyan) / 0.2)}
+.login-box button:hover{box-shadow:0 4px 24px hsl(var(--aegis-cyan) / 0.35);transform:translateY(-1px)}
 .login-error{color:var(--red);font-size:11px;margin-bottom:6px;display:none}
 
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:500;align-items:center;justify-content:center}
@@ -184,12 +189,14 @@ button{font-family:var(--font);cursor:pointer;border:none;font-size:13px}
 
 <div class="login-page" id="login-page" style="display:none">
   <div class="login-box">
-    <h2>&#10040; AngelClaw</h2>
-    <div class="login-sub">V10.0.0 Seraph &mdash; Autonomous AI Defense</div>
+    <div class="login-logo">&#10040;</div>
+    <h2 class="text-gradient">AngelClaw</h2>
+    <div class="login-sub">V10.0.0 SERAPH &mdash; AUTONOMOUS AI DEFENSE</div>
     <div class="login-error" id="login-error"></div>
     <input type="text" id="login-user" placeholder="Username" autocomplete="username"/>
     <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password"/>
     <button onclick="doLogin()">Sign In</button>
+    <div style="margin-top:14px;font-size:9px;color:var(--text-muted)">Guardian angel, not gatekeeper.</div>
   </div>
 </div>
 

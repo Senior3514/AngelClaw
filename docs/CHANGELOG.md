@@ -1,4 +1,23 @@
-# AngelClaw AGI Guardian — Changelog
+# AngelClaw — Changelog
+
+## V10.0.0 — Seraph (2026-02-20)
+### Streamlined Platform, Zero Mock Data, Real-Time Dashboard
+- Complete UI rewrite: consolidated 20 pages to 10 focused pages
+- Removed all mock/fallback data — every UI value from real API endpoints
+- Dashboard: real-time Halo Score, threat landscape, fleet distribution, guardian activity
+- Fleet: live mesh topology, agent table, micro-segmentation zones
+- Alerts: real-time feed with severity badges, SOAR stats integration
+- Angel Legion: live warden status from orchestrator, threat matrix
+- Threat Intel: live feeds, IOC matches, MITRE ATT&CK coverage
+- Analytics: 7-day threat matrix, ML anomaly stats, learning feedback
+- AI Engine: Seraph Brain health gauge, model registry, AGI defense status
+- Zero Trust: trust distribution, session stats, device assessment
+- Policies: snapshots, natural language policies, playbook management
+- Settings: org overview, tenant management, RBAC configuration
+- Refined glassmorphic design: deeper navy, stronger blur, fade-in animations
+- WebSocket auto-refresh on alerts page
+- README rewritten: focused, professional, no bloat
+- Version bumped across all project files
 
 ## V8.2.0 — Titan Grid (2026-02-20)
 ### Continuous Exposure Validation, Identity Governance & SecOps Workflow Automation

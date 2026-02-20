@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AngelClaw AGI Guardian -- macOS Installer (V8.2.0)
+# AngelClaw AGI Guardian -- macOS Installer (V10.0.0)
 #
 # Installs the full AngelClaw stack (ANGELNODE + Cloud + Ollama) on macOS
 # using Docker Desktop + Docker Compose. Auto-installs Homebrew and Docker
@@ -63,7 +63,7 @@ trap cleanup EXIT
 echo ""
 echo -e "${B}${C}================================================${N}"
 echo -e "${B}${C}  AngelClaw AGI Guardian -- macOS Installer${N}"
-echo -e "${B}${C}  V8.2.0 -- Titan Grid${N}"
+echo -e "${B}${C}  V10.0.0 -- Titan Grid${N}"
 echo -e "${B}${C}================================================${N}"
 echo ""
 
@@ -325,5 +325,5 @@ if [ "$LLM" = "true" ]; then
   echo ""
 fi
 
-echo -e "  ${C}AngelClaw V8.2.0 -- Titan Grid -- guardian angel, not gatekeeper.${N}"
+echo -e "  ${C}AngelClaw V10.0.0 -- Titan Grid -- guardian angel, not gatekeeper.${N}"
 echo ""

@@ -66,7 +66,7 @@ async def lifespan(app: FastAPI):
 
     await start_daemon()
     logger.info(
-        "AngelClaw AGI Guardian 8.2.0 started"
+        "AngelClaw V10.0.0 Seraph started"
         " — tables, heartbeat, orchestrator, Wazuh, shield, daemon"
     )
     yield
@@ -77,8 +77,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="AngelClaw AGI Guardian API",
-    version="8.2.0",
+    title="AngelClaw API",
+    version="10.0.0",
     lifespan=lifespan,
 )
 
@@ -424,7 +424,7 @@ def health_check():
     orch = angel_orchestrator.status()
     return {
         "status": "ok",
-        "version": "8.2.0",
+        "version": "10.0.0",
         "orchestrator": orch["running"],
         "agents": {name: info["status"] for name, info in orch.get("agents", {}).items()},
     }

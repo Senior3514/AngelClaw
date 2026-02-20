@@ -1,5 +1,9 @@
 # AngelClaw AGI Guardian — Release Notes
 
+## V10.0.0 — Titan Grid (2026-02-20)
+### Major Version Milestone
+- Version bump to V10.0.0 marking a major platform milestone across all components, installers, and extensions.
+
 ## V8.2.0 — Titan Grid (2026-02-20)
 ### Continuous Exposure Validation, Identity Governance & SecOps Workflow Automation
 - **Continuous Exposure Validation (BAS)** — Breach and attack simulation engine with 5 attack scenarios (full-spectrum, ransomware, data exfiltration, lateral movement, phishing). Per-control effectiveness testing, exposure score trending, gap identification, remediation verification loops. Measures actual exposure rather than theoretical risk.

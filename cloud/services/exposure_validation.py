@@ -116,7 +116,7 @@ class ExposureValidationService:
         tenant_data = self._store.get(tenant_id, {})
         return {
             "service": "ExposureValidationService",
-            "version": "8.2.0",
+            "version": "10.0.0",
             "tenant_id": tenant_id,
             "total_items": len(tenant_data),
         }

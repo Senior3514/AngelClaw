@@ -130,7 +130,7 @@ class SecOpsWorkflowService:
         """Get SecOps workflow service status."""
         return {
             "service": "SecOpsWorkflowService",
-            "version": "8.2.0",
+            "version": "10.0.0",
             "tenant_id": tenant_id,
             "total_workflows": len(self._workflows.get(tenant_id, {})),
             "active_executions": len([e for e in self._executions.get(tenant_id, {}).values() if e.get("status") == "running"]),
