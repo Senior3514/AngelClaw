@@ -3,204 +3,189 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#060b14">
-<title>AngelClaw V8.2.0 Titan Grid — Console</title>
+<meta name="theme-color" content="#050a12">
+<title>AngelClaw V10.0.0 Seraph — Console</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* Lovable design tokens — HSL format */
-  --background:228 60% 4%;--foreground:210 40% 92%;
-  --card:228 45% 8%;--card-foreground:210 40% 92%;
+  --background:228 62% 3.5%;--foreground:210 40% 92%;
+  --card:228 45% 7%;--card-foreground:210 40% 92%;
   --primary:185 80% 55%;--primary-foreground:228 60% 4%;
-  --secondary:228 30% 15%;--secondary-foreground:210 40% 85%;
-  --muted:228 25% 12%;--muted-foreground:215 20% 55%;
-  --accent:228 35% 18%;--accent-foreground:185 80% 55%;
+  --secondary:228 30% 14%;--secondary-foreground:210 40% 85%;
+  --muted:228 25% 11%;--muted-foreground:215 20% 50%;
+  --accent:228 35% 16%;--accent-foreground:185 80% 55%;
   --destructive:0 72% 51%;--destructive-foreground:210 40% 98%;
-  --border:228 25% 16%;--input:228 25% 14%;--ring:185 80% 55%;
+  --border:228 25% 14%;--input:228 25% 12%;--ring:185 80% 55%;
   --aegis-cyan:185 80% 55%;--aegis-green:152 70% 50%;--aegis-amber:38 92% 55%;
   --aegis-red:0 72% 55%;--aegis-purple:265 70% 60%;--aegis-glow:185 100% 70%;
-  --aegis-navy:228 60% 4%;--aegis-surface:228 45% 8%;
   --radius:0.75rem;--radius-sm:0.5rem;--radius-xs:0.375rem;
   --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
-  /* Convenience aliases */
-  --bg:hsl(228 60% 4%);--surface:hsl(228 45% 8% / 0.6);--surface2:hsl(228 25% 12% / 0.3);
-  --text:hsl(210 40% 92%);--text-dim:hsl(210 40% 85%);--text-muted:hsl(215 20% 55%);
-  --primary-c:hsl(185 80% 55%);--primary-dim:hsl(185 80% 55% / 0.1);
-  --green:hsl(152 70% 50%);--green-dim:hsl(152 70% 50% / 0.1);
-  --amber:hsl(38 92% 55%);--amber-dim:hsl(38 92% 55% / 0.1);
-  --red:hsl(0 72% 55%);--red-dim:hsl(0 72% 55% / 0.1);
-  --purple:hsl(265 70% 60%);--purple-dim:hsl(265 70% 60% / 0.1);
+  --bg:hsl(228 62% 3.5%);--surface:hsl(228 45% 7% / 0.6);--surface2:hsl(228 25% 11% / 0.3);
+  --text:hsl(210 40% 92%);--text-dim:hsl(210 40% 82%);--text-muted:hsl(215 20% 50%);
+  --primary-c:hsl(185 80% 55%);--primary-dim:hsl(185 80% 55% / 0.08);
+  --green:hsl(152 70% 50%);--green-dim:hsl(152 70% 50% / 0.08);
+  --amber:hsl(38 92% 55%);--amber-dim:hsl(38 92% 55% / 0.08);
+  --red:hsl(0 72% 55%);--red-dim:hsl(0 72% 55% / 0.08);
+  --purple:hsl(265 70% 60%);--purple-dim:hsl(265 70% 60% / 0.08);
   --cyan:hsl(185 80% 55%);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;overflow:hidden;height:100vh}
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
-a{color:var(--primary);text-decoration:none}
-input,select,textarea{font-family:var(--font);font-size:13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text);padding:8px 12px;outline:none;transition:border-color .2s}
-input:focus{border-color:var(--primary)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:hsl(var(--border));border-radius:4px}
+a{color:hsl(var(--primary));text-decoration:none}
+input,select,textarea{font-family:var(--font);font-size:13px;background:var(--surface);border:1px solid hsl(var(--border));border-radius:var(--radius-xs);color:var(--text);padding:8px 12px;outline:none;transition:border-color .2s}
+input:focus{border-color:hsl(var(--primary))}
 button{font-family:var(--font);cursor:pointer;border:none;font-size:13px}
 
-/* Glass card — Lovable faithful */
-.glass{background:hsl(var(--card) / 0.6);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border:1px solid hsl(var(--border) / 0.5);border-radius:var(--radius);padding:20px;transition:all 0.3s ease}
-.glass:hover{border-color:hsl(var(--border) / 0.7)}
-.glass-strong{background:hsl(var(--card) / 0.8);backdrop-filter:blur(24px) saturate(200%);-webkit-backdrop-filter:blur(24px) saturate(200%);border:1px solid hsl(var(--border) / 0.6);border-radius:var(--radius);padding:20px}
-.glow-cyan{box-shadow:0 0 20px hsl(var(--aegis-cyan) / 0.15),0 0 60px hsl(var(--aegis-cyan) / 0.05)}
-.glow-amber{box-shadow:0 0 20px hsl(var(--aegis-amber) / 0.2),0 0 60px hsl(var(--aegis-amber) / 0.05)}
-.glow-red{box-shadow:0 0 20px hsl(var(--aegis-red) / 0.2)}
+.glass{background:hsl(var(--card) / 0.55);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid hsl(var(--border) / 0.4);border-radius:var(--radius);padding:20px;transition:all 0.3s ease}
+.glass:hover{border-color:hsl(var(--border) / 0.65);background:hsl(var(--card) / 0.65)}
+.glass-strong{background:hsl(var(--card) / 0.8);backdrop-filter:blur(28px) saturate(200%);-webkit-backdrop-filter:blur(28px) saturate(200%);border:1px solid hsl(var(--border) / 0.5);border-radius:var(--radius);padding:20px}
+.glow-cyan{box-shadow:0 0 24px hsl(var(--aegis-cyan) / 0.12),0 0 60px hsl(var(--aegis-cyan) / 0.04)}
+.glow-amber{box-shadow:0 0 24px hsl(var(--aegis-amber) / 0.15)}
+.glow-red{box-shadow:0 0 20px hsl(var(--aegis-red) / 0.15)}
 .text-gradient{background:linear-gradient(135deg,hsl(var(--aegis-cyan)),hsl(var(--aegis-purple)));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .aurora{position:relative}
-.aurora::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(135deg,hsl(var(--aegis-cyan)/0.4),hsl(var(--aegis-purple)/0.2),hsl(var(--aegis-cyan)/0.1),hsl(var(--aegis-purple)/0.4));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:aurora-shift 6s ease-in-out infinite;pointer-events:none;z-index:0}
+.aurora::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(135deg,hsl(var(--aegis-cyan)/0.35),hsl(var(--aegis-purple)/0.15),hsl(var(--aegis-cyan)/0.08),hsl(var(--aegis-purple)/0.35));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:aurora-shift 6s ease-in-out infinite;pointer-events:none;z-index:0}
 .aurora>*{position:relative;z-index:1}
 
-/* Badges */
 .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:600;white-space:nowrap}
 .badge-default{background:hsl(var(--primary) / 0.1);color:hsl(var(--primary))}
-.badge-destructive{background:hsl(var(--destructive) / 0.1);color:hsl(var(--destructive))}
-.badge-amber{background:hsl(var(--aegis-amber) / 0.1);color:hsl(var(--aegis-amber))}
+.badge-destructive{background:hsl(var(--destructive) / 0.12);color:hsl(var(--destructive))}
+.badge-amber{background:hsl(var(--aegis-amber) / 0.12);color:hsl(var(--aegis-amber))}
 .badge-green{background:hsl(var(--aegis-green) / 0.1);color:hsl(var(--aegis-green))}
 .badge-purple{background:hsl(var(--aegis-purple) / 0.1);color:hsl(var(--aegis-purple))}
-.badge-outline{background:transparent;border:1px solid hsl(var(--border));color:hsl(var(--muted-foreground))}
+.badge-outline{background:transparent;border:1px solid hsl(var(--border));color:var(--text-muted)}
 .badge-secondary{background:hsl(var(--secondary));color:hsl(var(--secondary-foreground))}
 
-/* Layout */
 .app-shell{display:flex;height:100vh;overflow:hidden}
-.sidebar{width:220px;min-width:220px;background:hsl(228 50% 6% / 0.95);backdrop-filter:blur(24px) saturate(200%);-webkit-backdrop-filter:blur(24px) saturate(200%);border-right:1px solid hsl(var(--border) / 0.4);display:flex;flex-direction:column;transition:width .3s ease-out,min-width .3s ease-out;overflow:hidden;z-index:50;flex-shrink:0}
-.sidebar.collapsed{width:68px;min-width:68px}
-.sidebar-logo{padding:16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
-.logo-icon{font-size:22px;color:var(--primary);flex-shrink:0}
+.sidebar{width:210px;min-width:210px;background:hsl(228 50% 5% / 0.97);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-right:1px solid hsl(var(--border) / 0.35);display:flex;flex-direction:column;z-index:50;flex-shrink:0}
+.sidebar.collapsed{width:60px;min-width:60px}
+.sidebar-logo{padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid hsl(var(--border) / 0.3)}
+.logo-icon{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,hsl(var(--aegis-cyan)),hsl(var(--aegis-purple)));display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;flex-shrink:0}
 .logo-text{overflow:hidden;white-space:nowrap}.sidebar.collapsed .logo-text{display:none}
 .logo-name{font-size:15px;font-weight:800;display:block}.logo-version{font-size:9px;color:var(--text-muted);display:block}
-.sidebar-nav{flex:1;overflow-y:auto;padding:8px}
-.nav-section{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);padding:12px 12px 4px;overflow:hidden;white-space:nowrap}
-.sidebar.collapsed .nav-section{text-align:center;font-size:0;padding:8px 0;border-top:1px solid var(--border)}
-.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius-xs);cursor:pointer;transition:all .15s;color:var(--text-dim);position:relative;white-space:nowrap}
+.sidebar-nav{flex:1;overflow-y:auto;padding:6px 8px}
+.nav-section{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);padding:14px 12px 4px;overflow:hidden;white-space:nowrap}
+.sidebar.collapsed .nav-section{display:none}
+.nav-item{display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:var(--radius-xs);cursor:pointer;transition:all .15s;color:var(--text-dim);position:relative;white-space:nowrap;font-size:12px}
 .nav-item:hover{background:var(--primary-dim);color:var(--text)}
-.nav-item.active{background:var(--primary-dim);color:var(--primary);font-weight:600}
-.nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;border-radius:0 3px 3px 0;background:var(--primary)}
-.nav-icon{font-size:15px;flex-shrink:0;width:20px;text-align:center}
+.nav-item.active{background:var(--primary-dim);color:hsl(var(--primary));font-weight:600}
+.nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;border-radius:0 3px 3px 0;background:hsl(var(--primary))}
+.nav-icon{font-size:14px;flex-shrink:0;width:18px;text-align:center}
 .sidebar.collapsed .nav-label{display:none}
 .sidebar.collapsed .nav-item{justify-content:center;padding:10px}
-.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted);font-style:italic;overflow:hidden;white-space:nowrap}
+.sidebar-footer{padding:10px 16px;border-top:1px solid hsl(var(--border) / 0.3);font-size:9px;color:var(--text-muted);font-style:italic;overflow:hidden;white-space:nowrap}
 .sidebar.collapsed .sidebar-footer{font-size:0;padding:8px}
-.sidebar-toggle{padding:8px;text-align:center;cursor:pointer;color:var(--text-muted);font-size:12px;border-top:1px solid var(--border)}
-.sidebar-toggle:hover{color:var(--primary)}
+.sidebar-toggle{padding:6px;text-align:center;cursor:pointer;color:var(--text-muted);font-size:11px;border-top:1px solid hsl(var(--border) / 0.3)}
+.sidebar-toggle:hover{color:hsl(var(--primary))}
 
 .main-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.topbar{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid hsl(var(--border) / 0.3);background:hsl(var(--card) / 0.6);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);gap:12px;flex-shrink:0;z-index:40}
-.topbar-search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 14px;min-width:280px}
+.topbar{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid hsl(var(--border) / 0.25);background:hsl(var(--card) / 0.5);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);gap:12px;flex-shrink:0;z-index:40}
+.topbar-search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid hsl(var(--border));border-radius:var(--radius-sm);padding:5px 12px;min-width:260px}
 .topbar-search input{background:none;border:none;color:var(--text);font-size:12px;outline:none;flex:1}
-.topbar-right{display:flex;align-items:center;gap:12px}
-.halo-badge{display:flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;background:var(--primary-dim);border:1px solid rgba(28,196,216,0.2);font-size:11px;font-weight:700;color:var(--primary)}
-.notif-btn{background:none;border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text-dim);font-size:16px;padding:4px 8px;position:relative}
-.notif-dot{position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:50%;background:hsl(var(--aegis-amber));animation:pulse 2s infinite}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.halo-badge{display:flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;background:var(--primary-dim);border:1px solid hsl(var(--aegis-cyan) / 0.15);font-size:11px;font-weight:700;color:hsl(var(--primary))}
+.notif-btn{background:none;border:1px solid hsl(var(--border));border-radius:var(--radius-xs);color:var(--text-dim);font-size:15px;padding:3px 7px;position:relative}
+.notif-dot{position:absolute;top:2px;right:2px;width:5px;height:5px;border-radius:50%;background:hsl(var(--aegis-amber));animation:pulse 2s infinite}
 .user-pill{display:flex;align-items:center;gap:8px}
-.user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--purple));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
-.user-info{line-height:1.2}.uname{font-size:12px;font-weight:600}.utenant{font-size:9px;color:var(--text-muted)}
-.logout-btn{background:var(--red-dim);color:var(--red);padding:4px 10px;border-radius:var(--radius-xs);font-size:11px;font-weight:600}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,hsl(var(--primary)),var(--purple));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff}
+.user-info{line-height:1.2}.uname{font-size:11px;font-weight:600}.utenant{font-size:9px;color:var(--text-muted)}
+.logout-btn{background:var(--red-dim);color:var(--red);padding:3px 8px;border-radius:var(--radius-xs);font-size:10px;font-weight:600}
 
-.main-content{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:20px}
+.main-content{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:16px}
 
-/* Grids */
-.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .stat-card{display:flex;align-items:center;gap:12px}
-.stat-icon{width:40px;height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:17px;background:var(--primary-dim);flex-shrink:0}
+.stat-icon{width:38px;height:38px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 .stat-val{font-size:22px;font-weight:800;line-height:1.1}
-.stat-label{font-size:11px;color:var(--text-dim);font-weight:500}
+.stat-label{font-size:10px;color:var(--text-dim);font-weight:500}
 .stat-desc{font-size:9px;color:var(--text-muted)}
-.g12{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.g12{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
 
-/* Page header */
-.page-header{margin-bottom:4px}
-.page-title{font-size:20px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.page-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.page-header{margin-bottom:2px}
+.page-title{font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.page-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
 
-/* Alert row */
-.alert-row{display:flex;gap:8px;padding:8px 10px;border-radius:var(--radius-xs);background:var(--surface2);border:1px solid var(--border);transition:background .15s}
-.alert-row:hover{background:rgba(28,40,65,0.5)}
-.alert-row.unresolved{background:rgba(217,64,64,0.05);border-color:rgba(217,64,64,0.2)}
+.alert-row{display:flex;gap:8px;padding:7px 10px;border-radius:var(--radius-xs);background:var(--surface2);border:1px solid hsl(var(--border) / 0.3);transition:background .15s}
+.alert-row:hover{background:hsl(228 30% 10% / 0.5)}
+.alert-row.unresolved{background:hsl(0 72% 51% / 0.04);border-color:hsl(0 72% 51% / 0.15)}
 
-/* Table */
 .tbl{width:100%;border-collapse:collapse;font-size:12px}
-.tbl th{text-align:left;padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);border-bottom:1px solid var(--border)}
-.tbl td{padding:8px 10px;border-bottom:1px solid rgba(30,40,70,0.2)}
+.tbl th{text-align:left;padding:7px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);border-bottom:1px solid hsl(var(--border))}
+.tbl td{padding:7px 10px;border-bottom:1px solid hsl(var(--border) / 0.2)}
 .tbl tr:hover td{background:var(--primary-dim)}
 
-/* Loading / empty */
-.loading{text-align:center;padding:40px;color:var(--text-muted);font-size:13px}
-.empty{text-align:center;padding:20px;color:var(--text-muted);font-size:12px}
+.loading{text-align:center;padding:40px;color:var(--text-muted);font-size:12px}
+.empty{text-align:center;padding:18px;color:var(--text-muted);font-size:11px}
 
-/* Chat */
-.chat-panel{width:320px;min-width:320px;border-left:1px solid var(--border);display:flex;flex-direction:column;background:rgba(8,12,24,0.95)}
-.chat-header{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
-.chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
-.chat-msg{padding:8px 12px;border-radius:var(--radius-sm);font-size:12px;line-height:1.5;max-width:90%}
-.chat-msg.system{background:var(--primary-dim);border:1px solid rgba(28,196,216,0.15);align-self:flex-start}
+.chat-panel{width:300px;min-width:300px;border-left:1px solid hsl(var(--border) / 0.3);display:flex;flex-direction:column;background:hsl(228 62% 3.5% / 0.97)}
+.chat-header{padding:10px 14px;border-bottom:1px solid hsl(var(--border) / 0.3);font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.chat-messages{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px}
+.chat-msg{padding:7px 10px;border-radius:var(--radius-sm);font-size:11px;line-height:1.5;max-width:90%}
+.chat-msg.system{background:var(--primary-dim);border:1px solid hsl(var(--aegis-cyan) / 0.1);align-self:flex-start}
 .chat-msg.user{background:var(--surface2);align-self:flex-end}
-.chat-msg.bot{background:var(--surface);border:1px solid var(--border);align-self:flex-start}
-.chat-typing{padding:8px 16px;font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px}
-.typing-dots span{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--primary);animation:blink 1.4s infinite;margin:0 1px}
+.chat-msg.bot{background:var(--surface);border:1px solid hsl(var(--border));align-self:flex-start}
+.chat-typing{padding:6px 14px;font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+.typing-dots span{display:inline-block;width:4px;height:4px;border-radius:50%;background:hsl(var(--primary));animation:blink 1.4s infinite;margin:0 1px}
 .typing-dots span:nth-child(2){animation-delay:0.2s}.typing-dots span:nth-child(3){animation-delay:0.4s}
-.chat-input-row{display:flex;gap:6px;padding:12px;border-top:1px solid var(--border)}
-.chat-input{flex:1;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text);font-size:12px;outline:none}
-.chat-send{background:var(--primary);color:#000;font-weight:700;padding:8px 14px;border-radius:var(--radius-xs);font-size:12px}
-.chat-toggle{display:none;position:fixed;bottom:16px;right:16px;width:48px;height:48px;border-radius:50%;background:var(--primary);color:#000;font-size:20px;z-index:200;box-shadow:0 4px 20px rgba(28,196,216,0.3)}
+.chat-input-row{display:flex;gap:5px;padding:10px;border-top:1px solid hsl(var(--border) / 0.3)}
+.chat-input{flex:1;padding:7px 10px;background:var(--surface);border:1px solid hsl(var(--border));border-radius:var(--radius-xs);color:var(--text);font-size:11px;outline:none}
+.chat-send{background:hsl(var(--primary));color:#000;font-weight:700;padding:7px 12px;border-radius:var(--radius-xs);font-size:11px}
+.chat-toggle{display:none;position:fixed;bottom:16px;right:16px;width:44px;height:44px;border-radius:50%;background:hsl(var(--primary));color:#000;font-size:18px;z-index:200;box-shadow:0 4px 20px hsl(var(--aegis-cyan) / 0.3)}
 
-/* Login */
 .login-page{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:999}
-.login-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;width:360px;text-align:center;backdrop-filter:blur(12px)}
-.login-box h2{font-size:22px;font-weight:800;color:var(--primary);margin-bottom:4px}
-.login-sub{font-size:12px;color:var(--text-muted);margin-bottom:20px}
-.login-box input{width:100%;margin-bottom:10px;padding:10px 14px}
-.login-box button{width:100%;padding:10px;background:var(--primary);color:#000;font-weight:700;border-radius:var(--radius-xs);font-size:14px;margin-top:4px}
-.login-error{color:var(--red);font-size:12px;margin-bottom:8px;display:none}
+.login-box{background:var(--surface);border:1px solid hsl(var(--border));border-radius:var(--radius);padding:32px;width:340px;text-align:center;backdrop-filter:blur(16px)}
+.login-box h2{font-size:20px;font-weight:800;color:hsl(var(--primary));margin-bottom:4px}
+.login-sub{font-size:11px;color:var(--text-muted);margin-bottom:18px}
+.login-box input{width:100%;margin-bottom:8px;padding:9px 12px}
+.login-box button{width:100%;padding:9px;background:hsl(var(--primary));color:#000;font-weight:700;border-radius:var(--radius-xs);font-size:13px;margin-top:4px}
+.login-error{color:var(--red);font-size:11px;margin-bottom:6px;display:none}
 
-/* Modal */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:500;align-items:center;justify-content:center}
 .modal-overlay.show{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);width:90%;max-width:700px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column}
-.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
-.modal-header h2{font-size:16px;font-weight:700}
-.modal-close{background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer}
-.modal-body{flex:1;overflow-y:auto;padding:20px}
+.modal{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius);width:90%;max-width:700px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid hsl(var(--border))}
+.modal-header h2{font-size:15px;font-weight:700}
+.modal-close{background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer}
+.modal-body{flex:1;overflow-y:auto;padding:18px}
 
-/* Animations */
-@keyframes aurora-shift{0%,100%{opacity:0.5}50%{opacity:1}}
-@keyframes pulse-glow{0%,100%{opacity:0.4;transform:scale(1)}50%{opacity:0.8;transform:scale(1.02)}}
-@keyframes shield-pulse{0%,100%{box-shadow:0 0 20px hsl(var(--aegis-cyan)/0.1)}50%{box-shadow:0 0 40px hsl(var(--aegis-cyan)/0.25),0 0 80px hsl(var(--aegis-cyan)/0.1)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+@keyframes aurora-shift{0%,100%{opacity:0.4}50%{opacity:1}}
+@keyframes pulse-glow{0%,100%{opacity:0.4;transform:scale(1)}50%{opacity:0.7;transform:scale(1.01)}}
+@keyframes shield-pulse{0%,100%{box-shadow:0 0 20px hsl(var(--aegis-cyan)/0.08)}50%{box-shadow:0 0 40px hsl(var(--aegis-cyan)/0.2),0 0 80px hsl(var(--aegis-cyan)/0.08)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 @keyframes blink{0%,100%{opacity:0.2}50%{opacity:1}}
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .animate-shield-pulse{animation:shield-pulse 3s ease-in-out infinite}
 .animate-float{animation:float 4s ease-in-out infinite}
 .animate-pulse-glow{animation:pulse-glow 3s ease-in-out infinite}
 .animate-marquee{animation:marquee 30s linear infinite}
 .gauge-arc{transition:stroke-dashoffset 1s ease-out}
+.fade-in{animation:fadeIn 0.4s ease-out}
 
-/* Mobile */
 @media(max-width:900px){
   .sidebar{position:fixed;left:-260px;top:0;bottom:0;z-index:300;transition:left .25s;box-shadow:4px 0 24px rgba(0,0,0,0.5)}
   .sidebar.open{left:0}.chat-panel{display:none}.chat-panel.mobile-open{display:flex;position:fixed;inset:0;width:100%;z-index:250}
   .chat-toggle{display:block}.topbar-search{display:none}
   .stat-row{grid-template-columns:repeat(2,1fr)}.g2,.g3,.g4,.g5{grid-template-columns:1fr}
-  .g12{grid-template-columns:1fr}.main-content{padding:14px}.mobile-menu-btn{display:inline-flex!important}
+  .g12{grid-template-columns:1fr}.main-content{padding:12px}.mobile-menu-btn{display:inline-flex!important}
 }
-.mobile-menu-btn{display:none;background:none;border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text);font-size:16px;padding:2px 8px;cursor:pointer;margin-right:8px}
+.mobile-menu-btn{display:none;background:none;border:1px solid hsl(var(--border));border-radius:var(--radius-xs);color:var(--text);font-size:14px;padding:2px 7px;cursor:pointer;margin-right:6px}
 </style>
 </head>
 <body>
 
-<!-- Login -->
 <div class="login-page" id="login-page" style="display:none">
   <div class="login-box">
     <h2>&#10040; AngelClaw</h2>
-    <div class="login-sub">Autonomous AI Defense Guardian &mdash; Sign in</div>
+    <div class="login-sub">V10.0.0 Seraph &mdash; Autonomous AI Defense</div>
     <div class="login-error" id="login-error"></div>
     <input type="text" id="login-user" placeholder="Username" autocomplete="username"/>
     <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password"/>
@@ -208,36 +193,24 @@ button{font-family:var(--font);cursor:pointer;border:none;font-size:13px}
   </div>
 </div>
 
-<!-- Main App -->
 <div id="main-app" style="display:none" class="app-shell">
   <div class="sidebar" id="sidebar">
-    <div class="sidebar-logo"><div class="logo-icon" style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,hsl(var(--aegis-cyan)),hsl(var(--aegis-purple)));display:flex;align-items:center;justify-content:center;font-size:18px;color:hsl(var(--primary-foreground));flex-shrink:0">&#10040;</div><div class="logo-text"><span class="logo-name text-gradient">AngelClaw</span><span class="logo-version">v8.2 &middot; Titan Grid</span></div></div>
+    <div class="sidebar-logo"><div class="logo-icon">&#10040;</div><div class="logo-text"><span class="logo-name text-gradient">AngelClaw</span><span class="logo-version">v10.0 &middot; Seraph</span></div></div>
     <div class="sidebar-nav" id="sidebar-nav">
       <div class="nav-section">Command</div>
       <div class="nav-item active" onclick="navigate('dashboard')" data-page="dashboard"><span class="nav-icon">&#9670;</span><span class="nav-label">Dashboard</span></div>
+      <div class="nav-section">Operations</div>
       <div class="nav-item" onclick="navigate('fleet')" data-page="fleet"><span class="nav-icon">&#9678;</span><span class="nav-label">Fleet</span></div>
-      <div class="nav-item" onclick="navigate('tenants')" data-page="tenants"><span class="nav-icon">&#9964;</span><span class="nav-label">Tenants</span></div>
-      <div class="nav-section">Security</div>
       <div class="nav-item" onclick="navigate('alerts')" data-page="alerts"><span class="nav-icon">&#9888;</span><span class="nav-label">Alerts</span></div>
       <div class="nav-item" onclick="navigate('legion')" data-page="legion"><span class="nav-icon">&#9876;</span><span class="nav-label">Angel Legion</span></div>
-      <div class="nav-item" onclick="navigate('anti-tamper')" data-page="anti-tamper"><span class="nav-icon">&#128274;</span><span class="nav-label">Anti-Tamper</span></div>
       <div class="nav-section">Intelligence</div>
+      <div class="nav-item" onclick="navigate('threat-intel')" data-page="threat-intel"><span class="nav-icon">&#128270;</span><span class="nav-label">Threat Intel</span></div>
       <div class="nav-item" onclick="navigate('analytics')" data-page="analytics"><span class="nav-icon">&#128200;</span><span class="nav-label">Analytics</span></div>
-      <div class="nav-item" onclick="navigate('learning')" data-page="learning"><span class="nav-icon">&#129504;</span><span class="nav-label">Self-Learning</span></div>
+      <div class="nav-item" onclick="navigate('ai-engine')" data-page="ai-engine"><span class="nav-icon">&#129504;</span><span class="nav-label">AI Engine</span></div>
       <div class="nav-section">Governance</div>
+      <div class="nav-item" onclick="navigate('zero-trust')" data-page="zero-trust"><span class="nav-icon">&#128272;</span><span class="nav-label">Zero Trust</span></div>
       <div class="nav-item" onclick="navigate('policies')" data-page="policies"><span class="nav-icon">&#128220;</span><span class="nav-label">Policies</span></div>
       <div class="nav-item" onclick="navigate('settings')" data-page="settings"><span class="nav-icon">&#9881;</span><span class="nav-label">Settings</span></div>
-      <div class="nav-section">Platform</div>
-      <div class="nav-item" onclick="navigate('threat-intel')" data-page="threat-intel"><span class="nav-icon">&#128270;</span><span class="nav-label">Threat Intel</span></div>
-      <div class="nav-item" onclick="navigate('assets')" data-page="assets"><span class="nav-icon">&#128451;</span><span class="nav-label">Assets</span></div>
-      <div class="nav-item" onclick="navigate('soar')" data-page="soar"><span class="nav-icon">&#9889;</span><span class="nav-label">SOAR</span></div>
-      <div class="nav-item" onclick="navigate('zero-trust')" data-page="zero-trust"><span class="nav-icon">&#128272;</span><span class="nav-label">Zero Trust</span></div>
-      <div class="nav-item" onclick="navigate('transcendence')" data-page="transcendence"><span class="nav-icon">&#129302;</span><span class="nav-label">AI Engine</span></div>
-      <div class="nav-item" onclick="navigate('convergence')" data-page="convergence"><span class="nav-icon">&#128338;</span><span class="nav-label">Real-Time</span></div>
-      <div class="nav-item" onclick="navigate('omniguard')" data-page="omniguard"><span class="nav-icon">&#9729;</span><span class="nav-label">Cloud Security</span></div>
-      <div class="nav-item" onclick="navigate('prometheus')" data-page="prometheus"><span class="nav-icon">&#127919;</span><span class="nav-label">Threat Hunt</span></div>
-      <div class="nav-item" onclick="navigate('empyrion')" data-page="empyrion"><span class="nav-icon">&#9889;</span><span class="nav-label">AGI Defense</span></div>
-      <div class="nav-item" onclick="navigate('titan-grid')" data-page="titan-grid"><span class="nav-icon">&#10040;</span><span class="nav-label">Titan Grid</span></div>
     </div>
     <div class="sidebar-footer">Guardian angel, not gatekeeper.</div>
     <div class="sidebar-toggle" onclick="toggleSidebarCollapse()">&#10094;</div>
@@ -247,7 +220,7 @@ button{font-family:var(--font);cursor:pointer;border:none;font-size:13px}
     <div class="topbar">
       <div style="display:flex;align-items:center">
         <button class="mobile-menu-btn" onclick="toggleSidebar()">&#9776;</button>
-        <div class="topbar-search"><span style="opacity:0.5">&#128270;</span><input type="text" id="search-input" placeholder='Ask Seraph Brain...' onkeydown="if(event.key==='Enter')seraphSearch(this.value)"/></div>
+        <div class="topbar-search"><span style="opacity:0.4;font-size:13px">&#128270;</span><input type="text" id="search-input" placeholder='Ask Seraph Brain...' onkeydown="if(event.key==='Enter')seraphSearch(this.value)"/></div>
       </div>
       <div class="topbar-right">
         <div class="halo-badge">&#10040; Halo <span id="halo-val">--</span></div>
@@ -260,10 +233,10 @@ button{font-family:var(--font);cursor:pointer;border:none;font-size:13px}
   </div>
 
   <div class="chat-panel" id="chat-panel">
-    <div class="chat-header"><span style="color:var(--primary)">&#10040;</span> AngelClaw AI <span style="font-size:9px;color:var(--text-muted);margin-left:auto" id="chat-daemon-pill">--</span></div>
-    <div class="chat-messages" id="chat-messages"><div class="chat-msg system">I'm <strong>AngelClaw</strong> &mdash; your autonomous security companion.</div></div>
+    <div class="chat-header"><span style="color:hsl(var(--primary))">&#10040;</span> Seraph AI <span style="font-size:9px;color:var(--text-muted);margin-left:auto" id="chat-daemon-pill">--</span></div>
+    <div class="chat-messages" id="chat-messages"><div class="chat-msg system">I'm <strong>AngelClaw Seraph</strong> &mdash; your autonomous security companion.</div></div>
     <div id="chat-typing" class="chat-typing" style="display:none"><span class="typing-dots"><span></span><span></span><span></span></span>Thinking...</div>
-    <div class="chat-input-row"><input class="chat-input" id="chat-input" placeholder="Ask AngelClaw..."/><button class="chat-send" onclick="sendChat()">Send</button></div>
+    <div class="chat-input-row"><input class="chat-input" id="chat-input" placeholder="Ask Seraph..."/><button class="chat-send" onclick="sendChat()">&#10148;</button></div>
   </div>
 </div>
 
@@ -274,40 +247,45 @@ button{font-family:var(--font);cursor:pointer;border:none;font-size:13px}
 </div>
 
 <script>
-/* ===== CORE JS ===== */
 const BASE=window.location.origin,chatHistory=[];
 let authToken=localStorage.getItem('angelclaw_token')||'',authUser=null,currentPage='dashboard',cachedData={},sidebarCollapsed=false;
 
 const esc=t=>t?String(t).replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';
-const ago=ts=>{if(!ts)return'never';const m=Math.floor((Date.now()-new Date(ts))/60000);return m<1?'just now':m<60?m+'m ago':m<1440?Math.floor(m/60)+'h ago':Math.floor(m/1440)+'d ago';};
+const ago=ts=>{if(!ts)return'--';const m=Math.floor((Date.now()-new Date(ts))/60000);return m<1?'just now':m<60?m+'m ago':m<1440?Math.floor(m/60)+'h ago':Math.floor(m/1440)+'d ago';};
 const riskColor=r=>r>50?'var(--red)':r>20?'var(--amber)':'var(--green)';
 const sevBadge=s=>s==='critical'?'badge-destructive':s==='high'?'badge-amber':'badge-default';
+const n2s=n=>n!=null?Number(n).toLocaleString():'--';
 
 function authHeaders(){const h={'Content-Type':'application/json'};if(authToken)h['Authorization']='Bearer '+authToken;return h;}
 async function fetchJSON(p){try{const r=await fetch(BASE+p,{headers:authHeaders()});if(r.status===401){showLogin();return null;}if(!r.ok)return null;return await r.json();}catch{return null;}}
 async function postJSON(p,b){try{const r=await fetch(BASE+p,{method:'POST',headers:authHeaders(),body:JSON.stringify(b)});if(r.status===401){showLogin();return null;}return await r.json();}catch{return null;}}
 
-function gc(content,cls=''){return`<div class="glass ${cls}">${content}</div>`;}
+function gc(content,cls=''){return`<div class="glass fade-in ${cls}">${content}</div>`;}
 
 function renderGauge(score,size=140){
+  if(score==null)score=0;
   const r=size/2-8,circ=2*Math.PI*r,offset=circ-(score/100)*circ;
-  const hsl=score>=80?'var(--aegis-green)':score>=50?'var(--aegis-amber)':'var(--aegis-red)';
-  return`<div style="position:relative;width:${size}px;height:${size}px;margin:0 auto"><svg width="${size}" height="${size}" style="transform:rotate(-90deg)"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="hsl(var(--border))" stroke-width="6"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="hsl(${hsl})" stroke-width="6" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${offset}" class="gauge-arc" style="filter:drop-shadow(0 0 8px hsl(${hsl}/0.4))"/></svg><div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:${size/4}px;font-weight:800">${score}</span><span style="font-size:10px;color:hsl(var(--muted-foreground))">/ 100</span></div></div>`;
+  const col=score>=80?'var(--aegis-green)':score>=50?'var(--aegis-amber)':'var(--aegis-red)';
+  return`<div style="position:relative;width:${size}px;height:${size}px;margin:0 auto"><svg width="${size}" height="${size}" style="transform:rotate(-90deg)"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="hsl(var(--border))" stroke-width="5"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="hsl(${col})" stroke-width="5" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${offset}" class="gauge-arc" style="filter:drop-shadow(0 0 6px hsl(${col}/0.3))"/></svg><div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:${size/4}px;font-weight:800">${score}</span><span style="font-size:9px;color:var(--text-muted)">/ 100</span></div></div>`;
 }
 
 function renderAreaChart(data,w,h){
+  if(!data||!data.length)return'<div class="empty">No chart data</div>';
   const maxV=Math.max(...data.map(d=>Math.max(d.threats||0,d.blocked||0)))*1.2||1;
-  const px=(key)=>data.map((d,i)=>`${(i/(data.length-1))*w},${h-(d[key]/maxV)*h}`);
-  const area=(key,col,gid)=>{
-    const p=px(key);return`<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stop-color="hsl(${col})" stop-opacity="0.3"/><stop offset="95%" stop-color="hsl(${col})" stop-opacity="0"/></linearGradient></defs><polygon points="${p.join(' ')} ${w},${h} 0,${h}" fill="url(#${gid})"/><polyline points="${p.join(' ')}" fill="none" stroke="hsl(${col})" stroke-width="2" stroke-linejoin="round"/>`;
-  };
-  const xl=data.map((d,i)=>`<text x="${(i/(data.length-1))*w}" y="${h+14}" fill="hsl(var(--muted-foreground))" font-size="10" text-anchor="middle" font-family="Inter,sans-serif">${esc(d.time)}</text>`).join('');
-  return`<svg viewBox="0 0 ${w} ${h+22}" style="width:100%;height:auto;overflow:visible">${area('threats','0 72% 55%','tGrad')}${area('blocked','185 80% 55%','bGrad')}${xl}</svg>`;
+  const px=(key)=>data.map((d,i)=>`${(i/(data.length-1))*w},${h-(((d[key]||0)/maxV)*h)}`);
+  const area=(key,col,gid)=>{const p=px(key);return`<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stop-color="hsl(${col})" stop-opacity="0.25"/><stop offset="95%" stop-color="hsl(${col})" stop-opacity="0"/></linearGradient></defs><polygon points="${p.join(' ')} ${w},${h} 0,${h}" fill="url(#${gid})"/><polyline points="${p.join(' ')}" fill="none" stroke="hsl(${col})" stroke-width="2" stroke-linejoin="round"/>`;};
+  const xl=data.map((d,i)=>`<text x="${(i/(data.length-1))*w}" y="${h+14}" fill="hsl(var(--muted-foreground))" font-size="9" text-anchor="middle" font-family="Inter,sans-serif">${esc(d.label||d.time||'')}</text>`).join('');
+  return`<svg viewBox="0 0 ${w} ${h+20}" style="width:100%;height:auto;overflow:visible">${area('threats','0 72% 55%','tGrad')}${area('blocked','185 80% 55%','bGrad')}${xl}</svg>`;
 }
 
 function renderDonut(pct,color,label){
+  if(pct==null)pct=0;
   const r=18,circ=2*Math.PI*r,offset=circ-(pct/100)*circ;
-  return`<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="position:relative;width:44px;height:44px"><svg width="44" height="44" style="transform:rotate(-90deg)"><circle cx="22" cy="22" r="${r}" fill="none" stroke="rgba(30,40,70,0.4)" stroke-width="4"/><circle cx="22" cy="22" r="${r}" fill="none" stroke="hsl(${color})" stroke-width="4" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/></svg><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700">${pct}%</span></div><span style="font-size:9px;color:var(--text-muted)">${label}</span></div>`;
+  return`<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="position:relative;width:44px;height:44px"><svg width="44" height="44" style="transform:rotate(-90deg)"><circle cx="22" cy="22" r="${r}" fill="none" stroke="hsl(var(--border) / 0.3)" stroke-width="4"/><circle cx="22" cy="22" r="${r}" fill="none" stroke="hsl(${color})" stroke-width="4" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/></svg><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700">${pct}%</span></div><span style="font-size:9px;color:var(--text-muted)">${label}</span></div>`;
+}
+
+function statCard(icon,value,label,color){
+  return gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${color}-dim);color:var(--${color})">${icon}</div><div><div class="stat-val">${value}</div><div class="stat-label">${label}</div></div></div>`);
 }
 
 /* Auth */
@@ -337,388 +315,301 @@ function toggleSidebar(){document.getElementById('sidebar').classList.toggle('op
 function toggleSidebarCollapse(){sidebarCollapsed=!sidebarCollapsed;document.getElementById('sidebar').classList.toggle('collapsed',sidebarCollapsed);document.querySelector('.sidebar-toggle').innerHTML=sidebarCollapsed?'&#10095;':'&#10094;';}
 function toggleMobileChat(){document.getElementById('chat-panel').classList.toggle('mobile-open');}
 function seraphSearch(q){
-  if(!q||!q.trim())return;const pages=['dashboard','fleet','tenants','alerts','legion','anti-tamper','analytics','learning','threat-intel','assets','soar','zero-trust','transcendence','convergence','omniguard','prometheus','empyrion','titan-grid','policies','settings'];
-  const match=pages.find(p=>q.toLowerCase().includes(p)||p.includes(q.toLowerCase()));
+  if(!q||!q.trim())return;const pages=['dashboard','fleet','alerts','legion','threat-intel','analytics','ai-engine','zero-trust','policies','settings'];
+  const match=pages.find(p=>q.toLowerCase().includes(p.replace('-',' '))||p.includes(q.toLowerCase()));
   if(match){navigate(match);document.getElementById('search-input').value='';return;}
   document.getElementById('search-input').value='';document.getElementById('chat-input').value=q;sendChat();
 }
 document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA'){e.preventDefault();document.getElementById('search-input').focus();}});
 
-/* Modal */
 function openModal(id){document.getElementById(id).classList.add('show');}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 
-/* Render router */
 async function renderPage(){
   const mc=document.getElementById('main-content');mc.innerHTML='<div class="loading">Loading...</div>';
   switch(currentPage){
-    case 'dashboard':return renderDashboard(mc);case 'fleet':return renderFleet(mc);case 'tenants':return renderTenants(mc);
-    case 'alerts':return renderAlerts(mc);case 'legion':return renderLegion(mc);case 'anti-tamper':return renderAntiTamper(mc);
-    case 'analytics':return renderAnalytics(mc);case 'learning':return renderLearning(mc);case 'threat-intel':return renderThreatIntel(mc);
-    case 'assets':return renderAssets(mc);case 'soar':return renderSOAR(mc);case 'zero-trust':return renderZeroTrust(mc);
-    case 'transcendence':return renderTranscendence(mc);case 'convergence':return renderConvergence(mc);case 'omniguard':return renderOmniguard(mc);
-    case 'prometheus':return renderPrometheus(mc);case 'empyrion':return renderEmpyrion(mc);case 'titan-grid':return renderTitanGrid(mc);
+    case 'dashboard':return renderDashboard(mc);case 'fleet':return renderFleet(mc);
+    case 'alerts':return renderAlerts(mc);case 'legion':return renderLegion(mc);
+    case 'threat-intel':return renderThreatIntel(mc);case 'analytics':return renderAnalytics(mc);
+    case 'ai-engine':return renderAIEngine(mc);case 'zero-trust':return renderZeroTrust(mc);
     case 'policies':return renderPolicies(mc);case 'settings':return renderSettings(mc);
     default:mc.innerHTML='<div class="empty">Page not found</div>';
   }
 }
 
-/* ===== PAGE: DASHBOARD ===== */
+/* ===== DASHBOARD ===== */
 async function renderDashboard(mc){
-  const [agents,events,orch,activity,daemon,alerts,shield,halo]= await Promise.all([
+  const [agents,events,daemon,activity,alerts,halo,threats,fleet,shield]=await Promise.all([
     fetchJSON('/api/v1/agents'),fetchJSON('/api/v1/incidents/recent?limit=30'),
-    fetchJSON('/api/v1/orchestrator/status'),fetchJSON('/api/v1/angelclaw/activity/recent?limit=12'),
-    fetchJSON('/api/v1/angelclaw/daemon/status'),fetchJSON('/api/v1/guardian/alerts/recent?tenantId=dev-tenant&limit=10'),
-    fetchJSON('/api/v1/angelclaw/shield/status'),fetchJSON('/api/v1/convergence/halo/current'),
+    fetchJSON('/api/v1/angelclaw/daemon/status'),fetchJSON('/api/v1/angelclaw/activity/recent?limit=10'),
+    fetchJSON('/api/v1/guardian/alerts/recent?tenantId=dev-tenant&limit=8'),fetchJSON('/api/v1/convergence/halo/current'),
+    fetchJSON('/api/v1/convergence/dashboard/threats'),fetchJSON('/api/v1/convergence/fleet/os-distribution'),
+    fetchJSON('/api/v1/angelclaw/shield/status'),
   ]);
   cachedData.agents=agents;cachedData.alerts=alerts;
   const ac=agents?agents.length:0,ec=events?events.length:0,alc=alerts?alerts.length:0;
-  const haloScore=halo?halo.score:94;
-  document.getElementById('halo-val').textContent=haloScore;
+  const hs=halo&&halo.score!=null?halo.score:null;
+  document.getElementById('halo-val').textContent=hs!=null?hs:'--';
 
-  let h=`<div class="page-header"><div class="page-title">&#10040; AngelClaw Command Center <span class="badge badge-outline">v8.2.0 &middot; Titan Grid</span></div><div class="page-sub">Guardian angel, not gatekeeper &mdash; autonomous AI defense fabric</div></div>`;
+  let h=`<div class="page-header"><div class="page-title">&#10040; AngelClaw Command Center <span class="badge badge-outline">v10.0.0 &middot; Seraph</span></div><div class="page-sub">Autonomous AI defense fabric &mdash; real-time data from all subsystems</div></div>`;
 
-  // Wingspan Stats
-  h+='<div class="stat-row">'+[{i:'&#10040;',v:haloScore,l:'Halo Score',d:'Security posture',c:'primary'},{i:'&#9678;',v:ac||1284,l:'Wingspan',d:'ANGELNODEs deployed',c:'green'},{i:'&#9964;',v:'3',l:'Active Tenants',d:'Isolated environments',c:'purple'},{i:'&#128200;',v:ec||'48,291',l:'Events Today',d:'Analyzed by Seraph Brain',c:'amber'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c});font-size:16px">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div><div class="stat-desc">${s.d}</div></div></div>`)).join('')+'</div>';
+  h+='<div class="stat-row">'+statCard('&#10040;',hs!=null?hs:'--','Halo Score','primary')+statCard('&#9678;',n2s(ac),'Fleet Nodes','green')+statCard('&#128276;',n2s(alc),'Active Alerts','amber')+statCard('&#128200;',n2s(ec),'Recent Events','cyan')+'</div>';
 
-  // Gauge + Threat Chart + Trust
   h+='<div class="g12">';
-  h+=`<div style="grid-column:span 3">${gc(`<div style="text-align:center"><p style="font-size:10px;color:hsl(var(--muted-foreground));text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:8px">Halo Score</p>${renderGauge(haloScore,144)}<p style="font-size:10px;color:hsl(var(--aegis-green));font-weight:500;margin-top:8px">ANGELGRID AI Posture</p></div>`,'aurora animate-shield-pulse')}</div>`;
-  // Threat Landscape area chart (from Lovable)
-  const chartData=[{time:'00:00',threats:12,blocked:11},{time:'04:00',threats:8,blocked:8},{time:'08:00',threats:24,blocked:22},{time:'12:00',threats:38,blocked:35},{time:'16:00',threats:29,blocked:27},{time:'20:00',threats:18,blocked:17},{time:'Now',threats:15,blocked:14}];
-  h+=`<div style="grid-column:span 5">${gc(`<h3 style="font-size:13px;font-weight:600;color:hsl(var(--muted-foreground));margin-bottom:12px">Threat Landscape</h3><div style="padding:8px 0">${renderAreaChart(chartData,400,180)}</div><div style="display:flex;gap:16px;margin-top:8px;font-size:10px"><span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:3px;border-radius:2px;background:hsl(0 72% 55%)"></span>Threats</span><span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:3px;border-radius:2px;background:hsl(185 80% 55%)"></span>Blocked</span></div>`)}</div>`;
-  h+=`<div style="grid-column:span 4">${gc(`<h3 style="font-size:13px;font-weight:600;color:hsl(var(--muted-foreground));margin-bottom:12px">Network Trust Level</h3><div style="height:10px;border-radius:10px;display:flex;overflow:hidden;margin-bottom:8px"><div style="width:62%;background:hsl(var(--aegis-green))"></div><div style="width:24%;background:hsl(var(--aegis-amber))"></div><div style="width:14%;background:hsl(var(--aegis-red))"></div></div><div style="display:flex;justify-content:space-between;font-size:10px;color:hsl(var(--muted-foreground));margin-bottom:20px"><span>&#9679; Verified 62%</span><span>&#9679; Conditional 24%</span><span>&#9679; Untrusted 14%</span></div><h3 style="font-size:13px;font-weight:600;color:hsl(var(--muted-foreground));margin-bottom:12px">Compliance Health</h3><div style="display:flex;justify-content:space-around">${renderDonut(94,'var(--aegis-green)','SOC2')}${renderDonut(88,'var(--aegis-cyan)','ISO27001')}${renderDonut(76,'var(--aegis-amber)','GDPR')}</div>`)}</div>`;
+  h+=`<div style="grid-column:span 3">${gc(`<div style="text-align:center"><p style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:8px">Halo Score</p>${renderGauge(hs||0,140)}<p style="font-size:10px;color:var(--green);font-weight:500;margin-top:6px">${hs!=null?'Live':'Connecting...'}</p></div>`,'aurora animate-shield-pulse')}</div>`;
+
+  const chartData=threats&&threats.data?threats.data:null;
+  h+=`<div style="grid-column:span 5">${gc(`<h3 style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px">Threat Landscape</h3><div style="padding:6px 0">${chartData?renderAreaChart(chartData,400,170):'<div class="empty">Awaiting threat data...</div>'}</div>${chartData?'<div style="display:flex;gap:14px;margin-top:6px;font-size:10px"><span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:3px;border-radius:2px;background:hsl(0 72% 55%)"></span>Threats</span><span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:3px;border-radius:2px;background:hsl(185 80% 55%)"></span>Blocked</span></div>':''}`)}</div>`;
+
+  h+=`<div style="grid-column:span 4">${gc(`<h3 style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px">System Health</h3><div class="g2">${[{l:'Shield',v:shield&&shield.mode?shield.mode:'--',c:shield?'green':'amber'},{l:'Daemon',v:daemon&&daemon.running?'Active':'--',c:daemon&&daemon.running?'green':'red'},{l:'Alerts',v:n2s(alc),c:alc>0?'amber':'green'},{l:'Fleet',v:n2s(ac),c:ac>0?'green':'amber'}].map(s=>`<div style="padding:8px;border-radius:6px;background:var(--surface2);text-align:center"><div style="font-size:10px;color:var(--text-muted)">${s.l}</div><div style="font-size:14px;font-weight:800;color:var(--${s.c});margin-top:2px">${s.v}</div></div>`).join('')}</div>`)}</div>`;
   h+='</div>';
 
-  // Predictive stats
-  h+='<div class="stat-row">'+[{i:'&#129504;',v:'847',l:'Vectors Predicted'},{i:'&#128737;',v:'12,491',l:'Pre-emptive Blocks'},{i:'&#128065;',v:'3.2 steps',l:'Prediction Lead'},{i:'&#9889;',v:'4,218',l:'Auto-Remediations'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`,'glow-cyan')).join('')+'</div>';
+  // Fleet OS breakdown
+  if(fleet&&Array.isArray(fleet)&&fleet.length){
+    h+=gc(`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:12px;font-weight:700">&#9678; Fleet Distribution</span><span class="badge badge-default">${n2s(ac)} nodes</span></div><div class="g${Math.min(fleet.length,5)}">`+fleet.map(f=>`<div style="padding:10px;border-radius:8px;background:var(--surface2);border:1px solid hsl(var(--border) / 0.2);text-align:center"><div style="font-size:12px;font-weight:700">${esc(f.os||f.name||'Unknown')}</div><div style="font-size:18px;font-weight:800;margin:4px 0">${n2s(f.count||f.total||0)}</div>${f.health!=null?`<div style="font-size:9px;color:var(--${f.health>99?'green':'amber'})">${f.health}% healthy</div>`:''}</div>`).join('')+'</div>');
+  }
 
-  // Health + Activity
-  h+='<div class="g12">';
-  h+=`<div style="grid-column:span 5"><div class="g2">${[{l:'Network',s:'Healthy',c:'green'},{l:'Identity',s:'Healthy',c:'green'},{l:'Data',s:'Warning',c:'amber'},{l:'Compliance',s:'Healthy',c:'green'}].map(i=>gc(`<div style="display:flex;align-items:center;gap:12px"><div style="width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--${i.c}-dim)">&#9670;</div><div><div style="font-size:13px;font-weight:600">${i.l}</div><div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="width:6px;height:6px;border-radius:50%;background:var(--${i.c});animation:pulse 2s infinite"></span><span style="font-size:11px;color:var(--${i.c})">${i.s}</span></div></div></div>`)).join('')}</div></div>`;
-  h+=`<div style="grid-column:span 7">${gc(`<div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-size:13px;font-weight:700">&#10040; Guardian Activity</span><span class="badge ${daemon&&daemon.running?'badge-green':'badge-destructive'}">${daemon&&daemon.running?'ACTIVE':'STOPPED'}</span></div><div style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">`+(activity&&activity.length?activity.map(a=>`<div style="display:flex;gap:8px;padding:6px 8px;border-radius:6px;background:var(--surface2);border-left:3px solid var(--primary)"><div style="flex:1"><span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--primary)">${esc(a.category)}</span> <span style="font-size:9px;color:var(--text-muted)">${ago(a.timestamp)}</span><div style="font-size:10px;margin-top:2px">${esc(a.summary)}</div></div></div>`).join(''):'<div class="empty">Guardian starting up...</div>')+'</div>','glow-amber')}</div>`;
-  h+='</div>';
-
-  // Fleet nodes
-  const fn=[{os:'Windows',ct:612,hp:99.2},{os:'macOS',ct:358,hp:99.8},{os:'Linux',ct:204,hp:98.4},{os:'iOS',ct:68,hp:100},{os:'Android',ct:42,hp:97.6}];
-  h+=gc(`<div style="display:flex;justify-content:space-between;margin-bottom:14px"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;font-weight:700">&#9678; ANGELNODE Fleet</span></div><span class="badge badge-default">${ac||1284} Agents</span></div><div class="g5">`+fn.map(n=>`<div style="padding:14px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);text-align:center"><div style="font-size:18px;margin-bottom:6px">&#128421;</div><div style="font-size:13px;font-weight:700">${n.os}</div><div style="font-size:20px;font-weight:800;margin:4px 0">${n.ct}</div><div style="display:flex;align-items:center;justify-content:center;gap:4px"><span style="width:5px;height:5px;border-radius:50%;background:var(--${n.hp>99?'green':'amber'})"></span><span style="font-size:10px;color:var(--text-muted)">${n.hp}%</span></div></div>`).join('')+'</div>');
-
-  // AI Agent Protection Panel (from Lovable)
-  const aiAgents=[{n:'GPT-4o Production',t:'LLM',r:12,s:'Protected',rq:'14.2K/hr'},{n:'Customer Support Bot',t:'Chatbot',r:8,s:'Protected',rq:'3.8K/hr'},{n:'RPA Invoice Agent',t:'RPA',r:24,s:'Monitored',rq:'890/hr'},{n:'Code Review Copilot',t:'LLM',r:15,s:'Protected',rq:'2.1K/hr'},{n:'Data Pipeline Agent',t:'Autonomous',r:31,s:'Monitored',rq:'5.4K/hr'},{n:'Threat Intel Analyzer',t:'AI Agent',r:6,s:'Protected',rq:'1.2K/hr'}];
-  h+=gc(`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><span style="font-size:14px">&#129302;</span><h3 style="font-size:13px;font-weight:600;color:hsl(var(--muted-foreground))">AI Agent Protection Panel &mdash; OpenClaw Shield</h3><span class="badge badge-default" style="margin-left:auto">${aiAgents.length} AI Agents Monitored</span></div><div class="g3">`+aiAgents.map(a=>`<div style="padding:12px;border-radius:8px;background:hsl(var(--muted)/0.3);border:1px solid hsl(var(--border)/0.3);transition:background 0.2s" onmouseover="this.style.background='hsl(228 25% 12% / 0.5)'" onmouseout="this.style.background='hsl(228 25% 12% / 0.3)'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:500">${a.n}</span><span class="badge ${a.s==='Protected'?'badge-default':'badge-secondary'}">${a.s}</span></div><div style="display:flex;align-items:center;gap:10px;font-size:10px;color:hsl(var(--muted-foreground));margin-top:6px"><span style="background:hsl(var(--primary)/0.1);padding:2px 6px;border-radius:4px;color:hsl(var(--primary))">${a.t}</span><span style="color:${a.r>25?'hsl(var(--aegis-amber))':'hsl(var(--aegis-green))'}">Risk: ${a.r}</span><span>${a.rq}</span></div></div>`).join('')+'</div>','aurora');
+  // Activity feed
+  h+=gc(`<div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="font-size:12px;font-weight:700">&#10040; Guardian Activity</span><span class="badge ${daemon&&daemon.running?'badge-green':'badge-destructive'}">${daemon&&daemon.running?'LIVE':'OFFLINE'}</span></div><div style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:3px">`+(activity&&activity.length?activity.map(a=>`<div style="display:flex;gap:6px;padding:5px 8px;border-radius:5px;background:var(--surface2);border-left:2px solid hsl(var(--primary))"><div style="flex:1"><span style="font-size:9px;font-weight:700;text-transform:uppercase;color:hsl(var(--primary))">${esc(a.category)}</span> <span style="font-size:9px;color:var(--text-muted)">${ago(a.timestamp)}</span><div style="font-size:10px;margin-top:1px">${esc(a.summary)}</div></div></div>`).join(''):'<div class="empty">No activity data available</div>')+'</div>','glow-amber');
 
   // Seraph ticker
-  h+=gc(`<div style="display:flex;align-items:center;gap:12px"><span style="font-size:16px;color:hsl(var(--primary));flex-shrink:0">&#129504;</span><div style="flex:1;overflow:hidden"><div style="display:flex;gap:24px;animation:marquee 30s linear infinite;white-space:nowrap"><span style="font-size:12px"><b style="color:var(--primary)">Seraph Brain</b> predicted and blocked <b style="color:var(--green)">847 attack vectors</b></span><span style="color:var(--text-muted)">&bull;</span><span style="font-size:12px"><b style="color:var(--primary)">Vigil</b> neutralized lateral movement</span><span style="color:var(--text-muted)">&bull;</span><span style="font-size:12px"><b style="color:var(--primary)">Iron Wing</b> applied <b style="color:var(--green)">142 patches</b></span><span style="color:var(--text-muted)">&bull;</span><span style="font-size:12px"><b style="color:var(--primary)">Vault Keeper</b> blocked prompt injection</span></div></div><span style="font-size:16px;color:var(--primary);animation:pulse 2s infinite">&#9881;</span></div>`,'glow-cyan');
+  h+=gc(`<div style="display:flex;align-items:center;gap:10px"><span style="font-size:14px;color:hsl(var(--primary));flex-shrink:0">&#129504;</span><div style="flex:1;overflow:hidden"><div style="display:flex;gap:20px;animation:marquee 30s linear infinite;white-space:nowrap"><span style="font-size:11px"><b style="color:hsl(var(--primary))">Seraph Brain</b> &mdash; V10.0.0 Autonomous Defense Active</span><span style="color:var(--text-muted)">&bull;</span><span style="font-size:11px"><b style="color:hsl(var(--primary))">Halo Score:</b> ${hs!=null?hs:'--'}</span><span style="color:var(--text-muted)">&bull;</span><span style="font-size:11px"><b style="color:hsl(var(--primary))">Fleet:</b> ${n2s(ac)} nodes</span><span style="color:var(--text-muted)">&bull;</span><span style="font-size:11px"><b style="color:hsl(var(--primary))">Events:</b> ${n2s(ec)} processed</span></div></div><span style="font-size:14px;color:hsl(var(--primary));animation:pulse 2s infinite">&#9881;</span></div>`,'glow-cyan');
 
   mc.innerHTML=h;
 }
 
-/* ===== PAGE: FLEET ===== */
+/* ===== FLEET ===== */
 async function renderFleet(mc){
-  const agents=cachedData.agents||await fetchJSON('/api/v1/agents');
-  const list=agents||[];
-  let h=`<div class="page-header"><div class="page-title">&#9678; Network Fabric &mdash; Fleet <span class="badge badge-default">${list.length} nodes</span></div><div class="page-sub">ANGELNODE mesh topology, traffic analysis, micro-segmentation zones</div></div>`;
-
-  // Stats
+  const [agents,meshStatus,osDist,segments]=await Promise.all([
+    cachedData.agents||fetchJSON('/api/v1/agents'),fetchJSON('/api/v1/mesh/status'),
+    fetchJSON('/api/v1/convergence/fleet/os-distribution'),fetchJSON('/api/v1/zerotrust/segments'),
+  ]);
+  const list=agents||[];cachedData.agents=list;
   const online=list.filter(a=>a.status==='online').length;
-  h+='<div class="stat-row">'+[{i:'&#9678;',v:list.length,l:'Total Nodes',c:'primary'},{i:'&#9989;',v:online,l:'Online',c:'green'},{i:'&#9888;',v:list.length-online,l:'Offline',c:'amber'},{i:'&#128274;',v:'AES-256',l:'Mesh Encryption',c:'cyan'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
 
-  // Topology placeholder
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">&#128462; Mesh Topology</div><div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:20px">${list.slice(0,20).map((a,i)=>`<div style="width:60px;text-align:center;padding:8px;border-radius:8px;background:var(--surface2);border:1px solid ${a.status==='online'?'var(--green)':'var(--red)'}40"><div style="font-size:16px">&#128421;</div><div style="font-size:8px;margin-top:4px;color:var(--text-dim)">${esc(a.agent_id||'node-'+i).slice(0,8)}</div><div style="font-size:8px;color:${a.status==='online'?'var(--green)':'var(--red)'}">${a.status||'online'}</div></div>`).join('')}</div>`,'aurora');
+  let h=`<div class="page-header"><div class="page-title">&#9678; Network Fabric <span class="badge badge-default">${n2s(list.length)} nodes</span></div><div class="page-sub">Fleet topology, mesh status, micro-segmentation</div></div>`;
+  h+='<div class="stat-row">'+statCard('&#9678;',n2s(list.length),'Total Nodes','primary')+statCard('&#9989;',n2s(online),'Online','green')+statCard('&#9888;',n2s(list.length-online),'Offline','amber')+statCard('&#128274;',meshStatus&&meshStatus.encryption?meshStatus.encryption:'--','Mesh Encryption','cyan')+'</div>';
 
-  // Agent table
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Fleet Nodes</div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Agent ID</th><th>Hostname</th><th>OS</th><th>Status</th><th>Trust</th><th>Last Seen</th></tr></thead><tbody>`+list.map(a=>`<tr><td style="font-family:var(--mono);font-size:11px;color:var(--primary)">${esc(a.agent_id)}</td><td>${esc(a.hostname)}</td><td>${esc(a.os_type||'--')}</td><td><span class="badge ${a.status==='online'?'badge-green':'badge-destructive'}">${a.status||'unknown'}</span></td><td style="color:${(a.trust_score||80)>70?'var(--green)':'var(--amber)'}">${a.trust_score||80}%</td><td style="font-size:11px;color:var(--text-dim)">${ago(a.last_heartbeat)}</td></tr>`).join('')+`</tbody></table></div>`);
+  if(list.length){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">&#128462; Mesh Topology</div><div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:12px">${list.slice(0,24).map((a,i)=>`<div style="width:54px;text-align:center;padding:6px;border-radius:6px;background:var(--surface2);border:1px solid ${a.status==='online'?'var(--green)':'var(--red)'}30;transition:transform .15s" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'"><div style="font-size:14px">&#128421;</div><div style="font-size:7px;margin-top:3px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis">${esc(a.agent_id||'node-'+i).slice(0,10)}</div><div style="font-size:7px;color:${a.status==='online'?'var(--green)':'var(--red)'}">${a.status||'--'}</div></div>`).join('')}</div>`,'aurora');
 
-  // Micro-segmentation
-  const zones=[{name:'Production',nodes:42,trust:'Verified',c:'green'},{name:'Development',nodes:28,trust:'Conditional',c:'amber'},{name:'Staging',nodes:14,trust:'Conditional',c:'amber'},{name:'DMZ',nodes:8,trust:'Untrusted',c:'red'}];
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">&#128272; Micro-Segmentation Zones</div><div class="g4">`+zones.map(z=>`<div style="padding:14px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);text-align:center"><div style="font-size:14px;font-weight:700">${z.name}</div><div style="font-size:20px;font-weight:800;margin:6px 0">${z.nodes}</div><span class="badge badge-${z.c}">${z.trust}</span></div>`).join('')+'</div>');
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">Fleet Nodes</div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Agent ID</th><th>Hostname</th><th>OS</th><th>Status</th><th>Trust</th><th>Last Seen</th></tr></thead><tbody>`+list.map(a=>`<tr><td style="font-family:var(--mono);font-size:10px;color:hsl(var(--primary))">${esc(a.agent_id)}</td><td>${esc(a.hostname)}</td><td>${esc(a.os_type||'--')}</td><td><span class="badge ${a.status==='online'?'badge-green':'badge-destructive'}">${a.status||'--'}</span></td><td style="color:${riskColor(100-(a.trust_score||80))}">${a.trust_score||'--'}%</td><td style="font-size:10px;color:var(--text-dim)">${ago(a.last_heartbeat)}</td></tr>`).join('')+`</tbody></table></div>`);
+  }else{h+=gc('<div class="empty">No fleet nodes registered. Deploy ANGELNODEs to see them here.</div>');}
 
+  if(segments&&Array.isArray(segments)&&segments.length){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">&#128272; Micro-Segmentation Zones</div><div class="g${Math.min(segments.length,4)}">`+segments.map(z=>`<div style="padding:12px;border-radius:8px;background:var(--surface2);text-align:center"><div style="font-size:13px;font-weight:700">${esc(z.name||z.segment_id)}</div><div style="font-size:9px;color:var(--text-muted);margin-top:4px">${esc(z.description||z.trust_level||'--')}</div></div>`).join('')+'</div>');
+  }
   mc.innerHTML=h;
 }
 
-/* ===== PAGE: TENANTS ===== */
-async function renderTenants(mc){
-  const tenants=await fetchJSON('/api/v1/tenants')||[];
-  let h=`<div class="page-header"><div class="page-title">&#9964; Identity &amp; Access <span class="badge badge-default">${tenants.length} tenants</span></div><div class="page-sub">Multi-tenant identity governance, behavioral biometrics, session inspector</div></div>`;
-
-  h+='<div class="stat-row">'+[{i:'&#9964;',v:tenants.length||3,l:'Active Tenants',c:'primary'},{i:'&#128101;',v:'1,847',l:'Total Users',c:'green'},{i:'&#129302;',v:'6',l:'AI Agents',c:'purple'},{i:'&#128274;',v:'MFA Active',l:'Auth Method',c:'cyan'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
-
-  // Tenant cards
-  const tenantData=tenants.length?tenants:[{tenant_id:'acme-corp',display_name:'Acme Corp',status:'active'},{tenant_id:'dev-team',display_name:'Dev Team',status:'active'},{tenant_id:'startup-xyz',display_name:'Startup XYZ',status:'active'}];
-  h+=`<div class="g3">`+tenantData.map(t=>gc(`<div style="text-align:center;padding:8px 0"><div style="font-size:28px;margin-bottom:8px">&#127970;</div><div style="font-size:15px;font-weight:700">${esc(t.display_name||t.tenant_id)}</div><div style="font-size:11px;color:var(--text-dim);margin:4px 0">${esc(t.tenant_id)}</div><span class="badge badge-green">${t.status||'active'}</span></div>`,'aurora')).join('')+'</div>';
-
-  // AI Agent identity
-  const aiAgents=[{name:'GPT-4o Production',type:'LLM',risk:12,status:'Protected'},{name:'Customer Support Bot',type:'Chatbot',risk:8,status:'Protected'},{name:'RPA Invoice Agent',type:'RPA',risk:24,status:'Monitored'},{name:'Code Review Copilot',type:'LLM',risk:15,status:'Protected'},{name:'Data Pipeline Agent',type:'Autonomous',risk:31,status:'Monitored'},{name:'Threat Intel Analyzer',type:'AI Agent',risk:6,status:'Protected'}];
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">&#129302; AI Agent Identity Registry</div><div class="g3">`+aiAgents.map(a=>`<div style="padding:12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;font-weight:600">${a.name}</span><span class="badge ${a.status==='Protected'?'badge-green':'badge-amber'}">${a.status}</span></div><div style="display:flex;gap:8px;font-size:10px;color:var(--text-dim)"><span class="badge badge-default">${a.type}</span><span style="color:${riskColor(a.risk)}">Risk: ${a.risk}</span></div></div>`).join('')+'</div>');
-
-  // Session inspector
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">&#128065; Active Sessions</div><table class="tbl"><thead><tr><th>User</th><th>Tenant</th><th>IP</th><th>MFA</th><th>Risk</th><th>Duration</th></tr></thead><tbody>`+[{u:'admin@acme-corp',t:'acme-corp',ip:'10.0.1.45',mfa:true,risk:4,dur:'2h 14m'},{u:'dev@dev-team',t:'dev-team',ip:'10.0.2.12',mfa:true,risk:8,dur:'45m'},{u:'ops@startup-xyz',t:'startup-xyz',ip:'10.0.3.88',mfa:false,risk:22,dur:'1h 30m'}].map(s=>`<tr><td style="font-family:var(--mono);font-size:11px">${s.u}</td><td>${s.t}</td><td style="color:var(--text-dim)">${s.ip}</td><td><span class="badge ${s.mfa?'badge-green':'badge-amber'}">${s.mfa?'Active':'Off'}</span></td><td style="color:${riskColor(s.risk)}">${s.risk}</td><td style="color:var(--text-dim)">${s.dur}</td></tr>`).join('')+'</tbody></table>');
-
-  mc.innerHTML=h;
-}
-
-/* ===== PAGE: ALERTS ===== */
+/* ===== ALERTS ===== */
 async function renderAlerts(mc){
-  const alerts=await fetchJSON('/api/v1/guardian/alerts/recent?tenantId=dev-tenant&limit=20')||cachedData.alerts||[];
-  let h=`<div class="page-header"><div class="page-title">&#9888; Alerts &amp; Events <span class="badge badge-destructive">${alerts.filter(a=>a.severity==='critical').length} Critical</span></div><div class="page-sub">Real-time alert feed from all 12 Angel Legion wardens</div></div>`;
+  const [alerts,soarStats]=await Promise.all([
+    fetchJSON('/api/v1/guardian/alerts/recent?tenantId=dev-tenant&limit=30'),
+    fetchJSON('/api/v1/soar/stats'),
+  ]);
+  const list=alerts||[];cachedData.alerts=list;
+  const crits=list.filter(a=>a.severity==='critical').length;
 
-  h+='<div class="stat-row">'+[{i:'&#128276;',v:alerts.length,l:'Active Alerts',c:'amber'},{i:'&#9989;',v:'4,218',l:'Auto-Resolved',c:'green'},{i:'&#9888;',v:alerts.filter(a=>a.severity==='critical').length,l:'Critical Events',c:'red'},{i:'&#128337;',v:'2.8s',l:'Avg Resolution',c:'cyan'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
+  let h=`<div class="page-header"><div class="page-title">&#9888; Alerts &amp; Events <span class="badge badge-destructive">${crits} Critical</span></div><div class="page-sub">Real-time alert feed from Angel Legion wardens</div></div>`;
+  h+='<div class="stat-row">'+statCard('&#128276;',n2s(list.length),'Total Alerts','amber')+statCard('&#9888;',n2s(crits),'Critical','red')+statCard('&#9989;',soarStats&&soarStats.total_executions!=null?n2s(soarStats.total_executions):'--','SOAR Runs','green')+statCard('&#128337;',soarStats&&soarStats.avg_response_time!=null?soarStats.avg_response_time+'s':'--','Avg Response','cyan')+'</div>';
 
-  // Warden breakdown
-  const wb=[{w:'Vigil',a:1847,c:342},{w:'Gate Keeper',a:2847,c:156},{w:'Vault Keeper',a:891,c:89},{w:'Iron Wing',a:1247,c:47},{w:'Net Warden',a:634,c:34},{w:'Drift Watcher',a:421,c:12},{w:'Chronicle',a:208,c:23},{w:'Paladin',a:67,c:8}];
-  h+='<div class="g12">';
-  h+=`<div style="grid-column:span 8">${gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Alert Breakdown by Warden</div><div style="display:flex;flex-direction:column;gap:6px">`+wb.map(w=>`<div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;font-weight:600;width:100px;flex-shrink:0">${w.w}</span><div style="flex:1;height:16px;border-radius:10px;background:var(--surface2);overflow:hidden;position:relative"><div style="position:absolute;height:100%;background:var(--primary);opacity:0.3;border-radius:10px;width:${Math.min(w.a/30,100)}%"></div><div style="position:absolute;height:100%;background:var(--red);opacity:0.6;border-radius:10px;width:${Math.min(w.c/30,100)}%"></div></div><span style="font-size:10px;color:var(--text-muted);width:60px;text-align:right">${w.a.toLocaleString()}</span><span style="font-size:10px;color:var(--red);width:50px;text-align:right">${w.c} crit</span></div>`).join('')+'</div>')}</div>`;
-  h+=`<div style="grid-column:span 4">${gc(`<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px"><span style="font-size:13px;font-weight:700">&#9889; Live Feed</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;margin-left:auto"></span></div><div style="display:flex;flex-direction:column;gap:6px">`+['Vault Keeper: secret scan clean','Drift Watcher: baseline match','Gate Keeper: rate limit applied','Scroll Keeper: audit log entry','Vigil: threat scan complete'].map((e,i)=>`<div style="padding:6px 8px;border-radius:6px;background:var(--surface2);border:1px solid var(--border)"><div style="font-size:9px;font-family:var(--mono);color:var(--primary)">T-00:0${i}</div><div style="font-size:10px;color:var(--text-dim);margin-top:2px">${e}</div></div>`).join('')+'</div>','aurora')}</div>`;
-  h+='</div>';
-
-  // Alert feed — full Lovable data with fallback
-  const mockAlerts=[
-    {id:'ALT-8821',time:'2m ago',event:'Prompt injection attempt blocked',agent:'GPT-4o Production',tenant:'acme-corp',severity:'critical',warden:'Vault Keeper',resolved:true,detail:'Adversarial prompt detected — Vault Keeper blocked before LLM ingestion'},
-    {id:'ALT-8820',time:'8m ago',event:'Binary checksum mismatch on ANGEL-004',agent:'ANGEL-004',tenant:'dev-team',severity:'critical',warden:'Iron Wing',resolved:true,detail:'Anti-tamper ENFORCE · Iron Wing restored from golden image in 1.2s'},
-    {id:'ALT-8819',time:'15m ago',event:'Anomalous API call sequence detected',agent:'RPA Invoice Agent',tenant:'startup-xyz',severity:'high',warden:'Gate Keeper',resolved:true,detail:'Gate Keeper flagged 847 API calls/min — rate limiter applied'},
-    {id:'ALT-8818',time:'22m ago',event:'Credential stuffing attempt',agent:'Edge-FW-01',tenant:'acme-corp',severity:'high',warden:'Vigil',resolved:true,detail:'Vigil detected pattern — 3,421 failed logins from 14 IPs. Auto-blocked.'},
-    {id:'ALT-8817',time:'35m ago',event:'Loose allowlist detected — startup-xyz',agent:'ANGELNODE Cloud',tenant:'startup-xyz',severity:'warning',warden:'Scroll Keeper',resolved:false,detail:'Self-Hardening Engine flagged 3 overly permissive rules — awaiting operator review'},
-    {id:'ALT-8816',time:'1h ago',event:'Data exfiltration attempt via LLM output',agent:'Data Pipeline Agent',tenant:'dev-team',severity:'critical',warden:'Vault Keeper',resolved:true,detail:'PII detected in LLM response — redacted before delivery'},
-    {id:'ALT-8815',time:'2h ago',event:'Agent behavioral drift — baseline deviation',agent:'Autonomous Orchestrator',tenant:'acme-corp',severity:'high',warden:'Drift Watcher',resolved:true,detail:'Drift Watcher detected 34% deviation from peer baseline — session quarantined'},
-    {id:'ALT-8814',time:'3h ago',event:'DNS tunneling detected on IoT-Gateway',agent:'IoT-Gateway',tenant:'startup-xyz',severity:'warning',warden:'Net Warden',resolved:true,detail:'Net Warden blocked C2 beacon attempt — node isolated'},
-    {id:'ALT-8813',time:'4h ago',event:'Suspicious browser extension threat',agent:'WS-Pool endpoint',tenant:'dev-team',severity:'warning',warden:'Glass Eye',resolved:true,detail:'Glass Eye detected page injection attempt · extension quarantined'},
-    {id:'ALT-8812',time:'6h ago',event:'Supply chain tool abuse detected',agent:'Build Pipeline',tenant:'acme-corp',severity:'high',warden:'Tool Smith',resolved:true,detail:'Tool Smith detected unsigned dependency injection · build stopped, reverted'},
-    {id:'ALT-8811',time:'8h ago',event:'Kill chain sequence — lateral movement',agent:'Internal Segment',tenant:'acme-corp',severity:'critical',warden:'Chronicle',resolved:true,detail:'Chronicle correlated 5-step kill chain · Iron Wing isolated 3 nodes in 0.9s'},
-    {id:'ALT-8810',time:'12h ago',event:'HIPAA compliance drift detected',agent:'Patient Data API',tenant:'startup-xyz',severity:'warning',warden:'Paladin',resolved:false,detail:'Paladin: 2 HIPAA controls out of compliance — manual review requested'},
-  ];
-  const displayAlerts=alerts&&alerts.length?alerts:mockAlerts;
-  h+=gc(`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="display:flex;align-items:center;gap:6px"><span style="font-size:14px">&#9888;</span><span style="font-size:13px;font-weight:700">Alert Center &mdash; All 12 Wardens &middot; Revertible Actions</span></div><div style="display:flex;gap:6px"><span class="badge badge-outline" style="cursor:pointer">&#128269; Filter</span><span class="badge badge-destructive">${displayAlerts.filter(a=>!a.resolved).length} Unresolved</span></div></div><div style="display:flex;flex-direction:column;gap:6px">`+displayAlerts.map(a=>{
-    const isApi=!!a.alert_id;const id=isApi?(a.alert_id):(a.id);const ev=isApi?a.title:a.event;const det=isApi?a.description:a.detail;const res=isApi?true:a.resolved;const sev=a.severity;const time=isApi?ago(a.created_at):a.time;
-    return`<div class="alert-row ${res?'':'unresolved'}"><span style="font-size:14px;flex-shrink:0;margin-top:2px">${res?'&#9989;':'&#9888;'}</span><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px"><div style="display:flex;align-items:center;gap:6px"><span style="font-family:var(--mono);font-size:10px;color:hsl(var(--primary))">${esc(id)}</span><span style="font-size:12px;font-weight:500">${esc(ev)}</span><span class="badge ${sevBadge(sev)}">${sev}</span></div><div style="display:flex;align-items:center;gap:6px"><span class="badge badge-outline">${esc(a.warden||'')}</span><span style="font-size:10px;font-family:var(--mono);color:hsl(var(--muted-foreground))">${esc(a.tenant||'')}</span><span style="font-size:10px;color:hsl(var(--muted-foreground))">${time}</span></div></div><p style="font-size:10px;color:hsl(var(--muted-foreground));margin-top:3px">${esc(det||'')}</p></div></div>`;
-  }).join('')+'</div>');
-
+  if(list.length){
+    h+=gc(`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;font-weight:700">Alert Feed</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite"></span></div><span class="badge badge-destructive">${list.filter(a=>a.status==='open'||!a.resolved).length} Open</span></div><div style="display:flex;flex-direction:column;gap:4px">`+list.map(a=>{
+      const id=a.alert_id||a.id||'--';const ev=a.title||a.event||a.summary||'Alert';const det=a.description||a.detail||'';const sev=a.severity||'info';const time=ago(a.created_at||a.timestamp);const resolved=a.status==='resolved'||a.resolved;
+      return`<div class="alert-row ${resolved?'':'unresolved'}"><span style="font-size:13px;flex-shrink:0;margin-top:1px">${resolved?'&#9989;':'&#9888;'}</span><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:3px"><div style="display:flex;align-items:center;gap:5px"><span style="font-family:var(--mono);font-size:9px;color:hsl(var(--primary))">${esc(id)}</span><span style="font-size:11px;font-weight:500">${esc(ev)}</span><span class="badge ${sevBadge(sev)}">${sev}</span></div><div style="display:flex;align-items:center;gap:5px">${a.warden?`<span class="badge badge-outline">${esc(a.warden)}</span>`:''}<span style="font-size:9px;color:var(--text-muted)">${time}</span></div></div>${det?`<p style="font-size:10px;color:var(--text-muted);margin-top:2px">${esc(det)}</p>`:''}</div></div>`;
+    }).join('')+'</div>');
+  }else{h+=gc('<div class="empty">No alerts. All systems nominal.</div>','glow-cyan');}
   mc.innerHTML=h;
 }
 
-/* ===== PAGE: LEGION ===== */
+/* ===== LEGION ===== */
 async function renderLegion(mc){
-  const wardens=[
-    {name:'Vigil',role:'Threat Detection & Real-Time Monitoring',alerts:1847,status:'Active',desc:'Watches all network traffic, endpoint behavior, and cloud events 24/7'},
-    {name:'Net Warden',role:'Network Security & Segmentation',alerts:634,status:'Active',desc:'Manages micro-segmentation, firewall rules, and east-west traffic control'},
-    {name:'Glass Eye',role:'Browser & Endpoint Visibility',alerts:312,status:'Active',desc:'Monitors browser extensions, page injections, and endpoint anomalies'},
-    {name:'Tool Smith',role:'Supply Chain & Build Security',alerts:189,status:'Active',desc:'Validates build pipelines, dependency integrity, and tool authorization'},
-    {name:'Chronicle',role:'Kill Chain Correlation & Forensics',alerts:208,status:'Active',desc:'Correlates multi-step attacks across data sources into kill chains'},
-    {name:'Vault Keeper',role:'Data Protection & Secret Management',alerts:891,status:'Active',desc:'Guards secrets, PII, and sensitive data across all systems'},
-    {name:'Drift Watcher',role:'Behavioral Baseline & Anomaly Detection',alerts:421,status:'Active',desc:'Tracks behavioral baselines and flags deviations from peer norms'},
-    {name:'Paladin',role:'Compliance & Regulatory Automation',alerts:67,status:'Active',desc:'Ensures SOC2, ISO27001, GDPR, HIPAA compliance continuously'},
-    {name:'Gate Keeper',role:'API Security & Rate Limiting',alerts:2847,status:'Active',desc:'Protects APIs with rate limiting, schema validation, and abuse detection'},
-    {name:'Iron Wing',role:'Patch Management & Self-Healing',alerts:1247,status:'Active',desc:'Applies patches, restores from golden images, and hardens endpoints'},
-    {name:'Deep Quill',role:'Evidence Collection & Chain of Custody',alerts:156,status:'Active',desc:'Collects forensic evidence with cryptographic chain of custody'},
-    {name:'Scroll Keeper',role:'Audit Logging & Compliance Trail',alerts:445,status:'Active',desc:'Maintains immutable audit logs and compliance documentation'},
-  ];
-  let h=`<div class="page-header"><div class="page-title">&#9876; Angel Legion <span class="badge badge-default">12 Wardens</span></div><div class="page-sub">The 12 autonomous wardens protecting your infrastructure</div></div>`;
+  const [legion,threats]=await Promise.all([
+    fetchJSON('/api/v1/orchestrator/legion/status'),
+    fetchJSON('/api/v1/analytics/threat-matrix?lookback_hours=24'),
+  ]);
 
-  h+='<div class="stat-row">'+[{i:'&#9876;',v:'12',l:'Active Wardens',c:'primary'},{i:'&#128737;',v:'9,264',l:'Total Alerts Handled',c:'green'},{i:'&#129504;',v:'99.2%',l:'Auto-Resolve Rate',c:'cyan'},{i:'&#9889;',v:'0.8s',l:'Avg Response Time',c:'amber'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
+  let h=`<div class="page-header"><div class="page-title">&#9876; Angel Legion</div><div class="page-sub">The autonomous wardens protecting your infrastructure</div></div>`;
 
-  h+='<div class="g3">'+wardens.map(w=>gc(`<div style="padding:4px 0"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:14px;font-weight:700">${w.name}</span><span class="badge badge-green">${w.status}</span></div><div style="font-size:10px;color:var(--primary);font-weight:600;margin-bottom:4px">${w.role}</div><div style="font-size:10px;color:var(--text-dim);margin-bottom:8px">${w.desc}</div><div style="display:flex;justify-content:space-between;font-size:10px"><span style="color:var(--text-muted)">${w.alerts.toLocaleString()} alerts</span><span style="color:var(--green)">99%+ resolved</span></div></div>`,'glow-cyan')).join('')+'</div>';
+  const wardens=legion&&legion.wardens?legion.wardens:legion&&Array.isArray(legion)?legion:null;
+  const wardenCount=wardens?wardens.length:0;
 
-  // Threat matrix
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">&#128200; AI Threat Intelligence Matrix</div><table class="tbl"><thead><tr><th>Threat Vector</th><th>Severity</th><th>Instances</th><th>Blocked</th><th>Warden</th></tr></thead><tbody>`+[{v:'Prompt Injection',s:'critical',n:847,b:'100%',w:'Vault Keeper'},{v:'Lateral Movement',s:'critical',n:234,b:'99.6%',w:'Vigil'},{v:'Data Exfiltration',s:'high',n:412,b:'100%',w:'Vault Keeper'},{v:'Credential Stuffing',s:'high',n:3421,b:'99.8%',w:'Vigil'},{v:'Supply Chain',s:'high',n:89,b:'100%',w:'Tool Smith'},{v:'DNS Tunneling',s:'warning',n:156,b:'100%',w:'Net Warden'}].map(t=>`<tr><td style="font-weight:600">${t.v}</td><td><span class="badge ${sevBadge(t.s)}">${t.s}</span></td><td>${t.n.toLocaleString()}</td><td style="color:var(--green);font-weight:600">${t.b}</td><td style="color:var(--primary)">${t.w}</td></tr>`).join('')+'</tbody></table>');
+  h+='<div class="stat-row">'+statCard('&#9876;',n2s(wardenCount),'Active Wardens','primary')+statCard('&#128737;','--','Alerts Handled','green')+statCard('&#129504;','--','Auto-Resolve Rate','cyan')+statCard('&#9889;','--','Avg Response','amber')+'</div>';
 
+  if(wardens&&wardens.length){
+    h+='<div class="g3">'+wardens.map(w=>gc(`<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:13px;font-weight:700">${esc(w.name||w.warden_name)}</span><span class="badge ${w.status==='active'||w.status==='Active'?'badge-green':'badge-amber'}">${esc(w.status||'--')}</span></div><div style="font-size:10px;color:hsl(var(--primary));font-weight:600;margin-bottom:3px">${esc(w.role||w.description||'')}</div>${w.alerts!=null?`<div style="font-size:9px;color:var(--text-muted)">${n2s(w.alerts)} alerts handled</div>`:''}</div>`,'glow-cyan')).join('')+'</div>';
+  }else{
+    h+=gc('<div class="empty">Warden data unavailable. Orchestrator may be initializing.</div>');
+  }
+
+  if(threats&&threats.length){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">Threat Matrix (24h)</div><table class="tbl"><thead><tr><th>Threat</th><th>Severity</th><th>Count</th><th>Status</th></tr></thead><tbody>`+threats.slice(0,10).map(t=>`<tr><td style="font-weight:600">${esc(t.threat_name||t.name||'Unknown')}</td><td><span class="badge ${sevBadge(t.severity||'high')}">${t.severity||'--'}</span></td><td>${n2s(t.count||t.instances||0)}</td><td><span class="badge badge-green">${t.status||'Blocked'}</span></td></tr>`).join('')+'</tbody></table>');
+  }
   mc.innerHTML=h;
 }
 
-/* ===== PAGE: ANTI-TAMPER ===== */
-async function renderAntiTamper(mc){
-  const shield=await fetchJSON('/api/v1/angelclaw/shield/status');
-  let h=`<div class="page-header"><div class="page-title">&#128274; Anti-Tamper Engine <span class="badge badge-default">${shield?shield.mode||'ENFORCE':'ENFORCE'}</span></div><div class="page-sub">Binary integrity, golden image restoration, tamper event logging</div></div>`;
-
-  // Mode selector
-  const mode=shield?shield.mode:'ENFORCE';
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Enforcement Mode</div><div style="display:flex;gap:12px">`+['OFF','MONITOR','ENFORCE'].map(m=>`<div style="flex:1;padding:16px;border-radius:10px;text-align:center;cursor:pointer;border:2px solid ${m===mode?'var(--primary)':'var(--border)'};background:${m===mode?'var(--primary-dim)':'var(--surface2)'}"><div style="font-size:16px;font-weight:800;color:${m===mode?'var(--primary)':'var(--text-dim)'}">${m}</div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">${m==='OFF'?'No protection':m==='MONITOR'?'Detect only':'Block & restore'}</div></div>`).join('')+'</div>');
-
-  h+='<div class="stat-row">'+[{i:'&#128274;',v:'142',l:'Integrity Checks/hr',c:'primary'},{i:'&#9989;',v:'99.8%',l:'Binary Match Rate',c:'green'},{i:'&#9888;',v:'3',l:'Tamper Events',c:'red'},{i:'&#9889;',v:'1.2s',l:'Avg Restore Time',c:'cyan'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
-
-  // Per-agent table
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Per-Agent Integrity Status</div><table class="tbl"><thead><tr><th>Agent</th><th>Mode</th><th>Last Check</th><th>Status</th><th>Checksum</th></tr></thead><tbody>`+[{a:'ANGEL-001',m:'ENFORCE',t:'2m ago',s:'Pass',c:'a4f2..e8c1'},{a:'ANGEL-002',m:'ENFORCE',t:'3m ago',s:'Pass',c:'b7d1..f3a2'},{a:'ANGEL-003',m:'MONITOR',t:'5m ago',s:'Pass',c:'c9e3..a1b4'},{a:'ANGEL-004',m:'ENFORCE',t:'1m ago',s:'Restored',c:'d2f4..b5c7'}].map(r=>`<tr><td style="font-family:var(--mono);color:var(--primary)">${r.a}</td><td><span class="badge badge-default">${r.m}</span></td><td style="color:var(--text-dim)">${r.t}</td><td><span class="badge ${r.s==='Pass'?'badge-green':'badge-amber'}">${r.s}</span></td><td style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">${r.c}</td></tr>`).join('')+'</tbody></table>');
-
-  // Tamper log
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">&#128196; Tamper Event Log</div><div style="display:flex;flex-direction:column;gap:6px">`+[{t:'8m ago',e:'Binary checksum mismatch on ANGEL-004',d:'Iron Wing restored from golden image in 1.2s',s:'critical'},{t:'2h ago',e:'Config file modification attempt',d:'Drift Watcher detected unauthorized change — reverted',s:'high'},{t:'6h ago',e:'Unsigned dependency injection in build pipeline',d:'Tool Smith blocked — build stopped and reverted',s:'high'}].map(e=>`<div class="alert-row"><span style="font-size:14px;flex-shrink:0">&#128274;</span><div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span class="badge ${sevBadge(e.s)}">${e.s}</span><span style="font-size:12px;font-weight:600">${e.e}</span></div><div style="font-size:10px;color:var(--text-dim);margin-top:2px">${e.d} &middot; ${e.t}</div></div></div>`).join('')+'</div>');
-
-  // Self-hardening
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">&#128737; Self-Hardening Checks</div><div class="g4">`+[{l:'Binary Integrity',p:100,c:'green'},{l:'Config Baseline',p:98,c:'green'},{l:'Cert Rotation',p:94,c:'cyan'},{l:'Permission Audit',p:88,c:'amber'}].map(c=>`<div style="text-align:center;padding:8px">${renderDonut(c.p,c.c==='green'?'152 70% 50%':c.c==='cyan'?'185 80% 55%':'38 92% 55%',c.l)}</div>`).join('')+'</div>','glow-cyan');
-  mc.innerHTML=h;
-}
-
-/* ===== PAGE: ANALYTICS ===== */
-async function renderAnalytics(mc){
-  const threats=await fetchJSON('/api/v1/analytics/threat-matrix?lookback_hours=168')||[];
-  const intents=await fetchJSON('/api/v1/transcendence/intents')||[];
-  let h=`<div class="page-header"><div class="page-title">&#128200; Analytics &amp; Intelligence <span class="badge badge-default">${intents.length||71} intents</span></div><div class="page-sub">Seraph Brain analytics, threat matrix visualization, cross-platform correlation</div></div>`;
-
-  h+='<div class="stat-row">'+[{i:'&#129504;',v:intents.length||71,l:'Active Intents',c:'primary'},{i:'&#128200;',v:'48,291',l:'Events Analyzed',c:'green'},{i:'&#128270;',v:threats.length||847,l:'Threats Detected',c:'red'},{i:'&#9889;',v:'99.2%',l:'Auto-Resolve Rate',c:'cyan'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
-
-  // Intent table
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">&#129504; Seraph Brain — Active Intents</div><table class="tbl"><thead><tr><th>Intent</th><th>Category</th><th>Confidence</th><th>Triggers/hr</th><th>Status</th></tr></thead><tbody>`+(intents.length?intents.slice(0,10).map(i=>`<tr><td style="font-weight:600">${esc(i.intent_name||i.name)}</td><td><span class="badge badge-default">${esc(i.category||'detection')}</span></td><td style="color:var(--green)">${i.confidence||'94%'}</td><td>${i.triggers_per_hour||Math.floor(Math.random()*200)}</td><td><span class="badge badge-green">Active</span></td></tr>`).join(''):[{n:'Prompt Injection Detection',c:'AI Security',t:142},{n:'Lateral Movement Prediction',c:'Network',t:89},{n:'Data Exfiltration Prevention',c:'Data Protection',t:67},{n:'Behavioral Drift Analysis',c:'Identity',t:234},{n:'Supply Chain Validation',c:'DevSecOps',t:45}].map(i=>`<tr><td style="font-weight:600">${i.n}</td><td><span class="badge badge-default">${i.c}</span></td><td style="color:var(--green)">94%+</td><td>${i.t}</td><td><span class="badge badge-green">Active</span></td></tr>`).join(''))+'</tbody></table>');
-
-  // Platform breakdown
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">&#128200; Platform Event Breakdown</div><div style="display:flex;flex-direction:column;gap:8px">`+[{p:'Endpoint',v:18420,pct:38},{p:'Network',v:12847,pct:27},{p:'Cloud',v:8912,pct:18},{p:'Identity',v:5234,pct:11},{p:'AI/LLM',v:2878,pct:6}].map(p=>`<div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;font-weight:600;width:80px">${p.p}</span><div style="flex:1;height:12px;border-radius:6px;background:var(--surface2);overflow:hidden"><div style="width:${p.pct}%;height:100%;background:var(--primary);border-radius:6px;opacity:0.7"></div></div><span style="font-size:10px;color:var(--text-dim);width:60px;text-align:right">${p.v.toLocaleString()}</span><span style="font-size:10px;color:var(--primary);width:30px;text-align:right">${p.pct}%</span></div>`).join('')+'</div>');
-
-  // Weekly trend
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">&#128200; Weekly Event Trend</div><div style="display:flex;align-items:flex-end;gap:6px;height:120px;padding:8px 0">`+[6842,7234,8120,6890,9234,8456,7890].map((v,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:100%;background:var(--primary);opacity:0.6;border-radius:4px 4px 0 0;height:${Math.floor(v/100)}px"></div><span style="font-size:9px;color:var(--text-muted)">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]}</span></div>`).join('')+'</div>','glow-cyan');
-  mc.innerHTML=h;
-}
-
-/* ===== PAGE: LEARNING ===== */
-async function renderLearning(mc){
-  const feedback=await fetchJSON('/api/v1/learning/feedback/recent?limit=20')||[];
-  let h=`<div class="page-header"><div class="page-title">&#129504; Self-Learning Engine <span class="badge badge-default">Adaptive</span></div><div class="page-sub">Feedback-driven learning loop, suggestion queue, auto-adjustments</div></div>`;
-
-  h+='<div class="stat-row">'+[{i:'&#129504;',v:'847',l:'Learned Patterns',c:'primary'},{i:'&#128257;',v:'94.2%',l:'Feedback Rate',c:'green'},{i:'&#9889;',v:'156',l:'Auto-Adjustments',c:'cyan'},{i:'&#128200;',v:'+12%',l:'Weekly Improvement',c:'amber'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
-
-  // Per-tenant feedback
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Feedback Loop by Tenant</div><div class="g3">`+[{t:'acme-corp',rate:96,adj:67},{t:'dev-team',rate:92,adj:45},{t:'startup-xyz',rate:88,adj:44}].map(t=>`<div style="text-align:center;padding:12px">${renderDonut(t.rate,'152 70% 50%',t.t)}<div style="font-size:10px;color:var(--text-dim);margin-top:8px">${t.adj} adjustments</div></div>`).join('')+'</div>','aurora');
-
-  // Suggestion queue
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">&#128161; Suggestion Queue</div><div style="display:flex;flex-direction:column;gap:6px">`+[{s:'Tighten API rate limit for startup-xyz RPA agent',p:'high',w:'Gate Keeper'},{s:'Add MFA requirement for ops@startup-xyz',p:'high',w:'Paladin'},{s:'Update behavioral baseline for Data Pipeline Agent',p:'medium',w:'Drift Watcher'},{s:'Rotate TLS certificates in DMZ zone',p:'medium',w:'Net Warden'},{s:'Add HIPAA control checks for Patient Data API',p:'low',w:'Paladin'}].map(s=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border)"><span class="badge ${s.p==='high'?'badge-amber':s.p==='medium'?'badge-default':'badge-outline'}">${s.p}</span><span style="font-size:12px;flex:1">${s.s}</span><span style="font-size:10px;color:var(--primary)">${s.w}</span></div>`).join('')+'</div>');
-
-  // Recent feedback
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Recent Feedback</div><div style="display:flex;flex-direction:column;gap:4px">`+(feedback.length?feedback.slice(0,8).map(f=>`<div style="padding:6px 8px;border-radius:6px;background:var(--surface2);border-left:3px solid var(--primary)"><div style="font-size:10px"><span style="color:var(--primary);font-weight:600">${esc(f.category||'learning')}</span> <span style="color:var(--text-muted)">${ago(f.timestamp)}</span></div><div style="font-size:11px;margin-top:2px">${esc(f.summary||f.description||'Feedback applied')}</div></div>`).join(''):'<div class="empty">No feedback yet.</div>')+'</div>');
-
-  // Hardening log
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">&#128274; Auto-Hardening Log</div><table class="tbl"><thead><tr><th>Time</th><th>Action</th><th>Warden</th><th>Impact</th></tr></thead><tbody>`+[{t:'5m ago',a:'Rate limit tightened for RPA agent',w:'Gate Keeper',i:'Low'},{t:'1h ago',a:'Behavioral baseline updated',w:'Drift Watcher',i:'Medium'},{t:'3h ago',a:'Firewall rule optimized',w:'Net Warden',i:'Low'},{t:'6h ago',a:'Secret rotation completed',w:'Vault Keeper',i:'Low'}].map(r=>`<tr><td style="color:var(--text-dim)">${r.t}</td><td>${r.a}</td><td style="color:var(--primary)">${r.w}</td><td><span class="badge badge-default">${r.i}</span></td></tr>`).join('')+'</tbody></table>','glow-cyan');
-  mc.innerHTML=h;
-}
-
-/* ===== PAGE: THREAT-INTEL ===== */
+/* ===== THREAT INTEL ===== */
 async function renderThreatIntel(mc){
-  const threats=await fetchJSON('/api/v1/analytics/threat-matrix?lookback_hours=24')||[];
-  let h=`<div class="page-header"><div class="page-title">&#128270; Threat Intelligence <span class="badge badge-destructive">${threats.length||12} active</span></div><div class="page-sub">Real-time threat feeds, IOC tracking, predictive threat modeling</div></div>`;
-  h+='<div class="stat-row">'+[{i:'&#128270;',v:threats.length||847,l:'Threats Tracked',c:'red'},{i:'&#127760;',v:'42',l:'Active IOCs',c:'amber'},{i:'&#129504;',v:'3.2 steps',l:'Prediction Lead',c:'cyan'},{i:'&#128737;',v:'100%',l:'Block Rate',c:'green'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Threat Feed</div><table class="tbl"><thead><tr><th>Threat</th><th>Type</th><th>Severity</th><th>Source</th><th>Status</th></tr></thead><tbody>`+(threats.length?threats.slice(0,12).map(t=>`<tr><td style="font-weight:600">${esc(t.threat_name||t.name||'Unknown')}</td><td><span class="badge badge-default">${esc(t.category||'malware')}</span></td><td><span class="badge ${sevBadge(t.severity||'high')}">${t.severity||'high'}</span></td><td style="color:var(--text-dim)">${esc(t.source||'Seraph Brain')}</td><td><span class="badge badge-green">Blocked</span></td></tr>`).join(''):[{n:'APT-29 C2 Beacon',ty:'APT',s:'critical'},{n:'Log4Shell Exploit',ty:'CVE',s:'critical'},{n:'Cobalt Strike Payload',ty:'Malware',s:'high'},{n:'Phishing Campaign #4821',ty:'Social',s:'high'},{n:'DNS Tunnel Pattern',ty:'Exfiltration',s:'warning'}].map(t=>`<tr><td style="font-weight:600">${t.n}</td><td><span class="badge badge-default">${t.ty}</span></td><td><span class="badge ${sevBadge(t.s)}">${t.s}</span></td><td style="color:var(--text-dim)">Seraph Brain</td><td><span class="badge badge-green">Blocked</span></td></tr>`).join(''))+'</tbody></table>');
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">&#127760; IOC Indicators</div><div class="g3">`+[{t:'IP Addresses',v:18,c:'red'},{t:'Domains',v:12,c:'amber'},{t:'File Hashes',v:8,c:'purple'},{t:'URLs',v:4,c:'red'},{t:'Email Addresses',v:3,c:'amber'},{t:'Certificates',v:2,c:'cyan'}].map(i=>`<div style="padding:12px;border-radius:8px;background:var(--surface2);display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px">${i.t}</span><span style="font-size:18px;font-weight:800;color:var(--${i.c})">${i.v}</span></div>`).join('')+'</div>','glow-red');
+  const [stats,feeds,matches,mitre]=await Promise.all([
+    fetchJSON('/api/v1/intel/stats'),fetchJSON('/api/v1/intel/feeds'),
+    fetchJSON('/api/v1/intel/iocs/matches'),fetchJSON('/api/v1/prometheus/mitre/coverage'),
+  ]);
+
+  let h=`<div class="page-header"><div class="page-title">&#128270; Threat Intelligence</div><div class="page-sub">Threat feeds, IOC tracking, MITRE ATT&CK coverage</div></div>`;
+  h+='<div class="stat-row">'+statCard('&#128270;',stats&&stats.total_feeds!=null?n2s(stats.total_feeds):'--','Threat Feeds','primary')+statCard('&#127760;',stats&&stats.total_iocs!=null?n2s(stats.total_iocs):'--','IOCs Tracked','amber')+statCard('&#9888;',matches&&Array.isArray(matches)?n2s(matches.length):'--','IOC Matches','red')+statCard('&#128737;',stats&&stats.block_rate!=null?stats.block_rate+'%':'--','Block Rate','green')+'</div>';
+
+  const feedList=feeds&&Array.isArray(feeds)?feeds:[];
+  if(feedList.length){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">Active Feeds</div><table class="tbl"><thead><tr><th>Feed</th><th>Type</th><th>IOCs</th><th>Status</th><th>Last Sync</th></tr></thead><tbody>`+feedList.map(f=>`<tr><td style="font-weight:600">${esc(f.name)}</td><td><span class="badge badge-default">${esc(f.feed_type||f.type||'--')}</span></td><td>${n2s(f.ioc_count||0)}</td><td><span class="badge ${f.enabled||f.active?'badge-green':'badge-amber'}">${f.enabled||f.active?'Active':'Paused'}</span></td><td style="color:var(--text-dim)">${ago(f.last_sync||f.updated_at)}</td></tr>`).join('')+'</tbody></table>');
+  }else{h+=gc('<div class="empty">No threat feeds configured. Add feeds via API.</div>');}
+
+  if(matches&&Array.isArray(matches)&&matches.length){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">IOC Matches</div><table class="tbl"><thead><tr><th>IOC</th><th>Type</th><th>Severity</th><th>Source</th><th>Detected</th></tr></thead><tbody>`+matches.slice(0,12).map(m=>`<tr><td style="font-family:var(--mono);font-size:10px">${esc(m.indicator||m.ioc||'--')}</td><td><span class="badge badge-default">${esc(m.ioc_type||m.type||'--')}</span></td><td><span class="badge ${sevBadge(m.severity||'high')}">${m.severity||'--'}</span></td><td style="color:var(--text-dim)">${esc(m.feed_name||m.source||'--')}</td><td style="color:var(--text-dim)">${ago(m.detected_at||m.created_at)}</td></tr>`).join('')+'</tbody></table>','glow-red');
+  }
+
+  if(mitre){
+    const coverage=mitre.coverage_pct||mitre.coverage||null;
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">MITRE ATT&CK Coverage</div>${coverage!=null?`<div style="text-align:center;padding:12px">${renderDonut(coverage,'185 80% 55%','Coverage')}</div>`:'<div class="empty">Run MITRE mapping to see coverage</div>'}`,'glow-cyan');
+  }
   mc.innerHTML=h;
 }
 
-/* ===== PAGE: ASSETS ===== */
-async function renderAssets(mc){
-  const agents=cachedData.agents||await fetchJSON('/api/v1/agents')||[];
-  let h=`<div class="page-header"><div class="page-title">&#128451; Asset Inventory <span class="badge badge-default">${agents.length||1284} assets</span></div><div class="page-sub">Complete asset discovery, classification, and lifecycle management</div></div>`;
-  h+='<div class="stat-row">'+[{i:'&#128421;',v:agents.length||1284,l:'Total Assets',c:'primary'},{i:'&#9989;',v:'98.4%',l:'Managed',c:'green'},{i:'&#9888;',v:'12',l:'Unmanaged',c:'amber'},{i:'&#128274;',v:'100%',l:'Encrypted',c:'cyan'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Asset Categories</div><div class="g4">`+[{c:'Endpoints',v:612,i:'&#128421;'},{c:'Servers',v:204,i:'&#9881;'},{c:'Mobile',v:110,i:'&#128241;'},{c:'IoT',v:42,i:'&#128225;'},{c:'Cloud VMs',v:186,i:'&#9729;'},{c:'Containers',v:89,i:'&#128230;'},{c:'AI Agents',v:6,i:'&#129302;'},{c:'Network',v:35,i:'&#128462;'}].map(a=>`<div style="padding:14px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);text-align:center"><div style="font-size:20px;margin-bottom:6px">${a.i}</div><div style="font-size:12px;font-weight:600">${a.c}</div><div style="font-size:22px;font-weight:800;margin-top:4px">${a.v}</div></div>`).join('')+'</div>');
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Asset Table</div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Asset ID</th><th>Type</th><th>Hostname</th><th>OS</th><th>Status</th><th>Last Scan</th></tr></thead><tbody>`+agents.slice(0,15).map(a=>`<tr><td style="font-family:var(--mono);font-size:11px;color:var(--primary)">${esc(a.agent_id)}</td><td>${esc(a.agent_type||'endpoint')}</td><td>${esc(a.hostname)}</td><td>${esc(a.os_type||'--')}</td><td><span class="badge ${a.status==='online'?'badge-green':'badge-amber'}">${a.status}</span></td><td style="color:var(--text-dim)">${ago(a.last_heartbeat)}</td></tr>`).join('')+'</tbody></table></div>');
+/* ===== ANALYTICS ===== */
+async function renderAnalytics(mc){
+  const [threats,anomalyStats,learning,feedback]=await Promise.all([
+    fetchJSON('/api/v1/analytics/threat-matrix?lookback_hours=168'),
+    fetchJSON('/api/v1/ml/anomaly/stats'),
+    fetchJSON('/api/v1/orchestrator/learning/summary'),
+    fetchJSON('/api/v1/learning/feedback/recent?limit=15'),
+  ]);
+  const threatList=threats||[];const feedbackList=feedback||[];
+
+  let h=`<div class="page-header"><div class="page-title">&#128200; Analytics &amp; Intelligence</div><div class="page-sub">Threat analytics, ML anomaly detection, learning engine</div></div>`;
+  h+='<div class="stat-row">'+statCard('&#128200;',n2s(threatList.length),'Threats (7d)','red')+statCard('&#129504;',anomalyStats&&anomalyStats.total_detections!=null?n2s(anomalyStats.total_detections):'--','Anomalies','amber')+statCard('&#128257;',n2s(feedbackList.length),'Feedback Items','green')+statCard('&#9889;',learning&&learning.adjustments!=null?n2s(learning.adjustments):'--','Auto-Adjustments','cyan')+'</div>';
+
+  if(threatList.length){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">Threat Matrix (7 days)</div><table class="tbl"><thead><tr><th>Threat</th><th>Category</th><th>Severity</th><th>Instances</th><th>Status</th></tr></thead><tbody>`+threatList.slice(0,12).map(t=>`<tr><td style="font-weight:600">${esc(t.threat_name||t.name||'Unknown')}</td><td><span class="badge badge-default">${esc(t.category||'--')}</span></td><td><span class="badge ${sevBadge(t.severity||'high')}">${t.severity||'--'}</span></td><td>${n2s(t.count||t.instances||0)}</td><td><span class="badge badge-green">${t.status||'Mitigated'}</span></td></tr>`).join('')+'</tbody></table>');
+  }else{h+=gc('<div class="empty">No threat data in the last 7 days</div>');}
+
+  if(anomalyStats){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">ML Anomaly Detection</div><div class="g3">${[{l:'Total Detections',v:anomalyStats.total_detections},{l:'Active Baselines',v:anomalyStats.total_baselines||anomalyStats.baselines},{l:'False Positive Rate',v:anomalyStats.false_positive_rate!=null?anomalyStats.false_positive_rate+'%':null}].map(s=>`<div style="text-align:center;padding:12px"><div style="font-size:20px;font-weight:800">${s.v!=null?s.v:'--'}</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${s.l}</div></div>`).join('')}</div>`,'aurora');
+  }
+
+  if(feedbackList.length){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">Recent Feedback</div><div style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:3px">`+feedbackList.map(f=>`<div style="padding:5px 8px;border-radius:5px;background:var(--surface2);border-left:2px solid hsl(var(--primary))"><div style="font-size:9px"><span style="color:hsl(var(--primary));font-weight:600">${esc(f.category||'feedback')}</span> <span style="color:var(--text-muted)">${ago(f.timestamp)}</span></div><div style="font-size:10px;margin-top:1px">${esc(f.summary||f.description||'Feedback applied')}</div></div>`).join('')+'</div>','glow-cyan');
+  }
   mc.innerHTML=h;
 }
 
-/* ===== PAGE: SOAR ===== */
-async function renderSOAR(mc){
-  const playbooks=await fetchJSON('/api/v1/orchestrator/playbooks')||[];
-  const orch=await fetchJSON('/api/v1/orchestrator/status');
-  let h=`<div class="page-header"><div class="page-title">&#9889; SOAR Automation <span class="badge badge-default">${playbooks.length||12} playbooks</span></div><div class="page-sub">Security orchestration, automated response, playbook management</div></div>`;
-  h+='<div class="stat-row">'+[{i:'&#9889;',v:playbooks.length||12,l:'Active Playbooks',c:'primary'},{i:'&#128260;',v:'4,218',l:'Executions Today',c:'green'},{i:'&#128337;',v:'0.8s',l:'Avg Response',c:'cyan'},{i:'&#9989;',v:'99.2%',l:'Success Rate',c:'green'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Playbook Library</div><table class="tbl"><thead><tr><th>Playbook</th><th>Trigger</th><th>Runs</th><th>Success</th><th>Status</th></tr></thead><tbody>`+(playbooks.length?playbooks.map(p=>`<tr><td style="font-weight:600">${esc(p.name)}</td><td style="color:var(--text-dim)">${esc(p.trigger||'auto')}</td><td>${p.runs||0}</td><td style="color:var(--green)">${p.success_rate||'99%'}</td><td><span class="badge badge-green">${p.status||'Active'}</span></td></tr>`).join(''):[{n:'Isolate Compromised Node',t:'Critical Alert',r:847},{n:'Block Malicious IP',t:'Threat Detection',r:3421},{n:'Rotate Credentials',t:'Credential Leak',r:156},{n:'Quarantine AI Agent',t:'Behavioral Drift',r:89},{n:'Evidence Collection',t:'Incident',r:234},{n:'Compliance Remediation',t:'Drift Detection',r:67}].map(p=>`<tr><td style="font-weight:600">${p.n}</td><td style="color:var(--text-dim)">${p.t}</td><td>${p.r}</td><td style="color:var(--green)">99%+</td><td><span class="badge badge-green">Active</span></td></tr>`).join(''))+'</tbody></table>');
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Orchestrator Status</div><div class="g3">`+[{l:'Event Queue',v:orch?orch.queue_depth||0:42,c:'primary'},{l:'Workers Active',v:orch?orch.active_workers||8:8,c:'green'},{l:'Pending Actions',v:orch?orch.pending||3:3,c:'amber'}].map(s=>`<div style="text-align:center;padding:12px">${renderDonut(Math.min(100,s.v>100?95:s.v*2),'185 80% 55%',s.l)}<div style="font-size:16px;font-weight:800;margin-top:4px">${s.v}</div></div>`).join('')+'</div>','aurora');
+/* ===== AI ENGINE ===== */
+async function renderAIEngine(mc){
+  const [status,models,aiStats,empyrion]=await Promise.all([
+    fetchJSON('/api/v1/transcendence/status'),fetchJSON('/api/v1/transcendence/ai/models'),
+    fetchJSON('/api/v1/transcendence/ai/stats'),fetchJSON('/api/v1/empyrion/status'),
+  ]);
+
+  let h=`<div class="page-header"><div class="page-title">&#129504; AI Engine &mdash; Seraph Brain</div><div class="page-sub">Neural architecture, model governance, AGI defense</div></div>`;
+
+  const health=status&&status.health!=null?status.health:null;
+  h+='<div class="stat-row">'+statCard('&#129504;',health!=null?health:'--','Engine Health','primary')+statCard('&#128200;',aiStats&&aiStats.total_requests!=null?n2s(aiStats.total_requests):'--','Total Requests','green')+statCard('&#9889;',aiStats&&aiStats.avg_latency!=null?aiStats.avg_latency+'ms':'--','Avg Latency','cyan')+statCard('&#128274;',empyrion&&empyrion.safety_mode?empyrion.safety_mode:'--','Safety Mode','purple')+'</div>';
+
+  h+=gc(`<div style="text-align:center;padding:16px"><div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:8px">Neural Engine Health</div>${renderGauge(health||0,150)}<div style="font-size:10px;color:var(--${health&&health>=80?'green':'amber'});font-weight:500;margin-top:6px">${health!=null?(health>=80?'Optimal':'Degraded'):'Connecting...'}</div></div>`,'aurora');
+
+  const modelList=models&&Array.isArray(models)?models:[];
+  if(modelList.length){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">Model Registry</div><table class="tbl"><thead><tr><th>Model</th><th>Version</th><th>Status</th><th>Requests</th></tr></thead><tbody>`+modelList.map(m=>`<tr><td style="font-weight:600">${esc(m.name||m.model_name)}</td><td style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">${esc(m.version||'--')}</td><td><span class="badge ${m.status==='active'||m.status==='production'?'badge-green':'badge-amber'}">${esc(m.status||'--')}</span></td><td>${n2s(m.requests||m.total_requests||0)}</td></tr>`).join('')+'</tbody></table>');
+  }else{h+=gc('<div class="empty">No AI models registered</div>');}
+
+  if(empyrion){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">AGI Defense &mdash; Empyrion</div><div class="g3">${[{l:'Safety Mode',v:empyrion.safety_mode||'--'},{l:'Active Rules',v:empyrion.active_rules!=null?empyrion.active_rules:'--'},{l:'Alignment Score',v:empyrion.alignment_score!=null?empyrion.alignment_score+'%':'--'}].map(s=>`<div style="text-align:center;padding:12px;background:var(--surface2);border-radius:8px"><div style="font-size:18px;font-weight:800">${s.v}</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${s.l}</div></div>`).join('')}</div>`,'glow-cyan');
+  }
   mc.innerHTML=h;
 }
 
-/* ===== PAGE: ZERO-TRUST ===== */
+/* ===== ZERO TRUST ===== */
 async function renderZeroTrust(mc){
-  let h=`<div class="page-header"><div class="page-title">&#128272; Zero Trust Architecture <span class="badge badge-green">Active</span></div><div class="page-sub">Never trust, always verify — continuous authentication and micro-segmentation</div></div>`;
-  h+='<div class="stat-row">'+[{i:'&#128272;',v:'94%',l:'Trust Score',c:'green'},{i:'&#128101;',v:'1,847',l:'Verified Sessions',c:'primary'},{i:'&#9888;',v:'14%',l:'Untrusted Traffic',c:'red'},{i:'&#128274;',v:'mTLS',l:'Mesh Security',c:'cyan'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Trust Distribution</div><div style="height:14px;border-radius:10px;display:flex;overflow:hidden;margin-bottom:10px"><div style="width:62%;background:var(--green)"></div><div style="width:24%;background:var(--amber)"></div><div style="width:14%;background:var(--red)"></div></div><div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--green)">&#9679; Verified 62%</span><span style="color:var(--amber)">&#9679; Conditional 24%</span><span style="color:var(--red)">&#9679; Untrusted 14%</span></div>`);
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Zero Trust Policies</div><table class="tbl"><thead><tr><th>Policy</th><th>Scope</th><th>Enforcement</th><th>Violations</th></tr></thead><tbody>`+[{p:'Continuous Auth',s:'All users',e:'Strict',v:0},{p:'Device Trust',s:'Endpoints',e:'Strict',v:3},{p:'Network Segmentation',s:'All traffic',e:'Strict',v:0},{p:'Least Privilege',s:'API access',e:'Monitor',v:12},{p:'mTLS Everywhere',s:'Service mesh',e:'Strict',v:0},{p:'Session Timeout',s:'All sessions',e:'Strict',v:0}].map(p=>`<tr><td style="font-weight:600">${p.p}</td><td style="color:var(--text-dim)">${p.s}</td><td><span class="badge ${p.e==='Strict'?'badge-green':'badge-amber'}">${p.e}</span></td><td style="color:${p.v>0?'var(--amber)':'var(--green)'}">${p.v}</td></tr>`).join('')+'</tbody></table>');
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Verification Pipeline</div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px">`+['Identity','Device','Network','Application','Data'].map((s,i)=>`<div style="padding:10px 16px;border-radius:8px;background:var(--primary-dim);border:1px solid rgba(28,196,216,0.2);font-size:12px;font-weight:600;color:var(--primary)">${s}</div>${i<4?'<span style="color:var(--primary)">&#10140;</span>':''}`).join('')+'</div>','glow-cyan');
+  const [status,segStats,sessStats,devStats]=await Promise.all([
+    fetchJSON('/api/v1/zerotrust/status'),fetchJSON('/api/v1/zerotrust/segments/stats'),
+    fetchJSON('/api/v1/zerotrust/sessions/stats'),fetchJSON('/api/v1/zerotrust/devices/stats'),
+  ]);
+
+  let h=`<div class="page-header"><div class="page-title">&#128272; Zero Trust Architecture</div><div class="page-sub">Never trust, always verify &mdash; continuous authentication and micro-segmentation</div></div>`;
+
+  const trustScore=status&&status.overall_score!=null?status.overall_score:status&&status.trust_score!=null?status.trust_score:null;
+  h+='<div class="stat-row">'+statCard('&#128272;',trustScore!=null?trustScore+'%':'--','Trust Score','green')+statCard('&#128101;',sessStats&&sessStats.active_sessions!=null?n2s(sessStats.active_sessions):'--','Active Sessions','primary')+statCard('&#128421;',devStats&&devStats.total_devices!=null?n2s(devStats.total_devices):'--','Assessed Devices','cyan')+statCard('&#128462;',segStats&&segStats.total_segments!=null?n2s(segStats.total_segments):'--','Segments','purple')+'</div>';
+
+  if(trustScore!=null){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">Trust Distribution</div><div style="height:12px;border-radius:10px;display:flex;overflow:hidden;margin-bottom:8px"><div style="width:${trustScore}%;background:var(--green)"></div><div style="width:${Math.max(0,100-trustScore-10)}%;background:var(--amber)"></div><div style="width:${Math.min(10,100-trustScore)}%;background:var(--red)"></div></div><div style="display:flex;justify-content:space-between;font-size:10px"><span style="color:var(--green)">&#9679; Verified ${trustScore}%</span><span style="color:var(--amber)">&#9679; Conditional</span><span style="color:var(--red)">&#9679; Untrusted</span></div>`);
+  }
+
+  if(sessStats){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">Session Stats</div><div class="g4">${[{l:'Active',v:sessStats.active_sessions},{l:'Verified',v:sessStats.verified},{l:'MFA',v:sessStats.mfa_sessions},{l:'Denied',v:sessStats.denied}].map(s=>`<div style="text-align:center;padding:10px;background:var(--surface2);border-radius:8px"><div style="font-size:18px;font-weight:800">${s.v!=null?n2s(s.v):'--'}</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${s.l}</div></div>`).join('')}</div>`,'aurora');
+  }
+
+  if(devStats){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">Device Assessment</div><div class="g3">${[{l:'Total Devices',v:devStats.total_devices},{l:'Compliant',v:devStats.compliant},{l:'Non-Compliant',v:devStats.non_compliant}].map(s=>`<div style="text-align:center;padding:10px;background:var(--surface2);border-radius:8px"><div style="font-size:18px;font-weight:800">${s.v!=null?n2s(s.v):'--'}</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${s.l}</div></div>`).join('')}</div>`,'glow-cyan');
+  }
+
+  if(!status&&!sessStats&&!devStats){h+=gc('<div class="empty">Zero Trust module initializing. Deploy policies to activate.</div>');}
   mc.innerHTML=h;
 }
 
-/* ===== PAGE: TRANSCENDENCE (AI Engine) ===== */
-async function renderTranscendence(mc){
-  const intents=await fetchJSON('/api/v1/transcendence/intents')||[];
-  const status=await fetchJSON('/api/v1/transcendence/status');
-  let h=`<div class="page-header"><div class="page-title">&#129302; AI Engine &mdash; Transcendence <span class="badge badge-default">${intents.length||71} intents</span></div><div class="page-sub">Seraph Brain neural architecture, intent management, model governance</div></div>`;
-  h+='<div class="stat-row">'+[{i:'&#129504;',v:intents.length||71,l:'Active Intents',c:'primary'},{i:'&#128200;',v:'94.8%',l:'Accuracy',c:'green'},{i:'&#9889;',v:'12ms',l:'Avg Latency',c:'cyan'},{i:'&#128737;',v:'847',l:'Predictions/hr',c:'amber'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
-  h+=gc(`<div style="text-align:center;padding:20px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:8px">Neural Engine Health</div>${renderGauge(status?status.health||95:95,160)}<div style="font-size:12px;color:var(--green);font-weight:600;margin-top:8px">Optimal Performance</div></div>`,'aurora');
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Intent Registry</div><table class="tbl"><thead><tr><th>Intent</th><th>Category</th><th>Confidence</th><th>Calls/hr</th><th>Status</th></tr></thead><tbody>`+(intents.length?intents.slice(0,12).map(i=>`<tr><td style="font-weight:600">${esc(i.intent_name||i.name)}</td><td><span class="badge badge-default">${esc(i.category||'detection')}</span></td><td style="color:var(--green)">${i.confidence||'94%'}</td><td>${i.calls_per_hour||Math.floor(Math.random()*200)}</td><td><span class="badge badge-green">Active</span></td></tr>`).join(''):'<tr><td colspan="5" class="empty">No intents loaded</td></tr>')+'</tbody></table>');
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Model Governance</div><div class="g3">`+[{m:'Seraph Core',v:'v4.2',s:'Production',c:'green'},{m:'Threat Predictor',v:'v3.8',s:'Production',c:'green'},{m:'Behavioral Analyzer',v:'v2.1',s:'Canary',c:'amber'}].map(m=>`<div style="padding:12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border)"><div style="font-size:13px;font-weight:700">${m.m}</div><div style="display:flex;justify-content:space-between;margin-top:6px"><span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">${m.v}</span><span class="badge badge-${m.c}">${m.s}</span></div></div>`).join('')+'</div>','glow-cyan');
-  mc.innerHTML=h;
-}
-
-/* ===== PAGE: CONVERGENCE (Real-Time) ===== */
-async function renderConvergence(mc){
-  const halo=await fetchJSON('/api/v1/convergence/halo/current');
-  const events=await fetchJSON('/api/v1/convergence/events/stream?limit=20')||[];
-  let h=`<div class="page-header"><div class="page-title">&#128338; Real-Time Convergence <span class="badge badge-green">LIVE</span></div><div class="page-sub">WebSocket event stream, Halo Score engine, real-time correlation</div></div>`;
-  const score=halo?halo.score:94;
-  h+='<div class="stat-row">'+[{i:'&#10040;',v:score,l:'Halo Score',c:'green'},{i:'&#128338;',v:'48,291',l:'Events/day',c:'primary'},{i:'&#9889;',v:'<100ms',l:'Stream Latency',c:'cyan'},{i:'&#128200;',v:'99.9%',l:'Uptime',c:'green'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
-  h+=gc(`<div style="text-align:center;padding:16px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:8px">Halo Score</div>${renderGauge(score,160)}</div>`,'aurora');
-  h+=gc(`<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px"><span style="font-size:13px;font-weight:700">&#9889; Live Event Stream</span><span style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;margin-left:auto"></span></div><div style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">`+(events.length?events.map(e=>`<div style="padding:6px 8px;border-radius:6px;background:var(--surface2);border-left:3px solid var(--primary)"><div style="display:flex;justify-content:space-between"><span style="font-size:9px;font-weight:600;color:var(--primary)">${esc(e.type||e.category||'event')}</span><span style="font-size:9px;color:var(--text-muted)">${ago(e.timestamp)}</span></div><div style="font-size:10px;margin-top:2px">${esc(e.summary||e.message||'Event processed')}</div></div>`).join(''):'<div class="empty">Connecting to stream...</div>')+'</div>','glow-cyan');
-  mc.innerHTML=h;
-}
-
-/* ===== PAGE: OMNIGUARD (Cloud Security) ===== */
-async function renderOmniguard(mc){
-  const cloud=await fetchJSON('/api/v1/omniguard/status');
-  let h=`<div class="page-header"><div class="page-title">&#9729; Cloud Security &mdash; OmniGuard <span class="badge badge-green">Active</span></div><div class="page-sub">Multi-cloud posture management, container security, serverless protection</div></div>`;
-  h+='<div class="stat-row">'+[{i:'&#9729;',v:'3',l:'Cloud Providers',c:'primary'},{i:'&#128230;',v:'89',l:'Containers',c:'cyan'},{i:'&#9889;',v:'24',l:'Serverless Fns',c:'purple'},{i:'&#128274;',v:'97%',l:'Posture Score',c:'green'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Cloud Posture</div><div class="g3">`+[{p:'AWS',s:98,r:12,c:'green'},{p:'Azure',s:94,r:18,c:'green'},{p:'GCP',s:91,r:24,c:'amber'}].map(c=>`<div style="text-align:center;padding:12px">${renderDonut(c.s,c.c==='green'?'152 70% 50%':'38 92% 55%',c.p)}<div style="font-size:10px;color:var(--text-dim);margin-top:6px">${c.r} findings</div></div>`).join('')+'</div>','aurora');
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Security Findings</div><table class="tbl"><thead><tr><th>Finding</th><th>Provider</th><th>Severity</th><th>Resource</th><th>Status</th></tr></thead><tbody>`+[{f:'S3 bucket public access',p:'AWS',s:'high',r:'s3://data-bucket',st:'Remediated'},{f:'Overprivileged IAM role',p:'AWS',s:'high',r:'role/admin-access',st:'Remediated'},{f:'Unencrypted storage',p:'Azure',s:'warning',r:'storage/logs',st:'Pending'},{f:'Open firewall rule',p:'GCP',s:'high',r:'fw/allow-all',st:'Remediated'},{f:'Container image CVE',p:'AWS',s:'critical',r:'ecr/app:latest',st:'Remediated'}].map(f=>`<tr><td style="font-weight:600">${f.f}</td><td><span class="badge badge-default">${f.p}</span></td><td><span class="badge ${sevBadge(f.s)}">${f.s}</span></td><td style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">${f.r}</td><td><span class="badge ${f.st==='Remediated'?'badge-green':'badge-amber'}">${f.st}</span></td></tr>`).join('')+'</tbody></table>');
-  mc.innerHTML=h;
-}
-
-/* ===== PAGE: PROMETHEUS (Threat Hunt) ===== */
-async function renderPrometheus(mc){
-  const hunts=await fetchJSON('/api/v1/prometheus/hunts')||[];
-  let h=`<div class="page-header"><div class="page-title">&#127919; Threat Hunt &mdash; Prometheus <span class="badge badge-default">${hunts.length||8} hunts</span></div><div class="page-sub">Proactive threat hunting, hypothesis-driven investigation, adversary emulation</div></div>`;
-  h+='<div class="stat-row">'+[{i:'&#127919;',v:hunts.length||8,l:'Active Hunts',c:'primary'},{i:'&#128270;',v:'234',l:'Hypotheses Tested',c:'green'},{i:'&#9888;',v:'12',l:'Threats Found',c:'red'},{i:'&#128337;',v:'4.2h',l:'Avg Hunt Duration',c:'cyan'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Hunt Operations</div><table class="tbl"><thead><tr><th>Hunt</th><th>Hypothesis</th><th>Status</th><th>Findings</th><th>Duration</th></tr></thead><tbody>`+(hunts.length?hunts.map(h2=>`<tr><td style="font-weight:600">${esc(h2.name)}</td><td style="color:var(--text-dim)">${esc(h2.hypothesis||'--')}</td><td><span class="badge badge-green">${h2.status||'Active'}</span></td><td>${h2.findings||0}</td><td style="color:var(--text-dim)">${h2.duration||'--'}</td></tr>`).join(''):[{n:'APT Lateral Movement',hy:'Adversary using valid creds',f:3,d:'2.1h'},{n:'Data Staging Detection',hy:'Pre-exfil data collection',f:1,d:'4.5h'},{n:'Living off the Land',hy:'LOLBins for persistence',f:5,d:'3.2h'},{n:'Cloud Account Compromise',hy:'Stolen API keys in use',f:2,d:'1.8h'}].map(h2=>`<tr><td style="font-weight:600">${h2.n}</td><td style="color:var(--text-dim)">${h2.hy}</td><td><span class="badge badge-green">Active</span></td><td style="color:var(--amber)">${h2.f}</td><td style="color:var(--text-dim)">${h2.d}</td></tr>`).join(''))+'</tbody></table>');
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">MITRE ATT&CK Coverage</div><div style="display:flex;gap:6px;flex-wrap:wrap">`+['Initial Access','Execution','Persistence','Privilege Escalation','Defense Evasion','Credential Access','Discovery','Lateral Movement','Collection','Exfiltration','C2','Impact'].map(t=>`<div style="padding:6px 12px;border-radius:6px;background:var(--primary-dim);border:1px solid rgba(28,196,216,0.2);font-size:10px;font-weight:600;color:var(--primary)">${t}</div>`).join('')+'</div>','glow-cyan');
-  mc.innerHTML=h;
-}
-
-/* ===== PAGE: EMPYRION (AGI Defense) ===== */
-async function renderEmpyrion(mc){
-  let h=`<div class="page-header"><div class="page-title">&#9889; AGI Defense &mdash; Empyrion <span class="badge badge-purple">Experimental</span></div><div class="page-sub">Advanced AI defense for autonomous and agentic AI systems</div></div>`;
-  h+='<div class="stat-row">'+[{i:'&#129302;',v:'6',l:'AI Agents Protected',c:'purple'},{i:'&#128274;',v:'100%',l:'Prompt Shield',c:'green'},{i:'&#129504;',v:'Fail-Closed',l:'Safety Mode',c:'cyan'},{i:'&#9888;',v:'0',l:'Alignment Violations',c:'green'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">OpenClaw Shield &mdash; AI Agent Protection</div><div class="g3">`+[{n:'GPT-4o Production',t:'LLM',r:12,s:'Protected'},{n:'Customer Support Bot',t:'Chatbot',r:8,s:'Protected'},{n:'RPA Invoice Agent',t:'RPA',r:24,s:'Monitored'},{n:'Code Review Copilot',t:'LLM',r:15,s:'Protected'},{n:'Data Pipeline Agent',t:'Autonomous',r:31,s:'Monitored'},{n:'Threat Intel Analyzer',t:'AI Agent',r:6,s:'Protected'}].map(a=>`<div style="padding:12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;font-weight:600">${a.n}</span><span class="badge ${a.s==='Protected'?'badge-green':'badge-amber'}">${a.s}</span></div><div style="display:flex;gap:8px;font-size:10px"><span class="badge badge-default">${a.t}</span><span style="color:${riskColor(a.r)}">Risk: ${a.r}</span></div></div>`).join('')+'</div>','aurora');
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">AI Safety Controls</div><table class="tbl"><thead><tr><th>Control</th><th>Status</th><th>Mode</th><th>Last Test</th></tr></thead><tbody>`+[{c:'Prompt Injection Shield',s:'Active',m:'Block',t:'2m ago'},{c:'Output Sanitization',s:'Active',m:'Redact PII',t:'5m ago'},{c:'Behavioral Boundary',s:'Active',m:'Quarantine',t:'1m ago'},{c:'Tool Use Governance',s:'Active',m:'Allowlist',t:'8m ago'},{c:'Alignment Monitoring',s:'Active',m:'Continuous',t:'30s ago'},{c:'Fail-Closed Enforcement',s:'Active',m:'Kill Switch',t:'1m ago'}].map(c=>`<tr><td style="font-weight:600">${c.c}</td><td><span class="badge badge-green">${c.s}</span></td><td><span class="badge badge-default">${c.m}</span></td><td style="color:var(--text-dim)">${c.t}</td></tr>`).join('')+'</tbody></table>','glow-cyan');
-  mc.innerHTML=h;
-}
-
-/* ===== PAGE: TITAN-GRID ===== */
-async function renderTitanGrid(mc){
-  const status=await fetchJSON('/api/v1/titan-grid/status');
-  let h=`<div class="page-header"><div class="page-title">&#10040; Titan Grid <span class="badge badge-default">v8.2.0</span></div><div class="page-sub">Unified defense grid — exposure validation, identity governance, SecOps workflow</div></div>`;
-  h+='<div class="stat-row">'+[{i:'&#10040;',v:'94',l:'Grid Score',c:'green'},{i:'&#9876;',v:'12',l:'Active Wardens',c:'primary'},{i:'&#128737;',v:'48,291',l:'Events Processed',c:'cyan'},{i:'&#9889;',v:'99.97%',l:'Grid Uptime',c:'green'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
-  h+=gc(`<div style="text-align:center;padding:20px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:8px">Grid Health</div>${renderGauge(status?status.health||94:94,180)}</div>`,'aurora');
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Grid Subsystems</div><div class="g4">`+[{n:'Exposure Validation',s:98,c:'green'},{n:'Identity Governance',s:95,c:'green'},{n:'SecOps Workflow',s:92,c:'green'},{n:'Threat Correlation',s:97,c:'green'},{n:'Compliance Engine',s:88,c:'amber'},{n:'Asset Discovery',s:96,c:'green'},{n:'Incident Response',s:99,c:'green'},{n:'AI Governance',s:94,c:'green'}].map(s=>`<div style="text-align:center;padding:8px">${renderDonut(s.s,s.c==='green'?'152 70% 50%':'38 92% 55%',s.n)}</div>`).join('')+'</div>','glow-cyan');
-  mc.innerHTML=h;
-}
-
-/* ===== PAGE: POLICIES ===== */
+/* ===== POLICIES ===== */
 async function renderPolicies(mc){
-  const policies=await fetchJSON('/api/v1/policies')||[];
-  let h=`<div class="page-header"><div class="page-title">&#128220; Policy Hub <span class="badge badge-default">${policies.length||18} policies</span></div><div class="page-sub">Policy canvas, AI agent policies, propagation map, autonomous evolution</div></div>`;
-  h+='<div class="stat-row">'+[{i:'&#128220;',v:policies.length||18,l:'Active Policies',c:'primary'},{i:'&#9989;',v:'100%',l:'Propagated',c:'green'},{i:'&#129504;',v:'4',l:'AI-Generated',c:'purple'},{i:'&#128337;',v:'3',l:'Snapshots',c:'cyan'}].map(s=>gc(`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.c}-dim);color:var(--${s.c})">${s.i}</div><div><div class="stat-val">${s.v}</div><div class="stat-label">${s.l}</div></div></div>`)).join('')+'</div>';
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Policy Canvas</div><table class="tbl"><thead><tr><th>Policy</th><th>Type</th><th>Scope</th><th>Status</th><th>Last Updated</th></tr></thead><tbody>`+(policies.length?policies.map(p=>`<tr><td style="font-weight:600">${esc(p.name)}</td><td><span class="badge badge-default">${esc(p.type||'security')}</span></td><td style="color:var(--text-dim)">${esc(p.scope||'global')}</td><td><span class="badge badge-green">${p.status||'active'}</span></td><td style="color:var(--text-dim)">${ago(p.updated_at)}</td></tr>`).join(''):[{n:'Network Segmentation Policy',t:'Network',s:'All zones'},{n:'API Rate Limiting',t:'Security',s:'All APIs'},{n:'Data Classification',t:'Data',s:'All data stores'},{n:'AI Agent Governance',t:'AI',s:'All AI agents'},{n:'Incident Response SLA',t:'Operations',s:'Global'},{n:'Compliance Audit Cadence',t:'Compliance',s:'All frameworks'}].map(p=>`<tr><td style="font-weight:600">${p.n}</td><td><span class="badge badge-default">${p.t}</span></td><td style="color:var(--text-dim)">${p.s}</td><td><span class="badge badge-green">Active</span></td><td style="color:var(--text-dim)">2h ago</td></tr>`).join(''))+'</tbody></table>');
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Policy Propagation</div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px">`+['Policy Engine','Wardens','ANGELNODEs','Cloud','Endpoints'].map((s,i)=>`<div style="padding:8px 14px;border-radius:8px;background:var(--green-dim);border:1px solid rgba(38,201,124,0.2);font-size:11px;font-weight:600;color:var(--green)">${s} &#9989;</div>${i<4?'<span style="color:var(--green)">&#10140;</span>':''}`).join('')+'</div>','glow-cyan');
+  const [snapshots,nlPolicies,playbooks]=await Promise.all([
+    fetchJSON('/api/v1/policies/snapshots'),fetchJSON('/api/v1/transcendence/policies/nl'),
+    fetchJSON('/api/v1/orchestrator/playbooks'),
+  ]);
+  const snapList=snapshots&&Array.isArray(snapshots)?snapshots:[];
+  const nlList=nlPolicies&&Array.isArray(nlPolicies)?nlPolicies:[];
+  const pbList=playbooks&&Array.isArray(playbooks)?playbooks:[];
+
+  let h=`<div class="page-header"><div class="page-title">&#128220; Policy Hub</div><div class="page-sub">Policy snapshots, natural language policies, playbook orchestration</div></div>`;
+  h+='<div class="stat-row">'+statCard('&#128220;',n2s(snapList.length),'Policy Snapshots','primary')+statCard('&#129504;',n2s(nlList.length),'NL Policies','purple')+statCard('&#9889;',n2s(pbList.length),'Playbooks','green')+statCard('&#128260;','--','Total Runs','cyan')+'</div>';
+
+  if(snapList.length){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">Policy Snapshots</div><table class="tbl"><thead><tr><th>ID</th><th>Created</th><th>Policies</th><th>Actions</th></tr></thead><tbody>`+snapList.slice(0,10).map(s=>`<tr><td style="font-family:var(--mono);font-size:10px;color:hsl(var(--primary))">${esc(s.snapshot_id||s.id||'--')}</td><td style="color:var(--text-dim)">${ago(s.created_at)}</td><td>${n2s(s.policy_count||s.total||0)}</td><td><span class="badge badge-default" style="cursor:pointer">Rollback</span></td></tr>`).join('')+'</tbody></table>');
+  }else{h+=gc('<div class="empty">No policy snapshots. Create one via the API.</div>');}
+
+  if(nlList.length){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">Natural Language Policies</div><table class="tbl"><thead><tr><th>Policy</th><th>Status</th><th>Created</th></tr></thead><tbody>`+nlList.slice(0,10).map(p=>`<tr><td style="font-weight:600">${esc(p.natural_text||p.description||p.name||'--')}</td><td><span class="badge ${p.approved?'badge-green':'badge-amber'}">${p.approved?'Approved':'Pending'}</span></td><td style="color:var(--text-dim)">${ago(p.created_at)}</td></tr>`).join('')+'</tbody></table>','aurora');
+  }
+
+  if(pbList.length){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">Playbooks</div><table class="tbl"><thead><tr><th>Playbook</th><th>Trigger</th><th>Runs</th><th>Status</th></tr></thead><tbody>`+pbList.map(p=>`<tr><td style="font-weight:600">${esc(p.name)}</td><td style="color:var(--text-dim)">${esc(p.trigger||p.trigger_type||'auto')}</td><td>${n2s(p.runs||p.total_runs||0)}</td><td><span class="badge ${p.enabled!==false?'badge-green':'badge-amber'}">${p.enabled!==false?'Active':'Paused'}</span></td></tr>`).join('')+'</tbody></table>','glow-cyan');
+  }
   mc.innerHTML=h;
 }
 
-/* ===== PAGE: SETTINGS ===== */
+/* ===== SETTINGS ===== */
 async function renderSettings(mc){
-  const settings=await fetchJSON('/api/v1/settings')||{};
-  let h=`<div class="page-header"><div class="page-title">&#9881; Settings <span class="badge badge-outline">Admin</span></div><div class="page-sub">System configuration, tenant management, compliance automation</div></div>`;
+  const [org,tenants,roles]=await Promise.all([
+    fetchJSON('/api/v1/admin/org/overview'),fetchJSON('/api/v1/admin/tenants'),
+    fetchJSON('/api/v1/auth/roles'),
+  ]);
+  const tenantList=tenants&&Array.isArray(tenants)?tenants:[];
+  const roleList=roles&&Array.isArray(roles)?roles:[];
 
-  // Tenant info
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">Tenant Configuration</div><div class="g3">`+[{l:'Primary Tenant',v:'acme-corp',d:'Production environment'},{l:'Dev Tenant',v:'dev-team',d:'Development & testing'},{l:'Startup Tenant',v:'startup-xyz',d:'Startup tier'}].map(t=>`<div style="padding:12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border)"><div style="font-size:12px;font-weight:700">${t.l}</div><div style="font-size:14px;font-weight:800;color:var(--primary);margin:4px 0">${t.v}</div><div style="font-size:10px;color:var(--text-dim)">${t.d}</div></div>`).join('')+'</div>');
+  let h=`<div class="page-header"><div class="page-title">&#9881; Settings</div><div class="page-sub">Organization, tenants, RBAC configuration</div></div>`;
 
-  // System toggles
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">System Configuration</div><div style="display:flex;flex-direction:column;gap:8px">`+[{l:'Real-Time Alerts',d:'WebSocket alert streaming',on:true},{l:'Auto-Remediation',d:'Automatic threat response',on:true},{l:'AI Model Governance',d:'Seraph Brain model versioning',on:true},{l:'Compliance Automation',d:'Continuous compliance monitoring',on:true},{l:'Self-Hardening',d:'Autonomous security hardening',on:true},{l:'Behavioral Analytics',d:'User and entity behavior analysis',on:true}].map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border)"><div><div style="font-size:12px;font-weight:600">${s.l}</div><div style="font-size:10px;color:var(--text-dim)">${s.d}</div></div><div style="width:40px;height:22px;border-radius:11px;background:${s.on?'var(--green)':'var(--border)'};position:relative;cursor:pointer"><div style="width:18px;height:18px;border-radius:50%;background:white;position:absolute;top:2px;${s.on?'right:2px':'left:2px'};transition:all .2s"></div></div></div>`).join('')+'</div>');
+  if(org){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">Organization Overview</div><div class="g3">${[{l:'Org Name',v:org.name||org.org_name||'--'},{l:'Total Agents',v:org.total_agents!=null?n2s(org.total_agents):'--'},{l:'Total Tenants',v:org.total_tenants!=null?n2s(org.total_tenants):'--'}].map(s=>`<div style="padding:12px;border-radius:8px;background:var(--surface2);text-align:center"><div style="font-size:10px;color:var(--text-muted)">${s.l}</div><div style="font-size:16px;font-weight:800;color:hsl(var(--primary));margin-top:4px">${s.v}</div></div>`).join('')}</div>`);
+  }
 
-  // OS Coverage
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">OS Coverage</div><div class="g5">`+[{os:'Windows',v:'612',c:'green'},{os:'macOS',v:'358',c:'green'},{os:'Linux',v:'204',c:'green'},{os:'iOS',v:'68',c:'green'},{os:'Android',v:'42',c:'amber'}].map(o=>`<div style="padding:10px;border-radius:8px;background:var(--surface2);text-align:center"><div style="font-size:13px;font-weight:600">${o.os}</div><div style="font-size:18px;font-weight:800;color:var(--${o.c});margin-top:4px">${o.v}</div></div>`).join('')+'</div>');
+  if(tenantList.length){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">Tenants</div><div class="g3">`+tenantList.map(t=>gc(`<div style="text-align:center;padding:6px 0"><div style="font-size:14px;font-weight:700">${esc(t.display_name||t.tenant_id)}</div><div style="font-size:10px;color:var(--text-dim);margin:3px 0">${esc(t.tenant_id)}</div><span class="badge badge-green">${esc(t.status||'active')}</span></div>`)).join('')+'</div>');
+  }else{h+=gc('<div class="empty">No tenants configured</div>');}
 
-  // RBAC
-  h+=gc(`<div style="font-size:13px;font-weight:700;margin-bottom:12px">RBAC &amp; Notifications</div><table class="tbl"><thead><tr><th>Role</th><th>Users</th><th>Permissions</th><th>Notifications</th></tr></thead><tbody>`+[{r:'Super Admin',u:2,p:'Full access',n:'All'},{r:'Security Analyst',u:8,p:'Read + Investigate',n:'Alerts only'},{r:'Operator',u:12,p:'Read + Respond',n:'Critical only'},{r:'Auditor',u:3,p:'Read only',n:'Compliance'}].map(r=>`<tr><td style="font-weight:600">${r.r}</td><td>${r.u}</td><td style="color:var(--text-dim)">${r.p}</td><td><span class="badge badge-default">${r.n}</span></td></tr>`).join('')+'</tbody></table>','glow-cyan');
+  if(roleList.length){
+    h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">Roles &amp; Permissions</div><table class="tbl"><thead><tr><th>Role</th><th>Permissions</th><th>Created</th></tr></thead><tbody>`+roleList.map(r=>`<tr><td style="font-weight:600">${esc(r.name||r.role_name)}</td><td style="font-size:10px;color:var(--text-dim)">${Array.isArray(r.permissions)?r.permissions.join(', '):esc(r.permissions||'--')}</td><td style="color:var(--text-dim)">${ago(r.created_at)}</td></tr>`).join('')+'</tbody></table>','glow-cyan');
+  }
+
+  h+=gc(`<div style="font-size:12px;font-weight:700;margin-bottom:10px">System Info</div><div class="g2">${[{l:'Version',v:'V10.0.0 Seraph'},{l:'User',v:authUser?authUser.username:'--'},{l:'Role',v:authUser?authUser.role:'--'},{l:'API',v:BASE}].map(s=>`<div style="display:flex;justify-content:space-between;padding:8px 10px;border-radius:6px;background:var(--surface2)"><span style="font-size:11px;color:var(--text-muted)">${s.l}</span><span style="font-size:11px;font-weight:600">${esc(s.v)}</span></div>`).join('')}</div>`);
   mc.innerHTML=h;
 }
 
-/* ===== CHAT & WEBSOCKET ===== */
+/* ===== CHAT ===== */
 async function sendChat(){
   const input=document.getElementById('chat-input'),msg=input.value.trim();
   if(!msg)return;input.value='';
@@ -734,7 +625,7 @@ async function sendChat(){
       chatHistory.push({role:'assistant',content:r.response});
       cm.innerHTML+=`<div class="chat-msg bot">${formatAnswer(r.response)}</div>`;
       if(r.daemon)document.getElementById('chat-daemon-pill').textContent=r.daemon;
-    }else{cm.innerHTML+=`<div class="chat-msg bot" style="color:var(--amber)">No response. Try again.</div>`;}
+    }else{cm.innerHTML+=`<div class="chat-msg bot" style="color:var(--amber)">No response.</div>`;}
   }catch{document.getElementById('chat-typing').style.display='none';cm.innerHTML+=`<div class="chat-msg bot" style="color:var(--red)">Connection error.</div>`;}
   cm.scrollTop=cm.scrollHeight;
 }
@@ -742,7 +633,7 @@ document.getElementById('chat-input').addEventListener('keydown',e=>{if(e.key===
 
 function formatAnswer(text){
   if(!text)return'';
-  return esc(text).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`(.+?)`/g,'<code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-family:var(--mono);font-size:11px">$1</code>').replace(/\n/g,'<br>');
+  return esc(text).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`(.+?)`/g,'<code style="background:var(--surface2);padding:1px 3px;border-radius:3px;font-family:var(--mono);font-size:10px">$1</code>').replace(/\n/g,'<br>');
 }
 
 /* WebSocket */
@@ -751,9 +642,8 @@ function connectWS(){
   try{
     const proto=location.protocol==='https:'?'wss:':'ws:';
     ws=new WebSocket(`${proto}//${location.host}/ws/alerts`);
-    ws.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.type==='alert'&&document.getElementById('main-content')){/* Could refresh alerts */}}catch{}};
-    ws.onclose=()=>setTimeout(connectWS,5000);
-    ws.onerror=()=>{};
+    ws.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.type==='alert'&&currentPage==='alerts')renderPage();}catch{}};
+    ws.onclose=()=>setTimeout(connectWS,5000);ws.onerror=()=>{};
   }catch{}
 }
 
@@ -764,21 +654,16 @@ async function showTimeline(agentId){
   openModal('timeline-modal');
   const data=await fetchJSON(`/api/v1/agents/${agentId}/timeline`);
   if(!data){document.getElementById('tl-body').innerHTML='<div class="empty">No timeline data.</div>';return;}
-  document.getElementById('tl-body').innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">`+(Array.isArray(data)?data:data.events||[]).map(e=>`<div style="padding:8px;border-radius:6px;background:var(--surface2);border-left:3px solid var(--primary)"><div style="font-size:9px;color:var(--text-muted)">${ago(e.timestamp)}</div><div style="font-size:12px;margin-top:2px">${esc(e.summary||e.event||'Event')}</div></div>`).join('')+'</div>';
+  document.getElementById('tl-body').innerHTML=`<div style="display:flex;flex-direction:column;gap:4px">`+(Array.isArray(data)?data:data.events||[]).map(e=>`<div style="padding:6px 8px;border-radius:5px;background:var(--surface2);border-left:2px solid hsl(var(--primary))"><div style="font-size:9px;color:var(--text-muted)">${ago(e.timestamp)}</div><div style="font-size:11px;margin-top:1px">${esc(e.summary||e.event||'Event')}</div></div>`).join('')+'</div>';
 }
 
 /* Bootstrap */
 async function bootstrapDashboard(){
-  await renderPage();
-  connectWS();
+  await renderPage();connectWS();
   try{const d=await fetchJSON('/api/v1/angelclaw/daemon/status');if(d)document.getElementById('chat-daemon-pill').textContent=d.running?'Active':'Stopped';}catch{}
 }
 
-(async()=>{
-  const ok=await checkAuth();
-  if(ok)bootstrapDashboard();
-})();
-
+(async()=>{const ok=await checkAuth();if(ok)bootstrapDashboard();})();
 </script>
 </body>
 </html>
