@@ -1,5 +1,12 @@
 # AngelClaw AGI Guardian — Changelog
 
+## V7.6.0 — Storm Watch (2026-02-20)
+### Incident Resilience & Disaster Recovery
+- Disaster Recovery: new service module
+- Chaos Testing: new service module
+- Brain V7.6: 2 new intents — total 107+ intents
+
+
 ## V7.5.0 — Iron Vault (2026-02-20)
 ### Data Protection & Privacy
 - Dlp Engine: new service module
