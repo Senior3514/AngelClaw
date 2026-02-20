@@ -8,28 +8,30 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="AngelClaw AGI Guardian — Enterprise Security Console">
 <link rel="manifest" href="/mobile/manifest.json">
-<title>AngelClaw AGI Guardian 7.0 — Administrative Console</title>
+<title>AngelClaw AGI Guardian V8.2.0 Titan Grid — Administrative Console</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0c14;
-    --surface: rgba(20,24,37,0.85);
-    --surface-solid: #141825;
-    --surface2: rgba(28,32,53,0.8);
-    --surface3: #242840;
-    --border: rgba(42,47,74,0.6);
-    --border-hover: rgba(124,168,255,0.3);
-    --text: #e8eaf0;
-    --text-dim: #8890b0;
+    --bg: #060810;
+    --bg-mesh: #0a0c16;
+    --surface: rgba(16,20,35,0.88);
+    --surface-solid: #10142a;
+    --surface2: rgba(22,28,50,0.85);
+    --surface3: #1e2240;
+    --border: rgba(42,47,80,0.5);
+    --border-hover: rgba(124,168,255,0.4);
+    --text: #ebedf4;
+    --text-dim: #8892b4;
     --text-muted: #5a6080;
     --angel-gold: #f0c850;
-    --angel-glow: rgba(240,200,80,0.08);
+    --angel-glow: rgba(240,200,80,0.10);
     --angel-blue: #7ca8ff;
-    --angel-blue-glow: rgba(124,168,255,0.10);
-    --angel-halo: linear-gradient(135deg, rgba(240,200,80,0.12), rgba(124,168,255,0.08));
+    --angel-blue-glow: rgba(124,168,255,0.12);
+    --angel-halo: linear-gradient(135deg, rgba(240,200,80,0.14), rgba(124,168,255,0.10));
     --angel-wing: linear-gradient(135deg, #f0c850 0%, #7ca8ff 50%, #c084fc 100%);
+    --angel-wing-v: linear-gradient(180deg, #f0c850 0%, #7ca8ff 50%, #c084fc 100%);
     --accent: #7ca8ff;
     --accent-dim: rgba(124,168,255,0.12);
     --green: #4ade80;
@@ -49,53 +51,71 @@
     --radius-xs: 6px;
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     --mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-    --sidebar-w: 230px;
-    --glass: blur(12px) saturate(1.4);
-    --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
-    --shadow-md: 0 4px 16px rgba(0,0,0,0.3);
-    --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
-    --shadow-glow: 0 0 20px rgba(124,168,255,0.08);
-    --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+    --sidebar-w: 240px;
+    --glass: blur(16px) saturate(1.6);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.25);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.35);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+    --shadow-glow: 0 0 24px rgba(124,168,255,0.10);
+    --shadow-gold: 0 0 20px rgba(240,200,80,0.08);
+    --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
   }
   html { font-size: 100%; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; min-height: 100dvh; }
-  body::before { content:''; position:fixed; top:0; left:0; width:100%; height:100%; background:radial-gradient(ellipse at 20% 20%, rgba(124,168,255,0.04) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(192,132,252,0.03) 0%, transparent 50%); pointer-events:none; z-index:0; }
+  body::before { content:''; position:fixed; top:0; left:0; width:100%; height:100%; background:
+    radial-gradient(ellipse at 15% 10%, rgba(240,200,80,0.04) 0%, transparent 40%),
+    radial-gradient(ellipse at 85% 15%, rgba(124,168,255,0.05) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 90%, rgba(192,132,252,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 60%, rgba(34,211,238,0.03) 0%, transparent 40%);
+    pointer-events:none; z-index:0; }
+  body::after { content:''; position:fixed; top:0; left:0; width:100%; height:100%;
+    background-image: linear-gradient(rgba(124,168,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(124,168,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px; pointer-events:none; z-index:0; animation: grid-drift 20s linear infinite; opacity:0.5; }
   a { color: var(--accent); text-decoration: none; }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes slideIn { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
+  ::-webkit-scrollbar-thumb { background: rgba(124,168,255,0.2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(124,168,255,0.35); }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeInScale { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+  @keyframes slideIn { from{opacity:0;transform:translateX(-12px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
   @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-  @keyframes glow-pulse { 0%,100%{box-shadow:0 0 8px rgba(124,168,255,0.1)} 50%{box-shadow:0 0 20px rgba(124,168,255,0.2)} }
+  @keyframes glow-pulse { 0%,100%{box-shadow:0 0 8px rgba(124,168,255,0.1)} 50%{box-shadow:0 0 24px rgba(124,168,255,0.25)} }
+  @keyframes gold-pulse { 0%,100%{box-shadow:0 0 8px rgba(240,200,80,0.1)} 50%{box-shadow:0 0 24px rgba(240,200,80,0.2)} }
   @keyframes halo-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  @keyframes grid-drift { from{transform:translate(0,0)} to{transform:translate(60px,60px)} }
+  @keyframes gradient-shift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+  @keyframes border-glow { 0%,100%{border-color:rgba(124,168,255,0.15)} 50%{border-color:rgba(124,168,255,0.35)} }
+  @keyframes counter-up { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
   .skeleton { background:linear-gradient(90deg,var(--surface3) 25%,rgba(42,47,74,0.6) 50%,var(--surface3) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:var(--radius-xs); }
 
   /* Header */
   .header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 24px; background: var(--surface); backdrop-filter: var(--glass);
+    padding: 12px 24px; background: linear-gradient(135deg, rgba(12,14,26,0.95), rgba(16,20,42,0.95)); backdrop-filter: var(--glass);
     border-bottom: 1px solid var(--border); position: relative; overflow: hidden; z-index: 100;
   }
-  .header::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--angel-wing); opacity:0.7; }
-  .header h1 { font-size:16px; font-weight:700; display:flex; align-items:center; gap:10px; }
-  .angel-icon { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--angel-glow); border:1px solid rgba(240,200,80,0.3); font-size:16px; flex-shrink:0; box-shadow:0 0 16px rgba(240,200,80,0.12); transition:var(--transition); }
-  .angel-icon:hover { box-shadow:0 0 24px rgba(240,200,80,0.25); transform:scale(1.05); }
+  .header::before { content:''; position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(90deg, rgba(240,200,80,0.03) 0%, transparent 30%, transparent 70%, rgba(124,168,255,0.03) 100%); pointer-events:none; }
+  .header::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--angel-wing); opacity:0.8; }
+  .header h1 { font-size:16px; font-weight:700; display:flex; align-items:center; gap:10px; position:relative; }
+  .angel-icon { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, rgba(240,200,80,0.15), rgba(124,168,255,0.1)); border:1px solid rgba(240,200,80,0.35); font-size:18px; flex-shrink:0; box-shadow:0 0 20px rgba(240,200,80,0.15), inset 0 0 12px rgba(240,200,80,0.05); transition:var(--transition); animation:gold-pulse 3s infinite; }
+  .angel-icon:hover { box-shadow:0 0 32px rgba(240,200,80,0.3), inset 0 0 16px rgba(240,200,80,0.08); transform:scale(1.1) rotate(5deg); }
   .brand-text { display:flex; flex-direction:column; }
-  .brand-name { line-height:1.2; letter-spacing:-0.3px; font-weight:800; }
-  .brand-sub { font-size:9px; font-weight:500; color:var(--angel-gold); letter-spacing:1.2px; text-transform:uppercase; opacity:0.8; }
-  .version-pill { font-size:9px; padding:2px 8px; border-radius:10px; background:var(--angel-glow); color:var(--angel-gold); border:1px solid rgba(240,200,80,0.2); font-weight:700; letter-spacing:0.3px; }
+  .brand-name { line-height:1.2; letter-spacing:-0.3px; font-weight:800; background:linear-gradient(90deg, var(--text), var(--angel-gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .brand-sub { font-size:9px; font-weight:600; color:var(--angel-gold); letter-spacing:1.5px; text-transform:uppercase; opacity:0.9; }
+  .version-pill { font-size:9px; padding:3px 10px; border-radius:12px; background:linear-gradient(135deg, rgba(240,200,80,0.12), rgba(124,168,255,0.08)); color:var(--angel-gold); border:1px solid rgba(240,200,80,0.25); font-weight:700; letter-spacing:0.5px; animation:border-glow 4s infinite; }
   .header-right { display:flex; align-items:center; gap:10px; }
   .search-bar { display:flex; align-items:center; gap:6px; padding:5px 12px; border-radius:20px; background:rgba(28,32,53,0.6); border:1px solid var(--border); font-size:11px; color:var(--text-dim); cursor:pointer; transition:var(--transition); min-width:180px; }
   .search-bar:hover,.search-bar:focus-within { border-color:var(--border-hover); background:rgba(28,32,53,0.9); }
   .search-bar input { background:none; border:none; color:var(--text); font-size:11px; font-family:var(--font); outline:none; width:100%; }
   .search-bar input::placeholder { color:var(--text-muted); }
   .search-bar kbd { font-size:8px; padding:1px 5px; border-radius:4px; background:var(--surface3); color:var(--text-muted); border:1px solid var(--border); font-family:var(--mono); }
-  .guardian-status { display:flex; align-items:center; gap:6px; padding:5px 14px; border-radius:20px; font-size:10px; font-weight:600; background:var(--green-dim); color:var(--green); border:1px solid rgba(74,222,128,0.15); transition:var(--transition); }
-  .guardian-status:hover { background:rgba(74,222,128,0.15); }
-  .guardian-status .dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 4px var(--green)} 50%{opacity:0.3;box-shadow:none} }
+  .guardian-status { display:flex; align-items:center; gap:6px; padding:5px 16px; border-radius:20px; font-size:10px; font-weight:700; background:linear-gradient(135deg, rgba(74,222,128,0.1), rgba(74,222,128,0.05)); color:var(--green); border:1px solid rgba(74,222,128,0.2); transition:var(--transition); letter-spacing:0.3px; }
+  .guardian-status:hover { background:rgba(74,222,128,0.15); box-shadow:0 0 16px rgba(74,222,128,0.1); }
+  .guardian-status .dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; box-shadow:0 0 6px var(--green); }
+  @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 6px var(--green)} 50%{opacity:0.4;box-shadow:0 0 2px var(--green)} }
   .user-badge { display:flex; align-items:center; gap:6px; padding:4px 10px; border-radius:var(--radius-sm); font-size:10px; background:var(--surface2); color:var(--text-dim); border:1px solid var(--border); transition:var(--transition); }
   .user-badge:hover { border-color:var(--border-hover); }
   .role-tag { padding:2px 6px; border-radius:4px; font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; }
@@ -112,69 +132,88 @@
 
   /* Sidebar navigation */
   .sidebar {
-    width:var(--sidebar-w); background:var(--surface); backdrop-filter:var(--glass); border-right:1px solid var(--border);
-    display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto;
+    width:var(--sidebar-w); background:linear-gradient(180deg, rgba(12,14,28,0.95) 0%, rgba(10,12,22,0.98) 100%); backdrop-filter:var(--glass); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto; position:relative;
   }
-  .sidebar-section { padding:14px 0 6px; }
-  .sidebar-section-title { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--text-muted); padding:0 18px 8px; }
+  .sidebar::after { content:''; position:absolute; top:0; right:0; width:1px; height:100%; background:linear-gradient(180deg, rgba(240,200,80,0.15) 0%, rgba(124,168,255,0.1) 50%, rgba(192,132,252,0.1) 100%); pointer-events:none; }
+  .sidebar-section { padding:16px 0 6px; }
+  .sidebar-section-title { font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:1.8px; color:var(--text-muted); padding:0 20px 10px; position:relative; }
+  .sidebar-section-title::after { content:''; position:absolute; bottom:6px; left:20px; width:20px; height:1px; background:var(--angel-wing); opacity:0.4; }
   .nav-item {
-    display:flex; align-items:center; gap:10px; padding:9px 18px; font-size:12px; font-weight:500;
-    color:var(--text-dim); cursor:pointer; border-left:3px solid transparent; transition:var(--transition); margin:1px 0; position:relative;
+    display:flex; align-items:center; gap:10px; padding:10px 20px; font-size:12px; font-weight:500;
+    color:var(--text-dim); cursor:pointer; border-left:3px solid transparent; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); margin:1px 0; position:relative; overflow:hidden;
   }
-  .nav-item:hover { background:rgba(124,168,255,0.05); color:var(--text); }
-  .nav-item.active { background:var(--accent-dim); color:var(--accent); border-left-color:var(--accent); font-weight:700; box-shadow:inset 0 0 20px rgba(124,168,255,0.05); }
-  .nav-item .nav-icon { font-size:14px; width:22px; text-align:center; transition:var(--transition); }
-  .nav-item:hover .nav-icon { transform:scale(1.1); }
-  .nav-item .nav-badge { margin-left:auto; font-size:9px; padding:2px 7px; border-radius:8px; font-weight:700; background:var(--red-dim); color:var(--red); }
-  .nav-item .nav-badge.green { background:var(--green-dim); color:var(--green); }
+  .nav-item::before { content:''; position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(90deg, rgba(124,168,255,0.06), transparent); opacity:0; transition:opacity 0.3s; pointer-events:none; }
+  .nav-item:hover { color:var(--text); }
+  .nav-item:hover::before { opacity:1; }
+  .nav-item.active { background:linear-gradient(90deg, rgba(124,168,255,0.1), rgba(124,168,255,0.02)); color:var(--accent); border-left-color:var(--accent); font-weight:700; box-shadow:inset 0 0 30px rgba(124,168,255,0.06); }
+  .nav-item.active::after { content:''; position:absolute; left:0; top:25%; bottom:25%; width:3px; background:var(--accent); border-radius:0 2px 2px 0; box-shadow:0 0 12px rgba(124,168,255,0.4); }
+  .nav-item .nav-icon { font-size:15px; width:24px; text-align:center; transition:var(--transition); filter:grayscale(0.5); }
+  .nav-item:hover .nav-icon { transform:scale(1.15) translateX(2px); filter:grayscale(0); }
+  .nav-item.active .nav-icon { filter:grayscale(0); }
+  .nav-item .nav-badge { margin-left:auto; font-size:9px; padding:2px 8px; border-radius:10px; font-weight:700; background:var(--red-dim); color:var(--red); box-shadow:0 0 8px rgba(248,113,113,0.15); }
+  .nav-item .nav-badge.green { background:var(--green-dim); color:var(--green); box-shadow:0 0 8px rgba(74,222,128,0.15); animation:glow-pulse 2s infinite; }
 
   /* Main content */
-  .main-content { flex:1; overflow-y:auto; padding:20px 24px; display:flex; flex-direction:column; gap:16px; scroll-behavior:smooth; }
-  .main-content > * { animation:fadeIn 0.3s ease-out both; }
-  .main-content > *:nth-child(2) { animation-delay:0.05s; }
-  .main-content > *:nth-child(3) { animation-delay:0.1s; }
-  .main-content > *:nth-child(4) { animation-delay:0.15s; }
-  .main-content > *:nth-child(5) { animation-delay:0.2s; }
+  .main-content { flex:1; overflow-y:auto; padding:24px 28px; display:flex; flex-direction:column; gap:18px; scroll-behavior:smooth; position:relative; z-index:1; }
+  .main-content > * { animation:slideUp 0.4s ease-out both; }
+  .main-content > *:nth-child(2) { animation-delay:0.06s; }
+  .main-content > *:nth-child(3) { animation-delay:0.12s; }
+  .main-content > *:nth-child(4) { animation-delay:0.18s; }
+  .main-content > *:nth-child(5) { animation-delay:0.24s; }
+  .main-content > *:nth-child(6) { animation-delay:0.30s; }
+  .main-content > *:nth-child(7) { animation-delay:0.36s; }
 
   /* Chat panel (collapsible) */
   .chat-panel {
-    width:350px; border-left:1px solid var(--border); display:flex; flex-direction:column;
-    background:var(--surface); backdrop-filter:var(--glass); flex-shrink:0; transition:width 0.25s cubic-bezier(0.4,0,0.2,1);
+    width:360px; border-left:1px solid var(--border); display:flex; flex-direction:column;
+    background:linear-gradient(180deg, rgba(12,14,28,0.95), rgba(10,12,22,0.98)); backdrop-filter:var(--glass); flex-shrink:0; transition:width 0.3s cubic-bezier(0.4,0,0.2,1); position:relative;
   }
+  .chat-panel::before { content:''; position:absolute; top:0; left:0; width:1px; height:100%; background:linear-gradient(180deg, rgba(240,200,80,0.1), rgba(124,168,255,0.08), rgba(192,132,252,0.08)); pointer-events:none; }
   .chat-panel.collapsed { width:0; overflow:hidden; border:none; }
   .chat-toggle {
-    position:fixed; bottom:24px; right:24px; width:52px; height:52px; border-radius:50%;
-    background:var(--angel-wing); border:none; font-size:22px; cursor:pointer; z-index:200;
-    display:none; box-shadow:var(--shadow-lg), 0 0 30px rgba(240,200,80,0.15); transition:var(--transition);
+    position:fixed; bottom:24px; right:24px; width:56px; height:56px; border-radius:50%;
+    background:var(--angel-wing); border:none; font-size:24px; cursor:pointer; z-index:200;
+    display:none; box-shadow:var(--shadow-lg), 0 0 40px rgba(240,200,80,0.2); transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+    animation:gold-pulse 2s infinite;
   }
-  .chat-toggle:hover { transform:scale(1.08); }
+  .chat-toggle:hover { transform:scale(1.12) rotate(5deg); }
 
   /* Cards */
-  .card { background:var(--surface); backdrop-filter:var(--glass); border:1px solid var(--border); border-radius:var(--radius); padding:16px; position:relative; overflow:hidden; transition:var(--transition); box-shadow:var(--shadow-sm); }
-  .card:hover { border-color:var(--border-hover); box-shadow:var(--shadow-md), var(--shadow-glow); }
-  .card.glow::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--angel-wing); opacity:0.6; }
-  .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--border); }
-  .card-title { font-size:13px; font-weight:700; display:flex; align-items:center; gap:7px; }
-  .card-title .icon { font-size:14px; opacity:0.8; }
-  .card-badge { font-size:9px; padding:3px 9px; border-radius:10px; font-weight:700; background:var(--accent-dim); color:var(--accent); letter-spacing:0.3px; }
-  .card-badge.gold { background:var(--angel-glow); color:var(--angel-gold); }
-  .card-badge.green { background:var(--green-dim); color:var(--green); }
-  .card-badge.red { background:var(--red-dim); color:var(--red); }
-  .card-badge.yellow { background:var(--yellow-dim); color:var(--yellow); }
+  .card { background:var(--surface); backdrop-filter:var(--glass); border:1px solid var(--border); border-radius:var(--radius); padding:18px; position:relative; overflow:hidden; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow:var(--shadow-sm); }
+  .card:hover { border-color:var(--border-hover); box-shadow:var(--shadow-md), var(--shadow-glow); transform:translateY(-1px); }
+  .card.glow { border-color:rgba(240,200,80,0.15); }
+  .card.glow::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--angel-wing); opacity:0.8; }
+  .card.glow::after { content:''; position:absolute; top:2px; left:0; right:0; height:40px; background:linear-gradient(180deg, rgba(240,200,80,0.04), transparent); pointer-events:none; }
+  .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid rgba(42,47,80,0.3); }
+  .card-title { font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px; letter-spacing:-0.1px; }
+  .card-title .icon { font-size:15px; opacity:0.9; }
+  .card-badge { font-size:9px; padding:3px 10px; border-radius:12px; font-weight:700; background:var(--accent-dim); color:var(--accent); letter-spacing:0.3px; border:1px solid rgba(124,168,255,0.15); }
+  .card-badge.gold { background:linear-gradient(135deg, rgba(240,200,80,0.12), rgba(240,200,80,0.06)); color:var(--angel-gold); border-color:rgba(240,200,80,0.2); }
+  .card-badge.green { background:var(--green-dim); color:var(--green); border-color:rgba(74,222,128,0.15); }
+  .card-badge.red { background:var(--red-dim); color:var(--red); border-color:rgba(248,113,113,0.15); }
+  .card-badge.yellow { background:var(--yellow-dim); color:var(--yellow); border-color:rgba(251,191,36,0.15); }
 
   /* Stats row */
-  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; }
-  .stat-card { background:var(--surface); backdrop-filter:var(--glass); border:1px solid var(--border); border-radius:var(--radius); padding:16px 14px; text-align:center; position:relative; overflow:hidden; transition:var(--transition); box-shadow:var(--shadow-sm); }
-  .stat-card:hover { border-color:var(--border-hover); transform:translateY(-2px); box-shadow:var(--shadow-md); }
-  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; opacity:0.6; }
-  .stat-card:nth-child(1)::before { background:var(--accent); }
-  .stat-card:nth-child(2)::before { background:var(--angel-gold); }
-  .stat-card:nth-child(3)::before { background:var(--green); }
-  .stat-card:nth-child(4)::before { background:var(--purple); }
-  .stat-card:nth-child(5)::before { background:var(--red); }
-  .stat-card:nth-child(6)::before { background:var(--orange); }
-  .stat-value { font-size:24px; font-weight:900; margin-bottom:2px; letter-spacing:-0.5px; }
-  .stat-label { font-size:9px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.8px; font-weight:600; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; }
+  .stat-card { background:linear-gradient(135deg, var(--surface), rgba(20,24,42,0.9)); backdrop-filter:var(--glass); border:1px solid var(--border); border-radius:var(--radius); padding:20px 16px; text-align:center; position:relative; overflow:hidden; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow:var(--shadow-sm); }
+  .stat-card:hover { border-color:var(--border-hover); transform:translateY(-4px); box-shadow:var(--shadow-lg), var(--shadow-glow); }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; opacity:0.8; }
+  .stat-card::after { content:''; position:absolute; top:3px; left:0; right:0; height:50px; opacity:0.5; pointer-events:none; }
+  .stat-card:nth-child(1)::before { background:linear-gradient(90deg, var(--accent), rgba(124,168,255,0.3)); }
+  .stat-card:nth-child(1)::after { background:linear-gradient(180deg, rgba(124,168,255,0.06), transparent); }
+  .stat-card:nth-child(2)::before { background:linear-gradient(90deg, var(--angel-gold), rgba(240,200,80,0.3)); }
+  .stat-card:nth-child(2)::after { background:linear-gradient(180deg, rgba(240,200,80,0.06), transparent); }
+  .stat-card:nth-child(3)::before { background:linear-gradient(90deg, var(--green), rgba(74,222,128,0.3)); }
+  .stat-card:nth-child(3)::after { background:linear-gradient(180deg, rgba(74,222,128,0.06), transparent); }
+  .stat-card:nth-child(4)::before { background:linear-gradient(90deg, var(--purple), rgba(192,132,252,0.3)); }
+  .stat-card:nth-child(4)::after { background:linear-gradient(180deg, rgba(192,132,252,0.06), transparent); }
+  .stat-card:nth-child(5)::before { background:linear-gradient(90deg, var(--red), rgba(248,113,113,0.3)); }
+  .stat-card:nth-child(5)::after { background:linear-gradient(180deg, rgba(248,113,113,0.06), transparent); }
+  .stat-card:nth-child(6)::before { background:linear-gradient(90deg, var(--orange), rgba(251,146,60,0.3)); }
+  .stat-card:nth-child(6)::after { background:linear-gradient(180deg, rgba(251,146,60,0.06), transparent); }
+  .stat-value { font-size:28px; font-weight:900; margin-bottom:4px; letter-spacing:-0.5px; animation:counter-up 0.5s ease-out both; }
+  .stat-label { font-size:9px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; font-weight:700; }
 
   /* Activity */
   .activity-item { display:flex; align-items:flex-start; gap:10px; padding:8px 10px; border-radius:var(--radius-sm); margin-bottom:4px; background:rgba(20,24,37,0.5); border-left:3px solid var(--border); transition:var(--transition); }
@@ -194,10 +233,10 @@
   /* Tables */
   .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
   .data-table { width:100%; border-collapse:collapse; font-size:11px; white-space:nowrap; }
-  .data-table th { text-align:left; padding:8px 10px; font-size:9px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-dim); border-bottom:1px solid var(--border); font-weight:700; }
-  .data-table td { padding:8px 10px; border-bottom:1px solid rgba(42,47,74,0.4); }
-  .data-table tr { transition:var(--transition); }
-  .data-table tr:hover { background:rgba(124,168,255,0.04); cursor:pointer; }
+  .data-table th { text-align:left; padding:10px 12px; font-size:9px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); border-bottom:1px solid var(--border); font-weight:800; background:rgba(10,12,24,0.3); }
+  .data-table td { padding:10px 12px; border-bottom:1px solid rgba(42,47,74,0.25); }
+  .data-table tr { transition:all 0.2s cubic-bezier(0.4,0,0.2,1); }
+  .data-table tr:hover { background:linear-gradient(90deg, rgba(124,168,255,0.06), rgba(124,168,255,0.02)); cursor:pointer; }
   .data-table tbody tr:last-child td { border-bottom:none; }
   .status-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:10px; font-size:9px; font-weight:700; letter-spacing:0.2px; }
   .status-active { background:var(--green-dim); color:var(--green); }
@@ -224,11 +263,12 @@
   .sev-info,.sev-low { background:var(--accent-dim); color:var(--accent); }
 
   /* Threat chart */
-  .threat-chart { display:flex; flex-direction:column; gap:6px; }
-  .threat-row { display:flex; align-items:center; gap:10px; }
-  .threat-label { width:75px; font-size:10px; color:var(--text-dim); text-align:right; font-weight:600; }
-  .threat-bar-bg { flex:1; height:22px; background:rgba(28,32,53,0.5); border-radius:var(--radius-xs); overflow:hidden; }
-  .threat-bar-fill { height:100%; border-radius:var(--radius-xs); display:flex; align-items:center; padding-left:8px; font-size:9px; font-weight:700; min-width:26px; transition:width 0.6s cubic-bezier(0.4,0,0.2,1); }
+  .threat-chart { display:flex; flex-direction:column; gap:8px; }
+  .threat-row { display:flex; align-items:center; gap:12px; }
+  .threat-label { width:80px; font-size:10px; color:var(--text-dim); text-align:right; font-weight:600; }
+  .threat-bar-bg { flex:1; height:26px; background:rgba(20,24,40,0.6); border-radius:var(--radius-sm); overflow:hidden; border:1px solid rgba(42,47,80,0.3); }
+  .threat-bar-fill { height:100%; border-radius:var(--radius-sm); display:flex; align-items:center; padding-left:10px; font-size:9px; font-weight:700; min-width:30px; transition:width 0.8s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden; }
+  .threat-bar-fill::after { content:''; position:absolute; top:0; left:0; right:0; height:50%; background:linear-gradient(180deg, rgba(255,255,255,0.08), transparent); pointer-events:none; }
 
   /* Grid layouts */
   .two-col { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px; }
@@ -254,25 +294,26 @@
   .btn-success:hover { background:rgba(74,222,128,0.2); }
 
   /* Halo Score */
-  .halo-score { display:flex; align-items:center; gap:16px; }
+  .halo-score { display:flex; align-items:center; gap:20px; }
   .halo-ring { width:64px; height:64px; border-radius:50%; position:relative; display:flex; align-items:center; justify-content:center; }
-  .halo-ring .halo-val { font-size:18px; font-weight:900; z-index:1; letter-spacing:-0.5px; }
-  .halo-ring svg { position:absolute; top:0; left:0; transform:rotate(-90deg); }
-  .halo-ring svg circle:last-child { transition:stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1); }
+  .halo-ring .halo-val { font-size:20px; font-weight:900; z-index:1; letter-spacing:-0.5px; text-shadow:0 0 20px currentColor; }
+  .halo-ring svg { position:absolute; top:0; left:0; transform:rotate(-90deg); filter:drop-shadow(0 0 6px rgba(124,168,255,0.2)); }
+  .halo-ring svg circle:last-child { transition:stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1); }
   .halo-meta { flex:1; }
-  .halo-label { font-size:9px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-dim); font-weight:700; }
-  .halo-desc { font-size:11px; color:var(--text-dim); margin-top:3px; }
+  .halo-label { font-size:9px; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); font-weight:800; }
+  .halo-desc { font-size:11px; color:var(--text-dim); margin-top:4px; line-height:1.5; }
 
   /* Shield grid */
-  .shield-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(85px,1fr)); gap:8px; }
-  .shield-stat { text-align:center; padding:8px 4px; border-radius:var(--radius-sm); background:rgba(20,24,37,0.4); transition:var(--transition); }
-  .shield-stat:hover { background:rgba(28,32,53,0.5); }
-  .shield-stat .val { font-size:18px; font-weight:800; }
-  .shield-stat .lbl { font-size:9px; color:var(--text-dim); font-weight:600; margin-top:2px; }
+  .shield-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:10px; }
+  .shield-stat { text-align:center; padding:12px 6px; border-radius:var(--radius-sm); background:rgba(16,20,38,0.5); transition:all 0.3s cubic-bezier(0.4,0,0.2,1); border:1px solid rgba(42,47,80,0.2); }
+  .shield-stat:hover { background:rgba(22,28,50,0.7); transform:translateY(-2px); border-color:var(--border-hover); box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+  .shield-stat .val { font-size:20px; font-weight:900; }
+  .shield-stat .lbl { font-size:9px; color:var(--text-dim); font-weight:700; margin-top:3px; text-transform:uppercase; letter-spacing:0.3px; }
 
   /* Chat */
-  .chat-header { padding:14px 16px; border-bottom:1px solid var(--border); font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px; background:var(--angel-halo); }
-  .chat-header .angel-chat-icon { color:var(--angel-gold); font-size:16px; filter:drop-shadow(0 0 6px rgba(240,200,80,0.3)); }
+  .chat-header { padding:16px 18px; border-bottom:1px solid var(--border); font-size:13px; font-weight:700; display:flex; align-items:center; gap:10px; background:linear-gradient(135deg, rgba(240,200,80,0.08), rgba(124,168,255,0.06)); position:relative; }
+  .chat-header::after { content:''; position:absolute; bottom:0; left:0; right:0; height:1px; background:var(--angel-wing); opacity:0.3; }
+  .chat-header .angel-chat-icon { color:var(--angel-gold); font-size:18px; filter:drop-shadow(0 0 8px rgba(240,200,80,0.4)); }
   .chat-messages { flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
   .chat-msg { padding:12px 16px; border-radius:14px; font-size:12px; line-height:1.7; max-width:92%; word-wrap:break-word; animation:fadeIn 0.25s ease-out; }
   .chat-msg.system { background:rgba(28,32,53,0.7); align-self:flex-start; border:1px solid var(--border); border-bottom-left-radius:4px; backdrop-filter:var(--glass); }
@@ -330,11 +371,12 @@
 
   /* Login */
   .login-page { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg); position:relative; overflow:hidden; }
-  .login-page::before { content:''; position:absolute; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle,rgba(240,200,80,0.06),transparent 70%); top:10%; left:20%; animation:float 8s ease-in-out infinite; }
-  .login-page::after { content:''; position:absolute; width:400px; height:400px; border-radius:50%; background:radial-gradient(circle,rgba(124,168,255,0.05),transparent 70%); bottom:10%; right:15%; animation:float 10s ease-in-out infinite reverse; }
+  .login-page::before { content:''; position:absolute; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle,rgba(240,200,80,0.07),transparent 70%); top:5%; left:15%; animation:float 8s ease-in-out infinite; }
+  .login-page::after { content:''; position:absolute; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle,rgba(124,168,255,0.06),transparent 70%); bottom:5%; right:10%; animation:float 10s ease-in-out infinite reverse; }
   @keyframes float { 0%,100%{transform:translate(0,0)} 50%{transform:translate(30px,-20px)} }
-  .login-box { background:var(--surface); backdrop-filter:var(--glass); border:1px solid var(--border); border-radius:var(--radius); padding:36px; width:380px; max-width:90vw; max-width:90dvw; position:relative; overflow:hidden; box-shadow:var(--shadow-lg); z-index:1; animation:fadeIn 0.4s ease-out; }
+  .login-box { background:linear-gradient(135deg, rgba(16,20,38,0.95), rgba(12,14,28,0.95)); backdrop-filter:var(--glass); border:1px solid rgba(240,200,80,0.15); border-radius:var(--radius); padding:40px; width:400px; max-width:90vw; max-width:90dvw; position:relative; overflow:hidden; box-shadow:var(--shadow-lg), 0 0 60px rgba(240,200,80,0.05); z-index:1; animation:fadeInScale 0.5s ease-out; }
   .login-box::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--angel-wing); }
+  .login-box::after { content:''; position:absolute; top:3px; left:0; right:0; height:80px; background:linear-gradient(180deg, rgba(240,200,80,0.04), transparent); pointer-events:none; }
   .login-box h2 { font-size:20px; margin-bottom:6px; display:flex; align-items:center; gap:10px; font-weight:800; }
   .login-box .login-sub { color:var(--text-dim); font-size:12px; margin-bottom:24px; }
   .login-box input { width:100%; padding:12px 14px; margin-bottom:12px; border-radius:var(--radius-sm); border:1px solid var(--border); background:rgba(28,32,53,0.6); color:var(--text); font-size:13px; font-family:var(--font); outline:none; transition:var(--transition); }
@@ -344,11 +386,22 @@
   .login-box button:active { transform:translateY(0); }
   .login-error { color:var(--red); font-size:11px; margin-bottom:8px; display:none; padding:6px 10px; background:var(--red-dim); border-radius:var(--radius-xs); border:1px solid rgba(248,113,113,0.2); }
 
-  .loading { color:var(--text-dim); font-size:11px; text-align:center; padding:20px; }
-  .loading::after { content:''; display:inline-block; width:14px; height:14px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:halo-spin 0.6s linear infinite; margin-left:8px; vertical-align:middle; }
-  .empty { color:var(--text-muted); font-size:11px; text-align:center; padding:20px; }
-  .page-title { font-size:18px; font-weight:800; margin-bottom:4px; display:flex; align-items:center; gap:10px; letter-spacing:-0.3px; }
-  .page-subtitle { font-size:12px; color:var(--text-dim); margin-bottom:14px; line-height:1.5; }
+  .loading { color:var(--text-dim); font-size:11px; text-align:center; padding:30px; }
+  .loading::after { content:''; display:inline-block; width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:halo-spin 0.6s linear infinite; margin-left:8px; vertical-align:middle; }
+  .empty { color:var(--text-muted); font-size:11px; text-align:center; padding:24px; }
+  .page-title { font-size:20px; font-weight:900; margin-bottom:4px; display:flex; align-items:center; gap:10px; letter-spacing:-0.4px; }
+  .page-subtitle { font-size:12px; color:var(--text-dim); margin-bottom:16px; line-height:1.5; }
+
+  /* Hero banner */
+  .hero-banner { background:linear-gradient(135deg, rgba(240,200,80,0.08) 0%, rgba(124,168,255,0.06) 40%, rgba(192,132,252,0.05) 100%); border:1px solid rgba(240,200,80,0.12); border-radius:var(--radius); padding:24px 28px; position:relative; overflow:hidden; }
+  .hero-banner::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--angel-wing); opacity:0.8; }
+  .hero-banner::after { content:''; position:absolute; top:-50%; right:-20%; width:300px; height:300px; border-radius:50%; background:radial-gradient(circle, rgba(240,200,80,0.06), transparent 70%); pointer-events:none; }
+  .hero-title { font-size:22px; font-weight:900; letter-spacing:-0.5px; margin-bottom:4px; background:var(--angel-wing); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero-sub { font-size:12px; color:var(--text-dim); line-height:1.6; }
+  .hero-stats { display:flex; gap:24px; margin-top:14px; flex-wrap:wrap; }
+  .hero-stat { display:flex; align-items:center; gap:8px; }
+  .hero-stat-val { font-size:20px; font-weight:900; }
+  .hero-stat-label { font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; font-weight:600; }
 
   /* Responsive */
   @media (max-width:1100px) {
@@ -597,7 +650,7 @@ document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key===
 function seraphSearch(query) {
   if(!query||!query.trim()) return;
   const q=query.trim().toLowerCase();
-  const pages=['dashboard','fleet','tenants','alerts','legion','anti-tamper','analytics','threat-intel','learning','assets','soar','zero-trust','transcendence','convergence','omniguard','prometheus','empyrion','policies','settings'];
+  const pages=['dashboard','fleet','tenants','alerts','legion','anti-tamper','analytics','threat-intel','learning','assets','soar','zero-trust','transcendence','convergence','omniguard','prometheus','empyrion','titan-grid','policies','settings'];
   const match=pages.find(p=>p.includes(q)||q.includes(p));
   if(match){navigate(match);document.getElementById('search-input').value='';return;}
   document.getElementById('search-input').value='';
@@ -654,32 +707,59 @@ async function renderPage() {
 
 /* === DASHBOARD === */
 async function renderDashboard(mc) {
-  const [agents,events,orch,activity,daemon,alerts,shield,threats] = await Promise.all([
+  const [agents,events,orch,activity,daemon,alerts,shield,threats,halo,titanStatus] = await Promise.all([
     fetchJSON('/api/v1/agents'), fetchJSON('/api/v1/incidents/recent?limit=30'),
     fetchJSON('/api/v1/orchestrator/status'), fetchJSON('/api/v1/angelclaw/activity/recent?limit=12'),
     fetchJSON('/api/v1/angelclaw/daemon/status'), fetchJSON('/api/v1/guardian/alerts/recent?tenantId=dev-tenant&limit=10'),
     fetchJSON('/api/v1/angelclaw/shield/status'), fetchJSON('/api/v1/analytics/threat-matrix?lookback_hours=24'),
+    fetchJSON('/api/v1/convergence/halo/current'), fetchJSON('/api/v1/titan-grid/status'),
   ]);
   cachedData.agents=agents; cachedData.alerts=alerts;
   const agentCount=agents?agents.length:0, eventCount=events?events.length:0;
   const blocked=events?events.filter(e=>['critical','high'].includes(e.severity)).length:0;
   const alertCount=alerts?alerts.length:0;
   const oi=orch?orch.stats||{}:{};
+  const haloScore=halo?halo.score:85;
   document.getElementById('nav-fleet-count').textContent=agentCount;
   document.getElementById('nav-alert-count').textContent=alertCount;
 
+  // Hero Banner with Halo Score
+  const haloText=haloScore>=80?'All Systems Optimal':haloScore>=60?'Minor Issues Detected':haloScore>=40?'Review Recommended':'Immediate Action Required';
+  const haloCol=haloColor(haloScore);
   let html = `
+  <div class="hero-banner">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+      <div style="flex:1;min-width:240px">
+        <div class="hero-title">AngelClaw Titan Grid</div>
+        <div class="hero-sub">Autonomous AGI security platform &mdash; real-time threat defense, exposure validation, identity governance &amp; workflow orchestration</div>
+        <div class="hero-stats">
+          <div class="hero-stat"><span class="hero-stat-val" style="color:var(--accent)">${agentCount}</span><span class="hero-stat-label">Agents</span></div>
+          <div class="hero-stat"><span class="hero-stat-val" style="color:var(--angel-gold)">${eventCount}</span><span class="hero-stat-label">Events</span></div>
+          <div class="hero-stat"><span class="hero-stat-val" style="color:var(--green)">${blocked}</span><span class="hero-stat-label">Blocked</span></div>
+          <div class="hero-stat"><span class="hero-stat-val" style="color:var(--red)">${alertCount}</span><span class="hero-stat-label">Alerts</span></div>
+        </div>
+      </div>
+      <div style="text-align:center;padding:4px 20px">
+        ${renderHaloRing(haloScore, 96)}
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${haloCol};margin-top:6px">Security Posture</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:2px">${haloText}</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Stat cards row
+  html += `
     <div class="stats">
-      <div class="stat-card"><div class="stat-value" style="color:var(--accent)">${agentCount}</div><div class="stat-label">Agents</div></div>
-      <div class="stat-card"><div class="stat-value" style="color:var(--angel-gold)">${eventCount}</div><div class="stat-label">Events (24h)</div></div>
-      <div class="stat-card"><div class="stat-value" style="color:var(--green)">${blocked}</div><div class="stat-label">Blocked</div></div>
-      <div class="stat-card"><div class="stat-value" style="color:var(--purple)">${oi.indicators_found||0}</div><div class="stat-label">Indicators</div></div>
-      <div class="stat-card"><div class="stat-value" style="color:var(--red)">${alertCount}</div><div class="stat-label">Alerts</div></div>
-      <div class="stat-card"><div class="stat-value" style="color:var(--orange)">${oi.incidents_created||0}</div><div class="stat-label">Incidents</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--accent)">${agentCount}</div><div class="stat-label">&#128421; Fleet Nodes</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--angel-gold)">${eventCount}</div><div class="stat-label">&#128200; Events (24h)</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--green)">${blocked}</div><div class="stat-label">&#128737; Blocked</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--purple)">${oi.indicators_found||0}</div><div class="stat-label">&#128270; Indicators</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--red)">${alertCount}</div><div class="stat-label">&#9888; Alerts</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--orange)">${oi.incidents_created||0}</div><div class="stat-label">&#128680; Incidents</div></div>
     </div>`;
 
-  // Activity panel
-  html += `<div class="card glow" style="background:var(--angel-halo)"><div class="card-header"><span class="card-title"><span class="icon">&#128737;</span> Guardian Activity</span><span class="card-badge gold">${daemon&&daemon.running?'ACTIVE ('+daemon.cycles_completed+' cycles)':'STOPPED'}</span></div><div style="max-height:200px;overflow-y:auto">`;
+  // Guardian Activity panel
+  html += `<div class="card glow"><div class="card-header"><span class="card-title"><span class="icon">&#128737;</span> Guardian Activity</span><span class="card-badge gold">${daemon&&daemon.running?'ACTIVE &mdash; '+daemon.cycles_completed+' cycles':'STOPPED'}</span></div><div style="max-height:220px;overflow-y:auto">`;
   if(activity&&activity.length) {
     html += activity.map(a=>`<div class="activity-item cat-${esc(a.category)}"><div class="activity-body"><span class="activity-cat">${esc(a.category)}</span><span class="activity-time">${ago(a.timestamp)}</span><div class="activity-text">${esc(a.summary)}</div></div></div>`).join('');
   } else html += '<div class="empty">Guardian starting up...</div>';
@@ -688,25 +768,25 @@ async function renderDashboard(mc) {
   // Two columns: Alerts + Orchestrator
   html += '<div class="two-col">';
   // Alerts
-  html += `<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#9888;</span> Guardian Alerts</span><span class="card-badge red">${alertCount}</span></div><div style="max-height:200px;overflow-y:auto">`;
+  html += `<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#9888;</span> Guardian Alerts</span><span class="card-badge red">${alertCount}</span></div><div style="max-height:220px;overflow-y:auto">`;
   if(alerts&&alerts.length) html += alerts.map(a=>`<div class="alert-item"><span class="alert-icon">${sevIcon(a.severity)}</span><div class="alert-body"><div class="alert-title">${esc(a.title)}</div><div class="alert-meta">${esc(a.severity)} &middot; ${ago(a.created_at)}</div></div></div>`).join('');
   else html += '<div class="empty">No alerts. All clear.</div>';
   html += '</div></div>';
   // Orchestrator
   html += `<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#9881;</span> AGI Orchestrator</span><span class="card-badge ${orch&&orch.running?'green':'red'}">${orch&&orch.running?'RUNNING':'STOPPED'}</span></div>`;
   if(orch) {
-    html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px"><span><span style="color:var(--text-dim)">Events:</span> ${oi.events_processed||0}</span><span><span style="color:var(--text-dim)">Indicators:</span> ${oi.indicators_found||0}</span><span><span style="color:var(--text-dim)">Incidents:</span> ${oi.incidents_created||0}</span><span><span style="color:var(--text-dim)">Responses:</span> ${oi.responses_executed||0}</span></div>`;
-    if(orch.agents) { html+='<div style="margin-top:8px;font-size:10px">'; for(const [n,i] of Object.entries(orch.agents)){const c=(i.status==='idle'||i.status==='ok')?'var(--green)':'var(--yellow)';html+=`<span style="margin-right:10px"><span style="color:${c}">&#9679;</span> ${n}</span>`;} html+='</div>'; }
+    html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:11px"><span><span style="color:var(--text-dim)">Events:</span> <strong>${oi.events_processed||0}</strong></span><span><span style="color:var(--text-dim)">Indicators:</span> <strong>${oi.indicators_found||0}</strong></span><span><span style="color:var(--text-dim)">Incidents:</span> <strong>${oi.incidents_created||0}</strong></span><span><span style="color:var(--text-dim)">Responses:</span> <strong>${oi.responses_executed||0}</strong></span></div>`;
+    if(orch.agents) { html+='<div style="margin-top:10px;font-size:10px;display:flex;flex-wrap:wrap;gap:6px">'; for(const [n,i] of Object.entries(orch.agents)){const c=(i.status==='idle'||i.status==='ok')?'var(--green)':'var(--yellow)';html+=`<span style="padding:3px 8px;border-radius:6px;background:rgba(20,24,40,0.5);border:1px solid rgba(42,47,80,0.3)"><span style="color:${c}">&#9679;</span> ${n}</span>`;} html+='</div>'; }
   }
   html += '</div></div>';
 
   // Two columns: Fleet + Threats
   html += '<div class="two-col">';
   // Fleet preview
-  html += `<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#128421;</span> Fleet</span><span class="card-badge">${agentCount}</span></div><div style="max-height:220px;overflow-y:auto">`;
+  html += `<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#128421;</span> Fleet</span><span class="card-badge">${agentCount}</span></div><div style="max-height:240px;overflow-y:auto">`;
   if(agents&&agents.length) {
     html += '<table class="data-table"><thead><tr><th>Host</th><th>Status</th><th>OS</th><th>Seen</th></tr></thead><tbody>';
-    html += agents.slice(0,10).map(a=>`<tr onclick="navigate('fleet')"><td>${esc(a.hostname)}</td><td><span class="status-badge ${statusClass(a.status)}">${esc(a.status)}</span></td><td>${esc(a.os)}</td><td>${ago(a.last_seen_at)}</td></tr>`).join('');
+    html += agents.slice(0,10).map(a=>`<tr onclick="navigate('fleet')"><td><strong>${esc(a.hostname)}</strong></td><td><span class="status-badge ${statusClass(a.status)}">${esc(a.status)}</span></td><td>${esc(a.os)}</td><td>${ago(a.last_seen_at)}</td></tr>`).join('');
     html += '</tbody></table>';
   } else html += '<div class="empty">No agents registered.</div>';
   html += '</div></div>';
@@ -718,8 +798,34 @@ async function renderDashboard(mc) {
   } else html += '<div class="empty">No threat data.</div>';
   html += '</div></div>';
 
+  // Three columns: Shield + Titan Grid + Daemon
+  html += '<div class="three-col">';
   // Shield
-  html += `<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#128737;</span> AngelClaw Shield</span><span class="card-badge">${shield?esc(shield.last_risk_level||'unknown').toUpperCase():'--'}</span></div><div class="shield-grid"><div class="shield-stat"><div class="val">${shield?shield.assessments_run||0:'--'}</div><div class="lbl">Checks</div></div><div class="shield-stat"><div class="val">${shield?(shield.injection_patterns||0)+(shield.leakage_patterns||0):'--'}</div><div class="lbl">Patterns</div></div><div class="shield-stat"><div class="val">${shield?shield.skills_registered||0:'--'}</div><div class="lbl">Skills</div></div><div class="shield-stat"><div class="val">${shield?(shield.evil_agi_patterns||0):'--'}</div><div class="lbl">Evil AGI</div></div></div></div>`;
+  html += `<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#128737;</span> AngelClaw Shield</span><span class="card-badge">${shield?esc(shield.last_risk_level||'unknown').toUpperCase():'--'}</span></div><div class="shield-grid"><div class="shield-stat"><div class="val" style="color:var(--accent)">${shield?shield.assessments_run||0:'--'}</div><div class="lbl">Checks</div></div><div class="shield-stat"><div class="val" style="color:var(--orange)">${shield?(shield.injection_patterns||0)+(shield.leakage_patterns||0):'--'}</div><div class="lbl">Patterns</div></div><div class="shield-stat"><div class="val" style="color:var(--purple)">${shield?shield.skills_registered||0:'--'}</div><div class="lbl">Skills</div></div><div class="shield-stat"><div class="val" style="color:var(--red)">${shield?(shield.evil_agi_patterns||0):'--'}</div><div class="lbl">Evil AGI</div></div></div></div>`;
+
+  // Titan Grid Quick Status
+  const tExpo = titanStatus?titanStatus.exposure_validation:null;
+  const tIga = titanStatus?titanStatus.identity_governance:null;
+  const tWf = titanStatus?titanStatus.secops_workflow:null;
+  html += `<div class="card glow"><div class="card-header"><span class="card-title"><span class="icon">&#128737;</span> Titan Grid</span><span class="card-badge gold">V8.2</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:11px">
+      <div style="display:flex;justify-content:space-between;padding:6px 10px;background:rgba(16,20,38,0.5);border-radius:8px;border:1px solid rgba(42,47,80,0.2)"><span style="color:var(--text-dim)">&#127919; BAS Runs</span><strong style="color:var(--angel-gold)">${tExpo?tExpo.total_items||0:0}</strong></div>
+      <div style="display:flex;justify-content:space-between;padding:6px 10px;background:rgba(16,20,38,0.5);border-radius:8px;border:1px solid rgba(42,47,80,0.2)"><span style="color:var(--text-dim)">&#128100; Identities</span><strong style="color:var(--accent)">${tIga?tIga.total_identities||0:0}</strong></div>
+      <div style="display:flex;justify-content:space-between;padding:6px 10px;background:rgba(16,20,38,0.5);border-radius:8px;border:1px solid rgba(42,47,80,0.2)"><span style="color:var(--text-dim)">&#9881; Workflows</span><strong style="color:var(--green)">${tWf?tWf.total_workflows||0:0}</strong></div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:10px;width:100%" onclick="navigate('titan-grid')">Open Titan Grid &rarr;</button>
+  </div>`;
+
+  // Quick System Status
+  html += `<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#9881;</span> System Status</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:11px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(16,20,38,0.5);border-radius:8px;border:1px solid rgba(42,47,80,0.2)"><span>Guardian Daemon</span><span class="status-badge ${daemon&&daemon.running?'status-active':'status-offline'}">${daemon&&daemon.running?'Active':'Stopped'}</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(16,20,38,0.5);border-radius:8px;border:1px solid rgba(42,47,80,0.2)"><span>Orchestrator</span><span class="status-badge ${orch&&orch.running?'status-active':'status-offline'}">${orch&&orch.running?'Running':'Stopped'}</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(16,20,38,0.5);border-radius:8px;border:1px solid rgba(42,47,80,0.2)"><span>Shield</span><span class="status-badge ${shield?'status-active':'status-offline'}">${shield?'Protected':'Inactive'}</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(16,20,38,0.5);border-radius:8px;border:1px solid rgba(42,47,80,0.2)"><span>Version</span><strong style="color:var(--angel-gold)">V8.2.0</strong></div>
+    </div>
+  </div>`;
+  html += '</div>';
 
   mc.innerHTML = html;
 }
@@ -1154,39 +1260,47 @@ async function renderTitanGrid(mc) {
   const iga = status?status.identity_governance:null;
   const wf = status?status.secops_workflow:null;
   const templates = await fetchJSON('/api/v1/titan-grid/workflow/templates');
-  let html = `<div class="page-title">&#128737; Titan Grid</div><div class="page-subtitle">Exposure Validation &bull; Identity Governance &bull; SecOps Workflow &mdash; V8.2.0</div>`;
+
+  let html = `<div class="hero-banner" style="margin-bottom:4px">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px">
+      <span style="font-size:28px;filter:drop-shadow(0 0 12px rgba(240,200,80,0.3))">&#128737;</span>
+      <div><div class="hero-title">Titan Grid</div><div class="hero-sub" style="margin:0">Exposure Validation &bull; Identity Governance &bull; SecOps Workflow Engine &mdash; V8.2.0</div></div>
+    </div>
+  </div>`;
+
   html += '<div class="stats">';
-  html += '<div class="stat-card"><div class="stat-value" style="color:var(--angel-gold)">'+(expo?expo.total_items||0:0)+'</div><div class="stat-label">Validation Runs</div></div>';
-  html += '<div class="stat-card"><div class="stat-value" style="color:var(--accent)">'+(iga?iga.total_identities||0:0)+'</div><div class="stat-label">Identities</div></div>';
-  html += '<div class="stat-card"><div class="stat-value" style="color:var(--green)">'+(iga?iga.active_campaigns||0:0)+'</div><div class="stat-label">Cert Campaigns</div></div>';
-  html += '<div class="stat-card"><div class="stat-value" style="color:var(--red)">'+(wf?wf.total_workflows||0:0)+'</div><div class="stat-label">Workflows</div></div>';
-  html += '<div class="stat-card"><div class="stat-value" style="color:var(--purple)">'+(wf?wf.active_executions||0:0)+'</div><div class="stat-label">Active Executions</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--angel-gold)">'+(expo?expo.total_items||0:0)+'</div><div class="stat-label">&#127919; BAS Runs</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--accent)">'+(iga?iga.total_identities||0:0)+'</div><div class="stat-label">&#128100; Identities</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--green)">'+(iga?iga.active_campaigns||0:0)+'</div><div class="stat-label">&#128203; Cert Campaigns</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--red)">'+(wf?wf.total_workflows||0:0)+'</div><div class="stat-label">&#9881; Workflows</div></div>';
+  html += '<div class="stat-card"><div class="stat-value" style="color:var(--purple)">'+(wf?wf.active_executions||0:0)+'</div><div class="stat-label">&#9654; Executions</div></div>';
   html += '</div>';
 
   // Row 1: Exposure Validation + Identity Governance
   html += '<div class="two-col">';
 
   // Exposure Validation Card
-  html += '<div class="card glow" style="background:var(--angel-halo)"><div class="card-header"><span class="card-title"><span class="icon">&#127919;</span> Exposure Validation (BAS)</span><span class="card-badge gold">V8.2</span></div>';
-  html += '<p style="color:var(--text-dim);font-size:11px;margin:0 0 12px">Breach &amp; Attack Simulation — test defenses against real-world attack techniques</p>';
-  html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
+  html += '<div class="card glow"><div class="card-header"><span class="card-title"><span class="icon">&#127919;</span> Exposure Validation (BAS)</span><span class="card-badge gold">V8.2</span></div>';
+  html += '<p style="color:var(--text-dim);font-size:11px;margin:0 0 14px;line-height:1.5">Breach &amp; Attack Simulation — test defenses against real-world attack techniques across your entire infrastructure</p>';
+  html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">';
   const scenarios = ['full_spectrum','ransomware','data_exfil','lateral_movement','phishing'];
+  const scenarioIcons = {'full_spectrum':'&#128165;','ransomware':'&#128274;','data_exfil':'&#128230;','lateral_movement':'&#128694;','phishing':'&#127907;'};
   scenarios.forEach(s=>{
-    html += `<button class="btn btn-sm" onclick="runBAS('${s}')" style="font-size:10px;padding:4px 10px;border-radius:6px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--border);cursor:pointer">${s.replace(/_/g,' ')}</button>`;
+    html += `<button onclick="runBAS('${s}')" style="font-size:10px;padding:6px 14px;border-radius:8px;background:linear-gradient(135deg, rgba(124,168,255,0.1), rgba(124,168,255,0.05));color:var(--accent);border:1px solid rgba(124,168,255,0.2);cursor:pointer;font-weight:600;transition:all 0.2s;font-family:var(--font)" onmouseover="this.style.background='rgba(124,168,255,0.15)';this.style.borderColor='rgba(124,168,255,0.4)';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(124,168,255,0.1), rgba(124,168,255,0.05))';this.style.borderColor='rgba(124,168,255,0.2)';this.style.transform='none'">${scenarioIcons[s]||''} ${s.replace(/_/g,' ')}</button>`;
   });
   html += '</div>';
-  html += '<div id="bas-result" style="font-size:11px;color:var(--text-dim)">Select a scenario to run simulation</div>';
+  html += '<div id="bas-result" style="font-size:11px;color:var(--text-dim);padding:10px 12px;background:rgba(16,20,38,0.5);border-radius:8px;border:1px solid rgba(42,47,80,0.2);min-height:40px">Select a scenario to run simulation</div>';
   html += '</div>';
 
   // Identity Governance Card
   html += '<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#128100;</span> Identity Governance (IGA)</span><span class="card-badge gold">V8.2</span></div>';
-  html += '<p style="color:var(--text-dim);font-size:11px;margin:0 0 12px">Lifecycle management, access certification, role mining, SoD enforcement</p>';
-  html += '<div style="display:flex;gap:6px;margin-bottom:12px">';
-  html += '<button class="btn btn-sm" onclick="igaAction(\'onboard\')" style="font-size:10px;padding:4px 10px;border-radius:6px;background:var(--green-dim);color:var(--green);border:1px solid var(--border);cursor:pointer">Onboard User</button>';
-  html += '<button class="btn btn-sm" onclick="igaAction(\'certify\')" style="font-size:10px;padding:4px 10px;border-radius:6px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--border);cursor:pointer">Start Certification</button>';
-  html += '<button class="btn btn-sm" onclick="igaAction(\'mine\')" style="font-size:10px;padding:4px 10px;border-radius:6px;background:var(--angel-gold-dim,rgba(240,200,80,0.1));color:var(--angel-gold);border:1px solid var(--border);cursor:pointer">Mine Roles</button>';
+  html += '<p style="color:var(--text-dim);font-size:11px;margin:0 0 14px;line-height:1.5">Lifecycle management, access certification, role mining, and separation of duties enforcement</p>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">';
+  html += '<button onclick="igaAction(\'onboard\')" style="font-size:10px;padding:6px 14px;border-radius:8px;background:linear-gradient(135deg, rgba(74,222,128,0.1), rgba(74,222,128,0.05));color:var(--green);border:1px solid rgba(74,222,128,0.2);cursor:pointer;font-weight:600;transition:all 0.2s;font-family:var(--font)" onmouseover="this.style.transform=\'translateY(-1px)\'" onmouseout="this.style.transform=\'none\'">&#128100; Onboard User</button>';
+  html += '<button onclick="igaAction(\'certify\')" style="font-size:10px;padding:6px 14px;border-radius:8px;background:linear-gradient(135deg, rgba(124,168,255,0.1), rgba(124,168,255,0.05));color:var(--accent);border:1px solid rgba(124,168,255,0.2);cursor:pointer;font-weight:600;transition:all 0.2s;font-family:var(--font)" onmouseover="this.style.transform=\'translateY(-1px)\'" onmouseout="this.style.transform=\'none\'">&#128203; Start Certification</button>';
+  html += '<button onclick="igaAction(\'mine\')" style="font-size:10px;padding:6px 14px;border-radius:8px;background:linear-gradient(135deg, rgba(240,200,80,0.1), rgba(240,200,80,0.05));color:var(--angel-gold);border:1px solid rgba(240,200,80,0.2);cursor:pointer;font-weight:600;transition:all 0.2s;font-family:var(--font)" onmouseover="this.style.transform=\'translateY(-1px)\'" onmouseout="this.style.transform=\'none\'">&#128270; Mine Roles</button>';
   html += '</div>';
-  html += '<div id="iga-result" style="font-size:11px;color:var(--text-dim)">Manage identity lifecycle and access governance</div>';
+  html += '<div id="iga-result" style="font-size:11px;color:var(--text-dim);padding:10px 12px;background:rgba(16,20,38,0.5);border-radius:8px;border:1px solid rgba(42,47,80,0.2);min-height:40px">Manage identity lifecycle and access governance</div>';
   html += '</div></div>';
 
   // Row 2: SecOps Workflow + Templates
@@ -1194,21 +1308,23 @@ async function renderTitanGrid(mc) {
 
   // SecOps Workflow Card
   html += '<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#9881;</span> SecOps Workflow Engine</span><span class="card-badge gold">V8.2</span></div>';
-  html += '<p style="color:var(--text-dim);font-size:11px;margin:0 0 12px">Multi-step security playbooks with approval gates and SLA tracking</p>';
-  html += '<button class="btn btn-sm" onclick="createWorkflow()" style="font-size:10px;padding:4px 10px;border-radius:6px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--border);cursor:pointer;margin-bottom:10px">+ Create Workflow</button>';
-  html += '<div id="wf-result" style="font-size:11px;color:var(--text-dim)">Create and execute security operations workflows</div>';
+  html += '<p style="color:var(--text-dim);font-size:11px;margin:0 0 14px;line-height:1.5">Multi-step security playbooks with approval gates, SLA tracking, and automated escalation</p>';
+  html += '<button onclick="createWorkflow()" style="font-size:10px;padding:7px 16px;border-radius:8px;background:linear-gradient(135deg, rgba(124,168,255,0.12), rgba(192,132,252,0.08));color:var(--accent);border:1px solid rgba(124,168,255,0.25);cursor:pointer;font-weight:600;margin-bottom:12px;transition:all 0.2s;font-family:var(--font)" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 4px 12px rgba(124,168,255,0.15)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'none\'">&#9889; Create Workflow</button>';
+  html += '<div id="wf-result" style="font-size:11px;color:var(--text-dim);padding:10px 12px;background:rgba(16,20,38,0.5);border-radius:8px;border:1px solid rgba(42,47,80,0.2);min-height:40px">Create and execute security operations workflows</div>';
   html += '</div>';
 
   // Templates Card
   html += '<div class="card"><div class="card-header"><span class="card-title"><span class="icon">&#128196;</span> Workflow Templates</span></div>';
   if(templates&&templates.length){
-    html += '<div style="display:flex;flex-direction:column;gap:6px">';
+    const catIcons = {incident:'&#128680;',vulnerability:'&#128274;',compliance:'&#128203;',hunting:'&#127919;'};
+    html += '<div style="display:flex;flex-direction:column;gap:8px">';
     templates.forEach(t=>{
       const catColors = {incident:'var(--red)',vulnerability:'var(--angel-gold)',compliance:'var(--accent)',hunting:'var(--green)'};
       const color = catColors[t.category]||'var(--text-dim)';
-      html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--card-hover);border-radius:6px;border:1px solid var(--border)">`;
-      html += `<div><span style="font-weight:600;font-size:12px;color:var(--text)">${t.name}</span><span style="font-size:10px;color:var(--text-dim);margin-left:8px">${t.steps} steps</span></div>`;
-      html += `<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:${color}22;color:${color};font-weight:700;text-transform:uppercase">${t.category}</span>`;
+      const icon = catIcons[t.category]||'&#9881;';
+      html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(135deg, rgba(16,20,38,0.6), rgba(16,20,38,0.3));border-radius:10px;border:1px solid rgba(42,47,80,0.3);transition:all 0.2s;cursor:default" onmouseover="this.style.borderColor='rgba(124,168,255,0.2)';this.style.transform='translateX(2px)'" onmouseout="this.style.borderColor='rgba(42,47,80,0.3)';this.style.transform='none'">`;
+      html += `<div style="display:flex;align-items:center;gap:10px"><span style="font-size:14px">${icon}</span><div><span style="font-weight:600;font-size:12px;color:var(--text)">${t.name}</span><div style="font-size:10px;color:var(--text-dim);margin-top:1px">${t.steps} steps</div></div></div>`;
+      html += `<span style="font-size:8px;padding:3px 10px;border-radius:10px;background:${color}18;color:${color};font-weight:700;text-transform:uppercase;letter-spacing:0.5px;border:1px solid ${color}25">${t.category}</span>`;
       html += '</div>';
     });
     html += '</div>';
@@ -1326,7 +1442,7 @@ function connectWebSocket() {
   } catch(err){}
 }
 function showToast(msg,color) {
-  const t=document.createElement('div'); t.style.cssText=`position:fixed;bottom:24px;right:24px;background:var(--surface-solid);border:1px solid var(--${color||'accent'});color:var(--text);padding:12px 20px;border-radius:var(--radius);z-index:9999;font-size:12px;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.4);backdrop-filter:blur(12px);animation:fadeIn 0.3s ease-out;font-weight:500;display:flex;align-items:center;gap:8px`;
+  const t=document.createElement('div'); t.style.cssText=`position:fixed;bottom:24px;right:24px;background:linear-gradient(135deg, rgba(16,20,38,0.95), rgba(10,12,22,0.95));border:1px solid var(--${color||'accent'});color:var(--text);padding:14px 22px;border-radius:var(--radius);z-index:9999;font-size:12px;max-width:380px;box-shadow:0 8px 40px rgba(0,0,0,0.5), 0 0 20px rgba(124,168,255,0.05);backdrop-filter:blur(16px);animation:slideUp 0.3s ease-out;font-weight:500;display:flex;align-items:center;gap:10px`;
   const icon=color==='red'?'&#9888;&#65039;':color==='green'?'&#9989;':'&#128737;';
   t.innerHTML=icon+' '+msg; document.body.appendChild(t); setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(10px)';t.style.transition='all 0.3s';setTimeout(()=>t.remove(),300);},4000);
 }
