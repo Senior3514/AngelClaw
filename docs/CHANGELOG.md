@@ -1,5 +1,12 @@
 # AngelClaw AGI Guardian — Changelog
 
+## V7.5.0 — Iron Vault (2026-02-20)
+### Data Protection & Privacy
+- Dlp Engine: new service module
+- Data Classification: new service module
+- Brain V7.5: 2 new intents — total 105+ intents
+
+
 ## V7.4.0 — Dark Web Radar (2026-02-20)
 ### Extended Threat Intelligence & Dark Web Monitoring
 - Darkweb Monitor: new service module

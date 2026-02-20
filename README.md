@@ -1,4 +1,4 @@
-# AngelClaw V7.4.0 -- Dark Web Radar: Extended Threat Intelligence # AngelClaw V7.3.0 -- Sentinel Eye: Advanced Observability # AngelClaw V7.2.0 -- Neural Mesh: AI-Enhanced Network Intelligence Log Intelligence Dark Web Monitoring
+# AngelClaw V7.5.0 -- Iron Vault: Data Protection # AngelClaw V7.4.0 -- Dark Web Radar: Extended Threat Intelligence # AngelClaw V7.3.0 -- Sentinel Eye: Advanced Observability # AngelClaw V7.2.0 -- Neural Mesh: AI-Enhanced Network Intelligence Log Intelligence Dark Web Monitoring Privacy
 
 **Guardian angel, not gatekeeper.**
 
@@ -18,7 +18,8 @@ analysis, reading, summarizing, reasoning, creating -- flows freely.
 
 | Version | Codename | Highlights |
 |---------|----------|------------|
-| **V7.4.0** | **Dark Web Radar** | AGI Defense Engine, Autonomous Response, Cross-Org Threat Federation, SOC Autopilot |
+| **V7.5.0** | **Iron Vault** | AGI Defense Engine, Autonomous Response, Cross-Org Threat Federation, SOC Autopilot |
+| V7.4.0 | Dark Web Radar | Dlp Engine, Data Classification |
 | V7.3.0 | Sentinel Eye | Darkweb Monitor, Supply Chain |
 | V7.2.0 | Neural Mesh | Log Analytics, Distributed Tracing |
 | V7.1.0 | Quantum Shield | Traffic Analysis, Dns Security |
